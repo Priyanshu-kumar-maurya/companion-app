@@ -3,9 +3,7 @@ import { PAGES } from "../../App";
 
 function DetailsPage({ girl: profile, setPage }) {
     const [hours, setHours] = useState(2);
-    const [posts, setPosts] = useState([]); // NAYA: Posts store karne ke liye
-
-    // NAYA: Backend se is profile ki posts lana
+    const [posts, setPosts] = useState([]); 
     useEffect(() => {
         const fetchUserPosts = async () => {
             if (!profile) return;
@@ -23,7 +21,6 @@ function DetailsPage({ girl: profile, setPage }) {
 
     if (!profile) return null;
 
-    // DB se jo tag aayega wo string hoga, isliye hum usko array mein todlenge
     let safeTags = ["Coffee Date", "Movie", "Dinner"];
     if (profile.tags) { 
         safeTags = typeof profile.tags === 'string' ? profile.tags.split(',') : profile.tags;
@@ -96,7 +93,6 @@ function DetailsPage({ girl: profile, setPage }) {
                     </div>
                 </div>
 
-                {/* --- NAYA: Posts Gallery (Boy/Booker ke dekhne ke liye) --- */}
                 <div className="mb-10">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         📸 {firstName}'s Gallery

@@ -2,21 +2,18 @@ import React, { useState } from "react";
 import { PAGES } from "../App";
 
 function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
-    // Mobile menu toggle karne ke liye state
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    // Dono mein se koi bhi user login ho sakta hai
     const currentUser = boyUser || girlUser;
 
     const handleLogout = () => {
-        localStorage.removeItem("token"); // Token zarur delete karna
+        localStorage.removeItem("token"); 
         if (setGirlUser) setGirlUser(null);
         if (setBoyUser) setBoyUser(null);
         setPage(PAGES.HOME);
-        setIsMenuOpen(false); // Mobile menu band kar do
+        setIsMenuOpen(false); 
     };
 
-    // Helper function: Active page check karke Underline lagane ke liye
     const getLinkStyle = (targetPage) => {
         const isActive = page === targetPage;
         return `px-3 py-1.5 text-sm transition-all duration-300 ${isActive
@@ -25,7 +22,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
             }`;
     };
 
-    // Page change karne ka function jo menu bhi band kar de (mobile ke liye)
     const handleNavClick = (targetPage) => {
         setPage(targetPage);
         setIsMenuOpen(false);
@@ -35,7 +31,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D1A]/90 backdrop-blur border-b border-pink-500/20">
             <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
 
-                {/* Logo */}
                 <div
                     className="text-xl font-bold cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent"
                     onClick={() => handleNavClick(PAGES.HOME)}
@@ -43,13 +38,11 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                     💞 RentGF
                 </div>
 
-                {/* --- DESKTOP MENU --- (Sirf badi screen par dikhega) */}
                 <div className="hidden md:flex items-center gap-4">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={getLinkStyle(PAGES.HOME)}>Home</button>
                     <button onClick={() => handleNavClick(PAGES.ABOUT)} className={getLinkStyle(PAGES.ABOUT)}>About</button>
                     <button onClick={() => handleNavClick(PAGES.HELP)} className={getLinkStyle(PAGES.HELP)}>Help</button>
 
-                    {/* Find option logged in user (Boy/Girl dono) ke liye */}
                     {currentUser && (
                         <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}>
                             🔍 Find
@@ -89,7 +82,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                     )}
                 </div>
 
-                {/* --- MOBILE HAMBURGER BUTTON --- (Sirf chhoti screen par dikhega) */}
                 <button
                     className="md:hidden text-2xl text-white outline-none"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -98,7 +90,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                 </button>
             </div>
 
-            {/* --- MOBILE DROPDOWN MENU --- */}
             {isMenuOpen && (
                 <div className="md:hidden absolute top-16 left-0 w-full bg-[#16162A] border-b border-pink-500/20 py-4 px-6 flex flex-col gap-4 shadow-xl">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}>Home</button>

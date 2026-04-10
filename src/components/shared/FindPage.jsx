@@ -113,7 +113,6 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                             >
                                 <div className="relative h-48 bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center text-6xl">
 
-                                    {/* --- NAYA LOGIC: Asli photo dikhao, warna Dummy photo dikhao --- */}
                                     <img
                                         src={u.profile_pic || (targetRole === "boy"
                                             ? "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"
@@ -122,7 +121,6 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                         alt={u.name}
                                         className="w-full h-full object-cover"
                                     />
-                                    {/* ----------------------------------------------------------- */}
 
                                     {u.online && (
                                         <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 border border-green-500/40 rounded-full px-2 py-0.5 text-xs text-green-400">

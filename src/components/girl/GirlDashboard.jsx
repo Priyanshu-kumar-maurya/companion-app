@@ -11,7 +11,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
     const [newPostCaption, setNewPostCaption] = useState("");
     const [postUploading, setPostUploading] = useState(false);
 
-    // --- NAYA: Settings / Edit Profile States ---
     const [showEditModal, setShowEditModal] = useState(false);
     const [editForm, setEditForm] = useState({
         age: user?.age || "",
@@ -79,7 +78,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
         } catch (err) { console.error(err); } finally { setPostUploading(false); }
     };
 
-    // --- NAYA: Profile Update (Settings) API Call ---
     const handleEditProfile = async (e) => {
         e.preventDefault();
         try {
@@ -97,7 +95,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
         } catch (err) { console.error("Edit error:", err); }
     };
 
-    // --- NAYA: Delete Post API Call ---
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
@@ -108,7 +105,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
         } catch (err) { console.error("Delete post error:", err); }
     };
 
-    // --- NAYA: Delete Account API Call ---
     const handleDeleteAccount = async () => {
         if (!window.confirm("🚨 WARNING: Are you sure you want to PERMANENTLY delete your account? All messages and photos will be lost.")) return;
         try {
@@ -151,7 +147,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
                         </div>
                     </div>
 
-                    {/* NAYA: Settings Button */}
                     <button
                         onClick={() => setShowEditModal(true)}
                         className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2"
@@ -209,7 +204,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
                                     {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white">{post.caption}</div>}
 
-                                    {/* NAYA: Delete Post Button */}
                                     <button
                                         onClick={() => handleDeletePost(post.id)}
                                         className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
@@ -226,7 +220,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
                 <button onClick={() => { localStorage.removeItem("token"); setGirlUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
 
-            {/* --- NAYA: SETTINGS / EDIT MODAL --- */}
             {showEditModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#16162A] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">

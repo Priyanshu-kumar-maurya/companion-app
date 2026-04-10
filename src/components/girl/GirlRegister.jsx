@@ -25,7 +25,6 @@ function GirlRegister({ setPage, setGirlUser }) {
         if (step < 3) {
             setStep((s) => s + 1);
         } else {
-            // STEP 3: Final Submit to Backend
             setLoading(true);
             setError("");
 
@@ -44,7 +43,7 @@ function GirlRegister({ setPage, setGirlUser }) {
                         city: form.city,
                         bio: form.bio,
                         price: form.price,
-                        tags: form.tags.join(", ") // Array ko string bana diya DB ke liye
+                        tags: form.tags.join(", ") 
                     }),
                 });
 
@@ -52,7 +51,7 @@ function GirlRegister({ setPage, setGirlUser }) {
 
                 if (response.ok) {
                     alert("🎉 Registration Successful! Please login to continue.");
-                    setPage(PAGES.GIRL_LOGIN); // Register hote hi Login page par bhej do
+                    setPage(PAGES.GIRL_LOGIN); 
                 } else {
                     setError(data.error);
                 }

@@ -20,7 +20,7 @@ function GirlLogin({ setPage, setGirlUser }) {
                 body: JSON.stringify({
                     email: form.email,
                     password: form.password,
-                    role: "girl" // Hardcode role 'girl'
+                    role: "girl" 
                 }),
             });
 

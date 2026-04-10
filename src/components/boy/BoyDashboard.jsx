@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
 
-// Dummy Reviews Boy ke liye
 const reviews = [
     { name: "Neha Gupta", rating: 5, text: "Such a gentleman! Had a great time at the cafe." },
     { name: "Priya Sharma", rating: 4, text: "Very polite and fun to talk to. Highly recommended!" }
@@ -20,7 +19,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
         city: user?.city || "",
         bio: user?.bio || "",
         price: user?.price || "",
-        tags: user?.tags || "" // NAYA: Tags state
+        tags: user?.tags || "" 
     });
 
     const stats = { spent: "12,500", sessions: 8, rating: "4.9" };
@@ -113,7 +112,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
         } catch (err) { console.error(err); }
     };
 
-    // Tags ko list mein todna (e.g. "Movie, Cafe" -> ["Movie", "Cafe"])
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
 
     return (
@@ -136,7 +134,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
                                 📍 {user.city || "City not set"} · 🎂 {user.age || "Age not set"}
                             </div>
 
-                            {/* NAYA: Dashboard par Interests dikhana */}
                             <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
                                 {myTags.map((tag, i) => (
                                     <span key={i} className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-full">
@@ -157,7 +154,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
                 </button>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
-                    {/* Stats... (same as before) */}
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💸 Total Spent</div><div className="text-2xl font-bold text-green-400">₹{stats.spent}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Your Rating</div><div className="text-2xl font-bold text-yellow-400">{stats.rating} ⭐</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Total Dates</div><div className="text-2xl font-bold text-blue-400">{stats.sessions}</div></div>
@@ -205,7 +201,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
                     )}
                 </div>
 
-                {/* --- NAYA: Recent Reviews for Boys --- */}
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
                     <div className="text-base font-semibold mb-4">⭐ Recent Reviews</div>
                     {reviews.map((r) => (
@@ -222,7 +217,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
                 <button onClick={() => { localStorage.removeItem("token"); setBoyUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
 
-            {/* EDIT PROFILE MODAL */}
             {showEditModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#16162A] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
@@ -248,7 +242,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
                                 <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
                             </div>
 
-                            {/* NAYA: Interests / Tags ka box */}
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5">Interests (Comma separated)</label>
                                 <input type="text" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. Movie, Long Drive, Cafe" className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
