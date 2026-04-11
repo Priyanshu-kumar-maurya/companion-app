@@ -159,7 +159,7 @@ app.post('/api/upload/:userId', upload.single('profile_pic'), async (req, res) =
         }
 
         const { userId } = req.params;
-        const imageUrl = `http://https://rentgf-and-bf.onrender.com/uploads/${req.file.filename}`;
+        const imageUrl = `https://rentgf-and-bf.onrender.com/uploads/${req.file.filename}`;
 
         await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [imageUrl, userId]);
 
@@ -175,7 +175,7 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
 
         const { userId } = req.params;
         const { caption } = req.body;
-        const imageUrl = `http://https://rentgf-and-bf.onrender.com/uploads/${req.file.filename}`;
+        const imageUrl = `https://rentgf-and-bf.onrender.com/uploads/${req.file.filename}`;
 
         const newPost = await pool.query(
             "INSERT INTO posts (user_id, image_url, caption) VALUES ($1, $2, $3) RETURNING *",

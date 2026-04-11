@@ -8,7 +8,7 @@ function DetailsPage({ girl: profile, setPage }) {
         const fetchUserPosts = async () => {
             if (!profile) return;
             try {
-                const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
+                const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
                 if (response.ok) {
                     setPosts(await response.json());
                 }

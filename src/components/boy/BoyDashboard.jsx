@@ -28,10 +28,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
         const fetchDashboardData = async () => {
             if (!user) return;
             try {
-                const chatRes = await fetch(`http://https://rentgf-and-bf.onrender.com/api/chats/${user.id}`);
+                const chatRes = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${user.id}`);
                 if (chatRes.ok) setChatHistory(await chatRes.json());
 
-                const postsRes = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
+                const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) setMyPosts(await postsRes.json());
             } catch (err) { console.error(err); }
         };
@@ -50,7 +50,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
         const formData = new FormData();
         formData.append("profile_pic", file);
         try {
-            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: formData });
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: formData });
             if (response.ok) {
                 const data = await response.json();
                 setBoyUser({ ...user, profile_pic: data.imageUrl });
@@ -66,7 +66,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
         formData.append("post_image", file);
         formData.append("caption", newPostCaption);
         try {
-            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, { method: "POST", body: formData });
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, { method: "POST", body: formData });
             if (response.ok) {
                 const data = await response.json();
                 setMyPosts([data.post, ...myPosts]);
@@ -78,7 +78,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
     const handleEditProfile = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editForm)
@@ -95,7 +95,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
-            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
             if (response.ok) setMyPosts(myPosts.filter(post => post.id !== postId));
         } catch (err) { console.error(err); }
     };
@@ -103,7 +103,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl }) {
     const handleDeleteAccount = async () => {
         if (!window.confirm("🚨 WARNING: Delete account permanently?")) return;
         try {
-            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
             if (response.ok) {
                 localStorage.removeItem("token");
                 setBoyUser(null);

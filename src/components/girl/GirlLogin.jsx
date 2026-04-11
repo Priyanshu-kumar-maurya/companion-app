@@ -12,7 +12,7 @@ function GirlLogin({ setPage, setGirlUser }) {
         setError("");
 
         try {
-            const response = await fetch("http://https://rentgf-and-bf.onrender.com/api/login", {
+            const response = await fetch("https://rentgf-and-bf.onrender.com/api/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

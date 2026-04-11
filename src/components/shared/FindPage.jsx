@@ -17,7 +17,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     useEffect(() => {
         const fetchProfiles = async () => {
             try {
-                const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/users?role=${targetRole}`);
+                const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users?role=${targetRole}`);
                 const data = await response.json();
 
                 if (response.ok) {

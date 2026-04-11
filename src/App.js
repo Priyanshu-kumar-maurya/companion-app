@@ -55,7 +55,7 @@ function App() {
       }
 
       try {
-        const response = await fetch("http://https://rentgf-and-bf.onrender.com/api/me", {
+        const response = await fetch("https://rentgf-and-bf.onrender.com/api/me", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`
