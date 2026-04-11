@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000", { autoConnect: false });
+const socket = io("http://https://rentgf-and-bf.onrender.com", { autoConnect: false });
 
 function ChatPage({ girl, currentUser, setPage }) {
     const [messages, setMessages] = useState([]);
@@ -17,7 +17,7 @@ function ChatPage({ girl, currentUser, setPage }) {
         const fetchOldMessages = async () => {
             if (!currentUser || !girl) return;
             try {
-                const response = await fetch(`http://localhost:5000/api/messages/${currentUser.id}/${girl.id}`);
+                const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${girl.id}`);
                 if (response.ok) {
                     const dbMessages = await response.json();
 

@@ -24,13 +24,13 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
         const fetchDashboardData = async () => {
             if (!user) return;
             try {
-                const chatRes = await fetch(`http://localhost:5000/api/chats/${user.id}`);
+                const chatRes = await fetch(`http://https://rentgf-and-bf.onrender.com/api/chats/${user.id}`);
                 if (chatRes.ok) setChatHistory(await chatRes.json());
 
-                const statsRes = await fetch(`http://localhost:5000/api/girl/stats/${user.id}`);
+                const statsRes = await fetch(`http://https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
                 if (statsRes.ok) setStats(await statsRes.json());
 
-                const postsRes = await fetch(`http://localhost:5000/api/posts/${user.id}`);
+                const postsRes = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) setMyPosts(await postsRes.json());
             } catch (err) {
                 console.error("Dashboard error:", err);
@@ -51,7 +51,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
         const formData = new FormData();
         formData.append("profile_pic", file);
         try {
-            const response = await fetch(`http://localhost:5000/api/upload/${user.id}`, { method: "POST", body: formData });
+            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: formData });
             if (response.ok) {
                 const data = await response.json();
                 setGirlUser({ ...user, profile_pic: data.imageUrl });
@@ -68,7 +68,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
         formData.append("post_image", file);
         formData.append("caption", newPostCaption);
         try {
-            const response = await fetch(`http://localhost:5000/api/posts/${user.id}`, { method: "POST", body: formData });
+            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, { method: "POST", body: formData });
             if (response.ok) {
                 const data = await response.json();
                 setMyPosts([data.post, ...myPosts]);
@@ -81,7 +81,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
     const handleEditProfile = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch(`http://localhost:5000/api/users/${user.id}`, {
+            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(editForm)
@@ -98,7 +98,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/posts/${postId}`, { method: "DELETE" });
+            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
             if (response.ok) {
                 setMyPosts(myPosts.filter(post => post.id !== postId));
             }
@@ -108,7 +108,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
     const handleDeleteAccount = async () => {
         if (!window.confirm("🚨 WARNING: Are you sure you want to PERMANENTLY delete your account? All messages and photos will be lost.")) return;
         try {
-            const response = await fetch(`http://localhost:5000/api/users/${user.id}`, { method: "DELETE" });
+            const response = await fetch(`http://https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
             if (response.ok) {
                 localStorage.removeItem("token");
                 setGirlUser(null);

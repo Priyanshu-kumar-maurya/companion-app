@@ -12,7 +12,7 @@ function BoyRegister({ setPage, setBoyUser }) {
         setError("");
 
         try {
-            const response = await fetch("http://localhost:5000/api/register", {
+            const response = await fetch("http://https://rentgf-and-bf.onrender.com/api/register", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

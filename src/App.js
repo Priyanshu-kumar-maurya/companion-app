@@ -43,10 +43,8 @@ function App() {
   const [girlUser, setGirlUser] = useState(null);
   const [boyUser, setBoyUser] = useState(null);
 
-  // NAYA: Auto-login / Session check karne ke liye state
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  // NAYA: Page reload hone par token verify karna
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem("token");
@@ -57,7 +55,7 @@ function App() {
       }
 
       try {
-        const response = await fetch("http://localhost:5000/api/me", {
+        const response = await fetch("http://https://rentgf-and-bf.onrender.com/api/me", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`
@@ -75,7 +73,6 @@ function App() {
             setPage(PAGES.GIRL_DASHBOARD);
           }
         } else {
-          // Token expire ya galat hai toh hata do
           localStorage.removeItem("token");
         }
       } catch (err) {
@@ -88,7 +85,6 @@ function App() {
     verifySession();
   }, []);
 
-  // NAYA: Jab tak backend se data aa raha hai, tab tak loading screen dikhao
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center text-white">
