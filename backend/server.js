@@ -118,10 +118,12 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
+        const { password: _, ...userData } = user;
+
         res.status(200).json({
             message: "Login successful!",
             token: token,
-            user: { id: user.id, name: user.name, email: user.email, role: user.role }
+            user: userData
         });
 
     } catch (err) {
@@ -129,7 +131,6 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: "Server mein kuch gadbad hai!" });
     }
 });
-
 app.get('/api/users', async (req, res) => {
     try {
         const { role } = req.query;
@@ -236,7 +237,7 @@ const authenticateToken = (req, res, next) => {
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
         const userResult = await pool.query(
-            "SELECT id, name, email, role FROM users WHERE id = $1",
+            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags FROM users WHERE id = $1",
             [req.user.id]
         );
 
@@ -277,7 +278,8 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
         const { user1, user2 } = req.params;
 
         const query = `
-            SELECT * FROM messages 
+            SELECT id, sender_id, receiver_id, text AS message, created_at 
+            FROM messages 
             WHERE (sender_id = $1 AND receiver_id = $2) 
                OR (sender_id = $2 AND receiver_id = $1)
             ORDER BY created_at ASC
