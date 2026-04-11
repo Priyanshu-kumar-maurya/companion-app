@@ -51,8 +51,8 @@ io.on("connection", (socket) => {
 
         try {
             await pool.query(
-                "INSERT INTO messages (sender_id, receiver_id, message) VALUES ($1, $2, $3)",
-                [data.sender_id, data.receiver_id, data.message]
+                "INSERT INTO messages (sender_id, receiver_id, text) VALUES ($1, $2, $3)",
+                [data.sender_id, data.receiver_id, data.text || data.message]
             );
         } catch (err) {
             console.error("❌ Message save karne mein error:", err.message);
