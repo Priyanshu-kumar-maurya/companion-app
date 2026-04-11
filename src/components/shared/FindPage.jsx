@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
-
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
 
@@ -23,7 +22,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                 if (response.ok) {
                     const formattedData = data.map(user => ({
                         ...user,
-                        tags: user.tags || ["Coffee Date", "Movie"],
+                        tags: user.tags ? (typeof user.tags === 'string' ? user.tags.split(',') : user.tags) : ["Coffee Date", "Movie"],
                         rating: user.rating || 4.5,
                         reviews: user.reviews || Math.floor(Math.random() * 50) + 10,
                         verified: true,
@@ -32,7 +31,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                     setUsers(formattedData);
                 }
             } catch (err) {
-                console.error("Data fetch error:", err);
+                console.error(err);
             } finally {
                 setLoading(false);
             }
@@ -44,13 +43,23 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     const filtered = users.filter(
         (u) =>
             (filterCity === "All" || u.city === filterCity) &&
-            (filterTag === "All" || u.tags.includes(filterTag)) &&
+            (filterTag === "All" || u.tags.some(tag => tag.trim() === filterTag)) &&
             (u.name.toLowerCase().includes(searchQ.toLowerCase()) ||
                 (u.city && u.city.toLowerCase().includes(searchQ.toLowerCase())))
     );
 
+    const handleProfileClick = (profile) => {
+        if (!currentUser) {
+            alert("Please Login or Register first to view profiles or chat!");
+            setPage(PAGES.BOY_REGISTER);
+            return;
+        }
+        setSelectedGirl(profile);
+        setPage(PAGES.DETAILS);
+    };
+
     return (
-        <div className="pt-16 min-h-screen">
+        <div className="pt-16 min-h-screen bg-[#0D0D1A]">
             <div className="max-w-5xl mx-auto px-6 py-8">
                 <h1 className="text-3xl font-bold mb-1">
                     Find a{" "}
@@ -100,7 +109,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20 text-pink-500">Loading profiles...</div>
+                    <div className="text-center py-20 text-pink-500 animate-pulse">Loading profiles...</div>
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">No companions found. Try different filters.</div>
                 ) : (
@@ -108,37 +117,39 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                         {filtered.map((u) => (
                             <div
                                 key={u.id}
-                                className="bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-pink-500/30 hover:-translate-y-1 transition"
-                                onClick={() => { setSelectedGirl(u); setPage(PAGES.DETAILS); }}
+                                className="bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-pink-500/30 hover:-translate-y-1 transition flex flex-col"
+                                onClick={() => handleProfileClick(u)}
                             >
-                                <div className="relative h-48 bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center text-6xl">
-
-                                    <img
-                                        src={u.profile_pic || (targetRole === "boy"
-                                            ? "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"
-                                            : "https://i.pinimg.com/736x/a9/58/09/a958095418a0b357314288566dd5c96a.jpg")
-                                        }
-                                        alt={u.name}
-                                        className="w-full h-full object-cover"
-                                    />
+                                <div className="relative h-48 flex items-center justify-center bg-gradient-to-br from-pink-500/30 to-purple-500/30">
+                                    {u.profile_pic ? (
+                                        <img
+                                            src={u.profile_pic}
+                                            alt={u.name}
+                                            className="w-full h-full object-cover transition duration-500 hover:scale-110"
+                                        />
+                                    ) : (
+                                        <div className="text-6xl text-white/70">😊</div>
+                                    )}
 
                                     {u.online && (
-                                        <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 border border-green-500/40 rounded-full px-2 py-0.5 text-xs text-green-400">
+                                        <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 border border-green-500/40 rounded-full px-2 py-0.5 text-xs text-green-400 backdrop-blur-sm">
                                             <span className="w-1.5 h-1.5 bg-green-400 rounded-full" /> Online
                                         </div>
                                     )}
                                     {u.verified && (
-                                        <div className="absolute top-3 left-3 bg-purple-500/20 border border-purple-500/40 rounded-full px-2 py-0.5 text-xs text-purple-300">
+                                        <div className="absolute top-3 left-3 bg-purple-500/20 border border-purple-500/40 rounded-full px-2 py-0.5 text-xs text-purple-300 backdrop-blur-sm">
                                             ✓ Verified
                                         </div>
                                     )}
+                                    <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#16162A] to-transparent h-16" />
                                 </div>
 
-                                <div className="p-4">
-                                    <div className="text-base font-semibold">{u.name}</div>
+                                <div className="p-4 flex-1 flex flex-col">
+                                    <div className="text-base font-semibold">{u.name.split(' ')[0]}</div>
                                     <div className="text-xs text-gray-400 mt-0.5">📍 {u.city || "Unknown"} · {u.age || "N/A"} years</div>
                                     <div className="text-xs text-yellow-400 mt-1">⭐ {u.rating} <span className="text-gray-500">({u.reviews} reviews)</span></div>
-                                    <div className="flex items-center justify-between mt-3">
+
+                                    <div className="mt-auto pt-4 flex items-center justify-between">
                                         <div>
                                             <span className="text-lg font-bold text-pink-400">₹{u.price || 1000}</span>
                                             <span className="text-xs text-gray-500">/hr</span>

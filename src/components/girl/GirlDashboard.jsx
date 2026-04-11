@@ -126,13 +126,27 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl }) {
 
                 <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                        <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-pink-500 flex-shrink-0 group">
-                            <img src={user.profile_pic || "https://i.pinimg.com/736x/a9/58/09/a958095418a0b357314288566dd5c96a.jpg"} alt="Profile" className="w-full h-full object-cover" />
-                            <label className="absolute inset-0 bg-black/60 flex items-center justify-center text-xs font-bold text-white opacity-0 group-hover:opacity-100 cursor-pointer transition">
-                                {uploading ? "Wait..." : "CHANGE"}
+                        {/* Profile Pic with Upload Camera Button */}
+                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg">
+                                {user?.profile_pic ? (
+                                    <img
+                                        src={user.profile_pic}
+                                        alt={user.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    "😊"
+                                )}
+                            </div>
+
+                            {/* Camera Upload Button */}
+                            <label className="absolute bottom-0 right-0 bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" title="Upload Profile Picture">
+                                {uploading ? "⏳" : "📷"}
                                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
                             </label>
                         </div>
+
                         <div className="text-center sm:text-left mt-2 sm:mt-0">
                             <h1 className="text-3xl font-bold">Welcome back, {user.name} 💕</h1>
                             <p className="text-sm text-gray-400 mt-1">Here's your dashboard overview</p>

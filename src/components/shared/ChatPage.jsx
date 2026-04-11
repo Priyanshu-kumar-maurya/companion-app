@@ -28,7 +28,7 @@ function ChatPage({ girl, currentUser, setPage }) {
                         return {
                             id: msg.id,
                             text: msg.message,
-                            sent: msg.sender_id === currentUser.id, // Agar current user ne bheja hai toh 'sent: true'
+                            sent: msg.sender_id === currentUser.id,
                             time: timeString
                         };
                     });
@@ -36,7 +36,7 @@ function ChatPage({ girl, currentUser, setPage }) {
                     setMessages(formattedMessages);
                 }
             } catch (error) {
-                console.error("Purane messages fetch nahi hue:", error);
+                console.error(error);
             }
         };
 
@@ -86,11 +86,19 @@ function ChatPage({ girl, currentUser, setPage }) {
     };
 
     return (
-        <div className="pt-16 h-screen flex flex-col bg-[#0D0D1A]">
-            <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-xl flex-shrink-0">
-                    😊
-                </div>
+        <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5 shrink-0">
+                {girl.profile_pic ? (
+                    <img
+                        src={girl.profile_pic}
+                        alt={girl.name}
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/10"
+                    />
+                ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-xl flex-shrink-0">
+                        😊
+                    </div>
+                )}
                 <div className="flex-1">
                     <div className="text-sm font-semibold">{girl.name}</div>
                     <div className="text-xs text-green-400 flex items-center gap-1.5">
@@ -99,7 +107,7 @@ function ChatPage({ girl, currentUser, setPage }) {
                     </div>
                 </div>
                 <button
-                    onClick={() => alert("📞 In-App Call starting... (Recorded for safety)")}
+                    onClick={() => alert("📞 In-App Call starting...")}
                     className="px-4 py-1.5 bg-green-500/15 border border-green-500/30 text-green-400 text-xs rounded-xl font-semibold hover:bg-green-500/25 transition"
                 >
                     📞 Call
@@ -112,7 +120,7 @@ function ChatPage({ girl, currentUser, setPage }) {
                 </button>
             </div>
 
-            <div className="px-5 py-2 bg-purple-500/10 border-b border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
+            <div className="px-5 py-2 bg-purple-500/10 border-b border-purple-500/20 text-xs text-purple-300 flex items-center gap-2 shrink-0">
                 🛡️ This conversation is encrypted and recorded for security purposes.
             </div>
 
@@ -133,13 +141,14 @@ function ChatPage({ girl, currentUser, setPage }) {
                 <div ref={bottomRef} />
             </div>
 
-            <div className="flex gap-3 px-5 py-4 border-t border-white/5 bg-[#16162A]">
+            <div className="flex gap-3 px-5 py-4 border-t border-white/5 bg-[#16162A] shrink-0">
                 <input
                     className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-full px-5 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
                     placeholder="Type a message..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                    onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth" }), 100)}
                 />
                 <button
                     onClick={sendMessage}
