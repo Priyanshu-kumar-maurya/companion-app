@@ -1,0 +1,11 @@
+<svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#ai-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#ai-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#ai-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <defs>
+        <linearGradient id="ai-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#ec4899"/>
+            <stop offset="1" stop-color="#a855f7"/>
+        </linearGradient>
+    </defs>
+</svg>

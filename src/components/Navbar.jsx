@@ -7,18 +7,18 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
     const currentUser = boyUser || girlUser;
 
     const handleLogout = () => {
-        localStorage.removeItem("token"); 
+        localStorage.removeItem("token");
         if (setGirlUser) setGirlUser(null);
         if (setBoyUser) setBoyUser(null);
         setPage(PAGES.HOME);
-        setIsMenuOpen(false); 
+        setIsMenuOpen(false);
     };
 
     const getLinkStyle = (targetPage) => {
         const isActive = page === targetPage;
         return `px-3 py-1.5 text-sm transition-all duration-300 ${isActive
-                ? "text-pink-400 font-bold border-b-2 border-pink-500"
-                : "text-gray-400 hover:text-white"
+            ? "text-pink-400 font-bold border-b-2 border-pink-500"
+            : "text-gray-400 hover:text-white"
             }`;
     };
 
@@ -30,14 +30,43 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0D0D1A]/90 backdrop-blur border-b border-pink-500/20">
             <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-
-                <div
-                    className="text-xl font-bold cursor-pointer bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent"
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                <svg
+                    className="w-8 h-8 shrink-0 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)] cursor-pointer"
+                    viewBox="0 0 100 100"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                     onClick={() => handleNavClick(PAGES.HOME)}
                 >
-                    💞 RentGF
-                </div>
-
+                    <path
+                        d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z"
+                        stroke="url(#ai-grad)"
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    <path
+                        d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z"
+                        stroke="url(#ai-grad)"
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    <path
+                        d="M23 30.5L50 50M77 30.5L50 50M50 77V50"
+                        stroke="url(#ai-grad)"
+                        strokeWidth="6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                    <defs>
+                        <linearGradient id="ai-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#ec4899" />
+                            <stop offset="1" stopColor="#a855f7" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                    RentGF</h3>
                 <div className="hidden md:flex items-center gap-4">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={getLinkStyle(PAGES.HOME)}>Home</button>
                     <button onClick={() => handleNavClick(PAGES.ABOUT)} className={getLinkStyle(PAGES.ABOUT)}>About</button>
@@ -54,8 +83,8 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                             <button
                                 onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
                                 className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD
-                                        ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]"
-                                        : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"
+                                    ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]"
+                                    : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"
                                     }`}
                             >
                                 👤 {currentUser.name.split(" ")[0]}
