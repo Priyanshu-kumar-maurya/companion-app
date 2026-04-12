@@ -108,13 +108,13 @@ function App() {
       case PAGES.GIRL_REGISTER:
         return <GirlRegister setPage={setPage} setGirlUser={setGirlUser} />;
       case PAGES.GIRL_DASHBOARD:
-        return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <GirlLogin setPage={setPage} setGirlUser={setGirlUser} />;
+        return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <GirlLogin setPage={setPage} setGirlUser={setGirlUser} />;
       case PAGES.BOY_LOGIN:
         return <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
       case PAGES.BOY_REGISTER:
         return <BoyRegister setPage={setPage} setBoyUser={setBoyUser} />;
       case PAGES.BOY_DASHBOARD:
-        return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
+        return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
       case PAGES.FIND:
         return <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       case PAGES.DETAILS:
