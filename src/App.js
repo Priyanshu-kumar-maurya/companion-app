@@ -12,6 +12,9 @@ import BoyDashboard from "./components/boy/BoyDashboard";
 import FindPage from "./components/shared/FindPage";
 import DetailsPage from "./components/shared/DetailsPage";
 import ChatPage from "./components/shared/ChatPage";
+import { io } from "socket.io-client";
+
+const socket = io("https://rentgf-and-bf.onrender.com");
 
 export const PAGES = {
   HOME: "home",
@@ -76,7 +79,7 @@ function App() {
           localStorage.removeItem("token");
         }
       } catch (err) {
-        console.error("Session verification failed:", err);
+        console.error(err);
       } finally {
         setIsCheckingAuth(false);
       }
