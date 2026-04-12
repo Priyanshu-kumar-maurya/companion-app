@@ -34,7 +34,11 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     }, [user]);
 
     useEffect(() => {
-        if (!socket) return;
+        // Agar socket ya user nahi hai toh kuch mat karo
+        if (!socket || !user) return;
+
+        // Dashboard pe aate hi apna khud ka ID wala room join karo
+        socket.emit("join_room", user.id.toString());
 
         const handleReceiveMessage = (data) => {
             if (data.sender_id) {
@@ -50,7 +54,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         return () => {
             socket.off("receive_message", handleReceiveMessage);
         };
-    }, [socket]);
+    }, [socket, user]);
 
     const handleChatClick = (person) => {
         setUnreadCounts(prev => {

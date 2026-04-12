@@ -46,8 +46,11 @@ io.on("connection", (socket) => {
     });
 
     socket.on("send_message", async (data) => {
-
         socket.to(data.room).emit("receive_message", data);
+
+        if (data.receiver_id) {
+            socket.to(data.receiver_id.toString()).emit("receive_message", data);
+        }
 
         try {
             await pool.query(

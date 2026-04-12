@@ -38,7 +38,9 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     }, [user]);
 
     useEffect(() => {
-        if (!socket) return;
+        if (!socket || !user) return;
+
+        socket.emit("join_room", user.id.toString());
 
         const handleReceiveMessage = (data) => {
             if (data.sender_id) {
@@ -54,7 +56,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         return () => {
             socket.off("receive_message", handleReceiveMessage);
         };
-    }, [socket]);
+    }, [socket, user]);
 
     const handleChatClick = (person) => {
         setUnreadCounts(prev => {
