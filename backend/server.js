@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
-
+const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -143,9 +143,14 @@ app.get('/api/users', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
@@ -160,23 +165,26 @@ app.post('/api/upload/:userId', upload.single('profile_pic'), async (req, res) =
         }
 
         const { userId } = req.params;
-        const imageUrl = `https://rentgf-and-bf.onrender.com/uploads/${req.file.filename}`;
+        const baseUrl = req.protocol + '://' + req.get('host');
+        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
         await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [imageUrl, userId]);
 
         res.status(200).json({ message: "Photo update ho gayi!", imageUrl: imageUrl });
     } catch (err) {
-        console.error("Upload error:", err);
+        console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 });
+
 app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Photo select karna zaroori hai!" });
 
         const { userId } = req.params;
         const { caption } = req.body;
-        const imageUrl = `https://rentgf-and-bf.onrender.com/uploads/${req.file.filename}`;
+        const baseUrl = req.protocol + '://' + req.get('host');
+        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
 
         const newPost = await pool.query(
             "INSERT INTO posts (user_id, image_url, caption) VALUES ($1, $2, $3) RETURNING *",
@@ -185,11 +193,10 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
 
         res.status(201).json({ message: "Post live ho gayi!", post: newPost.rows[0] });
     } catch (err) {
-        console.error("Post upload error:", err);
+        console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 });
-
 app.get('/api/posts/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
