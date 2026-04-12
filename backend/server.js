@@ -6,10 +6,27 @@ const { Pool } = require('pg');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
-const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'rentgf_uploads',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'mp4', 'mov'],
+        resource_type: 'auto' 
+    }
+});
+
+const upload = multer({ storage: storage });
 const app = express();
 
 
@@ -24,7 +41,6 @@ const io = new Server(server, {
 
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const pool = new Pool({
     connectionString: "postgresql://neondb_owner:npg_8VKzyms7OMvw@ep-twilight-sun-a1oynkx0.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
@@ -146,20 +162,7 @@ app.get('/api/users', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
 
 app.post('/api/upload/:userId', upload.single('profile_pic'), async (req, res) => {
     try {
@@ -168,14 +171,13 @@ app.post('/api/upload/:userId', upload.single('profile_pic'), async (req, res) =
         }
 
         const { userId } = req.params;
-        const baseUrl = req.protocol + '://' + req.get('host');
-        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+        const mediaUrl = req.file.path; // Cloudinary ka direct link
 
-        await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [imageUrl, userId]);
+        await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [mediaUrl, userId]);
 
-        res.status(200).json({ message: "Photo update ho gayi!", imageUrl: imageUrl });
+        res.status(200).json({ message: "Photo update ho gayi!", imageUrl: mediaUrl });
     } catch (err) {
-        console.error(err);
+        console.error("Upload error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -186,17 +188,16 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
 
         const { userId } = req.params;
         const { caption } = req.body;
-        const baseUrl = req.protocol + '://' + req.get('host');
-        const imageUrl = `${baseUrl}/uploads/${req.file.filename}`;
+        const mediaUrl = req.file.path; // Cloudinary ka direct link
 
         const newPost = await pool.query(
             "INSERT INTO posts (user_id, image_url, caption) VALUES ($1, $2, $3) RETURNING *",
-            [userId, imageUrl, caption || ""]
+            [userId, mediaUrl, caption || ""]
         );
 
         res.status(201).json({ message: "Post live ho gayi!", post: newPost.rows[0] });
     } catch (err) {
-        console.error(err);
+        console.error("Post upload error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
