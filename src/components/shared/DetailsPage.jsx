@@ -3,10 +3,13 @@ import { PAGES } from "../../App";
 
 function DetailsPage({ girl: profile, setPage }) {
     const [hours, setHours] = useState(2);
-    const [posts, setPosts] = useState([]); 
+    const [posts, setPosts] = useState([]);
+
     useEffect(() => {
         const fetchUserPosts = async () => {
-            if (!profile) return;
+            // Agar profile private hai, toh photos mangwane ka request hi mat bhejo
+            if (!profile || profile.is_private) return;
+
             try {
                 const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
                 if (response.ok) {
@@ -22,7 +25,7 @@ function DetailsPage({ girl: profile, setPage }) {
     if (!profile) return null;
 
     let safeTags = ["Coffee Date", "Movie", "Dinner"];
-    if (profile.tags) { 
+    if (profile.tags) {
         safeTags = typeof profile.tags === 'string' ? profile.tags.split(',') : profile.tags;
     }
     const safeRating = profile.rating || 4.5;
@@ -58,7 +61,7 @@ function DetailsPage({ girl: profile, setPage }) {
 
                         <div className="flex flex-wrap gap-2 mb-6">
                             {safeTags.map((tag) => (
-                                <span key={tag} className="px-3 py-1 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs rounded-full">{tag}</span>
+                                <span key={tag} className="px-3 py-1 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs rounded-full">{tag.trim()}</span>
                             ))}
                         </div>
 
@@ -96,10 +99,18 @@ function DetailsPage({ girl: profile, setPage }) {
                 <div className="mb-10">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         📸 {firstName}'s Gallery
-                        <span className="text-xs font-normal bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">{posts.length} posts</span>
+                        {/* Sirf tabhi posts count dikhao jab profile public ho */}
+                        {!profile.is_private && <span className="text-xs font-normal bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">{posts.length} posts</span>}
                     </h2>
 
-                    {posts.length === 0 ? (
+                    {/* NAYA LOGIC: Agar profile private hai, toh lock dikhao */}
+                    {profile.is_private ? (
+                        <div className="bg-[#16162A] border border-white/5 rounded-2xl p-16 text-center flex flex-col items-center justify-center">
+                            <div className="text-6xl mb-4 bg-white/5 w-24 h-24 flex items-center justify-center rounded-full border border-white/10">🔒</div>
+                            <h3 className="text-2xl font-bold text-white mb-2">This Account is Private</h3>
+                            <p className="text-gray-400 text-sm">You need to chat with them to learn more.</p>
+                        </div>
+                    ) : posts.length === 0 ? (
                         <div className="bg-[#16162A] border border-white/5 rounded-2xl p-8 text-center text-gray-500 text-sm">
                             No photos posted yet.
                         </div>

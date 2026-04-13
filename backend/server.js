@@ -154,7 +154,7 @@ app.get('/api/users', async (req, res) => {
     try {
         const { role } = req.query;
         const users = await pool.query(
-            "SELECT id, name, age, city, bio, price, profile_pic, role, tags FROM users WHERE role = $1",
+            "SELECT id, name, age, city, bio, price, profile_pic, role, tags, is_private FROM users WHERE role = $1",
             [role]
         );
         res.status(200).json(users.rows);

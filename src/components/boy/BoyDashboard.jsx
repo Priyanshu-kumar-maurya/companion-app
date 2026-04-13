@@ -16,7 +16,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         city: user?.city || "",
         bio: user?.bio || "",
         price: user?.price || "",
-        tags: user?.tags || ""
+        tags: user?.tags || "",
+        is_private: user?.is_private || false
     });
 
     useEffect(() => {
@@ -300,6 +301,21 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5">About Me (Bio)</label>
                                 <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white resize-none h-24 outline-none focus:border-blue-500" />
+                            </div>
+                            <div className="flex items-center justify-between bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 mt-2">
+                                <div>
+                                    <label className="block text-sm text-white font-bold">Private Account 🔒</label>
+                                    <p className="text-xs text-gray-400">Hide your gallery from others</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={editForm.is_private}
+                                        onChange={(e) => setEditForm({ ...editForm, is_private: e.target.checked })}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                                </label>
                             </div>
                             <button type="submit" className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold transition mt-2">
                                 Save Settings
