@@ -22,19 +22,18 @@ const storage = new CloudinaryStorage({
     params: {
         folder: 'rentgf_uploads',
         allowed_formats: ['jpg', 'jpeg', 'png', 'mp4', 'mov'],
-        resource_type: 'auto' 
+        resource_type: 'auto'
     }
 });
 
 const upload = multer({ storage: storage });
 const app = express();
 
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "*", 
+        origin: "*",
         methods: ["GET", "POST"]
     }
 });
@@ -52,7 +51,6 @@ const pool = new Pool({
 pool.connect()
     .then(async () => {
         console.log('✅ PostgreSQL Connected Successfully');
-
         try {
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
             console.log('✅ Database Auto-Fixed: is_private column ready!');
@@ -92,11 +90,9 @@ io.on("connection", (socket) => {
     });
 });
 
-
 app.get('/', (req, res) => {
     res.send('Dating App Backend with PostgreSQL & Socket.io is running!');
 });
-
 
 app.post('/api/register', async (req, res) => {
     try {
@@ -119,6 +115,7 @@ app.post('/api/register', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password, role } = req.body;
@@ -159,9 +156,11 @@ app.post('/api/login', async (req, res) => {
         res.status(500).json({ error: "Server mein kuch gadbad hai!" });
     }
 });
+
 app.get('/api/users', async (req, res) => {
     try {
         const { role } = req.query;
+        // Yahan is_private ko bhi utha rahe hain database se
         const users = await pool.query(
             "SELECT id, name, age, city, bio, price, profile_pic, role, tags, is_private FROM users WHERE role = $1",
             [role]
@@ -172,7 +171,6 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-
 app.post('/api/upload/:userId', upload.single('profile_pic'), async (req, res) => {
     try {
         if (!req.file) {
@@ -180,7 +178,7 @@ app.post('/api/upload/:userId', upload.single('profile_pic'), async (req, res) =
         }
 
         const { userId } = req.params;
-        const mediaUrl = req.file.path; // Cloudinary ka direct link
+        const mediaUrl = req.file.path;
 
         await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [mediaUrl, userId]);
 
@@ -197,7 +195,7 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
 
         const { userId } = req.params;
         const { caption } = req.body;
-        const mediaUrl = req.file.path; // Cloudinary ka direct link
+        const mediaUrl = req.file.path;
 
         const newPost = await pool.query(
             "INSERT INTO posts (user_id, image_url, caption) VALUES ($1, $2, $3) RETURNING *",
@@ -210,6 +208,7 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
         res.status(500).json({ error: "Server error" });
     }
 });
+
 app.get('/api/posts/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -222,6 +221,7 @@ app.get('/api/posts/:userId', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 app.get('/api/chats/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -241,6 +241,7 @@ app.get('/api/chats/:userId', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -249,15 +250,16 @@ const authenticateToken = (req, res, next) => {
 
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) return res.status(403).json({ error: "Invalid token." });
-        req.user = user; 
+        req.user = user;
         next();
     });
 };
 
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
+        // NAYA: is_private bhi laa rahe hain taaki jab tum khud login karo toh setting me purana status dikhe
         const userResult = await pool.query(
-            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags FROM users WHERE id = $1",
+            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private FROM users WHERE id = $1",
             [req.user.id]
         );
 
@@ -271,6 +273,7 @@ app.get('/api/me', authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 app.get('/api/girl/stats/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -293,6 +296,7 @@ app.get('/api/girl/stats/:userId', async (req, res) => {
         res.status(500).json({ error: "Stats fetch karne mein dikkat aayi" });
     }
 });
+
 app.get('/api/messages/:user1/:user2', async (req, res) => {
     try {
         const { user1, user2 } = req.params;
@@ -312,14 +316,17 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 app.put('/api/users/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const { age, city, bio, price, tags } = req.body; 
+        // NAYA: is_private update karne ke liye receive kiya
+        const { age, city, bio, price, tags, is_private } = req.body;
 
+        // NAYA: is_private = $6 add kiya 
         const updatedUser = await pool.query(
-            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5 WHERE id = $6 RETURNING *",
-            [age || null, city || '', bio || '', price || 0, tags || 'Coffee Date, Movie', userId]
+            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6 WHERE id = $7 RETURNING *",
+            [age || null, city || '', bio || '', price || 0, tags || 'Coffee Date, Movie', is_private || false, userId]
         );
 
         res.status(200).json({ message: "Profile Updated", user: updatedUser.rows[0] });
@@ -356,6 +363,7 @@ app.delete('/api/users/:userId', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {

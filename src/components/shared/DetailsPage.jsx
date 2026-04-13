@@ -4,12 +4,11 @@ import { PAGES } from "../../App";
 function DetailsPage({ girl: profile, setPage }) {
     const [hours, setHours] = useState(2);
     const [posts, setPosts] = useState([]);
+    const [expandedPost, setExpandedPost] = useState(null); 
 
     useEffect(() => {
         const fetchUserPosts = async () => {
-            // Agar profile private hai, toh photos mangwane ka request hi mat bhejo
             if (!profile || profile.is_private) return;
-
             try {
                 const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
                 if (response.ok) {
@@ -36,15 +35,15 @@ function DetailsPage({ girl: profile, setPage }) {
         : "https://i.pinimg.com/736x/a9/58/09/a958095418a0b357314288566dd5c96a.jpg");
 
     return (
-        <div className="pt-16 min-h-screen">
+        <div className="pt-16 min-h-screen relative">
             <div className="max-w-4xl mx-auto px-6 py-8">
                 <button onClick={() => setPage(PAGES.FIND)} className="text-sm text-gray-400 hover:text-white transition mb-6 flex items-center gap-1">
                     ← Back to Find
                 </button>
 
                 <div className="flex flex-col sm:flex-row gap-8 mb-7">
-                    <div className="w-full sm:w-64 h-72 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-[0_0_20px_rgba(236,72,153,0.15)]">
-                        <img src={profileImage} alt={profile.name} className="w-full h-full object-cover" />
+                    <div className="w-full sm:w-64 h-72 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-[0_0_20px_rgba(236,72,153,0.15)] cursor-pointer" onClick={() => setExpandedPost({ image_url: profileImage, caption: `${firstName}'s Profile Picture` })}>
+                        <img src={profileImage} alt={profile.name} className="w-full h-full object-cover hover:scale-105 transition" />
                     </div>
 
                     <div className="flex-1">
@@ -56,7 +55,7 @@ function DetailsPage({ girl: profile, setPage }) {
                         <p className="text-sm text-gray-400 mb-3">📍 {profile.city || "Unknown City"} · 🎂 {profile.age || "N/A"} years</p>
                         <div className="text-sm text-yellow-400 mb-4">⭐ {safeRating} <span className="text-gray-500">({safeReviews} reviews)</span></div>
                         <p className="text-sm text-gray-300 leading-relaxed mb-4">
-                            {profile.bio || "Hi there! I'm looking forward to having some great conversations and spending quality time together. Feel free to check my posts below!"}
+                            {profile.bio || "Hi there! I'm looking forward to having some great conversations and spending quality time together."}
                         </p>
 
                         <div className="flex flex-wrap gap-2 mb-6">
@@ -99,11 +98,9 @@ function DetailsPage({ girl: profile, setPage }) {
                 <div className="mb-10">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         📸 {firstName}'s Gallery
-                        {/* Sirf tabhi posts count dikhao jab profile public ho */}
                         {!profile.is_private && <span className="text-xs font-normal bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">{posts.length} posts</span>}
                     </h2>
 
-                    {/* NAYA LOGIC: Agar profile private hai, toh lock dikhao */}
                     {profile.is_private ? (
                         <div className="bg-[#16162A] border border-white/5 rounded-2xl p-16 text-center flex flex-col items-center justify-center">
                             <div className="text-6xl mb-4 bg-white/5 w-24 h-24 flex items-center justify-center rounded-full border border-white/10">🔒</div>
@@ -117,7 +114,7 @@ function DetailsPage({ girl: profile, setPage }) {
                     ) : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {posts.map(post => (
-                                <div key={post.id} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 shadow-lg">
+                                <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 shadow-lg cursor-pointer">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-500 group-hover:scale-110" />
                                     {post.caption && (
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-4">
@@ -129,8 +126,17 @@ function DetailsPage({ girl: profile, setPage }) {
                         </div>
                     )}
                 </div>
-
             </div>
+
+            {expandedPost && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4" onClick={() => setExpandedPost(null)}>
+                    <button className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl transition">✕</button>
+                    <div className="max-w-3xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <img src={expandedPost.image_url} alt="Expanded" className="w-full max-h-[80vh] object-contain rounded-xl" />
+                        {expandedPost.caption && <p className="text-white text-center mt-4 text-lg bg-black/50 p-3 rounded-lg border border-white/10">{expandedPost.caption}</p>}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
