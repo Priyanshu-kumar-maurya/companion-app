@@ -9,11 +9,13 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [postUploading, setPostUploading] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [unreadCounts, setUnreadCounts] = useState({});
+    const [expandedPost, setExpandedPost] = useState(null);
 
     const [editForm, setEditForm] = useState({
         age: user?.age || "",
         city: user?.city || "",
         bio: user?.bio || "",
+        price: user?.price || "",
         tags: user?.tags || ""
     });
 
@@ -34,10 +36,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     }, [user]);
 
     useEffect(() => {
-        // Agar socket ya user nahi hai toh kuch mat karo
         if (!socket || !user) return;
 
-        // Dashboard pe aate hi apna khud ka ID wala room join karo
         socket.emit("join_room", user.id.toString());
 
         const handleReceiveMessage = (data) => {
@@ -123,6 +123,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
             if (response.ok) {
                 setMyPosts(myPosts.filter(post => post.id !== postId));
+                setExpandedPost(null);
             }
         } catch (err) { console.error("Delete post error:", err); }
     };
@@ -147,8 +148,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             <div className="max-w-5xl mx-auto px-6 py-8">
                 <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0">
-                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg">
+                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
+                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg hover:border-blue-500 transition">
                                 {user?.profile_pic ? (
                                     <img
                                         src={user.profile_pic}
@@ -159,7 +160,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                     "😎"
                                 )}
                             </div>
-                            <label className="absolute bottom-0 right-0 bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" title="Upload Profile Picture">
+                            <label className="absolute bottom-0 right-0 bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" onClick={(e) => e.stopPropagation()} title="Upload Profile Picture">
                                 {uploading ? "⏳" : "📷"}
                                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
                             </label>
@@ -193,7 +194,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Status</div><div className="text-2xl font-bold text-yellow-400">Verified</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Total Connections</div><div className="text-2xl font-bold text-green-400">{chatHistory.length}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💸 Hourly Rate</div><div className="text-2xl font-bold text-green-400">₹{user.price || 0}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📸 Total Photos</div><div className="text-2xl font-bold text-blue-400">{myPosts.length}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Messages</div><div className="text-2xl font-bold text-purple-400">{chatHistory.length}</div></div>
                 </div>
@@ -241,11 +242,11 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {myPosts.map(post => (
-                                <div key={post.id} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10">
+                                <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
-                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white">{post.caption}</div>}
+                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white truncate">{post.caption}</div>}
                                     <button
-                                        onClick={() => handleDeletePost(post.id)}
+                                        onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
                                         className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
                                         title="Delete Post"
                                     >
@@ -259,6 +260,16 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
                 <button onClick={() => { localStorage.removeItem("token"); setBoyUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
+
+            {expandedPost && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4" onClick={() => setExpandedPost(null)}>
+                    <button className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl transition">✕</button>
+                    <div className="max-w-3xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <img src={expandedPost.image_url} alt="Expanded" className="w-full max-h-[80vh] object-contain rounded-xl" />
+                        {expandedPost.caption && <p className="text-white text-center mt-4 text-lg bg-black/50 p-3 rounded-lg border border-white/10">{expandedPost.caption}</p>}
+                    </div>
+                </div>
+            )}
 
             {showEditModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -274,9 +285,13 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                     <input type="number" value={editForm.age} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
                                 </div>
                                 <div>
-                                    <label className="block text-xs text-gray-400 mb-1.5">City</label>
-                                    <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
+                                    <label className="block text-xs text-gray-400 mb-1.5">Hourly Rate (₹)</label>
+                                    <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
                                 </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1.5">City</label>
+                                <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-blue-500" />
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5">Interests (Comma separated)</label>

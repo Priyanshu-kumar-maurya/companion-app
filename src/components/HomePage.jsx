@@ -54,48 +54,68 @@ function HomePage({ setPage, currentUser }) {
 
     return (
         <div className="min-h-screen bg-[#0D0D1A] pt-20 pb-10 relative z-0">
-            <div className="max-w-5xl mx-auto px-6 text-center mt-10 mb-20">
-                <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight">
+            <div className="max-w-5xl mx-auto px-6 text-center mt-10 mb-20 relative">
+
+                {/* Background Glows */}
+                <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-pink-600/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none -z-10"></div>
+
+                <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-pink-400 text-sm font-semibold mb-6 shadow-[0_0_15px_rgba(236,72,153,0.15)] relative z-10">
+                    ✨ India's #1 Companion App
+                </div>
+
+                <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight relative z-10">
                     Find Your Perfect <br />
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
                         Companion Today
                     </span>
                 </h1>
-                <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-10">
+
+                <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-12 relative z-10">
                     Join our secure and private platform to connect with amazing people for coffee dates, movies, events, and meaningful conversations.
                 </p>
 
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <div className="flex flex-col sm:flex-row justify-center gap-6 relative z-10">
                     {isLoggedIn ? (
                         <>
                             <button
                                 onClick={handleDashboardClick}
-                                className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-bold text-lg hover:opacity-90 transition shadow-[0_0_20px_rgba(236,72,153,0.3)]"
+                                className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold text-lg hover:opacity-90 transition shadow-[0_0_20px_rgba(236,72,153,0.3)]"
                             >
                                 Go to Dashboard
                             </button>
                             <button
                                 onClick={() => setPage(PAGES.FIND)}
-                                className="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-bold text-lg hover:bg-white/20 transition"
+                                className="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-xl font-bold text-lg hover:bg-white/20 transition"
                             >
                                 🔍 Browse Profiles
                             </button>
                         </>
                     ) : (
-                        <>
-                            <button
-                                onClick={() => setPage(PAGES.BOY_REGISTER)}
-                                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full font-bold text-lg hover:opacity-90 transition shadow-[0_0_20px_rgba(59,130,246,0.3)]"
-                            >
-                                Looking for a Companion?
-                            </button>
-                            <button
-                                onClick={() => setPage(PAGES.GIRL_REGISTER)}
-                                className="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-bold text-lg hover:bg-white/20 transition"
-                            >
-                                Join as a Companion
-                            </button>
-                        </>
+                        // NAYA: Clear Buttons for Girl and Boy
+                        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl mx-auto">
+                            <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-pink-500/20 rounded-2xl shadow-lg hover:border-pink-500/50 transition duration-300">
+                                <h3 className="text-pink-400 font-bold text-xl">For Girls 👩</h3>
+                                <p className="text-sm text-gray-400 mb-2 flex-grow">Earn money by spending time as a companion.</p>
+                                <button
+                                    onClick={() => setPage(PAGES.GIRL_LOGIN)}
+                                    className="w-full px-6 py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
+                                >
+                                    Join as a Girl
+                                </button>
+                            </div>
+
+                            <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-blue-500/20 rounded-2xl shadow-lg hover:border-blue-500/50 transition duration-300">
+                                <h3 className="text-blue-400 font-bold text-xl">For Boys 👨</h3>
+                                <p className="text-sm text-gray-400 mb-2 flex-grow">Find companions for dates, events & hangouts.</p>
+                                <button
+                                    onClick={() => setPage(PAGES.BOY_LOGIN)}
+                                    className="w-full px-6 py-3.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
+                                >
+                                    Join as a Boy
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>

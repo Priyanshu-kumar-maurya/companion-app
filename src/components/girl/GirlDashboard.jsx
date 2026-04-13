@@ -10,6 +10,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const [postUploading, setPostUploading] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [unreadCounts, setUnreadCounts] = useState({});
+    const [expandedPost, setExpandedPost] = useState(null);
+
     const [editForm, setEditForm] = useState({
         age: user?.age || "",
         city: user?.city || "",
@@ -125,6 +127,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
             if (response.ok) {
                 setMyPosts(myPosts.filter(post => post.id !== postId));
+                setExpandedPost(null);
             }
         } catch (err) { console.error("Delete post error:", err); }
     };
@@ -149,8 +152,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             <div className="max-w-5xl mx-auto px-6 py-8">
                 <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0">
-                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg">
+                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
+                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg hover:border-pink-500 transition">
                                 {user?.profile_pic ? (
                                     <img
                                         src={user.profile_pic}
@@ -161,7 +164,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                     "😊"
                                 )}
                             </div>
-                            <label className="absolute bottom-0 right-0 bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" title="Upload Profile Picture">
+                            <label className="absolute bottom-0 right-0 bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" onClick={(e) => e.stopPropagation()} title="Upload Profile Picture">
                                 {uploading ? "⏳" : "📷"}
                                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
                             </label>
@@ -185,18 +188,21 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         ⚙️ Settings
                     </button>
                 </div>
+
                 <button
                     onClick={() => setPage(PAGES.FIND)}
                     className="mb-8 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-pink-500/20"
                 >
                     🔍 Find Companions
                 </button>
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-pink-400">₹{stats.earnings}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">{stats.rating} ⭐</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Total Sessions</div><div className="text-2xl font-bold text-green-400">{stats.sessions}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Messages</div><div className="text-2xl font-bold text-purple-400">{chatHistory.length}</div></div>
                 </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     <div className="lg:col-span-2 bg-[#16162A] border border-white/5 rounded-2xl p-6">
                         <div className="text-base font-semibold mb-4 flex items-center gap-2">💬 Your Messages</div>
@@ -234,16 +240,17 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         </label>
                     </div>
                 </div>
+
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
                     <div className="text-base font-semibold mb-4">🖼️ My Gallery</div>
                     {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {myPosts.map(post => (
-                                <div key={post.id} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10">
+                                <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
-                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white">{post.caption}</div>}
+                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white truncate">{post.caption}</div>}
                                     <button
-                                        onClick={() => handleDeletePost(post.id)}
+                                        onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
                                         className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
                                         title="Delete Post"
                                     >
@@ -254,8 +261,20 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         </div>
                     )}
                 </div>
+
                 <button onClick={() => { localStorage.removeItem("token"); setGirlUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
+
+            {expandedPost && (
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4" onClick={() => setExpandedPost(null)}>
+                    <button className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl transition">✕</button>
+                    <div className="max-w-3xl w-full max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+                        <img src={expandedPost.image_url} alt="Expanded" className="w-full max-h-[80vh] object-contain rounded-xl" />
+                        {expandedPost.caption && <p className="text-white text-center mt-4 text-lg bg-black/50 p-3 rounded-lg border border-white/10">{expandedPost.caption}</p>}
+                    </div>
+                </div>
+            )}
+
             {showEditModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-[#16162A] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
