@@ -50,7 +50,16 @@ const pool = new Pool({
 });
 
 pool.connect()
-    .then(() => console.log('✅ PostgreSQL Connected Successfully'))
+    .then(async () => {
+        console.log('✅ PostgreSQL Connected Successfully');
+
+        try {
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
+            console.log('✅ Database Auto-Fixed: is_private column ready!');
+        } catch (e) {
+            console.log('Column check warning:', e.message);
+        }
+    })
     .catch((err) => console.error('❌ Database connection error:', err.stack));
 
 io.on("connection", (socket) => {
