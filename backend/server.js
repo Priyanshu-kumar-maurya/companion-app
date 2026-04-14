@@ -53,7 +53,9 @@ pool.connect()
         console.log('✅ PostgreSQL Connected Successfully');
         try {
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
-            console.log('✅ Database Auto-Fixed: is_private column ready!');
+            // NAYA: Messages table mein image_url ka column add kiya
+            await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
+            console.log('✅ Database Auto-Fixed: Columns ready!');
         } catch (e) {
             console.log('Column check warning:', e.message);
         }
@@ -76,9 +78,10 @@ io.on("connection", (socket) => {
         }
 
         try {
+            // NAYA: Message ke sath image_url bhi save hoga
             await pool.query(
-                "INSERT INTO messages (sender_id, receiver_id, text) VALUES ($1, $2, $3)",
-                [data.sender_id, data.receiver_id, data.text || data.message]
+                "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4)",
+                [data.sender_id, data.receiver_id, data.text || data.message || "", data.image_url || null]
             );
         } catch (err) {
             console.error("❌ Message save karne mein error:", err.message);
@@ -160,7 +163,6 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/users', async (req, res) => {
     try {
         const { role } = req.query;
-        // Yahan is_private ko bhi utha rahe hain database se
         const users = await pool.query(
             "SELECT id, name, age, city, bio, price, profile_pic, role, tags, is_private FROM users WHERE role = $1",
             [role]
@@ -205,6 +207,18 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
         res.status(201).json({ message: "Post live ho gayi!", post: newPost.rows[0] });
     } catch (err) {
         console.error("Post upload error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// NAYA: Chat mein photo bhejne ki API
+app.post('/api/chat-image', upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: "Koi photo select nahi ki!" });
+        // Cloudinary link wapas bhejenge
+        res.status(200).json({ imageUrl: req.file.path });
+    } catch (err) {
+        console.error("Chat image upload error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -257,7 +271,6 @@ const authenticateToken = (req, res, next) => {
 
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
-        // NAYA: is_private bhi laa rahe hain taaki jab tum khud login karo toh setting me purana status dikhe
         const userResult = await pool.query(
             "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private FROM users WHERE id = $1",
             [req.user.id]
@@ -302,7 +315,7 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
         const { user1, user2 } = req.params;
 
         const query = `
-            SELECT id, sender_id, receiver_id, text AS message, created_at 
+            SELECT id, sender_id, receiver_id, text AS message, image_url, created_at 
             FROM messages 
             WHERE (sender_id = $1 AND receiver_id = $2) 
                OR (sender_id = $2 AND receiver_id = $1)
@@ -320,10 +333,8 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
 app.put('/api/users/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        // NAYA: is_private update karne ke liye receive kiya
         const { age, city, bio, price, tags, is_private } = req.body;
 
-        // NAYA: is_private = $6 add kiya 
         const updatedUser = await pool.query(
             "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6 WHERE id = $7 RETURNING *",
             [age || null, city || '', bio || '', price || 0, tags || 'Coffee Date, Movie', is_private || false, userId]

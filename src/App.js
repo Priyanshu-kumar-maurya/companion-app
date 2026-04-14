@@ -123,7 +123,7 @@ function App() {
       case PAGES.DETAILS:
         return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} />;
       case PAGES.CHAT:
-        return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={boyUser || girlUser} setPage={setPage} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} />;
+        return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} />;
       default:
         return <HomePage setPage={setPage} />;
     }
