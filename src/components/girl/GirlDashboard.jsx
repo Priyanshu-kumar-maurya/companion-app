@@ -12,6 +12,10 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
 
+    // 🟢 NAYA STATE: Bookings aur Nayi Notification ke liye
+    const [myBookings, setMyBookings] = useState([]);
+    const [newBookingAlert, setNewBookingAlert] = useState(null);
+
     const [editForm, setEditForm] = useState({
         age: user?.age || "",
         city: user?.city || "",
@@ -25,14 +29,22 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         const fetchDashboardData = async () => {
             if (!user) return;
             try {
+                // Chats
                 const chatRes = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${user.id}`);
                 if (chatRes.ok) setChatHistory(await chatRes.json());
 
+                // Stats
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
                 if (statsRes.ok) setStats(await statsRes.json());
 
+                // Posts
                 const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) setMyPosts(await postsRes.json());
+
+                // 🟢 NAYA: Bookings Fetch karo
+                const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
+                if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
+
             } catch (err) {
                 console.error("Dashboard error:", err);
             }
@@ -43,7 +55,10 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     useEffect(() => {
         if (!socket || !user) return;
 
+        // Message wali room
         socket.emit("join_room", user.id.toString());
+        // 🟢 NAYA: Apni personal Notification room join karo
+        socket.emit("join_own_room", user.id);
 
         const handleReceiveMessage = (data) => {
             if (data.sender_id) {
@@ -54,12 +69,51 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             }
         };
 
+        // 🟢 NAYA: Booking ki live notification receive karna
+        const handleReceiveBooking = (data) => {
+            setNewBookingAlert(data);
+
+            // Background me latest list dobara mangwa lo
+            fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`)
+                .then(res => res.json())
+                .then(data => setMyBookings(data));
+
+            // 5 second baad alert hata do
+            setTimeout(() => setNewBookingAlert(null), 5000);
+        };
+
         socket.on("receive_message", handleReceiveMessage);
+        socket.on("receive_booking_notification", handleReceiveBooking); // Listen karo
 
         return () => {
             socket.off("receive_message", handleReceiveMessage);
+            socket.off("receive_booking_notification", handleReceiveBooking);
         };
     }, [socket, user]);
+
+    // 🟢 NAYA: Booking Accept ya Reject karne ka function
+    const handleBookingStatus = async (bookingId, newStatus) => {
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                // UI update karo
+                setMyBookings(myBookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
+
+                // Stats bhi update kar lo agar completed hua
+                if (newStatus === 'completed') {
+                    const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
+                    if (statsRes.ok) setStats(await statsRes.json());
+                }
+            }
+        } catch (error) {
+            console.error("Error updating booking:", error);
+        }
+    };
 
     const handleChatClick = (person) => {
         setUnreadCounts(prev => {
@@ -147,23 +201,31 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     };
 
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
+    const pendingBookings = myBookings.filter(b => b.status === 'pending');
 
     return (
         <div className="pt-16 min-h-screen relative">
+
+            {/* 🟢 NAYA: Live Alert Box */}
+            {newBookingAlert && (
+                <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
+                    <span className="text-2xl">🔔</span>
+                    <div>
+                        <div className="font-bold text-sm">New Booking Request!</div>
+                        <div className="text-xs">{newBookingAlert.sender_name} requested {newBookingAlert.hours} hrs for ₹{newBookingAlert.amount}</div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-5xl mx-auto px-6 py-8">
+                {/* Profile Header Block */}
                 <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                         <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
                             <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg hover:border-pink-500 transition">
                                 {user?.profile_pic ? (
-                                    <img
-                                        src={user.profile_pic}
-                                        alt={user.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    "😊"
-                                )}
+                                    <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                                ) : ("😊")}
                             </div>
                             <label className="absolute bottom-0 right-0 bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" onClick={(e) => e.stopPropagation()} title="Upload Profile Picture">
                                 {uploading ? "⏳" : "📷"}
@@ -182,26 +244,60 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             </div>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setShowEditModal(true)}
-                        className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2"
-                    >
+                    <button onClick={() => setShowEditModal(true)} className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
                         ⚙️ Settings
                     </button>
                 </div>
 
-                <button
-                    onClick={() => setPage(PAGES.FIND)}
-                    className="mb-8 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-pink-500/20"
-                >
+                <button onClick={() => setPage(PAGES.FIND)} className="mb-8 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-pink-500/20">
                     🔍 Find Companions
                 </button>
 
+                {/* Stats Block */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-pink-400">₹{stats.earnings}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">{stats.rating} ⭐</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Total Sessions</div><div className="text-2xl font-bold text-green-400">{stats.sessions}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Messages</div><div className="text-2xl font-bold text-purple-400">{chatHistory.length}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Completed Sessions</div><div className="text-2xl font-bold text-green-400">{stats.sessions}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Pending Requests</div><div className="text-2xl font-bold text-purple-400">{pendingBookings.length}</div></div>
+                </div>
+
+                {/* 🟢 NAYA: Booking Requests Section */}
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-7 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
+                    <div className="text-base font-semibold mb-4 flex items-center gap-2">
+                        📅 Booking Requests
+                        {pendingBookings.length > 0 && <span className="bg-pink-500 text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse">{pendingBookings.length} New</span>}
+                    </div>
+
+                    {myBookings.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No bookings yet.</div> : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {myBookings.map((booking) => (
+                                <div key={booking.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <img src={booking.boy_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} className="w-12 h-12 rounded-full object-cover border border-white/10" alt="Client" />
+                                        <div>
+                                            <div className="font-bold text-sm text-white">{booking.boy_name}</div>
+                                            <div className="text-xs text-pink-400">{booking.hours} hours • ₹{booking.amount}</div>
+                                            <div className="text-[10px] text-gray-500 mt-0.5">{new Date(booking.created_at).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full sm:w-auto flex gap-2 justify-end">
+                                        {booking.status === 'pending' && (
+                                            <>
+                                                <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">Accept</button>
+                                                <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">Reject</button>
+                                            </>
+                                        )}
+                                        {booking.status === 'accepted' && (
+                                            <button onClick={() => handleBookingStatus(booking.id, 'completed')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg text-xs font-bold shadow-lg">Mark Done</button>
+                                        )}
+                                        {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10">✅ Completed</span>}
+                                        {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10">❌ Rejected</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -250,13 +346,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                 <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
                                     {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white truncate">{post.caption}</div>}
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
-                                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
-                                        title="Delete Post"
-                                    >
-                                        🗑️
-                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }} className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg" title="Delete Post">🗑️</button>
                                 </div>
                             ))}
                         </div>
@@ -266,6 +356,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 <button onClick={() => { localStorage.removeItem("token"); setGirlUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
 
+            {/* Modals Same as before */}
             {expandedPost && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4" onClick={() => setExpandedPost(null)}>
                     <button className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl transition">✕</button>
@@ -285,51 +376,30 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         </div>
                         <form onSubmit={handleEditProfile} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-1.5">Age</label>
-                                    <input type="number" value={editForm.age} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-1.5">Hourly Rate (₹)</label>
-                                    <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" />
-                                </div>
+                                <div><label className="block text-xs text-gray-400 mb-1.5">Age</label><input type="number" value={editForm.age} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
+                                <div><label className="block text-xs text-gray-400 mb-1.5">Hourly Rate (₹)</label><input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
                             </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1.5">City</label>
-                                <input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1.5">Tags (Comma separated)</label>
-                                <input type="text" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. Movie, Shopping, Dinner" className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" />
-                            </div>
-                            <div>
-                                <label className="block text-xs text-gray-400 mb-1.5">About Me (Bio)</label>
-                                <textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white resize-none h-24 outline-none focus:border-pink-500" />
-                            </div>
+                            <div><label className="block text-xs text-gray-400 mb-1.5">City</label><input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
+                            <div><label className="block text-xs text-gray-400 mb-1.5">Tags (Comma separated)</label><input type="text" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. Movie, Shopping, Dinner" className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
+                            <div><label className="block text-xs text-gray-400 mb-1.5">About Me (Bio)</label><textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white resize-none h-24 outline-none focus:border-pink-500" /></div>
+
+                            {/* Private Switch */}
                             <div className="flex items-center justify-between bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 mt-2">
                                 <div>
                                     <label className="block text-sm text-white font-bold">Private Account 🔒</label>
                                     <p className="text-xs text-gray-400">Hide your gallery from others</p>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only peer"
-                                        checked={editForm.is_private}
-                                        onChange={(e) => setEditForm({ ...editForm, is_private: e.target.checked })}
-                                    />
+                                    <input type="checkbox" className="sr-only peer" checked={editForm.is_private} onChange={(e) => setEditForm({ ...editForm, is_private: e.target.checked })} />
                                     <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
                                 </label>
                             </div>
-                            <button type="submit" className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold transition mt-2">
-                                Save Settings
-                            </button>
+
+                            <button type="submit" className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold transition mt-2">Save Settings</button>
                         </form>
                         <div className="p-6 bg-red-500/5 border-t border-red-500/20">
                             <h4 className="text-red-400 text-sm font-bold mb-2">Danger Zone</h4>
-                            <button onClick={handleDeleteAccount} className="w-full py-3 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl font-bold text-sm transition">
-                                Delete Account Permanently
-                            </button>
+                            <button onClick={handleDeleteAccount} className="w-full py-3 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl font-bold text-sm transition">Delete Account Permanently</button>
                         </div>
                     </div>
                 </div>

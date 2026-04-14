@@ -11,6 +11,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
 
+    // 🟢 NAYA STATE: Bookings aur Nayi Notification ke liye
+    const [myBookings, setMyBookings] = useState([]);
+    const [newBookingAlert, setNewBookingAlert] = useState(null);
+
     const [editForm, setEditForm] = useState({
         age: user?.age || "",
         city: user?.city || "",
@@ -29,6 +33,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
                 const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) setMyPosts(await postsRes.json());
+
+                // 🟢 NAYA: Bookings Fetch karo
+                const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
+                if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
             } catch (err) {
                 console.error("Dashboard error:", err);
             }
@@ -40,6 +48,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         if (!socket || !user) return;
 
         socket.emit("join_room", user.id.toString());
+        // 🟢 NAYA: Apni personal Notification room join karo
+        socket.emit("join_own_room", user.id);
 
         const handleReceiveMessage = (data) => {
             if (data.sender_id) {
@@ -50,12 +60,44 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             }
         };
 
+        // 🟢 NAYA: Booking ki live notification receive karna
+        const handleReceiveBooking = (data) => {
+            setNewBookingAlert(data);
+
+            // Background me latest list dobara mangwa lo
+            fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`)
+                .then(res => res.json())
+                .then(data => setMyBookings(data));
+
+            // 5 second baad alert hata do
+            setTimeout(() => setNewBookingAlert(null), 5000);
+        };
+
         socket.on("receive_message", handleReceiveMessage);
+        socket.on("receive_booking_notification", handleReceiveBooking);
 
         return () => {
             socket.off("receive_message", handleReceiveMessage);
+            socket.off("receive_booking_notification", handleReceiveBooking);
         };
     }, [socket, user]);
+
+    // 🟢 NAYA: Booking Accept ya Reject karne ka function (Agar ladka service de raha hai toh)
+    const handleBookingStatus = async (bookingId, newStatus) => {
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (response.ok) {
+                setMyBookings(myBookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
+            }
+        } catch (error) {
+            console.error("Error updating booking:", error);
+        }
+    };
 
     const handleChatClick = (person) => {
         setUnreadCounts(prev => {
@@ -143,9 +185,21 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     };
 
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
+    const pendingBookings = myBookings.filter(b => b.status === 'pending');
 
     return (
         <div className="pt-16 min-h-screen relative">
+            {/* 🟢 NAYA: Live Alert Box */}
+            {newBookingAlert && (
+                <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
+                    <span className="text-2xl">🔔</span>
+                    <div>
+                        <div className="font-bold text-sm">New Booking Update!</div>
+                        <div className="text-xs">{newBookingAlert.sender_name} sent a request for {newBookingAlert.hours} hrs</div>
+                    </div>
+                </div>
+            )}
+
             <div className="max-w-5xl mx-auto px-6 py-8">
                 <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
@@ -195,9 +249,50 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Status</div><div className="text-2xl font-bold text-yellow-400">Verified</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💸 Hourly Rate</div><div className="text-2xl font-bold text-green-400">₹{user.price || 0}</div></div>
+                    {/* NAYA: Pending Requests Count */}
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Active Requests</div><div className="text-2xl font-bold text-blue-400">{pendingBookings.length}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📸 Total Photos</div><div className="text-2xl font-bold text-blue-400">{myPosts.length}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Messages</div><div className="text-2xl font-bold text-purple-400">{chatHistory.length}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💬 Messages</div><div className="text-2xl font-bold text-purple-400">{chatHistory.length}</div></div>
+                </div>
+
+                {/* 🟢 NAYA: Booking Requests Section */}
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-7 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                    <div className="text-base font-semibold mb-4 flex items-center gap-2">
+                        📅 My Bookings
+                        {pendingBookings.length > 0 && <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse">{pendingBookings.length} Active</span>}
+                    </div>
+
+                    {myBookings.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No bookings yet.</div> : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {myBookings.map((booking) => (
+                                <div key={booking.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-xl border border-blue-500/30">🎟️</div>
+                                        <div>
+                                            <div className="font-bold text-sm text-white">Session - {booking.hours} Hours</div>
+                                            <div className="text-xs text-blue-400">Amount: ₹{booking.amount}</div>
+                                            <div className="text-[10px] text-gray-500 mt-0.5">{new Date(booking.created_at).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full sm:w-auto flex gap-2 justify-end">
+                                        {booking.status === 'pending' && (
+                                            <>
+                                                {/* Agar boy ko request aayi hai toh wo accept/reject kar sakta hai */}
+                                                <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">Accept</button>
+                                                <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">Reject</button>
+                                            </>
+                                        )}
+                                        {booking.status === 'accepted' && (
+                                            <button onClick={() => handleBookingStatus(booking.id, 'completed')} className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-xs font-bold shadow-lg">Mark Done</button>
+                                        )}
+                                        {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10">✅ Completed</span>}
+                                        {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10">❌ Rejected</span>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
@@ -314,7 +409,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                         checked={editForm.is_private}
                                         onChange={(e) => setEditForm({ ...editForm, is_private: e.target.checked })}
                                     />
-                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                                 </label>
                             </div>
                             <button type="submit" className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold transition mt-2">
