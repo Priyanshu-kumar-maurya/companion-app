@@ -53,9 +53,30 @@ pool.connect()
         console.log('✅ PostgreSQL Connected Successfully');
         try {
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
-            // NAYA: Messages table mein image_url ka column add kiya
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
-            console.log('✅ Database Auto-Fixed: Columns ready!');
+
+            // NAYA: Bookings table agar nahi bani hai toh ban jayegi (tumhare purane columns ke sath)
+            await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
+                id SERIAL PRIMARY KEY,
+                boy_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                girl_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                hours INTEGER NOT NULL,
+                amount INTEGER NOT NULL,
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );`);
+
+            // NAYA: Reviews table jisme stars aur comment save honge
+            await pool.query(`CREATE TABLE IF NOT EXISTS reviews (
+                id SERIAL PRIMARY KEY,
+                reviewer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                companion_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+                comment TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );`);
+
+            console.log('✅ Database Auto-Fixed: Columns and Tables ready!');
         } catch (e) {
             console.log('Column check warning:', e.message);
         }
@@ -64,6 +85,12 @@ pool.connect()
 
 io.on("connection", (socket) => {
     console.log(`⚡ Naya user connect hua Socket pe: ${socket.id}`);
+
+    // NAYA: Har user ka apna ek personal room hoga notifications ke liye
+    socket.on("join_own_room", (userId) => {
+        socket.join(`user_${userId}`);
+        console.log(`User ${userId} ne apna notification room join kiya.`);
+    });
 
     socket.on("join_room", (room) => {
         socket.join(room);
@@ -78,7 +105,6 @@ io.on("connection", (socket) => {
         }
 
         try {
-            // NAYA: Message ke sath image_url bhi save hoga
             await pool.query(
                 "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4)",
                 [data.sender_id, data.receiver_id, data.text || data.message || "", data.image_url || null]
@@ -86,6 +112,12 @@ io.on("connection", (socket) => {
         } catch (err) {
             console.error("❌ Message save karne mein error:", err.message);
         }
+    });
+
+    // NAYA: Booking notification bhejne ka socket logic
+    socket.on("send_booking_notification", (data) => {
+        // Jisko booking aayi hai, uske personal room mein notification bhej do
+        socket.to(`user_${data.receiver_id}`).emit("receive_booking_notification", data);
     });
 
     socket.on("disconnect", () => {
@@ -211,11 +243,9 @@ app.post('/api/posts/:userId', upload.single('post_image'), async (req, res) => 
     }
 });
 
-// NAYA: Chat mein photo bhejne ki API
 app.post('/api/chat-image', upload.single('image'), (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Koi photo select nahi ki!" });
-        // Cloudinary link wapas bhejenge
         res.status(200).json({ imageUrl: req.file.path });
     } catch (err) {
         console.error("Chat image upload error:", err);
@@ -303,7 +333,7 @@ app.get('/api/girl/stats/:userId', async (req, res) => {
         res.status(200).json({
             earnings: stats.rows[0].total_earnings,
             sessions: stats.rows[0].total_sessions,
-            rating: "4.8"
+            rating: "4.8" // Ise aage chal kar dynamic karenge
         });
     } catch (err) {
         res.status(500).json({ error: "Stats fetch karne mein dikkat aayi" });
@@ -347,6 +377,99 @@ app.put('/api/users/:userId', async (req, res) => {
     }
 });
 
+// ==========================================
+// 🟢 NAYI APIs: BOOKINGS AUR REVIEWS KI
+// ==========================================
+
+// 1. Nayi Booking Banana
+app.post('/api/bookings', async (req, res) => {
+    try {
+        const { boy_id, girl_id, hours, amount } = req.body;
+        const newBooking = await pool.query(
+            "INSERT INTO bookings (boy_id, girl_id, hours, amount) VALUES ($1, $2, $3, $4) RETURNING *",
+            [boy_id, girl_id, hours, amount]
+        );
+        res.status(201).json(newBooking.rows[0]);
+    } catch (err) {
+        console.error("Booking error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 2. Booking Dashboard ke liye fetch karna (Ladki ko uski requests dikhane ke liye)
+app.get('/api/bookings/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const bookings = await pool.query(`
+            SELECT b.*, 
+                   u.name as boy_name, u.profile_pic as boy_pic
+            FROM bookings b
+            JOIN users u ON b.boy_id = u.id
+            WHERE b.girl_id = $1 OR b.boy_id = $1
+            ORDER BY b.created_at DESC
+        `, [userId]);
+        res.status(200).json(bookings.rows);
+    } catch (err) {
+        console.error("Booking fetch error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 3. Booking Accept/Reject karna
+app.put('/api/bookings/:bookingId', async (req, res) => {
+    try {
+        const { status } = req.body; // 'accepted', 'rejected', 'completed'
+        const updatedBooking = await pool.query(
+            "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
+            [status, req.params.bookingId]
+        );
+        res.status(200).json(updatedBooking.rows[0]);
+    } catch (err) {
+        console.error("Booking update error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 4. Review Submit karna
+app.post('/api/reviews', async (req, res) => {
+    try {
+        const { reviewer_id, companion_id, rating, comment } = req.body;
+        const newReview = await pool.query(
+            "INSERT INTO reviews (reviewer_id, companion_id, rating, comment) VALUES ($1, $2, $3, $4) RETURNING *",
+            [reviewer_id, companion_id, rating, comment]
+        );
+        res.status(201).json(newReview.rows[0]);
+    } catch (err) {
+        console.error("Review error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 5. Profile page par reviews fetch karna
+app.get('/api/reviews/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const reviews = await pool.query(`
+            SELECT r.*, u.name as reviewer_name, u.profile_pic as reviewer_pic
+            FROM reviews r JOIN users u ON r.reviewer_id = u.id
+            WHERE r.companion_id = $1 ORDER BY r.created_at DESC
+        `, [userId]);
+
+        const avgResult = await pool.query("SELECT ROUND(AVG(rating), 1) as avg_rating FROM reviews WHERE companion_id = $1", [userId]);
+
+        res.status(200).json({
+            reviews: reviews.rows,
+            avgRating: avgResult.rows[0].avg_rating || 0,
+            totalReviews: reviews.rows.length
+        });
+    } catch (err) {
+        console.error("Review fetch error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ==========================================
+
 app.delete('/api/posts/:postId', async (req, res) => {
     try {
         const { postId } = req.params;
@@ -365,6 +488,7 @@ app.delete('/api/users/:userId', async (req, res) => {
         await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
         await pool.query("DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1", [userId]);
         await pool.query("DELETE FROM bookings WHERE boy_id = $1 OR girl_id = $1", [userId]);
+        await pool.query("DELETE FROM reviews WHERE reviewer_id = $1 OR companion_id = $1", [userId]);
 
         await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 
