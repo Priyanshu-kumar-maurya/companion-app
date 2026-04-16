@@ -55,8 +55,10 @@ pool.connect()
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
 
-            // NAYA: Bookings table agar nahi bani hai toh ban jayegi (tumhare purane columns ke sath)
-            await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
+            // 🚨 NAYA FIX: Purani galat table ko delete karke ekdum fresh table banayenge
+            await pool.query("DROP TABLE IF EXISTS bookings CASCADE;");
+
+            await pool.query(`CREATE TABLE bookings (
                 id SERIAL PRIMARY KEY,
                 boy_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 girl_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -66,7 +68,6 @@ pool.connect()
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
 
-            // NAYA: Reviews table jisme stars aur comment save honge
             await pool.query(`CREATE TABLE IF NOT EXISTS reviews (
                 id SERIAL PRIMARY KEY,
                 reviewer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -76,13 +77,12 @@ pool.connect()
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
 
-            console.log('✅ Database Auto-Fixed: Columns and Tables ready!');
+            console.log('✅ Database Auto-Fixed: Tables refreshed!');
         } catch (e) {
             console.log('Column check warning:', e.message);
         }
     })
     .catch((err) => console.error('❌ Database connection error:', err.stack));
-
 io.on("connection", (socket) => {
     console.log(`⚡ Naya user connect hua Socket pe: ${socket.id}`);
 
