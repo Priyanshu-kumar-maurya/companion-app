@@ -83,8 +83,18 @@ pool.connect()
         }
     })
     .catch((err) => console.error('❌ Database connection error:', err.stack));
+
+// 🟢 NAYA: Online users track karne ke liye Map
+const onlineUsers = new Map();
+
 io.on("connection", (socket) => {
     console.log(`⚡ Naya user connect hua Socket pe: ${socket.id}`);
+
+    // 🟢 NAYA: Jab koi app kholta hai toh online dikhane ke liye
+    socket.on("user_connected", (userId) => {
+        onlineUsers.set(userId.toString(), socket.id);
+        io.emit("update_online_users", Array.from(onlineUsers.keys())); // Sabko updated list bhej do
+    });
 
     // NAYA: Har user ka apna ek personal room hoga notifications ke liye
     socket.on("join_own_room", (userId) => {
@@ -97,20 +107,47 @@ io.on("connection", (socket) => {
         console.log(`User ID: ${socket.id} ne room join kiya: ${room}`);
     });
 
+    // 🟢 UPDATE: Message send karna (Ab hum naye message ki asli ID return karenge)
     socket.on("send_message", async (data) => {
-        socket.to(data.room).emit("receive_message", data);
-
-        if (data.receiver_id) {
-            socket.to(data.receiver_id.toString()).emit("receive_message", data);
-        }
-
         try {
-            await pool.query(
-                "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4)",
+            const result = await pool.query(
+                "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at",
                 [data.sender_id, data.receiver_id, data.text || data.message || "", data.image_url || null]
             );
+
+            // Jo message save hua uski ID data mein dal do
+            const savedMessage = result.rows[0];
+            data.id = savedMessage.id;
+            data.created_at = savedMessage.created_at;
+
+            io.to(data.room).emit("receive_message", data);
+
+            if (data.receiver_id) {
+                // Agar dusra room hai toh waha bhi bhej do
+                socket.to(data.receiver_id.toString()).emit("receive_message", data);
+            }
         } catch (err) {
             console.error("❌ Message save karne mein error:", err.message);
+        }
+    });
+
+    // 🟢 NAYA: Message Edit karne ka logic
+    socket.on("edit_message", async (data) => {
+        try {
+            await pool.query("UPDATE messages SET text = $1 WHERE id = $2 AND sender_id = $3", [data.newText, data.messageId, data.sender_id]);
+            io.to(data.room).emit("message_edited", { messageId: data.messageId, newText: data.newText });
+        } catch (error) {
+            console.error("Edit error:", error);
+        }
+    });
+
+    // 🟢 NAYA: Message Delete karne ka logic
+    socket.on("delete_message", async (data) => {
+        try {
+            await pool.query("DELETE FROM messages WHERE id = $1 AND sender_id = $2", [data.messageId, data.sender_id]);
+            io.to(data.room).emit("message_deleted", data.messageId);
+        } catch (error) {
+            console.error("Delete error:", error);
         }
     });
 
@@ -120,7 +157,20 @@ io.on("connection", (socket) => {
         socket.to(`user_${data.receiver_id}`).emit("receive_booking_notification", data);
     });
 
+    // 🟢 UPDATE: Jab koi tab band kare ya net chala jaye toh offline kar do
     socket.on("disconnect", () => {
+        let disconnectedUserId = null;
+        for (let [userId, socketId] of onlineUsers.entries()) {
+            if (socketId === socket.id) {
+                disconnectedUserId = userId;
+                onlineUsers.delete(userId);
+                break;
+            }
+        }
+        // Agar user map mein tha, toh sabko batao wo offline chala gaya
+        if (disconnectedUserId) {
+            io.emit("update_online_users", Array.from(onlineUsers.keys()));
+        }
         console.log(`User disconnect ho gaya: ${socket.id}`);
     });
 });
