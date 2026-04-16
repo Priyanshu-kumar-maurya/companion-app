@@ -55,10 +55,10 @@ pool.connect()
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
 
-            // 🚨 NAYA FIX: Purani galat table ko delete karke ekdum fresh table banayenge
-            await pool.query("DROP TABLE IF EXISTS bookings CASCADE;");
+            // 🚨 YAHAN SE 'DROP TABLE' HATA DIYA HAI TAARI DATA DELETE NA HO 🚨
 
-            await pool.query(`CREATE TABLE bookings (
+            // IF NOT EXISTS laga diya taaki table pehle se ho toh wahi use kare
+            await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
                 id SERIAL PRIMARY KEY,
                 boy_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 girl_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -77,7 +77,7 @@ pool.connect()
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
 
-            console.log('✅ Database Auto-Fixed: Tables refreshed!');
+            console.log('✅ Database Auto-Fixed: Tables ready!');
         } catch (e) {
             console.log('Column check warning:', e.message);
         }

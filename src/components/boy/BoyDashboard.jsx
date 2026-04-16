@@ -11,7 +11,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
 
-    // 🟢 NAYA STATE: Bookings aur Nayi Notification ke liye
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
 
@@ -34,7 +33,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) setMyPosts(await postsRes.json());
 
-                // 🟢 NAYA: Bookings Fetch karo
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
                 if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
             } catch (err) {
@@ -48,7 +46,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         if (!socket || !user) return;
 
         socket.emit("join_room", user.id.toString());
-        // 🟢 NAYA: Apni personal Notification room join karo
         socket.emit("join_own_room", user.id);
 
         const handleReceiveMessage = (data) => {
@@ -60,16 +57,11 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             }
         };
 
-        // 🟢 NAYA: Booking ki live notification receive karna
         const handleReceiveBooking = (data) => {
             setNewBookingAlert(data);
-
-            // Background me latest list dobara mangwa lo
             fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`)
                 .then(res => res.json())
                 .then(data => setMyBookings(data));
-
-            // 5 second baad alert hata do
             setTimeout(() => setNewBookingAlert(null), 5000);
         };
 
@@ -82,7 +74,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         };
     }, [socket, user]);
 
-    // 🟢 NAYA: Booking Accept ya Reject karne ka function (Agar ladka service de raha hai toh)
     const handleBookingStatus = async (bookingId, newStatus) => {
         try {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
@@ -185,11 +176,15 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     };
 
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
+
+    // 🟢 FIX: Ladko ke liye bhi earnings aur completed sessions live calculate kar rahe hain!
     const pendingBookings = myBookings.filter(b => b.status === 'pending');
+    const completedBookings = myBookings.filter(b => b.status === 'completed');
+    const totalEarnings = completedBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+    const completedSessions = completedBookings.length;
 
     return (
         <div className="pt-16 min-h-screen relative">
-            {/* 🟢 NAYA: Live Alert Box */}
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>
@@ -206,14 +201,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
                             <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg hover:border-blue-500 transition">
                                 {user?.profile_pic ? (
-                                    <img
-                                        src={user.profile_pic}
-                                        alt={user.name}
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    "😎"
-                                )}
+                                    <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                                ) : ("😎")}
                             </div>
                             <label className="absolute bottom-0 right-0 bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" onClick={(e) => e.stopPropagation()} title="Upload Profile Picture">
                                 {uploading ? "⏳" : "📷"}
@@ -232,30 +221,23 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             </div>
                         </div>
                     </div>
-                    <button
-                        onClick={() => setShowEditModal(true)}
-                        className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2"
-                    >
+                    <button onClick={() => setShowEditModal(true)} className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
                         ⚙️ Settings
                     </button>
                 </div>
 
-                <button
-                    onClick={() => setPage(PAGES.FIND)}
-                    className="mb-8 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-blue-500/20"
-                >
+                <button onClick={() => setPage(PAGES.FIND)} className="mb-8 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-blue-500/20">
                     🔍 Find Companions
                 </button>
 
+                {/* 🟢 FIX: Ye raha ekdum Girl Dashboard jaisa same to same stat block */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Status</div><div className="text-2xl font-bold text-yellow-400">Verified</div></div>
-                    {/* NAYA: Pending Requests Count */}
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Active Requests</div><div className="text-2xl font-bold text-blue-400">{pendingBookings.length}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📸 Total Photos</div><div className="text-2xl font-bold text-blue-400">{myPosts.length}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💬 Messages</div><div className="text-2xl font-bold text-purple-400">{chatHistory.length}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-blue-400">₹{totalEarnings}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">4.8 ⭐</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Completed Sessions</div><div className="text-2xl font-bold text-green-400">{completedSessions}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Pending Requests</div><div className="text-2xl font-bold text-purple-400">{pendingBookings.length}</div></div>
                 </div>
 
-                {/* 🟢 NAYA: Booking Requests Section */}
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-7 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                     <div className="text-base font-semibold mb-4 flex items-center gap-2">
                         📅 My Bookings
@@ -278,7 +260,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                     <div className="w-full sm:w-auto flex gap-2 justify-end">
                                         {booking.status === 'pending' && (
                                             <>
-                                                {/* Agar boy ko request aayi hai toh wo accept/reject kar sakta hai */}
                                                 <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">Accept</button>
                                                 <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">Reject</button>
                                             </>
