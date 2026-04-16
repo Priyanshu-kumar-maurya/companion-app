@@ -14,8 +14,9 @@ import DetailsPage from "./components/shared/DetailsPage";
 import ChatPage from "./components/shared/ChatPage";
 import { io } from "socket.io-client";
 
-const socket = io("https://rentgf-and-bf.onrender.com");
-
+const socket = io("https://rentgf-and-bf.onrender.com", {
+  transports: ['websocket']
+});
 export const PAGES = {
   HOME: "home",
   ABOUT: "about",

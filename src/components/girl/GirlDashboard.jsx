@@ -11,8 +11,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const [showEditModal, setShowEditModal] = useState(false);
     const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
-
-    // 🟢 NAYA STATE: Bookings aur Nayi Notification ke liye
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
 
@@ -29,19 +27,15 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         const fetchDashboardData = async () => {
             if (!user) return;
             try {
-                // Chats
                 const chatRes = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${user.id}`);
                 if (chatRes.ok) setChatHistory(await chatRes.json());
 
-                // Stats
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
                 if (statsRes.ok) setStats(await statsRes.json());
 
-                // Posts
                 const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) setMyPosts(await postsRes.json());
 
-                // 🟢 NAYA: Bookings Fetch karo
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
                 if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
 
@@ -55,9 +49,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     useEffect(() => {
         if (!socket || !user) return;
 
-        // Message wali room
         socket.emit("join_room", user.id.toString());
-        // 🟢 NAYA: Apni personal Notification room join karo
         socket.emit("join_own_room", user.id);
 
         const handleReceiveMessage = (data) => {
@@ -69,17 +61,14 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             }
         };
 
-        // 🟢 NAYA: Booking ki live notification receive karna
         const handleReceiveBooking = (data) => {
             setNewBookingAlert(data);
 
-            // Background me latest list dobara mangwa lo
             fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`)
                 .then(res => res.json())
                 .then(data => setMyBookings(data));
 
-            // 5 second baad alert hata do
-            setTimeout(() => setNewBookingAlert(null), 5000);
+            setTimeout(() => setNewBookingAlert(null), 4000);
         };
 
         socket.on("receive_message", handleReceiveMessage);
@@ -91,7 +80,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         };
     }, [socket, user]);
 
-    // 🟢 NAYA: Booking Accept ya Reject karne ka function
     const handleBookingStatus = async (bookingId, newStatus) => {
         try {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
@@ -101,10 +89,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             });
 
             if (response.ok) {
-                // UI update karo
                 setMyBookings(myBookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
 
-                // Stats bhi update kar lo agar completed hua
                 if (newStatus === 'completed') {
                     const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
                     if (statsRes.ok) setStats(await statsRes.json());
@@ -206,7 +192,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     return (
         <div className="pt-16 min-h-screen relative">
 
-            {/* 🟢 NAYA: Live Alert Box */}
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>
@@ -218,7 +203,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             )}
 
             <div className="max-w-5xl mx-auto px-6 py-8">
-                {/* Profile Header Block */}
                 <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                         <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
@@ -253,7 +237,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     🔍 Find Companions
                 </button>
 
-                {/* Stats Block */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-pink-400">₹{stats.earnings}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">{stats.rating} ⭐</div></div>
@@ -261,7 +244,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Pending Requests</div><div className="text-2xl font-bold text-purple-400">{pendingBookings.length}</div></div>
                 </div>
 
-                {/* 🟢 NAYA: Booking Requests Section */}
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-7 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
                     <div className="text-base font-semibold mb-4 flex items-center gap-2">
                         📅 Booking Requests
@@ -356,7 +338,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 <button onClick={() => { localStorage.removeItem("token"); setGirlUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
 
-            {/* Modals Same as before */}
             {expandedPost && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4" onClick={() => setExpandedPost(null)}>
                     <button className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl transition">✕</button>
@@ -383,7 +364,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             <div><label className="block text-xs text-gray-400 mb-1.5">Tags (Comma separated)</label><input type="text" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. Movie, Shopping, Dinner" className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
                             <div><label className="block text-xs text-gray-400 mb-1.5">About Me (Bio)</label><textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white resize-none h-24 outline-none focus:border-pink-500" /></div>
 
-                            {/* Private Switch */}
                             <div className="flex items-center justify-between bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 mt-2">
                                 <div>
                                     <label className="block text-sm text-white font-bold">Private Account 🔒</label>

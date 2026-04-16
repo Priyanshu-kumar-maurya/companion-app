@@ -2,15 +2,16 @@ import React, { useState, useRef, useEffect } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
 
-const socket = io("https://rentgf-and-bf.onrender.com", { autoConnect: false });
-
+const socket = io("https://rentgf-and-bf.onrender.com", {
+    autoConnect: false,
+    transports: ['websocket']
+});
 function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [uploadingImage, setUploadingImage] = useState(false);
     const bottomRef = useRef(null);
 
-    // 🟢 NAYE STATES: Online status aur Edit/Delete ke liye
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [editingMsgId, setEditingMsgId] = useState(null);
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
@@ -52,12 +53,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.connect();
         socket.emit("join_room", roomId);
 
-        // 🟢 NAYA: Server ko batao main online aa gaya
         socket.emit("user_connected", currentUser.id);
 
         const handleReceiveMessage = (data) => {
             setMessages((prev) => {
-                // Duplicate rokne ke liye
                 if (prev.find(m => m.id === data.id)) return prev;
                 const date = data.created_at ? new Date(data.created_at) : new Date();
                 return [...prev, {
@@ -70,17 +69,14 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             });
         };
 
-        // 🟢 NAYA: Live Online Users list update
         const handleUpdateOnlineUsers = (usersArray) => {
             setOnlineUsers(usersArray);
         };
 
-        // 🟢 NAYA: Dusre ne message edit kiya toh live change
         const handleMessageEdited = (data) => {
             setMessages(prev => prev.map(msg => msg.id === data.messageId ? { ...msg, text: data.newText } : msg));
         };
 
-        // 🟢 NAYA: Dusre ne message delete kiya toh live gayab
         const handleMessageDeleted = (deletedId) => {
             setMessages(prev => prev.filter(msg => msg.id !== deletedId));
         };
@@ -107,7 +103,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         if (!input.trim() && !imageLink) return;
         if (!currentUser) return;
 
-        // 🟢 NAYA: Agar Edit mode on hai, toh update bhejenge
         if (editingMsgId) {
             socket.emit("edit_message", {
                 messageId: editingMsgId,
@@ -130,7 +125,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         };
 
         socket.emit("send_message", messageData);
-        setInput(""); // Khali kar do turant
+        setInput(""); 
     };
 
     const handleImageAttachment = async (e) => {
@@ -161,7 +156,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    // 🟢 NAYA: Message Delete Trigger
     const deleteMessage = (id) => {
         if (window.confirm("Delete this message?")) {
             socket.emit("delete_message", { messageId: id, room: roomId, sender_id: currentUser.id });
@@ -169,7 +163,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    // 🟢 NAYA: Message Edit Trigger
     const editMessage = (id, text) => {
         setEditingMsgId(id);
         setInput(text);
@@ -180,12 +173,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         setPage(PAGES.DETAILS);
     };
 
-    // 🟢 Check: Kya samne wala Online hai? (String/Number match)
     const isOnline = onlineUsers.includes(girl.id) || onlineUsers.includes(girl.id.toString());
 
     return (
         <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
-            {/* Header */}
             <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5 shrink-0 relative">
                 <div onClick={handleViewProfile} className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-white/5 p-1 rounded-xl transition duration-200">
                     {girl.profile_pic ? (
@@ -201,7 +192,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     )}
                     <div>
                         <div className="text-sm font-semibold">{girl.name}</div>
-                        {/* 🟢 DYNAMIC ONLINE/OFFLINE STATUS */}
                         {isOnline ? (
                             <div className="text-xs text-green-400 flex items-center gap-1.5 mt-0.5">
                                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
@@ -226,7 +216,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 🔒 End-to-end encrypted chat
             </div>
 
-            {/* Chat Body */}
             <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
                 {messages.map((msg) => (
                     <div
@@ -236,7 +225,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         onMouseLeave={() => setHoveredMsgId(null)}
                     >
                         <div className="flex items-center gap-2">
-                            {/* 🟢 NAYA: Hover Menu Edit & Delete (Sirf apne text messages par) */}
                             {msg.sent && hoveredMsgId === msg.id && !msg.imageUrl && (
                                 <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
                                     <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
@@ -263,7 +251,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 <div ref={bottomRef} />
             </div>
 
-            {/* 🟢 NAYA: Edit Alert Bar */}
             {editingMsgId && (
                 <div className="bg-pink-500/20 text-pink-300 text-xs px-4 py-2 flex justify-between items-center border-t border-pink-500/30">
                     <span>✏️ Editing message...</span>
@@ -271,7 +258,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </div>
             )}
 
-            {/* Input Footer */}
             <div className="flex items-end gap-2 px-4 py-3 border-t border-white/5 bg-[#16162A] shrink-0">
                 <label className="w-11 h-11 bg-white/5 hover:bg-white/10 text-gray-400 rounded-full flex items-center justify-center text-xl cursor-pointer transition shrink-0 border border-white/10" title="Attach Image">
                     📎

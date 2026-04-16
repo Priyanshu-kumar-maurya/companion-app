@@ -50,14 +50,12 @@ const pool = new Pool({
 
 pool.connect()
     .then(async () => {
-        console.log('✅ PostgreSQL Connected Successfully');
+        console.log(' PostgreSQL Connected Successfully');
         try {
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
 
-            // 🚨 YAHAN SE 'DROP TABLE' HATA DIYA HAI TAARI DATA DELETE NA HO 🚨
 
-            // IF NOT EXISTS laga diya taaki table pehle se ho toh wahi use kare
             await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
                 id SERIAL PRIMARY KEY,
                 boy_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -77,26 +75,23 @@ pool.connect()
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
 
-            console.log('✅ Database Auto-Fixed: Tables ready!');
+            console.log(' Database Auto-Fixed: Tables ready!');
         } catch (e) {
             console.log('Column check warning:', e.message);
         }
     })
     .catch((err) => console.error('❌ Database connection error:', err.stack));
 
-// 🟢 NAYA: Online users track karne ke liye Map
 const onlineUsers = new Map();
 
 io.on("connection", (socket) => {
     console.log(`⚡ Naya user connect hua Socket pe: ${socket.id}`);
 
-    // 🟢 NAYA: Jab koi app kholta hai toh online dikhane ke liye
     socket.on("user_connected", (userId) => {
         onlineUsers.set(userId.toString(), socket.id);
-        io.emit("update_online_users", Array.from(onlineUsers.keys())); // Sabko updated list bhej do
+        io.emit("update_online_users", Array.from(onlineUsers.keys())); 
     });
 
-    // NAYA: Har user ka apna ek personal room hoga notifications ke liye
     socket.on("join_own_room", (userId) => {
         socket.join(`user_${userId}`);
         console.log(`User ${userId} ne apna notification room join kiya.`);
@@ -107,7 +102,6 @@ io.on("connection", (socket) => {
         console.log(`User ID: ${socket.id} ne room join kiya: ${room}`);
     });
 
-    // 🟢 UPDATE: Message send karna (Ab hum naye message ki asli ID return karenge)
     socket.on("send_message", async (data) => {
         try {
             const result = await pool.query(
@@ -115,7 +109,6 @@ io.on("connection", (socket) => {
                 [data.sender_id, data.receiver_id, data.text || data.message || "", data.image_url || null]
             );
 
-            // Jo message save hua uski ID data mein dal do
             const savedMessage = result.rows[0];
             data.id = savedMessage.id;
             data.created_at = savedMessage.created_at;
@@ -123,7 +116,6 @@ io.on("connection", (socket) => {
             io.to(data.room).emit("receive_message", data);
 
             if (data.receiver_id) {
-                // Agar dusra room hai toh waha bhi bhej do
                 socket.to(data.receiver_id.toString()).emit("receive_message", data);
             }
         } catch (err) {
@@ -131,7 +123,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // 🟢 NAYA: Message Edit karne ka logic
     socket.on("edit_message", async (data) => {
         try {
             await pool.query("UPDATE messages SET text = $1 WHERE id = $2 AND sender_id = $3", [data.newText, data.messageId, data.sender_id]);
@@ -141,7 +132,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // 🟢 NAYA: Message Delete karne ka logic
     socket.on("delete_message", async (data) => {
         try {
             await pool.query("DELETE FROM messages WHERE id = $1 AND sender_id = $2", [data.messageId, data.sender_id]);
@@ -151,13 +141,10 @@ io.on("connection", (socket) => {
         }
     });
 
-    // NAYA: Booking notification bhejne ka socket logic
     socket.on("send_booking_notification", (data) => {
-        // Jisko booking aayi hai, uske personal room mein notification bhej do
         socket.to(`user_${data.receiver_id}`).emit("receive_booking_notification", data);
     });
 
-    // 🟢 UPDATE: Jab koi tab band kare ya net chala jaye toh offline kar do
     socket.on("disconnect", () => {
         let disconnectedUserId = null;
         for (let [userId, socketId] of onlineUsers.entries()) {
@@ -167,7 +154,6 @@ io.on("connection", (socket) => {
                 break;
             }
         }
-        // Agar user map mein tha, toh sabko batao wo offline chala gaya
         if (disconnectedUserId) {
             io.emit("update_online_users", Array.from(onlineUsers.keys()));
         }
@@ -383,7 +369,7 @@ app.get('/api/girl/stats/:userId', async (req, res) => {
         res.status(200).json({
             earnings: stats.rows[0].total_earnings,
             sessions: stats.rows[0].total_sessions,
-            rating: "4.8" // Ise aage chal kar dynamic karenge
+            rating: "4.8" 
         });
     } catch (err) {
         res.status(500).json({ error: "Stats fetch karne mein dikkat aayi" });
@@ -427,11 +413,7 @@ app.put('/api/users/:userId', async (req, res) => {
     }
 });
 
-// ==========================================
-// 🟢 NAYI APIs: BOOKINGS AUR REVIEWS KI
-// ==========================================
 
-// 1. Nayi Booking Banana
 app.post('/api/bookings', async (req, res) => {
     try {
         const { boy_id, girl_id, hours, amount } = req.body;
@@ -446,7 +428,6 @@ app.post('/api/bookings', async (req, res) => {
     }
 });
 
-// 2. Booking Dashboard ke liye fetch karna (Ladki ko uski requests dikhane ke liye)
 app.get('/api/bookings/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -465,10 +446,9 @@ app.get('/api/bookings/:userId', async (req, res) => {
     }
 });
 
-// 3. Booking Accept/Reject karna
 app.put('/api/bookings/:bookingId', async (req, res) => {
     try {
-        const { status } = req.body; // 'accepted', 'rejected', 'completed'
+        const { status } = req.body; 
         const updatedBooking = await pool.query(
             "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
             [status, req.params.bookingId]
@@ -480,7 +460,6 @@ app.put('/api/bookings/:bookingId', async (req, res) => {
     }
 });
 
-// 4. Review Submit karna
 app.post('/api/reviews', async (req, res) => {
     try {
         const { reviewer_id, companion_id, rating, comment } = req.body;
@@ -495,7 +474,6 @@ app.post('/api/reviews', async (req, res) => {
     }
 });
 
-// 5. Profile page par reviews fetch karna
 app.get('/api/reviews/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -518,7 +496,6 @@ app.get('/api/reviews/:userId', async (req, res) => {
     }
 });
 
-// ==========================================
 
 app.delete('/api/posts/:postId', async (req, res) => {
     try {

@@ -177,7 +177,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
 
-    // 🟢 FIX: Ladko ke liye bhi earnings aur completed sessions live calculate kar rahe hain!
     const pendingBookings = myBookings.filter(b => b.status === 'pending');
     const completedBookings = myBookings.filter(b => b.status === 'completed');
     const totalEarnings = completedBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
@@ -230,7 +229,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     🔍 Find Companions
                 </button>
 
-                {/* 🟢 FIX: Ye raha ekdum Girl Dashboard jaisa same to same stat block */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-blue-400">₹{totalEarnings}</div></div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">4.8 ⭐</div></div>

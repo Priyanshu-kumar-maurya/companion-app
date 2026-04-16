@@ -2,16 +2,14 @@ import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
 
-// NAYA: Socket.io connection for sending booking notifications
 const socket = io("https://rentgf-and-bf.onrender.com", { autoConnect: false });
 
-function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: currentUser add kiya hai
+function DetailsPage({ girl: profile, currentUser, setPage }) {
     const [hours, setHours] = useState(2);
     const [posts, setPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
 
-    // 🟢 NAYE STATES: Bookings aur Reviews ke liye
-    const [bookingStatus, setBookingStatus] = useState(null); // 'loading', 'success', null
+    const [bookingStatus, setBookingStatus] = useState(null); 
     const [reviews, setReviews] = useState([]);
     const [avgRating, setAvgRating] = useState(0);
     const [newReviewText, setNewReviewText] = useState("");
@@ -26,7 +24,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
         const fetchUserData = async () => {
             if (!profile) return;
 
-            // 1. Fetch Posts (Agar private nahi hai toh)
             if (!profile.is_private) {
                 try {
                     const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
@@ -34,7 +31,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                 } catch (err) { console.error("Posts fetch error:", err); }
             }
 
-            // 2. Fetch Reviews aur Rating
             try {
                 const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
                 if (reviewRes.ok) {
@@ -47,14 +43,12 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
         fetchUserData();
     }, [profile]);
 
-    // 🟢 NAYA: Booking handle karne ka function
     const handleBooking = async () => {
         if (!currentUser) return alert("Please login first!");
 
         setBookingStatus('loading');
         const amount = (profile.price || 1000) * hours;
 
-        // Tumhare purane format ke hisaab se boy_id aur girl_id set kar rahe hain
         const boy_id = currentUser.role === 'boy' ? currentUser.id : profile.id;
         const girl_id = currentUser.role === 'girl' ? currentUser.id : profile.id;
 
@@ -68,7 +62,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
             if (response.ok) {
                 setBookingStatus('success');
 
-                // Socket.io se Notification Bhejna
                 socket.emit("send_booking_notification", {
                     receiver_id: profile.id,
                     sender_name: currentUser.name,
@@ -76,7 +69,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                     amount: amount
                 });
 
-                // 3 second baad button wapas normal kar do
                 setTimeout(() => setBookingStatus(null), 3000);
             }
         } catch (error) {
@@ -86,7 +78,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
         }
     };
 
-    // 🟢 NAYA: Review Submit karne ka function
     const submitReview = async () => {
         if (!newReviewText.trim() || !currentUser) return;
 
@@ -103,8 +94,7 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
             });
 
             if (response.ok) {
-                setNewReviewText(""); // Box khali kar do
-                // Naye reviews database se wapas mangwa lo
+                setNewReviewText(""); 
                 const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
                 const data = await reviewRes.json();
                 setReviews(data.reviews);
@@ -134,7 +124,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                     ← Back to Find
                 </button>
 
-                {/* Profile Header (Same as before) */}
                 <div className="flex flex-col sm:flex-row gap-8 mb-7">
                     <div className="w-full sm:w-64 h-72 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-2xl overflow-hidden flex-shrink-0 border border-white/10 shadow-[0_0_20px_rgba(236,72,153,0.15)] cursor-pointer" onClick={() => setExpandedPost({ image_url: profileImage, caption: `${firstName}'s Profile Picture` })}>
                         <img src={profileImage} alt={profile.name} className="w-full h-full object-cover hover:scale-105 transition" />
@@ -148,7 +137,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                         </div>
                         <p className="text-sm text-gray-400 mb-3">📍 {profile.city || "Unknown City"} · 🎂 {profile.age || "N/A"} years</p>
 
-                        {/* 🟢 NAYA: Asli Rating display */}
                         <div className="text-sm text-yellow-400 mb-4">⭐ {avgRating > 0 ? avgRating : "New"} <span className="text-gray-500">({reviews.length} reviews)</span></div>
 
                         <p className="text-sm text-gray-300 leading-relaxed mb-4">
@@ -169,7 +157,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                     </div>
                 </div>
 
-                {/* 🟢 NAYA: Booking Section with functionality */}
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-8">
                     <div className="text-base font-semibold mb-4">📅 Book a Session</div>
                     <div className="flex gap-2 flex-wrap mb-6">
@@ -185,7 +172,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                             <div className="text-xs text-gray-400">for {hours} hour session</div>
                         </div>
 
-                        {/* Dynamic Booking Button */}
                         <button
                             onClick={handleBooking}
                             disabled={bookingStatus !== null}
@@ -199,7 +185,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                     </div>
                 </div>
 
-                {/* Gallery (Same as before) */}
                 <div className="mb-10">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         📸 {firstName}'s Gallery
@@ -227,14 +212,12 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                     )}
                 </div>
 
-                {/* 🟢 NAYA: Reviews & Ratings Section */}
                 <div className="mb-10 border-t border-white/10 pt-8">
                     <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
                         ⭐ Ratings & Reviews
                         <span className="text-xs font-normal bg-white/10 text-gray-400 px-2 py-0.5 rounded-full">{reviews.length}</span>
                     </h2>
 
-                    {/* Write a Review Box */}
                     {currentUser && currentUser.id !== profile.id && (
                         <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-6">
                             <div className="text-sm font-semibold mb-2">Leave a Review</div>
@@ -266,7 +249,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
                         </div>
                     )}
 
-                    {/* Reviews List */}
                     {reviews.length === 0 ? (
                         <div className="text-gray-500 text-sm text-center py-4 bg-[#16162A] rounded-2xl border border-white/5">
                             No reviews yet. Be the first to leave one!
@@ -291,7 +273,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) { // Dhyan do: cur
 
             </div>
 
-            {/* Fullscreen Post Modal */}
             {expandedPost && (
                 <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-[60] flex items-center justify-center p-4" onClick={() => setExpandedPost(null)}>
                     <button className="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full flex items-center justify-center text-xl transition">✕</button>
