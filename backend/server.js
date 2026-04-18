@@ -57,6 +57,7 @@ pool.connect()
 
             // NAYA ADDITION 1: Delete for me ke liye database column
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_for INTEGER[] DEFAULT '{}';");
+            await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;");
 
 
             await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
@@ -108,13 +109,14 @@ io.on("connection", (socket) => {
     socket.on("send_message", async (data) => {
         try {
             const result = await pool.query(
-                "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at",
+                "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at, is_read",
                 [data.sender_id, data.receiver_id, data.text || data.message || "", data.image_url || null]
             );
 
             const savedMessage = result.rows[0];
             data.id = savedMessage.id;
             data.created_at = savedMessage.created_at;
+            data.is_read = savedMessage.is_read;
 
             io.to(data.room).emit("receive_message", data);
 
@@ -123,6 +125,15 @@ io.on("connection", (socket) => {
             }
         } catch (err) {
             console.error("❌ Message save karne mein error:", err.message);
+        }
+    });
+
+    socket.on("mark_messages_read", async (data) => {
+        try {
+            await pool.query("UPDATE messages SET is_read = true WHERE sender_id = $1 AND receiver_id = $2 AND is_read = false", [data.sender_id, data.receiver_id]);
+            io.to(data.room).emit("messages_read_update", data);
+        } catch (error) {
+            console.error(error);
         }
     });
 
@@ -394,7 +405,7 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
 
         // NAYA ADDITION 3: Filter messages deleted for me
         const query = `
-            SELECT id, sender_id, receiver_id, text AS message, image_url, created_at 
+            SELECT id, sender_id, receiver_id, text AS message, image_url, created_at, is_read 
             FROM messages 
             WHERE ((sender_id = $1 AND receiver_id = $2) 
                OR (sender_id = $2 AND receiver_id = $1))

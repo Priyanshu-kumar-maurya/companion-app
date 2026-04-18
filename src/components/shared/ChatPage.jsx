@@ -36,9 +36,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             id: msg.id,
                             text: msg.message,
                             imageUrl: msg.image_url,
-                            sent: msg.sender_id === currentUser.id,
+                            sent: String(msg.sender_id) === String(currentUser.id),
                             time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                            timestamp: date.getTime()
+                            timestamp: date.getTime(),
+                            is_read: msg.is_read
                         };
                     });
 
@@ -57,19 +58,38 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.emit("join_room", roomId);
         socket.emit("user_connected", currentUser.id);
 
+        // Jaise hi chat khulegi, samne wale ke saare messages READ mark kar denge
+        socket.emit("mark_messages_read", {
+            sender_id: girl.id,
+            receiver_id: currentUser.id,
+            room: roomId
+        });
+
         const handleReceiveMessage = (data) => {
             setMessages((prev) => {
-                if (prev.find(m => m.id === data.id)) return prev;
+                // Duplicate message check
+                if (prev.find(m => String(m.id) === String(data.id))) return prev;
+
                 const date = data.created_at ? new Date(data.created_at) : new Date();
                 return [...prev, {
-                    id: data.id || Date.now(),
+                    id: data.id,
                     text: data.text || data.message,
                     imageUrl: data.image_url,
-                    sent: data.sender_id === currentUser.id,
+                    sent: String(data.sender_id) === String(currentUser.id),
                     time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                    timestamp: date.getTime()
+                    timestamp: date.getTime(),
+                    is_read: data.is_read || false
                 }];
             });
+
+            // Agar message samne wale se aaya hai (current chat mein), toh use turant READ kardo
+            if (String(data.sender_id) === String(girl.id)) {
+                socket.emit("mark_messages_read", {
+                    sender_id: girl.id,
+                    receiver_id: currentUser.id,
+                    room: roomId
+                });
+            }
         };
 
         const handleUpdateOnlineUsers = (usersArray) => {
@@ -77,26 +97,35 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         };
 
         const handleMessageEdited = (data) => {
-            setMessages(prev => prev.map(msg => msg.id === data.messageId ? { ...msg, text: data.newText } : msg));
+            setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, text: data.newText } : msg));
         };
 
         const handleMessageDeleted = (deletedId) => {
-            setMessages(prev => prev.filter(msg => msg.id !== deletedId));
+            setMessages(prev => prev.filter(msg => String(msg.id) !== String(deletedId)));
+        };
+
+        const handleMessagesReadUpdate = (data) => {
+            // FIX: String conversion for accurate matching
+            if (String(data.receiver_id) === String(girl.id) && String(data.sender_id) === String(currentUser.id)) {
+                setMessages(prev => prev.map(msg => msg.sent ? { ...msg, is_read: true } : msg));
+            }
         };
 
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", handleUpdateOnlineUsers);
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
+        socket.on("messages_read_update", handleMessagesReadUpdate);
 
         return () => {
             socket.off("receive_message", handleReceiveMessage);
             socket.off("update_online_users", handleUpdateOnlineUsers);
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
+            socket.off("messages_read_update", handleMessagesReadUpdate);
             socket.disconnect();
         };
-    }, [roomId, currentUser.id]);
+    }, [roomId, currentUser.id, girl.id]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -113,7 +142,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 room: roomId,
                 sender_id: currentUser.id
             });
-            setMessages(prev => prev.map(msg => msg.id === editingMsgId ? { ...msg, text: input } : msg));
+            setMessages(prev => prev.map(msg => String(msg.id) === String(editingMsgId) ? { ...msg, text: input } : msg));
             setEditingMsgId(null);
             setInput("");
             return;
@@ -127,17 +156,9 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             room: roomId
         };
 
+        // 🚨 FIX: Ab yahan locally setMessages nahi kar rahe. 
+        // Jab Server se socket wapas aayega, tab message dikhega (isse double msg error solve ho jayega)
         socket.emit("send_message", messageData);
-
-        const now = new Date();
-        setMessages((prev) => [...prev, {
-            id: Date.now(),
-            text: input,
-            imageUrl: imageLink,
-            sent: true,
-            time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            timestamp: now.getTime()
-        }]);
         setInput("");
     };
 
@@ -172,7 +193,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const handleDeleteForMe = () => {
         if (!messageToDelete) return;
         socket.emit("delete_for_me", { messageId: messageToDelete.id, userId: currentUser.id });
-        setMessages(prev => prev.filter(msg => msg.id !== messageToDelete.id));
+        setMessages(prev => prev.filter(msg => String(msg.id) !== String(messageToDelete.id)));
         setMessageToDelete(null);
     };
 
@@ -192,7 +213,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         setPage(PAGES.DETAILS);
     };
 
-    const isOnline = onlineUsers.includes(girl.id) || onlineUsers.includes(girl.id.toString());
+    const isOnline = onlineUsers.includes(girl.id) || onlineUsers.includes(String(girl.id));
 
     return (
         <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
@@ -274,7 +295,16 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                     {msg.text && <span>{msg.text}</span>}
                                 </div>
                             </div>
-                            <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium">{msg.time} {msg.sent && "✓"}</div>
+
+                            {/* 🟢 DOUBLE TICK UI FIX */}
+                            <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium flex items-center justify-end gap-1">
+                                {msg.time}
+                                {msg.sent && (
+                                    <span className={msg.is_read ? "text-blue-400 font-bold text-xs" : "text-gray-400 font-bold text-xs"}>
+                                        {msg.is_read ? "✓✓" : "✓"}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     );
                 })}
