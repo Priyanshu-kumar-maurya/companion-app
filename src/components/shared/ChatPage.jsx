@@ -45,9 +45,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
                     setMessages(formattedMessages);
                 }
-            } catch (error) {
-                console.error(error);
-            }
+            } catch (error) { }
         };
 
         fetchOldMessages();
@@ -58,7 +56,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.emit("join_room", roomId);
         socket.emit("user_connected", currentUser.id);
 
-        // Jaise hi chat khulegi, samne wale ke saare messages READ mark kar denge
         socket.emit("mark_messages_read", {
             sender_id: girl.id,
             receiver_id: currentUser.id,
@@ -67,7 +64,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         const handleReceiveMessage = (data) => {
             setMessages((prev) => {
-                // Duplicate message check
                 if (prev.find(m => String(m.id) === String(data.id))) return prev;
 
                 const date = data.created_at ? new Date(data.created_at) : new Date();
@@ -82,7 +78,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 }];
             });
 
-            // Agar message samne wale se aaya hai (current chat mein), toh use turant READ kardo
             if (String(data.sender_id) === String(girl.id)) {
                 socket.emit("mark_messages_read", {
                     sender_id: girl.id,
@@ -105,7 +100,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         };
 
         const handleMessagesReadUpdate = (data) => {
-            // FIX: String conversion for accurate matching
             if (String(data.receiver_id) === String(girl.id) && String(data.sender_id) === String(currentUser.id)) {
                 setMessages(prev => prev.map(msg => msg.sent ? { ...msg, is_read: true } : msg));
             }
@@ -156,8 +150,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             room: roomId
         };
 
-        // 🚨 FIX: Ab yahan locally setMessages nahi kar rahe. 
-        // Jab Server se socket wapas aayega, tab message dikhega (isse double msg error solve ho jayega)
         socket.emit("send_message", messageData);
         setInput("");
     };
@@ -179,12 +171,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             if (response.ok) {
                 const data = await response.json();
                 sendMessage(data.imageUrl);
-            } else {
-                alert("Failed to upload image.");
             }
-        } catch (error) {
-            console.error("Image upload error:", error);
-        } finally {
+        } catch (error) { } finally {
             setUploadingImage(false);
             e.target.value = "";
         }
@@ -214,6 +202,21 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     };
 
     const isOnline = onlineUsers.includes(girl.id) || onlineUsers.includes(String(girl.id));
+
+    const formatMessageDate = (timestamp) => {
+        const date = new Date(timestamp);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return "Today";
+        } else if (date.toDateString() === yesterday.toDateString()) {
+            return "Yesterday";
+        } else {
+            return date.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+    };
 
     return (
         <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
@@ -268,44 +271,55 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
-                {messages.map((msg) => {
+                {messages.map((msg, index) => {
                     const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
 
-                    return (
-                        <div
-                            key={msg.id}
-                            className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`}
-                            onMouseEnter={() => setHoveredMsgId(msg.id)}
-                            onMouseLeave={() => setHoveredMsgId(null)}
-                        >
-                            <div className={`flex items-center gap-2 ${msg.sent ? "flex-row" : "flex-row-reverse"}`}>
-                                {hoveredMsgId === msg.id && (
-                                    <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
-                                        {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
-                                            <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
-                                        )}
-                                        <button onClick={() => setMessageToDelete(msg)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
-                                    </div>
-                                )}
+                    const prevMsg = index > 0 ? messages[index - 1] : null;
+                    const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
 
-                                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
-                                    {msg.imageUrl && (
-                                        <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                    return (
+                        <React.Fragment key={msg.id}>
+                            {showDateDivider && (
+                                <div className="flex justify-center my-2">
+                                    <span className="text-[10px] bg-white/5 text-gray-400 px-3 py-1 rounded-lg border border-white/10 shadow-sm font-medium tracking-wide">
+                                        {formatMessageDate(msg.timestamp)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div
+                                className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`}
+                                onMouseEnter={() => setHoveredMsgId(msg.id)}
+                                onMouseLeave={() => setHoveredMsgId(null)}
+                            >
+                                <div className={`flex items-center gap-2 ${msg.sent ? "flex-row" : "flex-row-reverse"}`}>
+                                    {hoveredMsgId === msg.id && (
+                                        <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
+                                            {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
+                                                <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
+                                            )}
+                                            <button onClick={() => setMessageToDelete(msg)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
+                                        </div>
                                     )}
-                                    {msg.text && <span>{msg.text}</span>}
+
+                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
+                                        {msg.imageUrl && (
+                                            <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                                        )}
+                                        {msg.text && <span>{msg.text}</span>}
+                                    </div>
+                                </div>
+
+                                <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium flex items-center justify-end gap-1">
+                                    {msg.time}
+                                    {msg.sent && (
+                                        <span className={msg.is_read ? "text-blue-400 font-bold text-xs" : "text-gray-400 font-bold text-xs"}>
+                                            {msg.is_read ? "✓✓" : "✓"}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-
-                            {/* 🟢 DOUBLE TICK UI FIX */}
-                            <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium flex items-center justify-end gap-1">
-                                {msg.time}
-                                {msg.sent && (
-                                    <span className={msg.is_read ? "text-blue-400 font-bold text-xs" : "text-gray-400 font-bold text-xs"}>
-                                        {msg.is_read ? "✓✓" : "✓"}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
+                        </React.Fragment>
                     );
                 })}
 
