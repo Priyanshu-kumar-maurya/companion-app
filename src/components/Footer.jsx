@@ -67,7 +67,6 @@ function Footer({ setPage }) {
                         </ul>
                     </div>
                 </div>
-
                 <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-gray-500">
                         © {new Date().getFullYear()} RentGF. All rights reserved.

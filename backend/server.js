@@ -55,6 +55,9 @@ pool.connect()
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
 
+            // NAYA ADDITION 1: Delete for me ke liye database column
+            await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_for INTEGER[] DEFAULT '{}';");
+
 
             await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
                 id SERIAL PRIMARY KEY,
@@ -89,7 +92,7 @@ io.on("connection", (socket) => {
 
     socket.on("user_connected", (userId) => {
         onlineUsers.set(userId.toString(), socket.id);
-        io.emit("update_online_users", Array.from(onlineUsers.keys())); 
+        io.emit("update_online_users", Array.from(onlineUsers.keys()));
     });
 
     socket.on("join_own_room", (userId) => {
@@ -138,6 +141,15 @@ io.on("connection", (socket) => {
             io.to(data.room).emit("message_deleted", data.messageId);
         } catch (error) {
             console.error("Delete error:", error);
+        }
+    });
+
+    // NAYA ADDITION 2: Delete for me ka socket listener
+    socket.on("delete_for_me", async (data) => {
+        try {
+            await pool.query("UPDATE messages SET deleted_for = array_append(deleted_for, $1) WHERE id = $2", [data.userId, data.messageId]);
+        } catch (error) {
+            console.error("Delete for me error:", error);
         }
     });
 
@@ -369,7 +381,7 @@ app.get('/api/girl/stats/:userId', async (req, res) => {
         res.status(200).json({
             earnings: stats.rows[0].total_earnings,
             sessions: stats.rows[0].total_sessions,
-            rating: "4.8" 
+            rating: "4.8"
         });
     } catch (err) {
         res.status(500).json({ error: "Stats fetch karne mein dikkat aayi" });
@@ -380,11 +392,13 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
     try {
         const { user1, user2 } = req.params;
 
+        // NAYA ADDITION 3: Filter messages deleted for me
         const query = `
             SELECT id, sender_id, receiver_id, text AS message, image_url, created_at 
             FROM messages 
-            WHERE (sender_id = $1 AND receiver_id = $2) 
-               OR (sender_id = $2 AND receiver_id = $1)
+            WHERE ((sender_id = $1 AND receiver_id = $2) 
+               OR (sender_id = $2 AND receiver_id = $1))
+            AND NOT ($1 = ANY(COALESCE(deleted_for, '{}')))
             ORDER BY created_at ASC
         `;
 
@@ -448,7 +462,7 @@ app.get('/api/bookings/:userId', async (req, res) => {
 
 app.put('/api/bookings/:bookingId', async (req, res) => {
     try {
-        const { status } = req.body; 
+        const { status } = req.body;
         const updatedBooking = await pool.query(
             "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
             [status, req.params.bookingId]

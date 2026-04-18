@@ -6,6 +6,7 @@ const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
     transports: ['websocket']
 });
+
 function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
@@ -15,6 +16,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [editingMsgId, setEditingMsgId] = useState(null);
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
+    const [messageToDelete, setMessageToDelete] = useState(null);
 
     const roomId = currentUser?.id < girl?.id
         ? `${currentUser?.id}_${girl?.id}`
@@ -35,7 +37,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             text: msg.message,
                             imageUrl: msg.image_url,
                             sent: msg.sender_id === currentUser.id,
-                            time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            timestamp: date.getTime()
                         };
                     });
 
@@ -52,7 +55,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     useEffect(() => {
         socket.connect();
         socket.emit("join_room", roomId);
-
         socket.emit("user_connected", currentUser.id);
 
         const handleReceiveMessage = (data) => {
@@ -64,7 +66,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     text: data.text || data.message,
                     imageUrl: data.image_url,
                     sent: data.sender_id === currentUser.id,
-                    time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                    timestamp: date.getTime()
                 }];
             });
         };
@@ -125,7 +128,17 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         };
 
         socket.emit("send_message", messageData);
-        setInput(""); 
+
+        const now = new Date();
+        setMessages((prev) => [...prev, {
+            id: Date.now(),
+            text: input,
+            imageUrl: imageLink,
+            sent: true,
+            time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            timestamp: now.getTime()
+        }]);
+        setInput("");
     };
 
     const handleImageAttachment = async (e) => {
@@ -156,11 +169,17 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    const deleteMessage = (id) => {
-        if (window.confirm("Delete this message?")) {
-            socket.emit("delete_message", { messageId: id, room: roomId, sender_id: currentUser.id });
-            setMessages(prev => prev.filter(msg => msg.id !== id));
-        }
+    const handleDeleteForMe = () => {
+        if (!messageToDelete) return;
+        socket.emit("delete_for_me", { messageId: messageToDelete.id, userId: currentUser.id });
+        setMessages(prev => prev.filter(msg => msg.id !== messageToDelete.id));
+        setMessageToDelete(null);
+    };
+
+    const handleDeleteForEveryone = () => {
+        if (!messageToDelete) return;
+        socket.emit("delete_message", { messageId: messageToDelete.id, room: roomId, sender_id: currentUser.id });
+        setMessageToDelete(null);
     };
 
     const editMessage = (id, text) => {
@@ -207,8 +226,19 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </div>
 
                 <div className="flex gap-2">
-                    <button onClick={() => alert("📞 In-App Call starting...")} className="w-10 h-10 bg-green-500/15 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center hover:bg-green-500/25 transition" title="Voice Call">📞</button>
-                    <button onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition ml-1 text-lg">✕</button>
+                    <button
+                        onClick={() => alert("📞 In-App Call starting...")}
+                        className="w-10 h-10 bg-green-500/15 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center hover:bg-green-500/25 transition"
+                        title="Voice Call"
+                    >
+                        📞
+                    </button>
+                    <button
+                        onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
+                        className="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition ml-1 text-lg"
+                    >
+                        ✕
+                    </button>
                 </div>
             </div>
 
@@ -217,35 +247,43 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             </div>
 
             <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`}
-                        onMouseEnter={() => msg.sent && setHoveredMsgId(msg.id)}
-                        onMouseLeave={() => setHoveredMsgId(null)}
-                    >
-                        <div className="flex items-center gap-2">
-                            {msg.sent && hoveredMsgId === msg.id && !msg.imageUrl && (
-                                <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
-                                    <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
-                                    <button onClick={() => deleteMessage(msg.id)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
-                                </div>
-                            )}
+                {messages.map((msg) => {
+                    const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
 
-                            <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
-                                {msg.imageUrl && (
-                                    <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                    return (
+                        <div
+                            key={msg.id}
+                            className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`}
+                            onMouseEnter={() => setHoveredMsgId(msg.id)}
+                            onMouseLeave={() => setHoveredMsgId(null)}
+                        >
+                            <div className={`flex items-center gap-2 ${msg.sent ? "flex-row" : "flex-row-reverse"}`}>
+                                {hoveredMsgId === msg.id && (
+                                    <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
+                                        {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
+                                            <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
+                                        )}
+                                        <button onClick={() => setMessageToDelete(msg)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
+                                    </div>
                                 )}
-                                {msg.text && <span>{msg.text}</span>}
+
+                                <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
+                                    {msg.imageUrl && (
+                                        <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />
+                                    )}
+                                    {msg.text && <span>{msg.text}</span>}
+                                </div>
                             </div>
+                            <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium">{msg.time} {msg.sent && "✓"}</div>
                         </div>
-                        <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium">{msg.time} {msg.sent && "✓"}</div>
-                    </div>
-                ))}
+                    );
+                })}
 
                 {uploadingImage && (
                     <div className="self-end max-w-[70%] mb-2">
-                        <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500/50 to-purple-500/50 text-white rounded-br-sm text-xs flex items-center gap-2 animate-pulse">⏳ Sending photo...</div>
+                        <div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500/50 to-purple-500/50 text-white rounded-br-sm text-xs flex items-center gap-2 animate-pulse">
+                            ⏳ Sending photo...
+                        </div>
                     </div>
                 )}
                 <div ref={bottomRef} />
@@ -282,13 +320,34 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     onClick={() => sendMessage(null)}
                     disabled={!input.trim()}
                     className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-lg transition flex-shrink-0 ${input.trim()
-                            ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105 shadow-[0_0_15px_rgba(236,72,153,0.3)] cursor-pointer'
-                            : 'bg-white/10 text-gray-500 cursor-not-allowed'
+                        ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105 shadow-[0_0_15px_rgba(236,72,153,0.3)] cursor-pointer'
+                        : 'bg-white/10 text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     {editingMsgId ? "✓" : "➤"}
                 </button>
             </div>
+
+            {messageToDelete && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="bg-[#16162A] border border-white/10 rounded-2xl w-full max-w-xs overflow-hidden shadow-2xl p-5 text-center">
+                        <h3 className="text-lg font-bold mb-4 text-white">Delete Message</h3>
+                        <div className="flex flex-col gap-3">
+                            {messageToDelete.sent && (Date.now() - messageToDelete.timestamp < 15 * 60 * 1000) && (
+                                <button onClick={handleDeleteForEveryone} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 rounded-xl font-semibold transition">
+                                    Delete for Everyone
+                                </button>
+                            )}
+                            <button onClick={handleDeleteForMe} className="py-2.5 bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 rounded-xl font-semibold transition">
+                                Delete for Me
+                            </button>
+                            <button onClick={() => setMessageToDelete(null)} className="py-2.5 mt-2 text-gray-500 hover:text-white font-semibold transition">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
