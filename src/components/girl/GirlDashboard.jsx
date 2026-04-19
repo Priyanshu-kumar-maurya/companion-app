@@ -253,17 +253,29 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     {myBookings.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No bookings yet.</div> : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {myBookings.map((booking) => (
-                                <div key={booking.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <img src={booking.boy_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} className="w-12 h-12 rounded-full object-cover border border-white/10" alt="Client" />
-                                        <div>
-                                            <div className="font-bold text-sm text-white">{booking.boy_name}</div>
-                                            <div className="text-xs text-pink-400">{booking.hours} hours • ₹{booking.amount}</div>
-                                            <div className="text-[10px] text-gray-500 mt-0.5">{new Date(booking.created_at).toLocaleDateString()}</div>
+                                <div key={booking.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col gap-4">
+
+                                    {/* Top: Profile Info */}
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <img src={booking.boy_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} className="w-12 h-12 rounded-full object-cover border border-white/10" alt="Client" />
+                                            <div>
+                                                <div className="font-bold text-sm text-white">{booking.boy_name}</div>
+                                                <div className="text-xs text-pink-400">{booking.hours} hours • ₹{booking.amount}</div>
+                                            </div>
                                         </div>
+                                        <div className="text-[10px] text-gray-500">{new Date(booking.created_at).toLocaleDateString()}</div>
                                     </div>
 
-                                    <div className="w-full sm:w-auto flex gap-2 justify-end">
+                                    {/* Middle: NEW Meeting Info Display */}
+                                    <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
+                                        <div className="text-[11px] text-gray-400 flex items-center gap-2">📅 <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
+                                        <div className="text-[11px] text-gray-400 flex items-center gap-2">📍 <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
+                                        {booking.meeting_details && <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">"{booking.meeting_details}"</div>}
+                                    </div>
+
+                                    {/* Bottom: Buttons */}
+                                    <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
                                         {booking.status === 'pending' && (
                                             <>
                                                 <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">Accept</button>
