@@ -69,7 +69,10 @@ pool.connect()
                 status VARCHAR(50) DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
-
+            await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_date DATE;");
+            await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_time TIME;");
+            await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_location TEXT;");
+            await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_details TEXT;");
             await pool.query(`CREATE TABLE IF NOT EXISTS reviews (
                 id SERIAL PRIMARY KEY,
                 reviewer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -155,7 +158,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // NAYA ADDITION 2: Delete for me ka socket listener
     socket.on("delete_for_me", async (data) => {
         try {
             await pool.query("UPDATE messages SET deleted_for = array_append(deleted_for, $1) WHERE id = $2", [data.userId, data.messageId]);
@@ -441,10 +443,11 @@ app.put('/api/users/:userId', async (req, res) => {
 
 app.post('/api/bookings', async (req, res) => {
     try {
-        const { boy_id, girl_id, hours, amount } = req.body;
+        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details } = req.body;
+
         const newBooking = await pool.query(
-            "INSERT INTO bookings (boy_id, girl_id, hours, amount) VALUES ($1, $2, $3, $4) RETURNING *",
-            [boy_id, girl_id, hours, amount]
+            "INSERT INTO bookings (boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
+            [boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details]
         );
         res.status(201).json(newBooking.rows[0]);
     } catch (err) {
