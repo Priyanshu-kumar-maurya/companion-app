@@ -48,7 +48,27 @@ function App() {
   const [boyUser, setBoyUser] = useState(null);
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  useEffect(() => {
+    const handleHashChange = () => {
+      const currentHash = window.location.hash.replace("#", "");
+      if (currentHash) {
+        setPage(currentHash);
+      } else {
+        setPage(PAGES.HOME);
+      }
+    };
 
+    window.addEventListener("hashchange", handleHashChange);
+    handleHashChange();
+
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hash !== `#${page}`) {
+      window.history.pushState(null, "", `#${page}`);
+    }
+  }, [page]);
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem("token");
