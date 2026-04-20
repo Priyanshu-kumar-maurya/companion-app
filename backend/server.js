@@ -54,8 +54,8 @@ pool.connect()
         try {
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
-
-            // NAYA ADDITION 1: Delete for me ke liye database column
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS kyc_status VARCHAR(20) DEFAULT 'unverified';");
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_for INTEGER[] DEFAULT '{}';");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;");
 
@@ -189,7 +189,28 @@ io.on("connection", (socket) => {
 app.get('/', (req, res) => {
     res.send('Dating App Backend with PostgreSQL & Socket.io is running!');
 });
+app.post('/api/kyc/:userId', upload.single('id_document'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "Koi document upload nahi hua!" });
+        }
+        const { userId } = req.params;
+        const documentUrl = req.file.path;
 
+        const updatedUser = await pool.query(
+            "UPDATE users SET id_proof_url = $1, kyc_status = 'pending' WHERE id = $2 RETURNING kyc_status, id_proof_url",
+            [documentUrl, userId]
+        );
+
+        res.status(200).json({
+            message: "KYC Document uploaded for verification! ⏳",
+            kyc_status: updatedUser.rows[0].kyc_status
+        });
+    } catch (err) {
+        console.error("KYC Upload error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 app.post('/api/register', async (req, res) => {
     try {
         const { name, email, password, role, age, city, bio, price, tags } = req.body;
@@ -405,7 +426,6 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
     try {
         const { user1, user2 } = req.params;
 
-        // NAYA ADDITION 3: Filter messages deleted for me
         const query = `
             SELECT id, sender_id, receiver_id, text AS message, image_url, created_at, is_read 
             FROM messages 

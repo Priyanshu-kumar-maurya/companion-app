@@ -10,6 +10,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [showEditModal, setShowEditModal] = useState(false);
     const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
+    const [kycUploading, setKycUploading] = useState(false);
 
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
@@ -73,7 +74,30 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             socket.off("receive_booking_notification", handleReceiveBooking);
         };
     }, [socket, user]);
+    const handleKycUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setKycUploading(true);
+        const formData = new FormData();
+        formData.append("id_document", file);
 
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/kyc/${user.id}`, {
+                method: "POST",
+                body: formData
+            });
+            if (response.ok) {
+                const data = await response.json();
+                if (setBoyUser) setBoyUser({ ...user, kyc_status: 'pending' });
+                if (setGirlUser) setGirlUser({ ...user, kyc_status: 'pending' });
+                alert("ID Submitted! Please wait 24 hours for verification. ⏳");
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setKycUploading(false);
+        }
+    };
     const handleBookingStatus = async (bookingId, newStatus) => {
         try {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
@@ -224,7 +248,40 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         ⚙️ Settings
                     </button>
                 </div>
+                <div className="mb-6">
+                    {(!user.kyc_status || user.kyc_status === 'unverified') && (
+                        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">⚠️ KYC Verification Required</h3>
+                                <p className="text-xs text-gray-400 mt-1">Upload a valid Govt. ID (Aadhaar/PAN) to get the "Verified" badge and receive more bookings.</p>
+                            </div>
+                            <label className="shrink-0 px-5 py-2.5 bg-red-500/20 hover:bg-red-500 text-white rounded-lg text-xs font-bold cursor-pointer transition border border-red-500/50">
+                                {kycUploading ? "Uploading..." : "Upload ID Proof"}
+                                <input type="file" accept="image/*" className="hidden" onChange={handleKycUpload} disabled={kycUploading} />
+                            </label>
+                        </div>
+                    )}
 
+                    {user.kyc_status === 'pending' && (
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center gap-3">
+                            <span className="text-2xl animate-spin">⏳</span>
+                            <div>
+                                <h3 className="text-yellow-400 font-bold text-sm">KYC Under Review</h3>
+                                <p className="text-xs text-gray-400 mt-1">Your ID is being verified by our team. This usually takes 12-24 hours.</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {user.kyc_status === 'verified' && (
+                        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3">
+                            <span className="text-2xl">✅</span>
+                            <div>
+                                <h3 className="text-green-400 font-bold text-sm">Account Verified</h3>
+                                <p className="text-xs text-gray-400 mt-1">Your identity is verified. You now have a trust badge on your profile!</p>
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <button onClick={() => setPage(PAGES.FIND)} className="mb-8 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-blue-500/20">
                     🔍 Find Companions
                 </button>
