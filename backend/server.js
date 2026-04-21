@@ -479,21 +479,24 @@ app.post('/api/bookings', async (req, res) => {
 app.get('/api/bookings/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+
         const bookings = await pool.query(`
             SELECT b.*, 
-                   u.name as boy_name, u.profile_pic as boy_pic
+                   boy.name as boy_name, boy.profile_pic as boy_pic,
+                   girl.name as girl_name, girl.profile_pic as girl_pic
             FROM bookings b
-            JOIN users u ON b.boy_id = u.id
+            JOIN users boy ON b.boy_id = boy.id
+            JOIN users girl ON b.girl_id = girl.id
             WHERE b.girl_id = $1 OR b.boy_id = $1
             ORDER BY b.created_at DESC
         `, [userId]);
+
         res.status(200).json(bookings.rows);
     } catch (err) {
         console.error("Booking fetch error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
-
 app.put('/api/bookings/:bookingId', async (req, res) => {
     try {
         const { status } = req.body;

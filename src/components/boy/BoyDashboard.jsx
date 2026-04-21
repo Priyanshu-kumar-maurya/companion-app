@@ -284,10 +284,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                 <div key={booking.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col gap-4">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-xl border border-blue-500/30">🎟️</div>
+                                            <img src={booking.girl_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"} className="w-12 h-12 rounded-full object-cover border border-white/10" alt="Companion" />
                                             <div>
-                                                <div className="font-bold text-sm text-white">Session - {booking.hours} Hours</div>
-                                                <div className="text-xs text-blue-400">Amount: ₹{booking.amount}</div>
+                                                <div className="font-bold text-sm text-white">{booking.girl_name}</div>
+                                                <div className="text-xs text-blue-400">{booking.hours} hours • ₹{booking.amount}</div>
                                             </div>
                                         </div>
                                         <div className="text-[10px] text-gray-500">{new Date(booking.created_at).toLocaleDateString()}</div>
