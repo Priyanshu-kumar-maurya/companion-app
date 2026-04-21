@@ -87,9 +87,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 body: formData
             });
             if (response.ok) {
-                const data = await response.json();
-                if (setBoyUser) setBoyUser({ ...user, kyc_status: 'pending' });
-                if (setGirlUser) setGirlUser({ ...user, kyc_status: 'pending' });
+                await response.json();
+                if (setBoyUser) setBoyUser({ ...user, kyc_status: 'pending' }); // 🚨 Sirf Boy wala rakha hai
                 alert("ID Submitted! Please wait 24 hours for verification. ⏳");
             }
         } catch (err) {

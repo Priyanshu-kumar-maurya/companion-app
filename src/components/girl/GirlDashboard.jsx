@@ -93,8 +93,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 body: formData
             });
             if (response.ok) {
-                await response.json(); // Warning fix: data variable hata diya
-                if (setGirlUser) setGirlUser({ ...user, kyc_status: 'pending' }); // Error fix: Sirf setGirlUser rakha
+                await response.json();
+                if (setGirlUser) setGirlUser({ ...user, kyc_status: 'pending' }); 
                 alert("ID Submitted! Please wait 24 hours for verification. ⏳");
             }
         } catch (err) {
