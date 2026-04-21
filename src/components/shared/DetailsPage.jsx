@@ -127,7 +127,7 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     const profileImage = profile.profile_pic || (profile.role === "boy" ? "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg" : "https://i.pinimg.com/736x/a9/58/09/a958095418a0b357314288566dd5c96a.jpg");
 
     return (
-        <div className="pt-16 min-h-screen relative">
+        <div className="pd-20 min-h-screen relative">
             <div className="max-w-4xl mx-auto px-6 py-8">
                 <button onClick={() => setPage(PAGES.FIND)} className="text-sm text-gray-400 hover:text-white transition mb-6 flex items-center gap-1">← Back to Find</button>
 

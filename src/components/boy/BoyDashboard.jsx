@@ -5,8 +5,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [chatHistory, setChatHistory] = useState([]);
     const [uploading, setUploading] = useState(false);
     const [myPosts, setMyPosts] = useState([]);
-    const [newPostCaption, setNewPostCaption] = useState("");
-    const [postUploading, setPostUploading] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
@@ -74,6 +72,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             socket.off("receive_booking_notification", handleReceiveBooking);
         };
     }, [socket, user]);
+
     const handleKycUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -88,7 +87,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             });
             if (response.ok) {
                 await response.json();
-                if (setBoyUser) setBoyUser({ ...user, kyc_status: 'pending' }); // 🚨 Sirf Boy wala rakha hai
+                if (setBoyUser) setBoyUser({ ...user, kyc_status: 'pending' });
                 alert("ID Submitted! Please wait 24 hours for verification. ⏳");
             }
         } catch (err) {
@@ -97,6 +96,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             setKycUploading(false);
         }
     };
+
     const handleBookingStatus = async (bookingId, newStatus) => {
         try {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
@@ -137,24 +137,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 alert("Profile picture updated! 📸");
             }
         } catch (err) { console.error(err); } finally { setUploading(false); }
-    };
-
-    const handlePostUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setPostUploading(true);
-        const formData = new FormData();
-        formData.append("post_image", file);
-        formData.append("caption", newPostCaption);
-        try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, { method: "POST", body: formData });
-            if (response.ok) {
-                const data = await response.json();
-                setMyPosts([data.post, ...myPosts]);
-                setNewPostCaption("");
-                alert("New photo posted! 📸");
-            }
-        } catch (err) { console.error(err); } finally { setPostUploading(false); }
     };
 
     const handleEditProfile = async (e) => {
@@ -247,6 +229,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         ⚙️ Settings
                     </button>
                 </div>
+
                 <div className="mb-6">
                     {(!user.kyc_status || user.kyc_status === 'unverified') && (
                         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -281,9 +264,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         </div>
                     )}
                 </div>
-                <button onClick={() => setPage(PAGES.FIND)} className="mb-8 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 hover:-translate-y-0.5 transition shadow-lg shadow-blue-500/20">
-                    🔍 Find Companions
-                </button>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-blue-400">₹{totalEarnings}</div></div>
@@ -302,7 +282,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {myBookings.map((booking) => (
                                 <div key={booking.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col gap-4">
-
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-xl border border-blue-500/30">🎟️</div>
@@ -313,13 +292,11 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                         </div>
                                         <div className="text-[10px] text-gray-500">{new Date(booking.created_at).toLocaleDateString()}</div>
                                     </div>
-
                                     <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
                                         <div className="text-[11px] text-gray-400 flex items-center gap-2">📅 <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
                                         <div className="text-[11px] text-gray-400 flex items-center gap-2">📍 <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
                                         {booking.meeting_details && <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">"{booking.meeting_details}"</div>}
                                     </div>
-
                                     <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
                                         {booking.status === 'pending' && (
                                             <>
@@ -339,46 +316,40 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <div className="lg:col-span-2 bg-[#16162A] border border-white/5 rounded-2xl p-6">
-                        <div className="text-base font-semibold mb-4 flex items-center gap-2">💬 Your Messages</div>
-                        {chatHistory.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No messages yet. Start exploring!</div> : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {chatHistory.map((person) => (
-                                    <div key={person.id} onClick={() => handleChatClick(person)} className="flex items-center gap-3 py-3 px-4 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:border-blue-500/30 transition">
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-sm font-bold">{person.name[0]}</div>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-semibold">{person.name}</div>
-                                            {unreadCounts[person.id] ? (
-                                                <div className="text-xs text-green-400 font-bold animate-pulse">New Message!</div>
-                                            ) : (
-                                                <div className="text-xs text-gray-400">Click to chat</div>
-                                            )}
-                                        </div>
+                {/* MESSAGES SECTION FULL WIDTH HO GAYA */}
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
+                    <div className="text-base font-semibold mb-4 flex items-center gap-2">💬 Your Messages</div>
+                    {chatHistory.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No messages yet. Start exploring!</div> : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {chatHistory.map((person) => (
+                                <div key={person.id} onClick={() => handleChatClick(person)} className="flex items-center gap-3 py-3 px-4 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:border-blue-500/30 transition">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/30 to-blue-500/30 flex items-center justify-center text-sm font-bold">{person.name[0]}</div>
+                                    <div className="flex-1">
+                                        <div className="text-sm font-semibold">{person.name}</div>
                                         {unreadCounts[person.id] ? (
-                                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_8px_rgba(34,197,94,0.6)]">
-                                                {unreadCounts[person.id]}
-                                            </div>
+                                            <div className="text-xs text-green-400 font-bold animate-pulse">New Message!</div>
                                         ) : (
-                                            <div className="text-blue-400">➤</div>
+                                            <div className="text-xs text-gray-400">Click to chat</div>
                                         )}
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6">
-                        <div className="text-base font-semibold mb-4 text-blue-400">📸 Create a Post</div>
-                        <textarea placeholder="Write a caption..." className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl p-3 text-sm text-white resize-none h-20 outline-none focus:border-blue-500 mb-3 transition" value={newPostCaption} onChange={(e) => setNewPostCaption(e.target.value)} />
-                        <label className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-semibold text-sm flex justify-center cursor-pointer hover:opacity-90 transition">
-                            {postUploading ? "Posting..." : "Select Photo & Post"}
-                            <input type="file" accept="image/*" className="hidden" onChange={handlePostUpload} disabled={postUploading} />
-                        </label>
-                    </div>
+                                    {unreadCounts[person.id] ? (
+                                        <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_8px_rgba(34,197,94,0.6)]">
+                                            {unreadCounts[person.id]}
+                                        </div>
+                                    ) : (
+                                        <div className="text-blue-400">➤</div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
-                    <div className="text-base font-semibold mb-4">🖼️ My Gallery</div>
+                    <div className="text-base font-semibold mb-4 flex items-center justify-between">
+                        <span>🖼️ My Gallery</span>
+                        <span className="text-xs text-gray-400 font-normal">Upload new photos using the + button above</span>
+                    </div>
                     {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {myPosts.map(post => (
