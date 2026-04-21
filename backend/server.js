@@ -223,7 +223,7 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password, role, age, city, bio, price, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, email, role",
+            "INSERT INTO users (name, email, password, role, age, city, bio, price, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, email, role, age, city, bio, price, tags, profile_pic, kyc_status",
             [name, email, hashedPassword, role, age || null, city || '', bio || '', price || 0, tags || '']
         );
         res.status(201).json({ message: "Registered!", user: newUser.rows[0] });

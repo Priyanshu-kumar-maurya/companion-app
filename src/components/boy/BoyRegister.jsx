@@ -20,8 +20,12 @@ function BoyRegister({ setPage, setBoyUser }) {
                 body: JSON.stringify({
                     name: form.name,
                     email: form.email,
+                    age: form.age,
+                    city: form.city,
                     password: form.password,
-                    role: "boy"
+                    role: "boy",
+                    price: form.price,
+                    tags: [form.city, form.age],
                 }),
             });
 
