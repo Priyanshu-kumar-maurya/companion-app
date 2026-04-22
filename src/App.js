@@ -3,16 +3,14 @@ import Navbar from "./components/Navbar";
 import HomePage from "./components/HomePage";
 import AboutPage from "./components/AboutPage";
 import HelpPage from "./components/HelpPage";
-import GirlLogin from "./components/girl/GirlLogin";
 import GirlDashboard from "./components/girl/GirlDashboard";
-import BoyLogin from "./components/boy/BoyLogin";
 import BoyDashboard from "./components/boy/BoyDashboard";
 import FindPage from "./components/shared/FindPage";
 import DetailsPage from "./components/shared/DetailsPage";
 import ChatPage from "./components/shared/ChatPage";
 
-// 🚨 NAYA UNIFIED REGISTER IMPORT KIYA 🚨
 import UnifiedRegister from "./components/UnifiedRegister";
+import UnifiedLogin from "./components/UnifiedLogin"; // 🚨 YEH IMPORT MISSING THA 🚨
 
 import { io } from "socket.io-client";
 
@@ -123,20 +121,21 @@ function App() {
         return <AboutPage />;
       case PAGES.HELP:
         return <HelpPage />;
-      case PAGES.GIRL_LOGIN:
-        return <GirlLogin setPage={setPage} setGirlUser={setGirlUser} />;
 
-      // 🚨 DONO REGISTER BUTTONS AB EK HI NAYE PAGE PAR JAYENGE 🚨
+      case PAGES.GIRL_LOGIN:
+        return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
+      case PAGES.BOY_LOGIN:
+        return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
+
       case PAGES.GIRL_REGISTER:
       case PAGES.BOY_REGISTER:
         return <UnifiedRegister setPage={setPage} />;
 
       case PAGES.GIRL_DASHBOARD:
-        return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <GirlLogin setPage={setPage} setGirlUser={setGirlUser} />;
-      case PAGES.BOY_LOGIN:
-        return <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
+        return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
       case PAGES.BOY_DASHBOARD:
-        return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
+        return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
+
       case PAGES.FIND:
         return <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       case PAGES.DETAILS:

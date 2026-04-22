@@ -91,26 +91,40 @@ function HomePage({ setPage, currentUser }) {
                             </button>
                         </>
                     ) : (
-                        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-2xl mx-auto">
-                            <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-pink-500/20 rounded-2xl shadow-lg hover:border-pink-500/50 transition duration-300">
-                                <h3 className="text-pink-400 font-bold text-xl">For Girls 👩</h3>
-                                <p className="text-sm text-gray-400 mb-2 flex-grow">Earn money by spending time as a companion.</p>
-                                <button
-                                    onClick={() => setPage(PAGES.GIRL_LOGIN)}
-                                    className="w-full px-6 py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
-                                >
-                                    Join as a Girl
-                                </button>
+                        <div className="flex flex-col items-center w-full max-w-2xl mx-auto">
+                            {/* 🚨 DONO JOIN BUTTONS AB SEEDHA REGISTER PAR JAYENGE 🚨 */}
+                            <div className="flex flex-col sm:flex-row gap-6 w-full mb-8">
+                                <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-pink-500/20 rounded-2xl shadow-lg hover:border-pink-500/50 transition duration-300">
+                                    <h3 className="text-pink-400 font-bold text-xl">For Girls 👩</h3>
+                                    <p className="text-sm text-gray-400 mb-2 flex-grow">Earn money by spending time as a companion.</p>
+                                    <button
+                                        onClick={() => setPage(PAGES.GIRL_REGISTER)}
+                                        className="w-full px-6 py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
+                                    >
+                                        Register as a Girl
+                                    </button>
+                                </div>
+
+                                <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-blue-500/20 rounded-2xl shadow-lg hover:border-blue-500/50 transition duration-300">
+                                    <h3 className="text-blue-400 font-bold text-xl">For Boys 👨</h3>
+                                    <p className="text-sm text-gray-400 mb-2 flex-grow">Find companions for dates, events & hangouts.</p>
+                                    <button
+                                        onClick={() => setPage(PAGES.BOY_REGISTER)}
+                                        className="w-full px-6 py-3.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
+                                    >
+                                        Register as a Boy
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-blue-500/20 rounded-2xl shadow-lg hover:border-blue-500/50 transition duration-300">
-                                <h3 className="text-blue-400 font-bold text-xl">For Boys 👨</h3>
-                                <p className="text-sm text-gray-400 mb-2 flex-grow">Find companions for dates, events & hangouts.</p>
+                            {/* 🚨 NAYA EXPLICIT LOGIN BUTTON YAHAN ADD KIYA HAI 🚨 */}
+                            <div className="text-center bg-[#16162A] border border-white/5 py-4 px-10 rounded-2xl w-full sm:w-auto shadow-lg hover:border-white/10 transition">
+                                <p className="text-gray-400 text-sm mb-2">Already have an account?</p>
                                 <button
                                     onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                    className="w-full px-6 py-3.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
+                                    className="text-white font-bold text-lg hover:text-pink-400 transition flex items-center justify-center gap-2 w-full"
                                 >
-                                    Join as a Boy
+                                    Login to your account <span className="text-xl">➔</span>
                                 </button>
                             </div>
                         </div>
@@ -155,7 +169,6 @@ function HomePage({ setPage, currentUser }) {
                                                 <div className="text-5xl text-white/70">😊</div>
                                             )}
 
-                                            {/* 🚨 NAKLI ONLINE HATA DIYA, ASLI VERIFIED LAGA DIYA 🚨 */}
                                             {profile.kyc_status === 'verified' && (
                                                 <div className="absolute top-3 left-3 bg-purple-500/90 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 text-white shadow-lg z-10">
                                                     ✓ Verified
@@ -165,7 +178,6 @@ function HomePage({ setPage, currentUser }) {
                                         </div>
 
                                         <div className="p-5 relative -mt-6 z-10">
-                                            {/* 🚨 ASLI RATING YAHAN ADD KI HAI 🚨 */}
                                             <div className="flex justify-between items-start">
                                                 <div>
                                                     <h3 className="text-xl font-bold">{profile.name.split(' ')[0]}</h3>

@@ -1,167 +1,125 @@
-import React, { useState, useEffect } from "react";
-import Navbar from "./components/Navbar";
-import HomePage from "./components/HomePage";
-import AboutPage from "./components/AboutPage";
-import HelpPage from "./components/HelpPage";
-import GirlDashboard from "./components/girl/GirlDashboard";
-import BoyDashboard from "./components/boy/BoyDashboard";
-import FindPage from "./components/shared/FindPage";
-import DetailsPage from "./components/shared/DetailsPage";
-import ChatPage from "./components/shared/ChatPage";
+import React, { useState } from "react";
+import { PAGES } from "../App";
 
-import UnifiedRegister from "./components/UnifiedRegister";
-// 🚨 NAYA UNIFIED LOGIN IMPORT KIYA 🚨
-import UnifiedLogin from "./components/UnifiedLogin";
+function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' }) {
+    const [formData, setFormData] = useState({
+        emailOrPhone: "",
+        password: "",
+        role: defaultRole
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-import { io } from "socket.io-client";
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-const socket = io("https://rentgf-and-bf.onrender.com", {
-    transports: ['websocket']
-});
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
 
-export const PAGES = {
-    HOME: "home",
-    ABOUT: "about",
-    HELP: "help",
-    GIRL_LOGIN: "girl_login",
-    GIRL_REGISTER: "girl_register",
-    GIRL_DASHBOARD: "girl_dashboard",
-    BOY_LOGIN: "boy_login",
-    BOY_REGISTER: "boy_register",
-    BOY_DASHBOARD: "boy_dashboard",
-    FIND: "find",
-    DETAILS: "details",
-    CHAT: "chat",
-};
+        try {
+            const response = await fetch("https://rentgf-and-bf.onrender.com/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData)
+            });
 
-function App() {
-    const [page, setPage] = useState(PAGES.HOME);
-    const [selectedGirl, setSelectedGirl] = useState(null);
-    const [girlUser, setGirlUser] = useState(null);
-    const [boyUser, setBoyUser] = useState(null);
+            const data = await response.json();
 
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-
-    useEffect(() => {
-        const handleHashChange = () => {
-            const currentHash = window.location.hash.replace("#", "");
-            if (currentHash) {
-                setPage(currentHash);
-            } else {
-                setPage(PAGES.HOME);
-            }
-        };
-
-        window.addEventListener("hashchange", handleHashChange);
-        handleHashChange();
-
-        return () => window.removeEventListener("hashchange", handleHashChange);
-    }, []);
-
-    useEffect(() => {
-        if (window.location.hash !== `#${page}`) {
-            window.history.pushState(null, "", `#${page}`);
-        }
-    }, [page]);
-
-    useEffect(() => {
-        const verifySession = async () => {
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-                setIsCheckingAuth(false);
-                return;
-            }
-
-            try {
-                const response = await fetch("https://rentgf-and-bf.onrender.com/api/me", {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    const userData = await response.json();
-
-                    if (userData.role === "boy") {
-                        setBoyUser(userData);
-                        setPage(PAGES.BOY_DASHBOARD);
-                    } else if (userData.role === "girl") {
-                        setGirlUser(userData);
-                        setPage(PAGES.GIRL_DASHBOARD);
-                    }
+            if (response.ok) {
+                localStorage.setItem("token", data.token);
+                if (data.user.role === 'girl') {
+                    if (setGirlUser) setGirlUser(data.user);
+                    setPage(PAGES.GIRL_DASHBOARD);
                 } else {
-                    localStorage.removeItem("token");
+                    if (setBoyUser) setBoyUser(data.user);
+                    setPage(PAGES.BOY_DASHBOARD);
                 }
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setIsCheckingAuth(false);
+            } else {
+                setError(data.error || "Login failed");
             }
-        };
-
-        verifySession();
-    }, []);
-
-    if (isCheckingAuth) {
-        return (
-            <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center text-white">
-                <div className="text-xl font-semibold text-pink-500 animate-pulse">
-                    Loading your dating experience... 💕
-                </div>
-            </div>
-        );
-    }
-
-    const renderPage = () => {
-        switch (page) {
-            case PAGES.HOME:
-                return <HomePage setPage={setPage} currentUser={boyUser || girlUser} />;
-            case PAGES.ABOUT:
-                return <AboutPage />;
-            case PAGES.HELP:
-                return <HelpPage />;
-
-            // 🚨 DONO LOGIN BUTTONS AB NAYE UNIFIED PAGE PAR JAYENGE 🚨
-            case PAGES.GIRL_LOGIN:
-                return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
-            case PAGES.BOY_LOGIN:
-                return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
-
-            case PAGES.GIRL_REGISTER:
-            case PAGES.BOY_REGISTER:
-                return <UnifiedRegister setPage={setPage} />;
-
-            case PAGES.GIRL_DASHBOARD:
-                return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
-            case PAGES.BOY_DASHBOARD:
-                return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
-
-            case PAGES.FIND:
-                return <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
-            case PAGES.DETAILS:
-                return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} currentUser={boyUser || girlUser} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
-            case PAGES.CHAT:
-                return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
-            default:
-                return <HomePage setPage={setPage} currentUser={boyUser || girlUser} />;
+        } catch (err) {
+            console.error(err);
+            setError("Server error. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
+    const isBoy = formData.role === 'boy';
+
     return (
-        <div className="min-h-screen bg-[#0D0D1A] text-white">
-            <Navbar
-                page={page}
-                setPage={setPage}
-                girlUser={girlUser}
-                boyUser={boyUser}
-                setGirlUser={setGirlUser}
-                setBoyUser={setBoyUser}
-            />
-            {renderPage()}
+        <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
+            <div className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? 'bg-blue-600/20' : 'bg-pink-600/20'}`}></div>
+
+            <div className={`bg-[#16162A] w-full max-w-md p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? 'border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]'}`}>
+
+                <h2 className="text-3xl font-extrabold text-center text-white mb-2">Welcome Back</h2>
+                <p className="text-gray-400 text-center text-sm mb-6">Login to your account</p>
+
+                <div className="flex bg-[#0D0D1A] p-1 rounded-xl mb-6 border border-white/5">
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, role: 'boy' })}
+                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                    >
+                        👨 Boy Login
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, role: 'girl' })}
+                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${!isBoy ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+                    >
+                        👩 Girl Login
+                    </button>
+                </div>
+
+                {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Email OR Phone Number</label>
+                        <input
+                            type="text"
+                            name="emailOrPhone"
+                            required
+                            value={formData.emailOrPhone}
+                            onChange={handleChange}
+                            className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                            placeholder="abc@mail.com ya 9876543210"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            required
+                            value={formData.password}
+                            onChange={handleChange}
+                            className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                            placeholder="••••••••"
+                        />
+                    </div>
+
+                    <button type="submit" disabled={loading} className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}>
+                        {loading ? "Logging in..." : "Login →"}
+                    </button>
+                </form>
+
+                <div className="mt-6 text-center">
+                    <p className="text-gray-400 text-sm">
+                        Don't have an account?{' '}
+                        <button onClick={() => setPage(isBoy ? PAGES.BOY_REGISTER : PAGES.GIRL_REGISTER)} className={`font-bold hover:underline ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
+                            Register here
+                        </button>
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
 
-export default App;
+export default UnifiedLogin;
