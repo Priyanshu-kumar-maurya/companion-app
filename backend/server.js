@@ -11,6 +11,14 @@ const { Server } = require('socket.io');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
+const nodemailer = require('nodemailer');
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -58,7 +66,10 @@ pool.connect()
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_for INTEGER[] DEFAULT '{}';");
             await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;");
-
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);");
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;");
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp VARCHAR(10);");
+            await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expiry TIMESTAMP;");
 
             await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
                 id SERIAL PRIMARY KEY,
@@ -213,41 +224,89 @@ app.post('/api/kyc/:userId', upload.single('id_document'), async (req, res) => {
 });
 app.post('/api/register', async (req, res) => {
     try {
-        const { name, email, password, role, age, city, bio, price, tags } = req.body;
-        if (!name || !email || !password || !role) return res.status(400).json({ error: "Name, email, password required!" });
+        const { name, email, phone, password, role, age, city, bio, price, tags } = req.body;
+        if (!name || !email || !phone || !password || !role) return res.status(400).json({ error: "Name, email, phone aur password zaroori hai!" });
 
-        const userExists = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-        if (userExists.rows.length > 0) return res.status(400).json({ error: "Email pehle se register hai!" });
+        const userExists = await pool.query("SELECT * FROM users WHERE email = $1 OR phone = $2", [email, phone]);
+        if (userExists.rows.length > 0) return res.status(400).json({ error: "Email ya Phone pehle se register hai!" });
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // 6 digit ka random OTP banao
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60000); // 10 minute tak valid
+
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password, role, age, city, bio, price, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, email, role, age, city, bio, price, tags, profile_pic, kyc_status",
-            [name, email, hashedPassword, role, age || null, city || '', bio || '', price || 0, tags || '']
+            "INSERT INTO users (name, email, phone, password, role, age, city, bio, price, tags, otp, otp_expiry, is_verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, false) RETURNING id, email",
+            [name, email, phone, hashedPassword, role, age || null, city || '', bio || '', price || 0, tags || '', otp, otpExpiry]
         );
-        res.status(201).json({ message: "Registered!", user: newUser.rows[0] });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'RentGF - Your Account Verification OTP',
+            text: `Welcome to RentGF! Your OTP for account verification is: ${otp}. It is valid for 10 minutes.`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) console.log("Email bhejne mein error:", error);
+        });
+
+        res.status(201).json({ message: "OTP sent to email!", userId: newUser.rows[0].id });
     } catch (err) {
         console.error("Register error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
 
+app.post('/api/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const result = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+
+        if (result.rows.length === 0) return res.status(400).json({ error: "User nahi mila!" });
+
+        const user = result.rows[0];
+
+        if (user.otp !== otp) return res.status(400).json({ error: "Galat OTP!" });
+        if (new Date() > new Date(user.otp_expiry)) return res.status(400).json({ error: "OTP expire ho gaya hai!" });
+
+        // OTP sahi hai toh verified true kar do
+        await pool.query("UPDATE users SET is_verified = true, otp = null, otp_expiry = null WHERE id = $1", [user.id]);
+
+        res.status(200).json({ message: "Account Verified Successfully! Ab aap login kar sakte hain." });
+    } catch (err) {
+        console.error("Verify OTP error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// --- 3. NAYA LOGIN API (Email YA Phone se) ---
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        const { emailOrPhone, password, role } = req.body; // 'email' ki jagah ab 'emailOrPhone' use karenge
 
-        if (!email || !password || !role) {
-            return res.status(400).json({ error: "Email, password aur role zaroori hai!" });
+        if (!emailOrPhone || !password || !role) {
+            return res.status(400).json({ error: "Details poori nahi hain!" });
         }
 
-        const userResult = await pool.query("SELECT * FROM users WHERE email = $1 AND role = $2", [email, role]);
+        // Check karo ki email match karta hai YA phone match karta hai
+        const userResult = await pool.query(
+            "SELECT * FROM users WHERE (email = $1 OR phone = $1) AND role = $2",
+            [emailOrPhone, role]
+        );
 
         if (userResult.rows.length === 0) {
             return res.status(400).json({ error: "User nahi mila ya role galat hai!" });
         }
 
         const user = userResult.rows[0];
+
+        // Agar account verified nahi hai toh login mat karne do
+        if (!user.is_verified) {
+            return res.status(403).json({ error: "Pehle apna account Email OTP se verify karein!" });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
@@ -260,7 +319,7 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        const { password: _, ...userData } = user;
+        const { password: _, otp, otp_expiry, ...userData } = user; // password aur otp hide kar diya
 
         res.status(200).json({
             message: "Login successful!",
