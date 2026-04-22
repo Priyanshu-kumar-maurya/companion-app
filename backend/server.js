@@ -277,12 +277,19 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/users', async (req, res) => {
     try {
         const { role } = req.query;
-        const users = await pool.query(
-            "SELECT id, name, age, city, bio, price, profile_pic, role, tags, is_private FROM users WHERE role = $1",
-            [role]
-        );
+        const users = await pool.query(`
+            SELECT u.id, u.name, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.kyc_status,
+                   COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
+                   COUNT(r.id) as review_count
+            FROM users u
+            LEFT JOIN reviews r ON u.id = r.companion_id
+            WHERE u.role = $1
+            GROUP BY u.id
+            ORDER BY avg_rating DESC, review_count DESC
+        `, [role]);
         res.status(200).json(users.rows);
     } catch (err) {
+        console.error("Users fetch error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

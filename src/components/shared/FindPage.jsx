@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
+
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
 
@@ -22,11 +23,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                 if (response.ok) {
                     const formattedData = data.map(user => ({
                         ...user,
-                        tags: user.tags ? (typeof user.tags === 'string' ? user.tags.split(',') : user.tags) : ["Coffee Date", "Movie"],
-                        rating: user.rating || 4.5,
-                        reviews: user.reviews || Math.floor(Math.random() * 50) + 10,
-                        verified: true,
-                        online: Math.random() > 0.5
+                        tags: user.tags ? (typeof user.tags === 'string' ? user.tags.split(',') : user.tags) : ["Coffee Date", "Movie"]
                     }));
                     setUsers(formattedData);
                 }
@@ -131,12 +128,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                         <div className="text-6xl text-white/70">😊</div>
                                     )}
 
-                                    {u.online && (
-                                        <div className="absolute top-3 right-3 flex items-center gap-1 bg-green-500/20 border border-green-500/40 rounded-full px-2 py-0.5 text-xs text-green-400 backdrop-blur-sm">
-                                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full" /> Online
-                                        </div>
-                                    )}
-                                    {u.verified && (
+                                    {u.kyc_status === 'verified' && (
                                         <div className="absolute top-3 left-3 bg-purple-500/20 border border-purple-500/40 rounded-full px-2 py-0.5 text-xs text-purple-300 backdrop-blur-sm">
                                             ✓ Verified
                                         </div>
@@ -147,7 +139,12 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                 <div className="p-4 flex-1 flex flex-col">
                                     <div className="text-base font-semibold">{u.name.split(' ')[0]}</div>
                                     <div className="text-xs text-gray-400 mt-0.5">📍 {u.city || "Unknown"} · {u.age || "N/A"} years</div>
-                                    <div className="text-xs text-yellow-400 mt-1">⭐ {u.rating} <span className="text-gray-500">({u.reviews} reviews)</span></div>
+                                    <div className="text-xs text-yellow-400 mt-1">
+                                        ⭐ {u.avg_rating > 0 ? `${u.avg_rating} ` : "New "}
+                                        <span className="text-gray-500">
+                                            {u.avg_rating > 0 ? `(${u.review_count} reviews)` : ""}
+                                        </span>
+                                    </div>
 
                                     <div className="mt-auto pt-4 flex items-center justify-between">
                                         <div>

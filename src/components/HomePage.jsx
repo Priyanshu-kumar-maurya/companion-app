@@ -58,6 +58,7 @@ function HomePage({ setPage, currentUser }) {
 
                 <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-pink-600/20 rounded-full blur-[100px] pointer-events-none"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
+
                 <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-pink-400 text-sm font-semibold mb-6 shadow-[0_0_15px_rgba(236,72,153,0.15)] relative z-10">
                     ✨ India's #1 Companion App
                 </div>
@@ -142,6 +143,7 @@ function HomePage({ setPage, currentUser }) {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                                 {featuredProfiles.map((profile) => (
                                     <div key={profile.id} className="bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden group hover:border-pink-500/30 transition duration-300">
+
                                         <div className="h-56 relative overflow-hidden flex items-center justify-center bg-gradient-to-br from-pink-500/30 to-purple-500/30">
                                             {profile.profile_pic ? (
                                                 <img
@@ -152,15 +154,27 @@ function HomePage({ setPage, currentUser }) {
                                             ) : (
                                                 <div className="text-5xl text-white/70">😊</div>
                                             )}
-                                            <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 text-green-400">
-                                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full" /> Online
-                                            </div>
+
+                                            {/* 🚨 NAKLI ONLINE HATA DIYA, ASLI VERIFIED LAGA DIYA 🚨 */}
+                                            {profile.kyc_status === 'verified' && (
+                                                <div className="absolute top-3 left-3 bg-purple-500/90 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1 text-white shadow-lg z-10">
+                                                    ✓ Verified
+                                                </div>
+                                            )}
                                             <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#16162A] to-transparent h-20" />
                                         </div>
 
                                         <div className="p-5 relative -mt-6 z-10">
-                                            <h3 className="text-xl font-bold">{profile.name.split(' ')[0]}</h3>
-                                            <p className="text-xs text-gray-400 mt-1">📍 {profile.city || "Unknown"} · 🎂 {profile.age || "N/A"} yrs</p>
+                                            {/* 🚨 ASLI RATING YAHAN ADD KI HAI 🚨 */}
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h3 className="text-xl font-bold">{profile.name.split(' ')[0]}</h3>
+                                                    <p className="text-xs text-gray-400 mt-1">📍 {profile.city || "Unknown"} · 🎂 {profile.age || "N/A"} yrs</p>
+                                                </div>
+                                                <div className="bg-[#0D0D1A] px-2 py-1 rounded-md border border-white/10 text-xs font-bold text-yellow-400 flex items-center gap-1">
+                                                    ⭐ {profile.avg_rating > 0 ? profile.avg_rating : "New"}
+                                                </div>
+                                            </div>
 
                                             <div className="mt-4 flex flex-wrap gap-2">
                                                 {(typeof profile.tags === 'string' ? profile.tags.split(',') : ["Coffee Date"]).slice(0, 2).map((tag, i) => (
