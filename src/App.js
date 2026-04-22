@@ -4,19 +4,22 @@ import HomePage from "./components/HomePage";
 import AboutPage from "./components/AboutPage";
 import HelpPage from "./components/HelpPage";
 import GirlLogin from "./components/girl/GirlLogin";
-import GirlRegister from "./components/girl/GirlRegister";
 import GirlDashboard from "./components/girl/GirlDashboard";
 import BoyLogin from "./components/boy/BoyLogin";
-import BoyRegister from "./components/boy/BoyRegister";
 import BoyDashboard from "./components/boy/BoyDashboard";
 import FindPage from "./components/shared/FindPage";
 import DetailsPage from "./components/shared/DetailsPage";
 import ChatPage from "./components/shared/ChatPage";
+
+// 🚨 NAYA UNIFIED REGISTER IMPORT KIYA 🚨
+import UnifiedRegister from "./components/UnifiedRegister";
+
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
   transports: ['websocket']
 });
+
 export const PAGES = {
   HOME: "home",
   ABOUT: "about",
@@ -32,15 +35,6 @@ export const PAGES = {
   CHAT: "chat",
 };
 
-export const GIRLS = [
-  { id: 1, name: "Aisha Khan", age: 22, city: "Mumbai", rating: 4.8, reviews: 142, price: 500, tags: ["Coffee Date", "Movie", "Study Partner"], bio: "I love long conversations, art galleries, and cozy cafes.", verified: true, online: true },
-  { id: 2, name: "Priya Sharma", age: 24, city: "Delhi", rating: 4.6, reviews: 98, price: 700, tags: ["Shopping", "Dinner", "Events"], bio: "Bubbly, outgoing and always up for an adventure!", verified: true, online: false },
-  { id: 3, name: "Neha Gupta", age: 21, city: "Pune", rating: 4.9, reviews: 211, price: 600, tags: ["Study Partner", "Coffee Date", "Walk"], bio: "Gentle, kind and a great listener.", verified: true, online: true },
-  { id: 4, name: "Riya Patel", age: 23, city: "Bangalore", rating: 4.5, reviews: 76, price: 450, tags: ["Movie", "Gaming", "Dinner"], bio: "Gamer girl who loves anime and good food!", verified: false, online: true },
-  { id: 5, name: "Sara Joshi", age: 25, city: "Chennai", rating: 4.7, reviews: 133, price: 800, tags: ["Events", "Travel", "Dinner"], bio: "Sophisticated and well-traveled.", verified: true, online: false },
-  { id: 6, name: "Meera Singh", age: 22, city: "Hyderabad", rating: 4.4, reviews: 55, price: 400, tags: ["Coffee Date", "Walk", "Study Partner"], bio: "Sweet, funny and easy to talk to.", verified: true, online: true },
-];
-
 function App() {
   const [page, setPage] = useState(PAGES.HOME);
   const [selectedGirl, setSelectedGirl] = useState(null);
@@ -48,6 +42,7 @@ function App() {
   const [boyUser, setBoyUser] = useState(null);
 
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
   useEffect(() => {
     const handleHashChange = () => {
       const currentHash = window.location.hash.replace("#", "");
@@ -69,6 +64,7 @@ function App() {
       window.history.pushState(null, "", `#${page}`);
     }
   }, [page]);
+
   useEffect(() => {
     const verifySession = async () => {
       const token = localStorage.getItem("token");
@@ -122,31 +118,33 @@ function App() {
   const renderPage = () => {
     switch (page) {
       case PAGES.HOME:
-        return <HomePage setPage={setPage} />;
+        return <HomePage setPage={setPage} currentUser={boyUser || girlUser} />;
       case PAGES.ABOUT:
         return <AboutPage />;
       case PAGES.HELP:
         return <HelpPage />;
       case PAGES.GIRL_LOGIN:
         return <GirlLogin setPage={setPage} setGirlUser={setGirlUser} />;
+
+      // 🚨 DONO REGISTER BUTTONS AB EK HI NAYE PAGE PAR JAYENGE 🚨
       case PAGES.GIRL_REGISTER:
-        return <GirlRegister setPage={setPage} setGirlUser={setGirlUser} />;
+      case PAGES.BOY_REGISTER:
+        return <UnifiedRegister setPage={setPage} />;
+
       case PAGES.GIRL_DASHBOARD:
         return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <GirlLogin setPage={setPage} setGirlUser={setGirlUser} />;
       case PAGES.BOY_LOGIN:
         return <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
-      case PAGES.BOY_REGISTER:
-        return <BoyRegister setPage={setPage} setBoyUser={setBoyUser} />;
       case PAGES.BOY_DASHBOARD:
         return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <BoyLogin setPage={setPage} setBoyUser={setBoyUser} />;
       case PAGES.FIND:
         return <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       case PAGES.DETAILS:
-        return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} currentUser={boyUser || girlUser}/> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} />;
+        return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} currentUser={boyUser || girlUser} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       case PAGES.CHAT:
-        return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} />;
+        return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       default:
-        return <HomePage setPage={setPage} />;
+        return <HomePage setPage={setPage} currentUser={boyUser || girlUser} />;
     }
   };
 
