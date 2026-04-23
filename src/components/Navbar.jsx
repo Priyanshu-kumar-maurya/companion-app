@@ -15,13 +15,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
     const isBoy = boyUser !== null;
     const isGirl = girlUser !== null;
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        if (setGirlUser) setGirlUser(null);
-        if (setBoyUser) setBoyUser(null);
-        setPage(PAGES.HOME);
-        setIsMenuOpen(false);
-    };
 
     const getLinkStyle = (targetPage) => {
         const isActive = page === targetPage;
@@ -36,12 +29,11 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
         setIsMenuOpen(false);
     };
 
-    // --- INSTAGRAM STYLE POST FUNCTIONS ---
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
             setPostFile(file);
-            setPostPreview(URL.createObjectURL(file)); // Image ka live preview banata hai
+            setPostPreview(URL.createObjectURL(file));
         }
     };
 
@@ -108,6 +100,15 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                             {currentUser && (
                                 <>
                                     <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}>🔍 Find</button>
+
+                                    {/* 🚨 DESKTOP: MESSAGES BUTTON ADDED HERE 🚨 */}
+                                    <button
+                                        onClick={() => setPage(PAGES.MESSAGES)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.MESSAGES ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
+                                    >
+                                        💬 Messages
+                                    </button>
+
                                     {/* Desktop Post Button */}
                                     <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
                                         <span className="text-sm">➕</span> Create
@@ -123,7 +124,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                                     >
                                         👤 {currentUser.name.split(" ")[0]}
                                     </button>
-                                    <button onClick={handleLogout} className="px-3 py-1.5 text-sm text-gray-400 hover:text-red-400 transition">Logout</button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
@@ -145,7 +145,7 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
 
                     {currentUser ? (
                         <button
-                            onClick={() => setShowPostModal(true)} // 🚨 DIRECT MODAL OPEN HOGA
+                            onClick={() => setShowPostModal(true)}
                             className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition"
                         >
                             <span className="text-sm">➕</span> Post
@@ -179,16 +179,26 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                         <button onClick={() => setPage(PAGES.HOME)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                             <span className="text-xl">🏠</span><span className="text-[10px] font-bold">Home</span>
                         </button>
+
                         {currentUser && (
                             <button onClick={() => setPage(PAGES.FIND)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">🔍</span><span className="text-[10px] font-bold">Explore</span>
                             </button>
                         )}
+
+                        {/* 🚨 MOBILE: MESSAGES BUTTON ADDED HERE 🚨 */}
+                        {currentUser && (
+                            <button onClick={() => setPage(PAGES.MESSAGES)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl">💬</span><span className="text-[10px] font-bold">Inbox</span>
+                            </button>
+                        )}
+
                         {currentUser && (
                             <button onClick={() => setPage(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">👤</span><span className="text-[10px] font-bold">Profile</span>
                             </button>
                         )}
+
                         {!currentUser && (
                             <button onClick={() => setPage(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">ℹ️</span><span className="text-[10px] font-bold">About</span>
@@ -203,7 +213,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-0">
                     <div className="bg-[#16162A] sm:border border-white/10 sm:rounded-2xl w-full max-w-md h-full sm:h-auto overflow-hidden flex flex-col animate-slide-up sm:animate-none">
 
-                        {/* Top Header of Modal */}
                         <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#0D0D1A]">
                             <button onClick={closePostModal} className="text-white text-2xl hover:text-red-400 transition">✕</button>
                             <h3 className="font-bold text-white text-lg">New Post</h3>
@@ -216,10 +225,8 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                             </button>
                         </div>
 
-                        {/* Body of Modal */}
                         <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
                             {!postPreview ? (
-                                // Box to select image
                                 <label className={`w-full aspect-square border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition ${isBoy ? 'hover:border-blue-500 hover:bg-blue-500/5' : 'hover:border-pink-500 hover:bg-pink-500/5'}`}>
                                     <span className="text-5xl mb-3">📸</span>
                                     <span className="text-white font-bold text-lg">Select Photo</span>
@@ -227,7 +234,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
                                 </label>
                             ) : (
-                                // Preview and Caption Section
                                 <div className="flex flex-col gap-4 animate-fade-in">
                                     <div className="relative">
                                         <img src={postPreview} alt="Preview" className="w-full aspect-square object-cover rounded-xl border border-white/10 shadow-lg" />

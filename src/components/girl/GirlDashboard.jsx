@@ -1,33 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
+import SettingsModal from '../shared/SettingsModal';
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
-    const [chatHistory, setChatHistory] = useState([]);
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "4.8" });
     const [uploading, setUploading] = useState(false);
     const [myPosts, setMyPosts] = useState([]);
     const [kycUploading, setKycUploading] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [unreadCounts, setUnreadCounts] = useState({});
     const [expandedPost, setExpandedPost] = useState(null);
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
-
-    const [editForm, setEditForm] = useState({
-        age: user?.age || "",
-        city: user?.city || "",
-        bio: user?.bio || "",
-        price: user?.price || "",
-        tags: user?.tags || "",
-        is_private: user?.is_private || false
-    });
+    const [showSettings, setShowSettings] = useState(false);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user) return;
             try {
-                const chatRes = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${user.id}`);
-                if (chatRes.ok) setChatHistory(await chatRes.json());
+                // 🚨 Chat fetch code yahan se hata diya gaya hai 🚨
 
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
                 if (statsRes.ok) setStats(await statsRes.json());
@@ -51,15 +40,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         socket.emit("join_room", user.id.toString());
         socket.emit("join_own_room", user.id);
 
-        const handleReceiveMessage = (data) => {
-            if (data.sender_id) {
-                setUnreadCounts(prev => ({
-                    ...prev,
-                    [data.sender_id]: (prev[data.sender_id] || 0) + 1
-                }));
-            }
-        };
-
         const handleReceiveBooking = (data) => {
             setNewBookingAlert(data);
             fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`)
@@ -68,11 +48,10 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             setTimeout(() => setNewBookingAlert(null), 4000);
         };
 
-        socket.on("receive_message", handleReceiveMessage);
+        // 🚨 Socket message listener yahan se hata diya gaya hai 🚨
         socket.on("receive_booking_notification", handleReceiveBooking);
 
         return () => {
-            socket.off("receive_message", handleReceiveMessage);
             socket.off("receive_booking_notification", handleReceiveBooking);
         };
     }, [socket, user]);
@@ -121,16 +100,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         }
     };
 
-    const handleChatClick = (person) => {
-        setUnreadCounts(prev => {
-            const newState = { ...prev };
-            delete newState[person.id];
-            return newState;
-        });
-        setSelectedGirl(person);
-        setPage(PAGES.CHAT);
-    };
-
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -147,23 +116,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         } catch (err) { console.error(err); } finally { setUploading(false); }
     };
 
-    const handleEditProfile = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(editForm)
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setGirlUser({ ...user, ...data.user });
-                setShowEditModal(false);
-                alert("Profile Settings Updated! ✅");
-            }
-        } catch (err) { console.error("Edit error:", err); }
-    };
-
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
@@ -173,19 +125,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 setExpandedPost(null);
             }
         } catch (err) { console.error("Delete post error:", err); }
-    };
-
-    const handleDeleteAccount = async () => {
-        if (!window.confirm("🚨 WARNING: Are you sure you want to PERMANENTLY delete your account? All messages and photos will be lost.")) return;
-        try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
-            if (response.ok) {
-                localStorage.removeItem("token");
-                setGirlUser(null);
-                setPage(PAGES.HOME);
-                alert("Account deleted. We will miss you! 👋");
-            }
-        } catch (err) { console.error("Delete account error:", err); }
     };
 
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
@@ -229,7 +168,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             </div>
                         </div>
                     </div>
-                    <button onClick={() => setShowEditModal(true)} className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
+
+                    <button onClick={() => setShowSettings(true)} className="px-4 py-2 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition">
                         ⚙️ Settings
                     </button>
                 </div>
@@ -318,35 +258,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     )}
                 </div>
 
-                {/* YAHAN SE POST SECTION HATA KAR MESSAGES KO FULL WIDTH KAR DIYA HAI */}
-                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
-                    <div className="text-base font-semibold mb-4 flex items-center gap-2">💬 Your Messages</div>
-                    {chatHistory.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No messages yet.</div> : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                            {chatHistory.map((person) => (
-                                <div key={person.id} onClick={() => handleChatClick(person)} className="flex items-center gap-3 py-3 px-4 bg-white/5 border border-white/5 rounded-xl cursor-pointer hover:border-pink-500/30 transition">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center text-sm font-bold">{person.name[0]}</div>
-                                    <div className="flex-1">
-                                        <div className="text-sm font-semibold">{person.name}</div>
-                                        {unreadCounts[person.id] ? (
-                                            <div className="text-xs text-green-400 font-bold animate-pulse">New Message!</div>
-                                        ) : (
-                                            <div className="text-xs text-gray-400">Click to reply</div>
-                                        )}
-                                    </div>
-                                    {unreadCounts[person.id] ? (
-                                        <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-[0_0_8px_rgba(34,197,94,0.6)]">
-                                            {unreadCounts[person.id]}
-                                        </div>
-                                    ) : (
-                                        <div className="text-pink-400">➤</div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
                     <div className="text-base font-semibold mb-4 flex items-center justify-between">
                         <span>🖼️ My Gallery</span>
@@ -364,8 +275,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         </div>
                     )}
                 </div>
-
-                <button onClick={() => { localStorage.removeItem("token"); setGirlUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
 
             {expandedPost && (
@@ -378,41 +287,13 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 </div>
             )}
 
-            {showEditModal && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-[#16162A] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl">
-                        <div className="px-6 py-5 border-b border-white/5 flex justify-between items-center">
-                            <h3 className="text-xl font-bold">⚙️ Settings</h3>
-                            <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
-                        </div>
-                        <form onSubmit={handleEditProfile} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs text-gray-400 mb-1.5">Age</label><input type="number" value={editForm.age} onChange={(e) => setEditForm({ ...editForm, age: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
-                                <div><label className="block text-xs text-gray-400 mb-1.5">Hourly Rate (₹)</label><input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
-                            </div>
-                            <div><label className="block text-xs text-gray-400 mb-1.5">City</label><input type="text" value={editForm.city} onChange={(e) => setEditForm({ ...editForm, city: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
-                            <div><label className="block text-xs text-gray-400 mb-1.5">Tags (Comma separated)</label><input type="text" value={editForm.tags} onChange={(e) => setEditForm({ ...editForm, tags: e.target.value })} placeholder="e.g. Movie, Shopping, Dinner" className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" /></div>
-                            <div><label className="block text-xs text-gray-400 mb-1.5">About Me (Bio)</label><textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white resize-none h-24 outline-none focus:border-pink-500" /></div>
-
-                            <div className="flex items-center justify-between bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 mt-2">
-                                <div>
-                                    <label className="block text-sm text-white font-bold">Private Account 🔒</label>
-                                    <p className="text-xs text-gray-400">Hide your gallery from others</p>
-                                </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" checked={editForm.is_private} onChange={(e) => setEditForm({ ...editForm, is_private: e.target.checked })} />
-                                    <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
-                                </label>
-                            </div>
-
-                            <button type="submit" className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold transition mt-2">Save Settings</button>
-                        </form>
-                        <div className="p-6 bg-red-500/5 border-t border-red-500/20">
-                            <h4 className="text-red-400 text-sm font-bold mb-2">Danger Zone</h4>
-                            <button onClick={handleDeleteAccount} className="w-full py-3 border border-red-500/50 text-red-400 hover:bg-red-500 hover:text-white rounded-xl font-bold text-sm transition">Delete Account Permanently</button>
-                        </div>
-                    </div>
-                </div>
+            {showSettings && (
+                <SettingsModal
+                    user={user}
+                    setUser={setGirlUser}
+                    onClose={() => setShowSettings(false)}
+                    setPage={setPage}
+                />
             )}
         </div>
     );

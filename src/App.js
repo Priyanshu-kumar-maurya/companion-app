@@ -8,7 +8,7 @@ import BoyDashboard from "./components/boy/BoyDashboard";
 import FindPage from "./components/shared/FindPage";
 import DetailsPage from "./components/shared/DetailsPage";
 import ChatPage from "./components/shared/ChatPage";
-
+import MessagesPage from "./components/shared/MessagesPage";
 import UnifiedRegister from "./components/UnifiedRegister";
 import UnifiedLogin from "./components/UnifiedLogin"; // 🚨 YEH IMPORT MISSING THA 🚨
 
@@ -31,6 +31,7 @@ export const PAGES = {
   FIND: "find",
   DETAILS: "details",
   CHAT: "chat",
+  MESSAGES: "messages",
 };
 
 function App() {
@@ -121,7 +122,8 @@ function App() {
         return <AboutPage />;
       case PAGES.HELP:
         return <HelpPage />;
-
+      case PAGES.MESSAGES:
+        return (boyUser || girlUser) ? <MessagesPage currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} socket={socket} /> : <UnifiedLogin setPage={setPage} />;
       case PAGES.GIRL_LOGIN:
         return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
       case PAGES.BOY_LOGIN:
