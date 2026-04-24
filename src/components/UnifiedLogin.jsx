@@ -1,11 +1,10 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
 
-function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' }) {
+function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
     const [formData, setFormData] = useState({
         emailOrPhone: "",
-        password: "",
-        role: defaultRole
+        password: ""
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -38,43 +37,23 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' })
                     setPage(PAGES.BOY_DASHBOARD);
                 }
             } else {
-                setError(data.error || "Login failed");
+                setError(data.error || "Login failed.");
             }
         } catch (err) {
-            console.error(err);
-            setError("Server error. Please try again.");
+            setError("Server error. Please try again later.");
         } finally {
             setLoading(false);
         }
     };
 
-    const isBoy = formData.role === 'boy';
-
     return (
         <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
-            <div className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? 'bg-blue-600/20' : 'bg-pink-600/20'}`}></div>
+            <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 bg-purple-600/20"></div>
 
-            <div className={`bg-[#16162A] w-full max-w-md p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? 'border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]'}`}>
+            <div className="bg-[#16162A] w-full max-w-md p-8 rounded-3xl border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] transition-colors duration-500">
 
                 <h2 className="text-3xl font-extrabold text-center text-white mb-2">Welcome Back</h2>
                 <p className="text-gray-400 text-center text-sm mb-6">Login to your account</p>
-
-                <div className="flex bg-[#0D0D1A] p-1 rounded-xl mb-6 border border-white/5">
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, role: 'boy' })}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                    >
-                        👨 Boy Login
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, role: 'girl' })}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${!isBoy ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                    >
-                        👩 Girl Login
-                    </button>
-                </div>
 
                 {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
 
@@ -87,8 +66,8 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' })
                             required
                             value={formData.emailOrPhone}
                             onChange={handleChange}
-                            className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
-                            placeholder="abc@mail.com ya 9876543210"
+                            className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
+                            placeholder="example@mail.com or 9876543210"
                         />
                     </div>
                     <div>
@@ -99,12 +78,12 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' })
                             required
                             value={formData.password}
                             onChange={handleChange}
-                            className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                            className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
                             placeholder="••••••••"
                         />
                     </div>
 
-                    <button type="submit" disabled={loading} className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}>
+                    <button type="submit" disabled={loading} className="w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-blue-500 to-purple-500">
                         {loading ? "Logging in..." : "Login →"}
                     </button>
                 </form>
@@ -112,7 +91,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' })
                 <div className="mt-6 text-center">
                     <p className="text-gray-400 text-sm">
                         Don't have an account?{' '}
-                        <button onClick={() => setPage(isBoy ? PAGES.BOY_REGISTER : PAGES.GIRL_REGISTER)} className={`font-bold hover:underline ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
+                        <button onClick={() => setPage(PAGES.BOY_REGISTER)} className="font-bold hover:underline text-purple-400">
                             Register here
                         </button>
                     </p>

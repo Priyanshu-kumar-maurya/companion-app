@@ -7,7 +7,6 @@ function UnifiedRegister({ setPage }) {
     });
     const [loading, setLoading] = useState(false);
 
-    // OTP Modal States
     const [showOtpModal, setShowOtpModal] = useState(false);
     const [otp, setOtp] = useState("");
     const [verifying, setVerifying] = useState(false);
@@ -16,7 +15,6 @@ function UnifiedRegister({ setPage }) {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // DOB se Age nikalne ka formula
     const calculateAge = (dobString) => {
         const today = new Date();
         const birthDate = new Date(dobString);
@@ -33,13 +31,12 @@ function UnifiedRegister({ setPage }) {
 
         const age = calculateAge(formData.dob);
         if (age < 18) {
-            alert("🚨 You must be at least 18 years old to join.");
+            alert("You must be at least 18 years old to join.");
             return;
         }
 
         setLoading(true);
         try {
-            // Frontend se calculated age backend ko bhej rahe hain
             const response = await fetch("https://rentgf-and-bf.onrender.com/api/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -48,14 +45,13 @@ function UnifiedRegister({ setPage }) {
 
             const data = await response.json();
             if (response.ok) {
-                // Success! Ab OTP popup dikhao
                 setShowOtpModal(true);
             } else {
-                alert(data.error || "Registration failed!");
+                alert(data.error || "Registration failed.");
             }
         } catch (err) {
             console.error(err);
-            alert("Server Error. Please try again later.");
+            alert("Server error. Please try again later.");
         } finally {
             setLoading(false);
         }
@@ -64,7 +60,7 @@ function UnifiedRegister({ setPage }) {
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
         if (otp.length !== 6) {
-            alert("Please enter a valid 6-digit OTP");
+            alert("Please enter a valid 6-digit OTP.");
             return;
         }
 
@@ -78,16 +74,15 @@ function UnifiedRegister({ setPage }) {
 
             const data = await response.json();
             if (response.ok) {
-                alert("✅ Account Verified Successfully! Please Login.");
+                alert("Account verified successfully! Please login.");
                 setShowOtpModal(false);
-                // Redirect to Login based on role
                 setPage(formData.role === 'girl' ? PAGES.GIRL_LOGIN : PAGES.BOY_LOGIN);
             } else {
-                alert(data.error || "Invalid OTP!");
+                alert(data.error || "Invalid OTP.");
             }
         } catch (err) {
             console.error(err);
-            alert("Verification Failed.");
+            alert("Verification failed.");
         } finally {
             setVerifying(false);
         }
@@ -97,52 +92,42 @@ function UnifiedRegister({ setPage }) {
 
     return (
         <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
-            {/* Background Glow */}
             <div className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? 'bg-blue-600/20' : 'bg-pink-600/20'}`}></div>
 
             <div className={`bg-[#16162A] w-full max-w-md p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? 'border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]'}`}>
 
                 <h2 className="text-3xl font-extrabold text-center text-white mb-2">Create Account</h2>
-                <p className="text-gray-400 text-center text-sm mb-6">Join India's #1 Companion App</p>
-
-                {/* ROLE SELECTOR TOGGLE */}
-                <div className="flex bg-[#0D0D1A] p-1 rounded-xl mb-6 border border-white/5">
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, role: 'boy' })}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                    >
-                        👨 Join as Boy
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, role: 'girl' })}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${!isBoy ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
-                    >
-                        👩 Join as Girl
-                    </button>
-                </div>
+                <p className="text-gray-400 text-center text-sm mb-6">Join our platform today</p>
 
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
                         <label className="block text-xs text-gray-400 mb-1.5 ml-1">Full Name</label>
-                        <input type="text" name="name" required value={formData.name} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="Priyanshu..." />
+                        <input type="text" name="name" required value={formData.name} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="John Doe" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1.5 ml-1">Gender</label>
+                            <select name="role" required value={formData.role} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}>
+                                <option value="boy">Male</option>
+                                <option value="girl">Female</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs text-gray-400 mb-1.5 ml-1">Date of Birth</label>
+                            <input type="date" name="dob" required value={formData.dob} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1.5 ml-1">Email</label>
-                            <input type="email" name="email" required value={formData.email} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="abc@mail.com" />
+                            <input type="email" name="email" required value={formData.email} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="example@mail.com" />
                         </div>
                         <div>
                             <label className="block text-xs text-gray-400 mb-1.5 ml-1">Phone Number</label>
                             <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="9876543210" pattern="[0-9]{10}" />
                         </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Date of Birth</label>
-                        <input type="date" name="dob" required value={formData.dob} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} />
                     </div>
 
                     <div>
@@ -165,7 +150,6 @@ function UnifiedRegister({ setPage }) {
                 </div>
             </div>
 
-            {/* OTP MODAL */}
             {showOtpModal && (
                 <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="bg-[#16162A] w-full max-w-sm p-8 rounded-3xl border border-white/10 shadow-2xl animate-fade-in text-center">

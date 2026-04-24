@@ -279,7 +279,6 @@ app.post('/api/verify-otp', async (req, res) => {
         if (user.otp !== otp) return res.status(400).json({ error: "Galat OTP!" });
         if (new Date() > new Date(user.otp_expiry)) return res.status(400).json({ error: "OTP expire ho gaya hai!" });
 
-        // OTP sahi hai toh verified true kar do
         await pool.query("UPDATE users SET is_verified = true, otp = null, otp_expiry = null WHERE id = $1", [user.id]);
 
         res.status(200).json({ message: "Account Verified Successfully! Ab aap login kar sakte hain." });
@@ -289,35 +288,32 @@ app.post('/api/verify-otp', async (req, res) => {
     }
 });
 
-// --- 3. NAYA LOGIN API (Email YA Phone se) ---
 app.post('/api/login', async (req, res) => {
     try {
-        const { emailOrPhone, password, role } = req.body; // 'email' ki jagah ab 'emailOrPhone' use karenge
+        const { emailOrPhone, password } = req.body; // Role hata diya yahan se
 
-        if (!emailOrPhone || !password || !role) {
-            return res.status(400).json({ error: "Details poori nahi hain!" });
+        if (!emailOrPhone || !password) {
+            return res.status(400).json({ error: "Incomplete details provided!" });
         }
 
-        // Check karo ki email match karta hai YA phone match karta hai
         const userResult = await pool.query(
-            "SELECT * FROM users WHERE (email = $1 OR phone = $1) AND role = $2",
-            [emailOrPhone, role]
+            "SELECT * FROM users WHERE email = $1 OR phone = $1",
+            [emailOrPhone]
         );
 
         if (userResult.rows.length === 0) {
-            return res.status(400).json({ error: "User nahi mila ya role galat hai!" });
+            return res.status(400).json({ error: "Account not found! Please register first." });
         }
 
         const user = userResult.rows[0];
 
-        // Agar account verified nahi hai toh login mat karne do
         if (!user.is_verified) {
-            return res.status(403).json({ error: "Pehle apna account Email OTP se verify karein!" });
+            return res.status(403).json({ error: "Please verify your account using the Email OTP first!" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ error: "Galat password!" });
+            return res.status(400).json({ error: "Incorrect password!" });
         }
 
         const token = jwt.sign(
@@ -326,20 +322,19 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        const { password: _, otp, otp_expiry, ...userData } = user; // password aur otp hide kar diya
+        const { password: _, otp, otp_expiry, ...userData } = user;
 
         res.status(200).json({
             message: "Login successful!",
             token: token,
-            user: userData
+            user: userData 
         });
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ error: "Server mein kuch gadbad hai!" });
+        res.status(500).json({ error: "Internal server error!" });
     }
 });
-
 app.get('/api/users', async (req, res) => {
     try {
         const { role } = req.query;
