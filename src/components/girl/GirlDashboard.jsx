@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { PAGES } from "../../App";
 import SettingsModal from '../shared/SettingsModal';
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
@@ -131,7 +130,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const pendingBookings = myBookings.filter(b => b.status === 'pending');
 
     return (
-        <div className="pt-16 min-h-screen relative">
+        <div className="pt-16 min-h-[100dvh] relative">
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>

@@ -53,7 +53,7 @@ function HomePage({ setPage, currentUser }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#0D0D1A] pt-24 pb-10">
+        <div className="min-h-[100dvh] bg-[#0D0D1A] pt-24 pb-10">
             <div className="max-w-5xl mx-auto px-6 text-center mt-10 mb-20 relative">
 
                 <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-pink-600/20 rounded-full blur-[100px] pointer-events-none"></div>

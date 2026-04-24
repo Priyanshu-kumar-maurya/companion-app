@@ -48,7 +48,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     if (!currentUser) return null;
 
     return (
-        <div className="pt-24 pb-20 min-h-screen bg-[#0D0D1A] px-6 max-w-3xl mx-auto">
+        <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-6 max-w-3xl mx-auto">
             <h1 className="text-3xl font-extrabold mb-6 text-white flex items-center gap-3">
                 💬 Messages
             </h1>

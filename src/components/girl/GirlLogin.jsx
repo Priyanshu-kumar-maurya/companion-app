@@ -42,7 +42,7 @@ function GirlLogin({ setPage, setGirlUser }) {
     };
 
     return (
-        <div className="pt-16 min-h-screen flex items-center justify-center px-4">
+        <div className="pt-16 min-h-[100dvh] flex items-center justify-center px-4">
             <div className="bg-[#16162A] border border-white/5 rounded-3xl p-10 w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-1">💖 Companion Login</h2>
                 <p className="text-sm text-gray-400 mb-7">Welcome back! Login to manage your profile.</p>

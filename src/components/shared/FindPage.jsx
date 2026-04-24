@@ -56,7 +56,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     };
 
     return (
-        <div className="pt-16 min-h-screen bg-[#0D0D1A]">
+        <div className="pt-16 min-h-[100dvh] bg-[#0D0D1A]">
             <div className="max-w-5xl mx-auto px-6 py-8">
                 <h1 className="text-3xl font-bold mb-1">
                     Find a{" "}

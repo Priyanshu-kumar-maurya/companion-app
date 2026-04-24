@@ -228,14 +228,21 @@ app.post('/api/register', async (req, res) => {
         if (!name || !email || !phone || !password || !role) return res.status(400).json({ error: "Name, email, phone aur password zaroori hai!" });
 
         const userExists = await pool.query("SELECT * FROM users WHERE email = $1 OR phone = $2", [email, phone]);
-        if (userExists.rows.length > 0) return res.status(400).json({ error: "Email ya Phone pehle se register hai!" });
+
+        if (userExists.rows.length > 0) {
+            const existingUser = userExists.rows[0];
+            if (existingUser.is_verified) {
+                return res.status(400).json({ error: "Email ya Phone pehle se register hai!" });
+            } else {
+                await pool.query("DELETE FROM users WHERE id = $1", [existingUser.id]);
+            }
+        }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 6 digit ka random OTP banao
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60000); // 10 minute tak valid
+        const otpExpiry = new Date(Date.now() + 10 * 60000);
 
         const newUser = await pool.query(
             "INSERT INTO users (name, email, phone, password, role, age, city, bio, price, tags, otp, otp_expiry, is_verified) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, false) RETURNING id, email",
@@ -250,12 +257,12 @@ app.post('/api/register', async (req, res) => {
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
-            if (error) console.log("Email bhejne mein error:", error);
+            if (error) console.log(error);
         });
 
         res.status(201).json({ message: "OTP sent to email!", userId: newUser.rows[0].id });
     } catch (err) {
-        console.error("Register error:", err);
+        console.error(err);
         res.status(500).json({ error: "Server error" });
     }
 });

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { PAGES } from "../../App";
 import SettingsModal from '../shared/SettingsModal';
 
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
@@ -122,7 +121,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const completedSessions = completedBookings.length;
 
     return (
-        <div className="pt-16 min-h-screen relative">
+        <div className="pt-16 min-h-[100dvh] relative">
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>
@@ -274,7 +273,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
-                <button onClick={() => { localStorage.removeItem("token"); setBoyUser(null); setPage(PAGES.HOME); }} className="px-5 py-2.5 bg-white/5 border border-white/10 text-gray-400 rounded-xl text-sm hover:text-red-400 transition">Logout</button>
             </div>
 
             {expandedPost && (

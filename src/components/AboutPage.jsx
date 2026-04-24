@@ -2,7 +2,7 @@ import React from "react";
 
 function AboutPage() {
     return (
-        <div className="pt-16 min-h-screen">
+        <div className="pt-16 min-h-[100dvh]">
             <div className="text-center max-w-2xl mx-auto px-6 py-20">
                 <h1 className="text-4xl font-bold mb-4">
                     About{" "}

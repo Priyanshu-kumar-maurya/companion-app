@@ -43,7 +43,7 @@ function BoyLogin({ setPage, setBoyUser }) {
     };
 
     return (
-        <div className="pt-16 min-h-screen flex items-center justify-center px-4">
+        <div className="pt-16 min-h-[100dvh] flex items-center justify-center px-4">
             <div className="bg-[#16162A] border border-white/7 rounded-3xl p-10 w-full max-w-md">
                 <h2 className="text-2xl font-bold mb-1">🔍 User Login</h2>
                 <p className="text-sm text-gray-400 mb-7">Login to find and connect with companions.</p>

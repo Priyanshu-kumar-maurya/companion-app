@@ -51,7 +51,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, defaultRole = 'boy' })
     const isBoy = formData.role === 'boy';
 
     return (
-        <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
+        <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
             <div className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? 'bg-blue-600/20' : 'bg-pink-600/20'}`}></div>
 
             <div className={`bg-[#16162A] w-full max-w-md p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? 'border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]'}`}>

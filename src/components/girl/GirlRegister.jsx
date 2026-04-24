@@ -67,7 +67,7 @@ function GirlRegister({ setPage, setGirlUser }) {
     const stepLabels = ["Basic Info", "Profile Details", "Preferences"];
 
     return (
-        <div className="pt-16 min-h-screen flex items-center justify-center px-4 py-10">
+        <div className="pt-16 min-h-[100dvh] flex items-center justify-center px-4 py-10">
             <div className="bg-[#16162A] border border-white/5 rounded-3xl p-10 w-full max-w-md shadow-2xl">
                 <h2 className="text-2xl font-bold mb-1">💁‍♀️ Join as a Companion</h2>
                 <p className="text-sm text-gray-400 mb-2">

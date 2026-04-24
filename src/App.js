@@ -106,7 +106,7 @@ function App() {
 
   if (isCheckingAuth) {
     return (
-      <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center text-white">
+      <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center text-white">
         <div className="text-xl font-semibold text-pink-500 animate-pulse">
           Loading your dating experience... 💕
         </div>
@@ -150,7 +150,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0D0D1A] text-white">
+    <div className="min-h-[100dvh] bg-[#0D0D1A] text-white overflow-x-hidden w-full relative">
       <Navbar
         page={page}
         setPage={setPage}

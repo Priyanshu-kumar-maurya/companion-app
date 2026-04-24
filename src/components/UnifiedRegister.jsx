@@ -96,7 +96,7 @@ function UnifiedRegister({ setPage }) {
     const isBoy = formData.role === 'boy';
 
     return (
-        <div className="min-h-screen bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
+        <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
             {/* Background Glow */}
             <div className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? 'bg-blue-600/20' : 'bg-pink-600/20'}`}></div>
 
