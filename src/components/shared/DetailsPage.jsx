@@ -74,7 +74,8 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     amount,
                     meeting_date: meetingInfo.date,
                     meeting_time: meetingInfo.time,
-                    meeting_location: meetingInfo.location
+                    meeting_location: meetingInfo.location,
+                    sender_id: currentUser.id
                 })
             });
 

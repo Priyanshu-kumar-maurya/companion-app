@@ -70,7 +70,7 @@ pool.connect()
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;");
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp VARCHAR(10);");
             await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expiry TIMESTAMP;");
-
+            await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS sender_id INTEGER;");
             await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
                 id SERIAL PRIMARY KEY,
                 boy_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -531,11 +531,11 @@ app.put('/api/users/:userId', async (req, res) => {
 
 app.post('/api/bookings', async (req, res) => {
     try {
-        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details } = req.body;
+        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, sender_id } = req.body;
 
         const newBooking = await pool.query(
-            "INSERT INTO bookings (boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *",
-            [boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details]
+            "INSERT INTO bookings (boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, sender_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+            [boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, sender_id]
         );
         res.status(201).json(newBooking.rows[0]);
     } catch (err) {

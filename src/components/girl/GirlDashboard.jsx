@@ -240,16 +240,33 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                     </div>
                                     <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
                                         {booking.status === 'pending' && (
-                                            <>
-                                                <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">Accept</button>
-                                                <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">Reject</button>
-                                            </>
+                                            (booking.sender_id === user.id || (!booking.sender_id && user.role === 'boy')) ? (
+                                                <>
+                                                    <span className="text-yellow-400 text-xs font-bold border border-yellow-400/20 px-3 py-2 rounded-lg bg-yellow-400/10">
+                                                        ⏳ Pending Approval
+                                                    </span>
+                                                    <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                                                        Cancel Request
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">
+                                                        Accept
+                                                    </button>
+                                                    <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                                                        Reject
+                                                    </button>
+                                                </>
+                                            )
                                         )}
                                         {booking.status === 'accepted' && (
-                                            <button onClick={() => handleBookingStatus(booking.id, 'completed')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg text-xs font-bold shadow-lg">Mark Done</button>
+                                            <button onClick={() => handleBookingStatus(booking.id, 'completed')} className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-xs font-bold shadow-lg">
+                                                Mark Done
+                                            </button>
                                         )}
                                         {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10">✅ Completed</span>}
-                                        {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10">❌ Rejected</span>}
+                                        {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10">❌ Canceled / Rejected</span>}
                                     </div>
                                 </div>
                             ))}
