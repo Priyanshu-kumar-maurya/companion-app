@@ -1,70 +1,77 @@
-# Getting Started with Create React App
+# 💖 RentGF - Find Your Perfect Companion
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+RentGF is a secure, private, and premium platform designed to help users find their perfect companion for coffee dates, movies, events, and meaningful conversations. Built with a modern tech stack, it ensures a seamless and interactive user experience.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+* **Smart Authentication:** OTP-based email verification with auto-role detection (Boy/Girl) upon login.
+* **Role-Based Dashboards:** Dedicated and customized interfaces for both users and companions.
+* **Real-Time Chat:** Instant messaging system powered by Socket.io, including read receipts and message deletion.
+* **Booking System:** Complete workflow for sending, accepting, rejecting, and completing booking requests.
+* **KYC Verification:** Secure ID proof upload system to ensure platform safety and build trust.
+* **Dynamic Gallery:** Users can upload, view, and manage their profile pictures and gallery posts.
+* **Responsive Design:** Fully optimized for mobile, tablet, and desktop viewing with advanced UI/UX components.
 
-### `npm start`
+## 🛠️ Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+**Frontend:**
+* React.js
+* Tailwind CSS
+* React Router DOM
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+**Backend:**
+* Node.js & Express.js
+* PostgreSQL (Neon DB)
+* Socket.io (Real-time WebSockets)
+* JSON Web Tokens (JWT) & Bcrypt (Security)
+* Cloudinary & Multer (Image/Media Storage)
+* Nodemailer (OTP & Email Services)
 
-### `npm test`
+## ⚙️ Local Development Setup
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+To run this project locally, follow these steps:
 
-### `npm run build`
+### 1. Clone the repository
+\`\`\`bash
+git clone https://github.com/your-username/rentgf-and-bf.git
+cd rentgf-and-bf
+\`\`\`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 2. Install Dependencies
+\`\`\`bash
+# For Frontend
+npm install
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# For Backend (if in the same repo or navigate to backend folder)
+cd backend
+npm install
+\`\`\`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 3. Environment Variables (.env)
+Create a `.env` file in your backend directory and add the following:
+\`\`\`env
+PORT=5000
+DATABASE_URL=your_postgresql_connection_string
+JWT_SECRET=your_jwt_secret
+EMAIL_USER=your_email@gmail.com
+EMAIL_PASS=your_app_password
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+\`\`\`
 
-### `npm run eject`
+### 4. Run the Application
+\`\`\`bash
+# Start Frontend
+npm start
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Start Backend
+npm run server
+\`\`\`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 🌐 Live Demo
+The project backend is deployed on **Render** and the frontend is hosted on **Vercel**.
+*(Add your live Vercel link here later)*
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+*Built with ❤️ by Priyanshu*
