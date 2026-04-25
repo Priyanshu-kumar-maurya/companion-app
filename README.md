@@ -33,7 +33,7 @@ To run this project locally, follow these steps:
 
 ### 1. Clone the repository
 \`\`\`bash
-git clone https://github.com/your-username/rentgf-and-bf.git
+git clone https://github.com/Priyanshu-kumar-maurya/rentgf-and-bf.git
 cd rentgf-and-bf
 \`\`\`
 
@@ -71,7 +71,7 @@ npm run server
 
 ## 🌐 Live Demo
 The project backend is deployed on **Render** and the frontend is hosted on **Vercel**.
-*(Add your live Vercel link here later)*
+*https://rentgf-app.vercel.app/*
 
 ---
 *Built with ❤️ by Priyanshu*
