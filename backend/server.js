@@ -80,6 +80,13 @@ pool.connect()
                 status VARCHAR(50) DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
+            await pool.query(`CREATE TABLE IF NOT EXISTS follows (
+                id SERIAL PRIMARY KEY,
+                follower_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                following_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(follower_id, following_id)
+            );`);
             await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_date DATE;");
             await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_time TIME;");
             await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS meeting_location TEXT;");
@@ -510,7 +517,62 @@ app.get('/api/messages/:user1/:user2', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+app.post('/api/follow', async (req, res) => {
+    try {
+        const { follower_id, following_id } = req.body;
+        if (follower_id === following_id) {
+            return res.status(400).json({ error: "You cannot follow yourself." });
+        }
 
+        await pool.query(
+            "INSERT INTO follows (follower_id, following_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            [follower_id, following_id]
+        );
+        res.status(200).json({ message: "Followed successfully" });
+    } catch (err) {
+        console.error("Follow error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.post('/api/unfollow', async (req, res) => {
+    try {
+        const { follower_id, following_id } = req.body;
+        await pool.query(
+            "DELETE FROM follows WHERE follower_id = $1 AND following_id = $2",
+            [follower_id, following_id]
+        );
+        res.status(200).json({ message: "Unfollowed successfully" });
+    } catch (err) {
+        console.error("Unfollow error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.get('/api/follow-stats/:profileId', async (req, res) => {
+    try {
+        const { profileId } = req.params;
+        const { currentUserId } = req.query;
+
+        const followersResult = await pool.query("SELECT COUNT(*) FROM follows WHERE following_id = $1", [profileId]);
+        const followingResult = await pool.query("SELECT COUNT(*) FROM follows WHERE follower_id = $1", [profileId]);
+
+        let isFollowing = false;
+        if (currentUserId) {
+            const checkFollow = await pool.query("SELECT * FROM follows WHERE follower_id = $1 AND following_id = $2", [currentUserId, profileId]);
+            isFollowing = checkFollow.rows.length > 0;
+        }
+
+        res.status(200).json({
+            followers: parseInt(followersResult.rows[0].count),
+            following: parseInt(followingResult.rows[0].count),
+            isFollowing: isFollowing
+        });
+    } catch (err) {
+        console.error("Follow stats error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 app.put('/api/users/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
