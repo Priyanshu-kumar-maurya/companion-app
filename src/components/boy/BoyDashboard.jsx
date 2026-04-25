@@ -2,15 +2,12 @@ import React, { useState, useEffect } from "react";
 import SettingsModal from '../shared/SettingsModal';
 
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
-    const [uploading, setUploading] = useState(false);
     const [myPosts, setMyPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
     const [kycUploading, setKycUploading] = useState(false);
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
-
-    // --- NAYA FOLLOW STATS STATE ---
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
 
     useEffect(() => {
@@ -23,7 +20,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
                 if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
 
-                // --- NAYA FOLLOW STATS FETCH ---
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${user.id}`);
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
@@ -98,22 +94,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         }
     };
 
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("profile_pic", file);
-        try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: formData });
-            if (response.ok) {
-                const data = await response.json();
-                setBoyUser({ ...user, profile_pic: data.imageUrl });
-                alert("Profile picture updated! 📸");
-            }
-        } catch (err) { console.error(err); } finally { setUploading(false); }
-    };
-
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
@@ -132,7 +112,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const completedSessions = completedBookings.length;
 
     return (
-        <div className="pt-16 min-h-[100dvh] relative">
+        <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>
@@ -143,48 +123,50 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 </div>
             )}
 
-            <div className="max-w-5xl mx-auto px-6 py-8">
-                <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
-                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg hover:border-blue-500 transition">
-                                {user?.profile_pic ? (
-                                    <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                                ) : ("😎")}
-                            </div>
-                            <label className="absolute bottom-0 right-0 bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" onClick={(e) => e.stopPropagation()} title="Upload Profile Picture">
-                                {uploading ? "⏳" : "📷"}
-                                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
-                            </label>
-                        </div>
-                        <div className="text-center sm:text-left mt-2 sm:mt-0">
-                            <h1 className="text-3xl font-bold">Welcome back, {user.name} 🚀</h1>
+            <div className="max-w-5xl mx-auto px-4 py-6">
 
-                            {/* --- NAYA FOLLOWERS UI --- */}
-                            <div className="flex items-center gap-5 mt-3 mb-3 justify-center sm:justify-start">
-                                <div className="flex flex-col items-center sm:items-start">
-                                    <span className="text-lg font-bold text-white">{followStats.followers}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Followers</span>
-                                </div>
-                                <div className="w-px h-6 bg-white/10"></div>
-                                <div className="flex flex-col items-center sm:items-start">
-                                    <span className="text-lg font-bold text-white">{followStats.following}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Following</span>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
-                                {myTags.map((tag, i) => (
-                                    <span key={i} className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-full">
-                                        {tag.trim()}
-                                    </span>
-                                ))}
-                            </div>
+                {/* --- NAYA MOBILE-OPTIMIZED HEADER --- */}
+                <div className="flex items-center gap-5 mb-6">
+                    {/* DP (Camera Icon Hataya) */}
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
+                        <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg transition">
+                            {user?.profile_pic ? (
+                                <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                            ) : ("😎")}
                         </div>
                     </div>
-                    <button onClick={() => setShowSettings(true)} className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-sm font-semibold hover:bg-white/20 transition flex items-center gap-2">
-                        ⚙️ Settings
-                    </button>
+
+                    {/* Name, Stats & Settings (Side-by-side with DP) */}
+                    <div className="flex-1 flex flex-col items-start">
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white truncate max-w-full">{user.name} 🚀</h1>
+
+                        {/* Followers/Following Stats */}
+                        <div className="flex items-center gap-4 mt-2 mb-3">
+                            <div className="flex flex-col items-start">
+                                <span className="text-lg font-bold text-white leading-none">{followStats.followers}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-500">Followers</span>
+                            </div>
+                            <div className="w-px h-6 bg-white/10"></div>
+                            <div className="flex flex-col items-start">
+                                <span className="text-lg font-bold text-white leading-none">{followStats.following}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-500">Following</span>
+                            </div>
+                        </div>
+
+                        {/* Settings Button (Left aligned under stats) */}
+                        <button onClick={() => setShowSettings(true)} className="px-4 py-1.5 bg-white/10 border border-white/20 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition flex items-center gap-1.5">
+                            ⚙️ Edit Profile
+                        </button>
+                    </div>
+                </div>
+
+                {/* Tags Section */}
+                <div className="flex flex-wrap gap-2 mb-8 justify-start">
+                    {myTags.map((tag, i) => (
+                        <span key={i} className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-full">
+                            {tag.trim()}
+                        </span>
+                    ))}
                 </div>
 
                 <div className="mb-6">
@@ -222,14 +204,14 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-blue-400">₹{totalEarnings}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">4.8 ⭐</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Completed Sessions</div><div className="text-2xl font-bold text-green-400">{completedSessions}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Pending Requests</div><div className="text-2xl font-bold text-purple-400">{pendingBookings.length}</div></div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">💳 Earnings</div><div className="text-xl font-bold text-blue-400">₹{totalEarnings}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">⭐ Rating</div><div className="text-xl font-bold text-yellow-400">4.8 ⭐</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">📅 Sessions</div><div className="text-xl font-bold text-green-400">{completedSessions}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">🔔 Requests</div><div className="text-xl font-bold text-purple-400">{pendingBookings.length}</div></div>
                 </div>
 
-                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-7 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-7 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
                     <div className="text-base font-semibold mb-4 flex items-center gap-2">
                         📅 My Bookings
                         {pendingBookings.length > 0 && <span className="bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse">{pendingBookings.length} Active</span>}
@@ -292,20 +274,20 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
-                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-6">
                     <div className="text-base font-semibold mb-4 flex items-center justify-between">
                         <span>🖼️ My Gallery</span>
-                        <span className="text-xs text-gray-400 font-normal">Upload new photos using the + button above</span>
+                        <span className="text-xs text-gray-400 font-normal">Use + Post above to add</span>
                     </div>
                     {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {myPosts.map(post => (
                                 <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
-                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white truncate">{post.caption}</div>}
+                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-2 pt-5 text-[10px] text-white truncate">{post.caption}</div>}
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
-                                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
+                                        className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg text-xs"
                                         title="Delete Post"
                                     >
                                         🗑️
