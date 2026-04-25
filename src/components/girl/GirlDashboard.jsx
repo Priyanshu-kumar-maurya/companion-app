@@ -3,20 +3,18 @@ import SettingsModal from '../shared/SettingsModal';
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "4.8" });
-    const [uploading, setUploading] = useState(false);
     const [myPosts, setMyPosts] = useState([]);
     const [kycUploading, setKycUploading] = useState(false);
     const [expandedPost, setExpandedPost] = useState(null);
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
+    const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user) return;
             try {
-                // 🚨 Chat fetch code yahan se hata diya gaya hai 🚨
-
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
                 if (statsRes.ok) setStats(await statsRes.json());
 
@@ -25,6 +23,9 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
                 if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
+
+                const followRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${user.id}`);
+                if (followRes.ok) setFollowStats(await followRes.json());
 
             } catch (err) {
                 console.error("Dashboard error:", err);
@@ -47,7 +48,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             setTimeout(() => setNewBookingAlert(null), 4000);
         };
 
-        // 🚨 Socket message listener yahan se hata diya gaya hai 🚨
         socket.on("receive_booking_notification", handleReceiveBooking);
 
         return () => {
@@ -99,22 +99,6 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         }
     };
 
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        setUploading(true);
-        const formData = new FormData();
-        formData.append("profile_pic", file);
-        try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: formData });
-            if (response.ok) {
-                const data = await response.json();
-                setGirlUser({ ...user, profile_pic: data.imageUrl });
-                alert("Profile picture updated! 📸");
-            }
-        } catch (err) { console.error(err); } finally { setUploading(false); }
-    };
-
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
@@ -130,7 +114,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const pendingBookings = myBookings.filter(b => b.status === 'pending');
 
     return (
-        <div className="pt-16 min-h-[100dvh] relative">
+        <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-green-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>
@@ -141,36 +125,51 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 </div>
             )}
 
-            <div className="max-w-5xl mx-auto px-6 py-8">
-                <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                        <div className="relative w-24 h-24 shrink-0 mx-auto sm:mx-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
-                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg hover:border-pink-500 transition">
-                                {user?.profile_pic ? (
-                                    <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                                ) : ("😊")}
-                            </div>
-                            <label className="absolute bottom-0 right-0 bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm" onClick={(e) => e.stopPropagation()} title="Upload Profile Picture">
-                                {uploading ? "⏳" : "📷"}
-                                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
-                            </label>
-                        </div>
-                        <div className="text-center sm:text-left mt-2 sm:mt-0">
-                            <h1 className="text-3xl font-bold">Welcome back, {user.name} 💕</h1>
-                            <p className="text-sm text-gray-400 mt-1">Here's your dashboard overview</p>
-                            <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
-                                {myTags.map((tag, i) => (
-                                    <span key={i} className="px-2.5 py-1 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs rounded-full">
-                                        {tag.trim()}
-                                    </span>
-                                ))}
-                            </div>
+            <div className="max-w-5xl mx-auto px-4 py-6">
+
+                {/* NAYA HEADER UI: DP Left, Details Right */}
+                <div className="flex items-center gap-5 mb-6">
+                    {/* Profile Picture */}
+                    <div className="relative w-24 h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
+                        <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg">
+                            {user?.profile_pic ? (
+                                <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                            ) : ("😊")}
                         </div>
                     </div>
 
-                    <button onClick={() => setShowSettings(true)} className="px-4 py-2 bg-white/10 rounded-lg text-sm font-bold hover:bg-white/20 transition">
-                        ⚙️ Settings
-                    </button>
+                    {/* Name, Settings & Stats Stacked */}
+                    <div className="flex-1">
+                        <div className="flex flex-col items-start gap-1">
+                            <h1 className="text-2xl font-bold text-white truncate max-w-full">{user.name} 🚀</h1>
+
+                            {/* Settings Button Ab Name ke theek neeche left aligned */}
+                            <button onClick={() => setShowSettings(true)} className="px-4 py-1.5 mt-1 bg-white/10 rounded-lg text-xs font-bold text-gray-300 hover:bg-white/20 transition flex items-center gap-1.5">
+                                ⚙️ Edit Profile
+                            </button>
+                        </div>
+
+                        {/* Followers/Following Stats */}
+                        <div className="flex items-center gap-4 mt-3">
+                            <div className="flex flex-col items-start">
+                                <span className="text-lg font-bold text-white leading-tight">{followStats.followers}</span>
+                                <span className="text-[10px] text-gray-400">Followers</span>
+                            </div>
+                            <div className="flex flex-col items-start">
+                                <span className="text-lg font-bold text-white leading-tight">{followStats.following}</span>
+                                <span className="text-[10px] text-gray-400">Following</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tags Section */}
+                <div className="flex flex-wrap gap-2 mb-8">
+                    {myTags.map((tag, i) => (
+                        <span key={i} className="px-3 py-1 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs rounded-full">
+                            {tag.trim()}
+                        </span>
+                    ))}
                 </div>
 
                 <div className="mb-6">
@@ -206,14 +205,14 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">💳 Total Earnings</div><div className="text-2xl font-bold text-pink-400">₹{stats.earnings}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">⭐ Rating</div><div className="text-2xl font-bold text-yellow-400">{stats.rating} ⭐</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">📅 Completed Sessions</div><div className="text-2xl font-bold text-green-400">{stats.sessions}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5"><div className="text-xs text-gray-400 mb-2">🔔 Pending Requests</div><div className="text-2xl font-bold text-purple-400">{pendingBookings.length}</div></div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">💳 Earnings</div><div className="text-xl font-bold text-pink-400">₹{stats.earnings}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">⭐ Rating</div><div className="text-xl font-bold text-yellow-400">{stats.rating} ⭐</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">📅 Sessions</div><div className="text-xl font-bold text-green-400">{stats.sessions}</div></div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">🔔 Requests</div><div className="text-xl font-bold text-purple-400">{pendingBookings.length}</div></div>
                 </div>
 
-                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-7 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-7 shadow-[0_0_15px_rgba(236,72,153,0.1)]">
                     <div className="text-base font-semibold mb-4 flex items-center gap-2">
                         📅 Booking Requests
                         {pendingBookings.length > 0 && <span className="bg-pink-500 text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse">{pendingBookings.length} New</span>}
@@ -274,18 +273,18 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     )}
                 </div>
 
-                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-6">
+                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-6">
                     <div className="text-base font-semibold mb-4 flex items-center justify-between">
                         <span>🖼️ My Gallery</span>
-                        <span className="text-xs text-gray-400 font-normal">Upload new photos using the + button above</span>
+                        <span className="text-xs text-gray-400 font-normal">Use + Post above to add</span>
                     </div>
                     {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                             {myPosts.map(post => (
                                 <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
-                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-3 pt-6 text-xs text-white truncate">{post.caption}</div>}
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }} className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg" title="Delete Post">🗑️</button>
+                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-2 pt-5 text-[10px] text-white truncate">{post.caption}</div>}
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }} className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg text-xs" title="Delete Post">🗑️</button>
                                 </div>
                             ))}
                         </div>

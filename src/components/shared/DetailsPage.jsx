@@ -18,6 +18,10 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     const [newReviewText, setNewReviewText] = useState("");
     const [newRating, setNewRating] = useState(5);
 
+    // --- NAYA FOLLOW STATE ---
+    const [followStats, setFollowStats] = useState({ followers: 0, following: 0, isFollowing: false });
+    const [followLoading, setFollowLoading] = useState(false);
+
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [meetingInfo, setMeetingInfo] = useState({
         date: "",
@@ -34,6 +38,7 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
         const fetchUserData = async () => {
             if (!profile) return;
 
+            // Fetch Posts
             if (!profile.is_private) {
                 try {
                     const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
@@ -41,6 +46,7 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                 } catch (err) { }
             }
 
+            // Fetch Reviews
             try {
                 const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
                 if (reviewRes.ok) {
@@ -49,9 +55,48 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     setAvgRating(data.avgRating);
                 }
             } catch (err) { }
+
+            // --- NAYA FOLLOW STATS FETCH LOGIC ---
+            try {
+                const currentUserId = currentUser ? currentUser.id : '';
+                const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${profile.id}?currentUserId=${currentUserId}`);
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    setFollowStats(statsData);
+                }
+            } catch (err) { }
         };
         fetchUserData();
-    }, [profile]);
+    }, [profile, currentUser]);
+
+    // --- NAYA FOLLOW/UNFOLLOW FUNCTION ---
+    const handleFollowToggle = async () => {
+        if (!currentUser) return alert("Please login to follow!");
+        if (currentUser.id === profile.id) return alert("You cannot follow yourself.");
+
+        setFollowLoading(true);
+        const endpoint = followStats.isFollowing ? '/api/unfollow' : '/api/follow';
+
+        try {
+            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ follower_id: currentUser.id, following_id: profile.id })
+            });
+
+            if (res.ok) {
+                setFollowStats(prev => ({
+                    ...prev,
+                    isFollowing: !prev.isFollowing,
+                    followers: prev.isFollowing ? prev.followers - 1 : prev.followers + 1
+                }));
+            }
+        } catch (err) {
+            console.error("Follow action failed:", err);
+        } finally {
+            setFollowLoading(false);
+        }
+    };
 
     const handleBookingSubmit = async () => {
         if (!currentUser) return alert("Please login first!");
@@ -144,17 +189,50 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                             <span className="text-xs text-green-400 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-400 rounded-full" /> Online</span>
                         </div>
                         <p className="text-sm text-gray-400 mb-3">📍 {profile.city || "Unknown City"} · 🎂 {profile.age || "N/A"} years</p>
-                        <div className="text-sm text-yellow-400 mb-4">⭐ {avgRating > 0 ? avgRating : "New"} <span className="text-gray-500">({reviews.length} reviews)</span></div>
+
+                        {/* --- NAYA FOLLOWERS STATS UI --- */}
+                        <div className="flex gap-6 mb-4 items-center">
+                            <div className="flex flex-col items-center">
+                                <span className="text-lg font-bold text-white">{followStats.followers}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-500">Followers</span>
+                            </div>
+                            <div className="w-px h-8 bg-white/10"></div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-lg font-bold text-white">{followStats.following}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-500">Following</span>
+                            </div>
+                            <div className="w-px h-8 bg-white/10"></div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-lg font-bold text-yellow-400">⭐ {avgRating > 0 ? avgRating : "New"}</span>
+                                <span className="text-[10px] uppercase tracking-wider text-gray-500">{reviews.length} Reviews</span>
+                            </div>
+                        </div>
+
                         <p className="text-sm text-gray-300 leading-relaxed mb-4">{profile.bio || "Hi there! I'm looking forward to having some great conversations."}</p>
                         <div className="flex flex-wrap gap-2 mb-6">
                             {safeTags.map((tag) => <span key={tag} className="px-3 py-1 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-xs rounded-full">{tag.trim()}</span>)}
                         </div>
+
+                        {/* --- NAYA FOLLOW/UNFOLLOW BUTTON WALA UI --- */}
                         <div className="flex gap-3 flex-wrap">
+                            {currentUser && currentUser.id !== profile.id && (
+                                <button
+                                    onClick={handleFollowToggle}
+                                    disabled={followLoading}
+                                    className={`px-6 py-3 rounded-full font-bold text-sm shadow-lg transition flex items-center justify-center min-w-[120px] ${followStats.isFollowing
+                                            ? "bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                                            : "bg-blue-500 text-white hover:bg-blue-600 shadow-blue-500/25"
+                                        }`}
+                                >
+                                    {followLoading ? "..." : followStats.isFollowing ? "Following" : "Follow"}
+                                </button>
+                            )}
                             <button onClick={() => setPage(PAGES.CHAT)} className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 shadow-lg shadow-pink-500/25 transition">💬 Chat with {firstName}</button>
                         </div>
                     </div>
                 </div>
 
+                {/* Baaki ka poora Booking, Gallery, aur Review section ekdum same hai */}
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 mb-8">
                     <div className="text-base font-semibold mb-4">📅 Book a Session</div>
                     <div className="flex gap-2 flex-wrap mb-6">

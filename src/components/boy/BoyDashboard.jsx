@@ -10,6 +10,9 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [newBookingAlert, setNewBookingAlert] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
 
+    // --- NAYA FOLLOW STATS STATE ---
+    const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
+
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user) return;
@@ -19,6 +22,14 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
                 if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
+
+                // --- NAYA FOLLOW STATS FETCH ---
+                const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${user.id}`);
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    setFollowStats(statsData);
+                }
+
             } catch (err) {
                 console.error("Dashboard error:", err);
             }
@@ -148,8 +159,21 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         </div>
                         <div className="text-center sm:text-left mt-2 sm:mt-0">
                             <h1 className="text-3xl font-bold">Welcome back, {user.name} 🚀</h1>
-                            <p className="text-sm text-gray-400 mt-1">Here's your dashboard overview</p>
-                            <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+
+                            {/* --- NAYA FOLLOWERS UI --- */}
+                            <div className="flex items-center gap-5 mt-3 mb-3 justify-center sm:justify-start">
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="text-lg font-bold text-white">{followStats.followers}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Followers</span>
+                                </div>
+                                <div className="w-px h-6 bg-white/10"></div>
+                                <div className="flex flex-col items-center sm:items-start">
+                                    <span className="text-lg font-bold text-white">{followStats.following}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Following</span>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
                                 {myTags.map((tag, i) => (
                                     <span key={i} className="px-2.5 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-full">
                                         {tag.trim()}
