@@ -18,6 +18,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
     const [messageToDelete, setMessageToDelete] = useState(null);
 
+    // --- CALLING STATES ---
+    const [callStatus, setCallStatus] = useState("idle"); // 'idle', 'calling', 'receiving', 'active'
+    const [callType, setCallType] = useState(null); // 'audio' or 'video'
+
     const roomId = currentUser?.id < girl?.id
         ? `${currentUser?.id}_${girl?.id}`
         : `${girl?.id}_${currentUser?.id}`;
@@ -105,11 +109,36 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             }
         };
 
+        // --- CALLING SOCKET LISTENERS ---
+        const handleIncomingCall = (data) => {
+            setCallType(data.type);
+            setCallStatus("receiving");
+        };
+
+        const handleCallAccepted = () => {
+            setCallStatus("active");
+        };
+
+        const handleCallRejected = () => {
+            setCallStatus("idle");
+            alert("Call declined");
+        };
+
+        const handleCallEnded = () => {
+            setCallStatus("idle");
+        };
+
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", handleUpdateOnlineUsers);
         socket.on("message_edited", handleMessageEdited);
         socket.on("message_deleted", handleMessageDeleted);
         socket.on("messages_read_update", handleMessagesReadUpdate);
+
+        // Call Events
+        socket.on("incoming_call", handleIncomingCall);
+        socket.on("call_accepted", handleCallAccepted);
+        socket.on("call_rejected", handleCallRejected);
+        socket.on("call_ended", handleCallEnded);
 
         return () => {
             socket.off("receive_message", handleReceiveMessage);
@@ -117,6 +146,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             socket.off("message_edited", handleMessageEdited);
             socket.off("message_deleted", handleMessageDeleted);
             socket.off("messages_read_update", handleMessagesReadUpdate);
+
+            socket.off("incoming_call", handleIncomingCall);
+            socket.off("call_accepted", handleCallAccepted);
+            socket.off("call_rejected", handleCallRejected);
+            socket.off("call_ended", handleCallEnded);
             socket.disconnect();
         };
     }, [roomId, currentUser.id, girl.id]);
@@ -124,6 +158,32 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    // --- CALLING FUNCTIONS ---
+    const startCall = (type) => {
+        setCallType(type);
+        setCallStatus("calling");
+        socket.emit("initiate_call", {
+            room: roomId,
+            receiver_id: girl.id,
+            type: type
+        });
+    };
+
+    const acceptCall = () => {
+        setCallStatus("active");
+        socket.emit("accept_call", { room: roomId, to: girl.id });
+    };
+
+    const rejectCall = () => {
+        setCallStatus("idle");
+        socket.emit("reject_call", { room: roomId, to: girl.id });
+    };
+
+    const endCall = () => {
+        setCallStatus("idle");
+        socket.emit("end_call", { room: roomId, to: girl.id });
+    };
 
     const sendMessage = (imageLink = null) => {
         if (!input.trim() && !imageLink) return;
@@ -220,6 +280,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     return (
         <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
+            {/* HEADER */}
             <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5 shrink-0 relative">
                 <div onClick={handleViewProfile} className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-white/5 p-1 rounded-xl transition duration-200">
                     {girl.profile_pic ? (
@@ -234,7 +295,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </div>
                     )}
                     <div>
-                        <div className="text-sm font-semibold">{girl.name}</div>
+                        <div className="text-sm font-semibold text-white">{girl.name}</div>
                         {isOnline ? (
                             <div className="text-xs text-green-400 flex items-center gap-1.5 mt-0.5">
                                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
@@ -249,13 +310,21 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     </div>
                 </div>
 
+                {/* 🚨 AUDIO & VIDEO CALL BUTTONS 🚨 */}
                 <div className="flex gap-2">
                     <button
-                        onClick={() => alert("📞 In-App Call starting...")}
-                        className="w-10 h-10 bg-green-500/15 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center hover:bg-green-500/25 transition"
+                        onClick={() => startCall('audio')}
+                        className="w-10 h-10 bg-green-500/15 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center hover:bg-green-500/25 transition text-lg"
                         title="Voice Call"
                     >
                         📞
+                    </button>
+                    <button
+                        onClick={() => startCall('video')}
+                        className="w-10 h-10 bg-blue-500/15 border border-blue-500/30 text-blue-400 rounded-full flex items-center justify-center hover:bg-blue-500/25 transition text-lg"
+                        title="Video Call"
+                    >
+                        📹
                     </button>
                     <button
                         onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
@@ -270,10 +339,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 🔒 End-to-end encrypted chat
             </div>
 
+            {/* CHAT MESSAGES */}
             <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
                 {messages.map((msg, index) => {
                     const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
-
                     const prevMsg = index > 0 ? messages[index - 1] : null;
                     const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
 
@@ -333,6 +402,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 <div ref={bottomRef} />
             </div>
 
+            {/* INPUT AREA */}
             {editingMsgId && (
                 <div className="bg-pink-500/20 text-pink-300 text-xs px-4 py-2 flex justify-between items-center border-t border-pink-500/30">
                     <span>✏️ Editing message...</span>
@@ -372,6 +442,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </button>
             </div>
 
+            {/* DELETE MODAL */}
             {messageToDelete && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
                     <div className="bg-[#16162A] border border-white/10 rounded-2xl w-full max-w-xs overflow-hidden shadow-2xl p-5 text-center">
@@ -390,6 +461,52 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* 🚨 CALLING OVERLAY MODAL (Ringing, Incoming, Active) 🚨 */}
+            {callStatus !== "idle" && (
+                <div className="fixed inset-0 z-[200] bg-[#0D0D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-fade-in">
+
+                    {/* Ringing Animation */}
+                    <div className="relative mb-8">
+                        <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${callStatus === 'active' ? 'bg-green-500' : 'bg-pink-500'}`}></div>
+                        <img
+                            src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"}
+                            alt={girl.name}
+                            className="w-32 h-32 rounded-full object-cover border-4 border-white/20 relative z-10 shadow-2xl"
+                        />
+                    </div>
+
+                    <h2 className="text-3xl font-extrabold text-white mb-2">{girl.name}</h2>
+                    <p className="text-gray-400 mb-12 uppercase tracking-widest text-sm font-semibold">
+                        {callStatus === "calling" && `Calling...`}
+                        {callStatus === "receiving" && `Incoming ${callType} Call`}
+                        {callStatus === "active" && `00:00 - Connected`}
+                    </p>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-6">
+                        {/* If receiving, show Accept button */}
+                        {callStatus === "receiving" && (
+                            <button onClick={acceptCall} className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(34,197,94,0.5)] transition hover:scale-110">
+                                {callType === 'video' ? '📹' : '📞'}
+                            </button>
+                        )}
+
+                        {/* Always show Reject/End button */}
+                        <button onClick={callStatus === "receiving" ? rejectCall : endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">
+                            📵
+                        </button>
+                    </div>
+
+                    {/* Dummy controls for active call */}
+                    {callStatus === "active" && (
+                        <div className="flex gap-4 mt-12">
+                            <button className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition">🎙️</button>
+                            {callType === 'video' && <button className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition">📷</button>}
+                        </div>
+                    )}
                 </div>
             )}
         </div>

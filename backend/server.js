@@ -157,7 +157,22 @@ io.on("connection", (socket) => {
             console.error(error);
         }
     });
+    socket.on("initiate_call", (data) => {
+        // data.receiver_id ko 'incoming_call' bhejenge
+        socket.to(data.room).emit("incoming_call", { type: data.type, caller_id: socket.id });
+    });
 
+    socket.on("accept_call", (data) => {
+        socket.to(data.room).emit("call_accepted");
+    });
+
+    socket.on("reject_call", (data) => {
+        socket.to(data.room).emit("call_rejected");
+    });
+
+    socket.on("end_call", (data) => {
+        socket.to(data.room).emit("call_ended");
+    });
     socket.on("edit_message", async (data) => {
         try {
             await pool.query("UPDATE messages SET text = $1 WHERE id = $2 AND sender_id = $3", [data.newText, data.messageId, data.sender_id]);
