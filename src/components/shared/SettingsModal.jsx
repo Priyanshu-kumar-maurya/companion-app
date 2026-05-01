@@ -11,7 +11,7 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
         age: user.age || "",
         city: user.city || "Mumbai",
         bio: user.bio || "",
-        price: user.price || "", // Price dono ke liye
+        price: user.price || "",
         tags: typeof user.tags === 'string' ? user.tags : (user.tags?.join(', ') || ""),
         link: user.link || "",
         is_private: user.is_private || false
