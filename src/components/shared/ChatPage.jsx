@@ -19,9 +19,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [messageToDelete, setMessageToDelete] = useState(null);
 
     // --- CALLING & WEBRTC STATES ---
-    const [callStatus, setCallStatus] = useState("idle"); // 'idle', 'calling', 'receiving', 'active'
+    const [callStatus, setCallStatus] = useState("idle");
     const [callType, setCallType] = useState(null);
     const callTypeRef = useRef(null);
+    const [facingMode, setFacingMode] = useState("user"); // 'user' (Front) or 'environment' (Back)
 
     // WebRTC Refs
     const peerConnectionRef = useRef(null);
@@ -36,6 +37,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     // --- 1. CLEANUP FUNCTION ---
     const cleanupCall = useCallback(() => {
         setCallStatus("idle");
+        setFacingMode("user"); // Reset to front camera
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
@@ -51,7 +53,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
-                video: type === 'video'
+                video: type === 'video' ? { facingMode: "user" } : false // Default front camera
             });
             localStreamRef.current = stream;
 
@@ -233,6 +235,50 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const toggleVideo = () => {
         if (localStreamRef.current) {
             localStreamRef.current.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+        }
+    };
+
+    // --- 🚨 NAYA CAMERA SWITCH LOGIC 🚨 ---
+    const switchCamera = async () => {
+        if (!localStreamRef.current || callType !== 'video') return;
+
+        const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
+        setFacingMode(newFacingMode);
+
+        try {
+            // Get new video stream from the other camera
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: newFacingMode }
+            });
+
+            const newVideoTrack = newStream.getVideoTracks()[0];
+
+            // Stop the old video track
+            const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+            if (oldVideoTrack) {
+                oldVideoTrack.stop();
+                localStreamRef.current.removeTrack(oldVideoTrack);
+            }
+
+            // Add the new track to local stream
+            localStreamRef.current.addTrack(newVideoTrack);
+
+            // Update local video element
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = localStreamRef.current;
+            }
+
+            // Replace the video track in the active WebRTC peer connection
+            if (peerConnectionRef.current) {
+                const videoSender = peerConnectionRef.current.getSenders().find(s => s.track && s.track.kind === 'video');
+                if (videoSender) {
+                    videoSender.replaceTrack(newVideoTrack);
+                }
+            }
+        } catch (err) {
+            console.error("Error switching camera:", err);
+            alert("Could not switch camera. Device might not support it.");
+            setFacingMode(facingMode); // Revert state if failed
         }
     };
 
@@ -445,10 +491,16 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         <button onClick={callStatus === "receiving" ? rejectCall : endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">📵</button>
                     </div>
 
+                    {/* 🚨 NAYA CAMERA SWITCH BUTTON 🚨 */}
                     {callStatus === "active" && (
                         <div className="flex gap-4 mt-8">
-                            <button onClick={toggleMic} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md">🎙️</button>
-                            {callType === 'video' && <button onClick={toggleVideo} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md">📷</button>}
+                            <button onClick={toggleMic} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md" title="Mute/Unmute">🎙️</button>
+                            {callType === 'video' && (
+                                <>
+                                    <button onClick={toggleVideo} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md" title="Camera On/Off">📷</button>
+                                    <button onClick={switchCamera} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md" title="Switch Front/Back Camera">🔄</button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
