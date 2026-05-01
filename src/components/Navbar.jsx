@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 
-function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
+// 🚨 YAHAN DHYAN DEIN: Props mein 'socket' add kiya hai
+function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // --- NAYE POST STATES (Instagram Style) ---
@@ -11,9 +12,30 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
     const [postCaption, setPostCaption] = useState("");
     const [isPosting, setIsPosting] = useState(false);
 
+    // --- MESSAGES NOTIFICATION STATE ---
+    const [unreadCount, setUnreadCount] = useState(0);
+
     const currentUser = boyUser || girlUser;
     const isBoy = boyUser !== null;
     const isGirl = girlUser !== null;
+
+    // --- SOCKET LOGIC FOR NOTIFICATIONS ---
+    useEffect(() => {
+        if (!socket || !currentUser) return;
+
+        const handleNewMessage = (data) => {
+            // Agar user currently Messages page par nahi hai, tabhi count badhao
+            if (page !== PAGES.MESSAGES) {
+                setUnreadCount((prev) => prev + 1);
+            }
+        };
+
+        socket.on("receive_message", handleNewMessage);
+
+        return () => {
+            socket.off("receive_message", handleNewMessage);
+        };
+    }, [socket, currentUser, page]);
 
 
     const getLinkStyle = (targetPage) => {
@@ -25,6 +47,10 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
     };
 
     const handleNavClick = (targetPage) => {
+        // Agar user ne Messages click kiya, toh notifications reset kar do
+        if (targetPage === PAGES.MESSAGES) {
+            setUnreadCount(0);
+        }
         setPage(targetPage);
         setIsMenuOpen(false);
     };
@@ -101,12 +127,17 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
                                 <>
                                     <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}>🔍 Find</button>
 
-                                    {/* 🚨 DESKTOP: MESSAGES BUTTON ADDED HERE 🚨 */}
+                                    {/* 🚨 DESKTOP: MESSAGES BUTTON WITH BADGE 🚨 */}
                                     <button
-                                        onClick={() => setPage(PAGES.MESSAGES)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.MESSAGES ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
+                                        onClick={() => handleNavClick(PAGES.MESSAGES)}
+                                        className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.MESSAGES ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
                                     >
                                         💬 Messages
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-bounce">
+                                                {unreadCount}
+                                            </span>
+                                        )}
                                     </button>
 
                                     {/* Desktop Post Button */}
@@ -176,31 +207,39 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser }) {
             {!isHiddenScreen && (
                 <div className="fixed bottom-0 left-0 w-full bg-[#16162A]/95 backdrop-blur-xl border-t border-white/5 z-40 md:hidden pb-2 pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
-                        <button onClick={() => setPage(PAGES.HOME)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                             <span className="text-xl">🏠</span><span className="text-[10px] font-bold">Home</span>
                         </button>
 
                         {currentUser && (
-                            <button onClick={() => setPage(PAGES.FIND)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">🔍</span><span className="text-[10px] font-bold">Explore</span>
                             </button>
                         )}
 
-                        {/* 🚨 MOBILE: MESSAGES BUTTON ADDED HERE 🚨 */}
+                        {/* 🚨 MOBILE: MESSAGES BUTTON WITH BADGE 🚨 */}
                         {currentUser && (
-                            <button onClick={() => setPage(PAGES.MESSAGES)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">💬</span><span className="text-[10px] font-bold">Inbox</span>
+                            <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl relative">
+                                    💬
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-bounce shadow-lg">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </span>
+                                <span className="text-[10px] font-bold">Inbox</span>
                             </button>
                         )}
 
                         {currentUser && (
-                            <button onClick={() => setPage(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">👤</span><span className="text-[10px] font-bold">Profile</span>
                             </button>
                         )}
 
                         {!currentUser && (
-                            <button onClick={() => setPage(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">ℹ️</span><span className="text-[10px] font-bold">About</span>
                             </button>
                         )}

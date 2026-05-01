@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PAGES } from "../../App";
-
+import { PAGES } from '../../App';
 function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [chatHistory, setChatHistory] = useState([]);
     const [unreadCounts, setUnreadCounts] = useState({});
@@ -38,7 +37,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const handleChatClick = (person) => {
         setUnreadCounts(prev => {
             const newState = { ...prev };
-            delete newState[person.id];
+            delete newState[person.id]; // Mark as read locally
             return newState;
         });
         setSelectedGirl(person);
@@ -50,7 +49,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     return (
         <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-6 max-w-3xl mx-auto">
             <h1 className="text-3xl font-extrabold mb-6 text-white flex items-center gap-3">
-                💬 Messages
+                💬 Inbox
             </h1>
 
             <div className="bg-[#16162A] border border-white/5 rounded-2xl shadow-xl overflow-hidden">
@@ -65,22 +64,34 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                 ) : (
                     <div className="flex flex-col divide-y divide-white/5">
                         {chatHistory.map((person) => (
-                            <div key={person.id} onClick={() => handleChatClick(person)} className="flex items-center justify-between p-5 hover:bg-white/5 cursor-pointer transition">
+                            <div key={person.id} onClick={() => handleChatClick(person)} className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center text-xl font-bold shadow-inner">
-                                        {person.name[0]}
+
+                                    {/* 🚨 CHANGED: Showing actual User DP instead of just name initial 🚨 */}
+                                    <div className="relative">
+                                        {person.profile_pic ? (
+                                            <img src={person.profile_pic} alt={person.name} className="w-14 h-14 rounded-full object-cover border border-white/10" />
+                                        ) : (
+                                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center text-xl font-bold shadow-inner text-white">
+                                                {person.name[0]}
+                                            </div>
+                                        )}
+                                        {/* Green dot for online status could go here in future */}
                                     </div>
+
                                     <div>
                                         <div className="font-bold text-white text-lg">{person.name}</div>
                                         {unreadCounts[person.id] ? (
-                                            <div className="text-sm text-green-400 font-bold animate-pulse">New Message!</div>
+                                            <div className="text-sm text-gray-300 font-medium truncate max-w-[180px] sm:max-w-xs">New message received...</div>
                                         ) : (
-                                            <div className="text-sm text-gray-400">Tap to view conversation</div>
+                                            <div className="text-sm text-gray-500 truncate max-w-[180px] sm:max-w-xs">Tap to view conversation</div>
                                         )}
                                     </div>
                                 </div>
+
+                                {/* 🚨 CHANGED: WhatsApp/Insta style RED Notification Badge 🚨 */}
                                 {unreadCounts[person.id] ? (
-                                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-[0_0_10px_rgba(34,197,94,0.5)]">
+                                    <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-[0_0_10px_rgba(239,68,68,0.6)] animate-pulse">
                                         {unreadCounts[person.id]}
                                     </div>
                                 ) : (

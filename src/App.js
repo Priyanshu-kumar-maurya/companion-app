@@ -158,6 +158,7 @@ function App() {
         boyUser={boyUser}
         setGirlUser={setGirlUser}
         setBoyUser={setBoyUser}
+        socket={socket}
       />
       {renderPage()}
     </div>

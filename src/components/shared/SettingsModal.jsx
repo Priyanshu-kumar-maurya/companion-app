@@ -11,7 +11,7 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
         age: user.age || "",
         city: user.city || "Mumbai",
         bio: user.bio || "",
-        price: user.price || "",
+        price: user.price || "", // Price dono ke liye
         tags: typeof user.tags === 'string' ? user.tags : (user.tags?.join(', ') || ""),
         link: user.link || "",
         is_private: user.is_private || false
@@ -50,7 +50,6 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
         }
     };
 
-    // --- NAYA DP UPLOAD FUNCTION (Yahan Move Kiya) ---
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -143,7 +142,6 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
                     {activeView === 'edit_profile' && (
                         <form onSubmit={handleSave} className="p-5 space-y-4">
 
-                            {/* --- NAYA DP CHANGE UI (Yahan Add Kiya) --- */}
                             <div className="flex flex-col items-center mb-6">
                                 <div className="relative w-24 h-24 mb-3">
                                     <div className={`w-full h-full rounded-full overflow-hidden bg-gradient-to-br ${isGirl ? 'from-pink-500/30 to-purple-500/30 border-pink-500/20' : 'from-blue-500/30 to-purple-500/30 border-blue-500/20'} flex items-center justify-center text-4xl border-4 shadow-lg`}>
@@ -158,7 +156,6 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
                                 </div>
                                 <span className="text-xs text-gray-400">Tap icon to change photo</span>
                             </div>
-                            {/* -------------------------------------- */}
 
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1 ml-1">Full Name</label>
@@ -178,12 +175,10 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
                                 </div>
                             </div>
 
-                            {isGirl && (
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-1 ml-1">Hourly Rate (₹)</label>
-                                    <input type="number" name="price" value={formData.price} onChange={handleChange} className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-pink-500" />
-                                </div>
-                            )}
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 ml-1">Hourly Rate (₹)</label>
+                                <input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="e.g. 500" className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} />
+                            </div>
 
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1 ml-1">Bio</label>
