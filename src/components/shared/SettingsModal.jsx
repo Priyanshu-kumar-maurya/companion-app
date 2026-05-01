@@ -18,6 +18,7 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
     });
 
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     const handleChange = (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -49,23 +50,38 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
         }
     };
 
-    // 🚨 YAHAN UPDATE KIYA HAI: setUser(null) ADD KIYA 🚨
+    // --- NAYA DP UPLOAD FUNCTION (Yahan Move Kiya) ---
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        const uploadFormData = new FormData();
+        uploadFormData.append("profile_pic", file);
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: uploadFormData });
+            if (response.ok) {
+                const data = await response.json();
+                setUser({ ...user, profile_pic: data.imageUrl });
+                alert("Profile picture updated! 📸");
+            }
+        } catch (err) { console.error(err); } finally { setUploading(false); }
+    };
+
     const handleLogout = () => {
         if (window.confirm("Are you sure you want to logout?")) {
             localStorage.removeItem("token");
-            setUser(null); // Yeh line UI ko turant update karegi
+            setUser(null);
             setPage(PAGES.HOME);
         }
     };
 
-    // 🚨 YAHAN BHI UPDATE KIYA HAI: setUser(null) ADD KIYA 🚨
     const handleDeleteAccount = async () => {
         const confirmDelete = window.confirm("⚠️ WARNING: This will permanently delete your account, chats, and bookings. Type 'YES' to confirm.");
         if (confirmDelete) {
             try {
                 await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
                 localStorage.removeItem("token");
-                setUser(null); // Yeh line UI ko turant update karegi
+                setUser(null);
                 alert("Account deleted forever.");
                 setPage(PAGES.HOME);
             } catch (error) {
@@ -126,6 +142,23 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
 
                     {activeView === 'edit_profile' && (
                         <form onSubmit={handleSave} className="p-5 space-y-4">
+
+                            {/* --- NAYA DP CHANGE UI (Yahan Add Kiya) --- */}
+                            <div className="flex flex-col items-center mb-6">
+                                <div className="relative w-24 h-24 mb-3">
+                                    <div className={`w-full h-full rounded-full overflow-hidden bg-gradient-to-br ${isGirl ? 'from-pink-500/30 to-purple-500/30 border-pink-500/20' : 'from-blue-500/30 to-purple-500/30 border-blue-500/20'} flex items-center justify-center text-4xl border-4 shadow-lg`}>
+                                        {user?.profile_pic ? (
+                                            <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                                        ) : ("😊")}
+                                    </div>
+                                    <label className={`absolute bottom-0 right-0 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm ${isGirl ? 'bg-pink-500' : 'bg-blue-500'}`} title="Upload Profile Picture">
+                                        {uploading ? "⏳" : "📷"}
+                                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
+                                    </label>
+                                </div>
+                                <span className="text-xs text-gray-400">Tap icon to change photo</span>
+                            </div>
+                            {/* -------------------------------------- */}
 
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1 ml-1">Full Name</label>

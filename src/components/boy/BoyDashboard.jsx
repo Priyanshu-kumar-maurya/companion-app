@@ -10,6 +10,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [showSettings, setShowSettings] = useState(false);
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
 
+    // --- NEW STATES FOR MODALS ---
+    const [activeStatModal, setActiveStatModal] = useState(null);
+    const [reviews, setReviews] = useState([]);
+
     useEffect(() => {
         const fetchDashboardData = async () => {
             if (!user) return;
@@ -24,6 +28,13 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 if (statsRes.ok) {
                     const statsData = await statsRes.json();
                     setFollowStats(statsData);
+                }
+
+                // Fetch Reviews
+                const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${user.id}`);
+                if (reviewRes.ok) {
+                    const data = await reviewRes.json();
+                    setReviews(data.reviews);
                 }
 
             } catch (err) {
@@ -107,9 +118,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
     const myTags = user.tags ? user.tags.split(',') : ["Coffee Date", "Movie"];
     const pendingBookings = myBookings.filter(b => b.status === 'pending');
+
+    // --- DERIVED STATS FOR MODALS ---
     const completedBookings = myBookings.filter(b => b.status === 'completed');
     const totalEarnings = completedBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
-    const completedSessions = completedBookings.length;
 
     return (
         <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
@@ -126,44 +138,49 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             <div className="max-w-5xl mx-auto px-4 py-6">
 
                 {/* --- NAYA MOBILE-OPTIMIZED HEADER --- */}
-                <div className="flex items-center gap-5 mb-6">
-                    {/* DP (Camera Icon Hataya) */}
-                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
-                        <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg transition">
-                            {user?.profile_pic ? (
-                                <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                            ) : ("😎")}
-                        </div>
-                    </div>
+                <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4 sm:gap-6">
 
-                    {/* Name, Stats & Settings (Side-by-side with DP) */}
-                    <div className="flex-1 flex flex-col items-start">
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white truncate max-w-full">{user.name} 🚀</h1>
-
-                        {/* Followers/Following Stats */}
-                        <div className="flex items-center gap-4 mt-2 mb-3">
-                            <div className="flex flex-col items-start">
-                                <span className="text-lg font-bold text-white leading-none">{followStats.followers}</span>
-                                <span className="text-[10px] uppercase tracking-wider text-gray-500">Followers</span>
-                            </div>
-                            <div className="w-px h-6 bg-white/10"></div>
-                            <div className="flex flex-col items-start">
-                                <span className="text-lg font-bold text-white leading-none">{followStats.following}</span>
-                                <span className="text-[10px] uppercase tracking-wider text-gray-500">Following</span>
+                        {/* Profile Picture (No Camera Icon) */}
+                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
+                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg transition">
+                                {user?.profile_pic ? (
+                                    <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                                ) : ("😎")}
                             </div>
                         </div>
 
-                        {/* Settings Button (Left aligned under stats) */}
-                        <button onClick={() => setShowSettings(true)} className="px-4 py-1.5 bg-white/10 border border-white/20 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition flex items-center gap-1.5">
-                            ⚙️ Edit Profile
-                        </button>
+                        {/* Name and Stats (Next to DP) */}
+                        <div className="flex flex-col items-start gap-1">
+                            <div className="flex items-center gap-2">
+                                <h1 className="text-xl sm:text-2xl font-bold text-white truncate max-w-[150px] sm:max-w-[300px]">{user.name} 🚀</h1>
+                                {user.kyc_status === 'verified' && <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">✓ Verified</span>}
+                            </div>
+
+                            <div className="flex items-center gap-4 mt-1">
+                                <div className="flex flex-col items-start">
+                                    <span className="text-base font-bold text-white leading-tight">{followStats.followers}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Followers</span>
+                                </div>
+                                <div className="w-px h-6 bg-white/10"></div>
+                                <div className="flex flex-col items-start">
+                                    <span className="text-base font-bold text-white leading-tight">{followStats.following}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500">Following</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Settings Button on the Top Right */}
+                    <button onClick={() => setShowSettings(true)} className="px-3 py-1.5 bg-white/10 rounded-lg text-xs font-bold hover:bg-white/20 transition flex items-center gap-1.5 shrink-0 mt-2">
+                        ⚙️ Edit
+                    </button>
                 </div>
 
                 {/* Tags Section */}
                 <div className="flex flex-wrap gap-2 mb-8 justify-start">
                     {myTags.map((tag, i) => (
-                        <span key={i} className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-full">
+                        <span key={i} className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] rounded-full">
                             {tag.trim()}
                         </span>
                     ))}
@@ -204,11 +221,36 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
+                {/* --- INTERACTIVE STATS SECTION --- */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">💳 Earnings</div><div className="text-xl font-bold text-blue-400">₹{totalEarnings}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">⭐ Rating</div><div className="text-xl font-bold text-yellow-400">4.8 ⭐</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">📅 Sessions</div><div className="text-xl font-bold text-green-400">{completedSessions}</div></div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4"><div className="text-[11px] text-gray-400 mb-1">🔔 Requests</div><div className="text-xl font-bold text-purple-400">{pendingBookings.length}</div></div>
+                    <div
+                        className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition"
+                        onClick={() => setActiveStatModal('earnings')}
+                    >
+                        <div className="text-[11px] text-gray-400 mb-1">💳 Earnings</div>
+                        <div className="text-xl font-bold text-blue-400">₹{totalEarnings}</div>
+                    </div>
+
+                    <div
+                        className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition"
+                        onClick={() => setActiveStatModal('rating')}
+                    >
+                        <div className="text-[11px] text-gray-400 mb-1">⭐ Rating</div>
+                        <div className="text-xl font-bold text-yellow-400">4.8 ⭐</div>
+                    </div>
+
+                    <div
+                        className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition"
+                        onClick={() => setActiveStatModal('bookings')}
+                    >
+                        <div className="text-[11px] text-gray-400 mb-1">📅 Bookings</div>
+                        <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
+                    </div>
+
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-default">
+                        <div className="text-[11px] text-gray-400 mb-1">🔔 Requests</div>
+                        <div className="text-xl font-bold text-purple-400">{pendingBookings.length}</div>
+                    </div>
                 </div>
 
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-7 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
@@ -277,7 +319,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-6">
                     <div className="text-base font-semibold mb-4 flex items-center justify-between">
                         <span>🖼️ My Gallery</span>
-                        <span className="text-xs text-gray-400 font-normal">Use + Post above to add</span>
+                        <span className="text-xs text-gray-400 font-normal">Manage photos</span>
                     </div>
                     {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -317,6 +359,73 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     onClose={() => setShowSettings(false)}
                     setPage={setPage}
                 />
+            )}
+
+            {/* --- STATS DETAIL MODALS --- */}
+            {activeStatModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => setActiveStatModal(null)}>
+                    <div className="bg-[#16162A] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+
+                        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#16162A]">
+                            <h2 className="text-lg font-bold text-white">
+                                {activeStatModal === 'earnings' && "Earnings History"}
+                                {activeStatModal === 'rating' && "Reviews & Ratings"}
+                                {activeStatModal === 'bookings' && "Completed Bookings"}
+                            </h2>
+                            <button onClick={() => setActiveStatModal(null)} className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">✕</button>
+                        </div>
+
+                        <div className="overflow-y-auto p-5 space-y-3 custom-scrollbar">
+                            {/* EARNINGS VIEW */}
+                            {activeStatModal === 'earnings' && (
+                                completedBookings.length === 0 ? <p className="text-gray-500 text-center py-4 text-sm">No earnings recorded yet.</p> :
+                                    completedBookings.map(b => (
+                                        <div key={b.id} className="flex justify-between items-center bg-[#0D0D1A] p-3 rounded-xl border border-white/5">
+                                            <div>
+                                                <p className="text-sm font-bold text-white">{b.girl_name}</p>
+                                                <p className="text-[10px] text-gray-500">{new Date(b.created_at).toLocaleDateString()} • {b.hours} hrs</p>
+                                            </div>
+                                            <div className="text-blue-400 font-bold">+₹{b.amount}</div>
+                                        </div>
+                                    ))
+                            )}
+
+                            {/* RATINGS VIEW */}
+                            {activeStatModal === 'rating' && (
+                                reviews.length === 0 ? <p className="text-gray-500 text-center py-4 text-sm">No reviews yet.</p> :
+                                    reviews.map(rev => (
+                                        <div key={rev.id} className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex gap-3">
+                                            <img src={rev.reviewer_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={rev.reviewer_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                                            <div>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="font-semibold text-sm text-white">{rev.reviewer_name}</span>
+                                                    <span className="text-yellow-400 text-xs">{"★".repeat(rev.rating)}</span>
+                                                </div>
+                                                <p className="text-gray-300 text-xs">{rev.comment}</p>
+                                            </div>
+                                        </div>
+                                    ))
+                            )}
+
+                            {/* BOOKINGS VIEW */}
+                            {activeStatModal === 'bookings' && (
+                                completedBookings.length === 0 ? <p className="text-gray-500 text-center py-4 text-sm">No completed bookings yet.</p> :
+                                    completedBookings.map(b => (
+                                        <div key={b.id} className="flex justify-between items-center bg-[#0D0D1A] p-3 rounded-xl border border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <img src={b.girl_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} className="w-10 h-10 rounded-full object-cover" alt="Companion" />
+                                                <div>
+                                                    <p className="text-sm font-bold text-white">{b.girl_name}</p>
+                                                    <p className="text-[10px] text-gray-500">{new Date(b.created_at).toLocaleDateString()}</p>
+                                                </div>
+                                            </div>
+                                            <span className="text-green-400 text-[10px] bg-green-500/10 px-2 py-1 rounded border border-green-500/20">Completed</span>
+                                        </div>
+                                    ))
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
