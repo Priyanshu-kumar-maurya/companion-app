@@ -21,8 +21,13 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     // --- CALLING & WEBRTC STATES ---
     const [callStatus, setCallStatus] = useState("idle");
     const [callType, setCallType] = useState(null);
+    const [facingMode, setFacingMode] = useState("user");
+
+    // Refs for tracking values inside callbacks/sockets without re-rendering issues
+    const callStatusRef = useRef("idle");
     const callTypeRef = useRef(null);
-    const [facingMode, setFacingMode] = useState("user"); // 'user' (Front) or 'environment' (Back)
+    const isCallerRef = useRef(false);
+    const callStartTimeRef = useRef(null);
 
     // WebRTC Refs
     const peerConnectionRef = useRef(null);
@@ -34,10 +39,46 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         ? `${currentUser?.id}_${girl?.id}`
         : `${girl?.id}_${currentUser?.id}`;
 
-    // --- 1. CLEANUP FUNCTION ---
+    // Custom setter to keep Ref and State synced
+    const updateCallStatus = (status) => {
+        setCallStatus(status);
+        callStatusRef.current = status;
+    };
+
+    // --- 1. CALL HISTORY LOGGER ---
+    const logCallToChat = useCallback((messageText) => {
+        if (!currentUser || !girl) return;
+        const messageData = {
+            sender_id: currentUser.id,
+            receiver_id: girl.id,
+            message: messageText,
+            image_url: null,
+            room: roomId
+        };
+        socket.emit("send_message", messageData);
+    }, [currentUser, girl, roomId]);
+
+    // --- 2. CLEANUP & LOG FUNCTION ---
     const cleanupCall = useCallback(() => {
-        setCallStatus("idle");
-        setFacingMode("user"); // Reset to front camera
+        // Record Call History if user was the caller
+        if (isCallerRef.current && callTypeRef.current) {
+            if (callStatusRef.current === 'active' && callStartTimeRef.current) {
+                const durationMs = Date.now() - callStartTimeRef.current;
+                const totalSeconds = Math.floor(durationMs / 1000);
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = (totalSeconds % 60).toString().padStart(2, '0');
+                logCallToChat(`✅ ${callTypeRef.current === 'video' ? 'Video' : 'Audio'} Call - ${mins}:${secs}`);
+            } else if (callStatusRef.current === 'calling') {
+                logCallToChat(`❌ Missed ${callTypeRef.current === 'video' ? 'Video' : 'Audio'} Call`);
+            }
+        }
+
+        updateCallStatus("idle");
+        setFacingMode("user");
+        isCallerRef.current = false;
+        callStartTimeRef.current = null;
+        callTypeRef.current = null;
+
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
@@ -46,14 +87,14 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
         }
-    }, []);
+    }, [logCallToChat]);
 
-    // --- 2. WEBRTC SETUP FUNCTION ---
+    // --- 3. WEBRTC SETUP FUNCTION ---
     const setupWebRTC = useCallback(async (type, isCaller) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
-                video: type === 'video' ? { facingMode: "user" } : false // Default front camera
+                video: type === 'video' ? { facingMode: "user" } : false
             });
             localStreamRef.current = stream;
 
@@ -93,7 +134,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     }, [roomId, cleanupCall]);
 
-    // --- 3. FETCH MESSAGES ---
+    // --- 4. FETCH MESSAGES ---
     useEffect(() => {
         const fetchOldMessages = async () => {
             if (!currentUser || !girl) return;
@@ -117,7 +158,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         fetchOldMessages();
     }, [currentUser, girl]);
 
-    // --- 4. SOCKET LISTENERS ---
+    // --- 5. SOCKET LISTENERS ---
     useEffect(() => {
         socket.connect();
         socket.emit("join_room", roomId);
@@ -156,16 +197,18 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.on("incoming_call", (data) => {
             setCallType(data.type);
             callTypeRef.current = data.type;
-            setCallStatus("receiving");
+            isCallerRef.current = false;
+            callStartTimeRef.current = null;
+            updateCallStatus("receiving");
         });
 
         socket.on("call_accepted", async () => {
-            setCallStatus("active");
+            updateCallStatus("active");
+            callStartTimeRef.current = Date.now();
             await setupWebRTC(callTypeRef.current, true);
         });
 
         socket.on("call_rejected", () => {
-            alert("Call declined");
             cleanupCall();
         });
 
@@ -203,16 +246,19 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // --- 5. CALL ACTIONS ---
+    // --- 6. CALL ACTIONS ---
     const startCall = (type) => {
         setCallType(type);
         callTypeRef.current = type;
-        setCallStatus("calling");
+        isCallerRef.current = true;
+        callStartTimeRef.current = null;
+        updateCallStatus("calling");
         socket.emit("initiate_call", { room: roomId, receiver_id: girl.id, type: type });
     };
 
     const acceptCall = () => {
-        setCallStatus("active");
+        updateCallStatus("active");
+        callStartTimeRef.current = Date.now();
         socket.emit("accept_call", { room: roomId, to: girl.id });
     };
 
@@ -238,51 +284,34 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    // --- 🚨 NAYA CAMERA SWITCH LOGIC 🚨 ---
     const switchCamera = async () => {
         if (!localStreamRef.current || callType !== 'video') return;
-
         const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
         setFacingMode(newFacingMode);
 
         try {
-            // Get new video stream from the other camera
-            const newStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: newFacingMode }
-            });
-
+            const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: newFacingMode } });
             const newVideoTrack = newStream.getVideoTracks()[0];
-
-            // Stop the old video track
             const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
+
             if (oldVideoTrack) {
                 oldVideoTrack.stop();
                 localStreamRef.current.removeTrack(oldVideoTrack);
             }
-
-            // Add the new track to local stream
             localStreamRef.current.addTrack(newVideoTrack);
+            if (localVideoRef.current) localVideoRef.current.srcObject = localStreamRef.current;
 
-            // Update local video element
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = localStreamRef.current;
-            }
-
-            // Replace the video track in the active WebRTC peer connection
             if (peerConnectionRef.current) {
                 const videoSender = peerConnectionRef.current.getSenders().find(s => s.track && s.track.kind === 'video');
-                if (videoSender) {
-                    videoSender.replaceTrack(newVideoTrack);
-                }
+                if (videoSender) videoSender.replaceTrack(newVideoTrack);
             }
         } catch (err) {
             console.error("Error switching camera:", err);
-            alert("Could not switch camera. Device might not support it.");
-            setFacingMode(facingMode); // Revert state if failed
+            setFacingMode(facingMode);
         }
     };
 
-    // --- 6. MESSAGING FUNCTIONS ---
+    // --- 7. MESSAGING FUNCTIONS ---
     const sendMessage = (imageLink = null) => {
         if (!input.trim() && !imageLink) return;
         if (!currentUser) return;
@@ -347,7 +376,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     return (
         <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
             {/* HEADER */}
-            <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5 shrink-0 relative">
+            <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5 shrink-0 relative z-[40]">
                 <div onClick={handleViewProfile} className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-white/5 p-1 rounded-xl transition duration-200">
                     {girl.profile_pic ? (
                         <img src={girl.profile_pic} alt={girl.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
@@ -425,7 +454,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </div>
             )}
 
-            <div className="flex items-end gap-2 px-4 py-3 border-t border-white/5 bg-[#16162A] shrink-0">
+            <div className="flex items-end gap-2 px-4 py-3 border-t border-white/5 bg-[#16162A] shrink-0 z-[40]">
                 <label className="w-11 h-11 bg-white/5 hover:bg-white/10 text-gray-400 rounded-full flex items-center justify-center text-xl cursor-pointer transition shrink-0 border border-white/10" title="Attach Image">
                     📎 <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || editingMsgId} />
                 </label>
@@ -456,51 +485,76 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </div>
             )}
 
-            {/* 🚨 ACTIVE CALLING / WEBRTC OVERLAY MODAL 🚨 */}
+            {/* 🚨 WHATSAPP-STYLE CALLING & WEBRTC OVERLAY MODAL 🚨 */}
             {callStatus !== "idle" && (
-                <div className="fixed inset-0 z-[200] bg-[#0D0D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 animate-fade-in">
+                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-[#000000]' : 'bg-[#0D0D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6'} animate-fade-in overflow-hidden`}>
 
-                    {/* VIDEO/AUDIO DISPLAY */}
-                    <div className={`relative mb-8 w-full max-w-md flex flex-col items-center gap-4 ${callStatus === 'active' && callType === 'video' ? 'h-96' : 'h-32'}`}>
-                        {/* Remote Video */}
-                        <video ref={remoteVideoRef} autoPlay playsInline className={`rounded-2xl bg-black object-cover w-full h-full shadow-2xl ${callStatus === 'active' && callType === 'video' ? 'block' : 'hidden'}`} />
-                        {/* Local Video */}
-                        <video ref={localVideoRef} autoPlay playsInline muted className={`absolute bottom-4 right-4 w-24 h-32 rounded-xl bg-gray-900 object-cover shadow-lg border-2 border-white/20 ${callStatus === 'active' && callType === 'video' ? 'block' : 'hidden'}`} />
+                    {/* 1. ACTIVE VIDEO CALL UI (FULL SCREEN) */}
+                    {callStatus === 'active' && callType === 'video' && (
+                        <>
+                            {/* Remote Video (Full Screen Background) */}
+                            <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black" />
 
-                        {(callStatus !== 'active' || callType === 'audio') && (
-                            <div className="relative">
-                                <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${callStatus === 'active' ? 'bg-green-500' : 'bg-pink-500'}`}></div>
-                                <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-32 h-32 rounded-full object-cover border-4 border-white/20 relative z-10 shadow-2xl" />
+                            {/* Top Header Overlay */}
+                            <div className="absolute top-0 left-0 right-0 px-6 py-8 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center gap-4 z-20">
+                                <button onClick={endCall} className="text-white text-3xl font-light hover:scale-110 transition drop-shadow-lg">←</button>
+                                <div className="flex items-center gap-3">
+                                    <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-12 h-12 rounded-full border-2 border-white/30 object-cover shadow-lg" />
+                                    <div className="text-white drop-shadow-md">
+                                        <div className="font-bold text-lg leading-none mb-1">{girl.name}</div>
+                                        <div className="text-xs text-green-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Connected
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        )}
-                    </div>
 
-                    <h2 className="text-3xl font-extrabold text-white mb-2">{girl.name}</h2>
-                    <p className="text-gray-400 mb-12 uppercase tracking-widest text-sm font-semibold">
-                        {callStatus === "calling" && `Calling...`}
-                        {callStatus === "receiving" && `Incoming ${callType} Call`}
-                        {callStatus === "active" && `Connected`}
-                    </p>
+                            {/* Local Video (Floating PiP Bottom Right) */}
+                            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-32 right-6 w-28 h-40 sm:w-36 sm:h-48 rounded-2xl bg-black object-cover shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/20 z-10 hover:scale-105 transition" />
 
-                    <div className="flex gap-6">
-                        {callStatus === "receiving" && (
-                            <button onClick={acceptCall} className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(34,197,94,0.5)] transition hover:scale-110">
-                                {callType === 'video' ? '📹' : '📞'}
-                            </button>
-                        )}
-                        <button onClick={callStatus === "receiving" ? rejectCall : endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">📵</button>
-                    </div>
+                            {/* Floating Control Bar */}
+                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-6 z-20 bg-black/60 px-6 py-4 rounded-full backdrop-blur-md border border-white/10 shadow-2xl">
+                                <button onClick={switchCamera} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition text-white">🔄</button>
+                                <button onClick={toggleVideo} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition text-white">📷</button>
+                                <button onClick={toggleMic} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition text-white">🎙️</button>
+                                <button onClick={endCall} className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition text-white hover:scale-110">📵</button>
+                            </div>
+                        </>
+                    )}
 
-                    {/* 🚨 NAYA CAMERA SWITCH BUTTON 🚨 */}
-                    {callStatus === "active" && (
-                        <div className="flex gap-4 mt-8">
-                            <button onClick={toggleMic} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md" title="Mute/Unmute">🎙️</button>
-                            {callType === 'video' && (
-                                <>
-                                    <button onClick={toggleVideo} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md" title="Camera On/Off">📷</button>
-                                    <button onClick={switchCamera} className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center text-xl hover:bg-white/20 transition backdrop-blur-md" title="Switch Front/Back Camera">🔄</button>
-                                </>
+                    {/* 2. AUDIO CALL & RINGING UI */}
+                    {!(callStatus === 'active' && callType === 'video') && (
+                        <div className="flex flex-col items-center justify-center w-full h-full">
+                            <div className="relative mb-8">
+                                <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${callStatus === 'active' ? 'bg-green-500' : 'bg-pink-500'}`}></div>
+                                <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-36 h-36 rounded-full object-cover border-4 border-white/20 relative z-10 shadow-2xl" />
+                            </div>
+
+                            <h2 className="text-3xl font-extrabold text-white mb-2">{girl.name}</h2>
+                            <p className="text-gray-400 mb-16 uppercase tracking-widest text-sm font-bold flex items-center gap-2">
+                                {callStatus === "calling" && <>Calling <span className="animate-pulse">...</span></>}
+                                {callStatus === "receiving" && `Incoming ${callType} Call`}
+                                {callStatus === "active" && <><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Connected</>}
+                            </p>
+
+                            <div className="flex gap-8">
+                                {callStatus === "receiving" && (
+                                    <button onClick={acceptCall} className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_25px_rgba(34,197,94,0.5)] transition hover:scale-110">
+                                        {callType === 'video' ? '📹' : '📞'}
+                                    </button>
+                                )}
+                                <button onClick={callStatus === "receiving" ? rejectCall : endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_25px_rgba(239,68,68,0.5)] transition hover:scale-110">📵</button>
+                            </div>
+
+                            {callStatus === "active" && callType === 'audio' && (
+                                <div className="flex gap-6 mt-12 bg-white/5 p-4 rounded-full backdrop-blur-md border border-white/5">
+                                    <button onClick={toggleMic} className="w-14 h-14 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition shadow-inner">🎙️</button>
+                                </div>
                             )}
+
+                            {/* Hidden elements for Audio Call to not break WebRTC */}
+                            <video ref={remoteVideoRef} autoPlay playsInline className="hidden" />
+                            <video ref={localVideoRef} autoPlay playsInline muted className="hidden" />
                         </div>
                     )}
                 </div>
