@@ -181,7 +181,17 @@ io.on("connection", (socket) => {
             console.error("Edit error:", error);
         }
     });
+    socket.on("webrtc_offer", (data) => {
+        socket.to(data.room).emit("webrtc_offer", data.offer);
+    });
 
+    socket.on("webrtc_answer", (data) => {
+        socket.to(data.room).emit("webrtc_answer", data.answer);
+    });
+
+    socket.on("webrtc_ice_candidate", (data) => {
+        socket.to(data.room).emit("webrtc_ice_candidate", data.candidate);
+    });
     socket.on("delete_message", async (data) => {
         try {
             await pool.query("DELETE FROM messages WHERE id = $1 AND sender_id = $2", [data.messageId, data.sender_id]);
