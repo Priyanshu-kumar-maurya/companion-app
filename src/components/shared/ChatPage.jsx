@@ -19,24 +19,28 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [messageToDelete, setMessageToDelete] = useState(null);
 
     // --- CALLING & WEBRTC STATES ---
-    const [callStatus, setCallStatus] = useState("idle");
-    const [callType, setCallType] = useState(null);
-    const [facingMode, setFacingMode] = useState("user");
-
+    const [callStatus, setCallStatus] = useState("idle"); 
+    const [callType, setCallType] = useState(null); 
+    const [facingMode, setFacingMode] = useState("user"); 
+    
     // Naye States Timer aur Mute ke liye
     const [callDuration, setCallDuration] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(false);
-
+    
     const callStatusRef = useRef("idle");
     const callTypeRef = useRef(null);
     const isCallerRef = useRef(false);
     const callStartTimeRef = useRef(null);
-
+    
     const peerConnectionRef = useRef(null);
     const localStreamRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const localVideoRef = useRef(null);
+
+    // 🚨 NAYA: AUDIO (RINGTONE) REFS 🚨
+    const incomingRingRef = useRef(typeof Audio !== "undefined" ? new Audio('/ringtone.mp3') : null);
+    const outgoingRingRef = useRef(typeof Audio !== "undefined" ? new Audio('/calling.mp3') : null);
 
     const roomId = currentUser?.id < girl?.id
         ? `${currentUser?.id}_${girl?.id}`
@@ -46,6 +50,30 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         setCallStatus(status);
         callStatusRef.current = status;
     };
+
+    // --- 🚨 RINGTONE LOGIC 🚨 ---
+    useEffect(() => {
+        if (incomingRingRef.current && outgoingRingRef.current) {
+            incomingRingRef.current.loop = true;
+            outgoingRingRef.current.loop = true;
+
+            // Jab tum call mila rahe ho
+            if (callStatus === 'calling') {
+                outgoingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+            } else {
+                outgoingRingRef.current.pause();
+                outgoingRingRef.current.currentTime = 0;
+            }
+
+            // Jab kisi ki call aa rahi ho
+            if (callStatus === 'receiving') {
+                incomingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+            } else {
+                incomingRingRef.current.pause();
+                incomingRingRef.current.currentTime = 0;
+            }
+        }
+    }, [callStatus]);
 
     // --- 1. CALL TIMER LOGIC ---
     useEffect(() => {
@@ -141,7 +169,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             }
 
             const pc = new RTCPeerConnection({
-                iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+                iceServers: [{ urls: "stun:stun.l.google.com:19302" }] 
             });
             peerConnectionRef.current = pc;
 
@@ -196,7 +224,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         fetchOldMessages();
     }, [currentUser, girl]);
 
-    // --- 6. SOCKET LISTENERS (BUG FIXED) ---
+    // --- 6. SOCKET LISTENERS ---
     useEffect(() => {
         socket.connect();
         socket.emit("join_room", roomId);
@@ -236,7 +264,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         const handleCallAccepted = async () => {
             updateCallStatus("active");
             callStartTimeRef.current = Date.now();
-            await setupWebRTC(callTypeRef.current, true);
+            await setupWebRTC(callTypeRef.current, true); 
         };
 
         const handleCallRejected = () => {
@@ -249,12 +277,12 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         const handleWebrtcOffer = async (offer) => {
             try {
-                if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== "stable") return; // Anti-Crash check
-
+                if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== "stable") return; 
+                
                 updateCallStatus("active");
                 callStartTimeRef.current = Date.now();
                 await setupWebRTC(callTypeRef.current, false);
-
+                
                 if (peerConnectionRef.current) {
                     await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
                     const answer = await peerConnectionRef.current.createAnswer();
@@ -280,7 +308,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             } catch (err) { console.error("Ice Candidate Error:", err); }
         };
 
-        // Register Events
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", (usersArray) => setOnlineUsers(usersArray));
         socket.on("message_edited", (data) => setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, text: data.newText } : msg)));
@@ -297,7 +324,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         return () => {
             cleanupCall();
-            // 🚨 REMOVE ALL LISTENERS PROPERLY TO AVOID MEMORY LEAKS AND RED CRASH ERRORS 🚨
             socket.off("receive_message", handleReceiveMessage);
             socket.off("update_online_users");
             socket.off("message_edited");
@@ -371,7 +397,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: newFacingMode } });
             const newVideoTrack = newStream.getVideoTracks()[0];
             const oldVideoTrack = localStreamRef.current.getVideoTracks()[0];
-
+            
             if (oldVideoTrack) {
                 oldVideoTrack.stop();
                 localStreamRef.current.removeTrack(oldVideoTrack);
@@ -576,8 +602,9 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
             {/* 🚨 PREMIUM WHATSAPP/INSTA CALL UI 🚨 */}
             {callStatus !== "idle" && (
-                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-[#000000]' : 'bg-[#0D0D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6'} animate-fade-in overflow-hidden flex flex-col justify-center`}>
-
+                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-[#000000]' : 'bg-[#0D0D1A]'} animate-fade-in overflow-hidden flex flex-col justify-center`}>
+                    
+                    {/* 1. AUDIO CALL & RINGING UI */}
                     {!(callStatus === 'active' && callType === 'video') && (
                         <>
                             <div className="absolute inset-0 z-0 pointer-events-none">
@@ -604,10 +631,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </>
                     )}
 
+                    {/* 2. ACTIVE VIDEO CALL UI (FULL SCREEN) */}
                     {callStatus === 'active' && callType === 'video' && (
                         <>
                             <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black z-0 pointer-events-none" />
-
+                            
                             <div className="absolute top-0 left-0 right-0 px-6 py-10 bg-gradient-to-b from-black/70 to-transparent flex justify-between items-start z-20">
                                 <div className="text-white drop-shadow-md">
                                     <div className="font-bold text-xl mb-1">{girl.name}</div>
@@ -620,6 +648,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </>
                     )}
 
+                    {/* 3. BOTTOM CONTROLS ROW */}
                     <div className="absolute bottom-12 w-full px-6 flex justify-center gap-6 z-20">
                         {callStatus === "receiving" ? (
                             <>
@@ -630,19 +659,22 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             </>
                         ) : (
                             <>
+                                {/* Floating Premium Controls for Active/Calling */}
                                 <button onClick={toggleMic} className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition ${isMuted ? 'bg-white text-black shadow-lg' : 'bg-gray-800/80 text-white backdrop-blur-md border border-white/10'}`}>
                                     {isMuted ? '🔇' : '🎙️'}
                                 </button>
-
+                                
                                 <button onClick={endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">
                                     📵
                                 </button>
 
+                                {/* Show Video toggle button if in video call OR if we want to turn video on in audio call */}
                                 {callType === 'video' ? (
                                     <button onClick={toggleVideo} className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition ${isVideoOff ? 'bg-white text-black shadow-lg' : 'bg-gray-800/80 text-white backdrop-blur-md border border-white/10'}`}>
                                         {isVideoOff ? '🚫' : '📹'}
                                     </button>
                                 ) : (
+                                    // Audio Call 'Speaker' placeholder button to keep layout balanced
                                     <button className="w-14 h-14 bg-gray-800/80 text-white backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-xl transition pointer-events-none">
                                         🔊
                                     </button>
