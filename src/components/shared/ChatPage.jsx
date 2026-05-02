@@ -23,13 +23,16 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [callType, setCallType] = useState(null);
     const [facingMode, setFacingMode] = useState("user");
 
-    // Refs for tracking values inside callbacks/sockets without re-rendering issues
+    // Naye States Timer aur Mute ke liye
+    const [callDuration, setCallDuration] = useState(0);
+    const [isMuted, setIsMuted] = useState(false);
+    const [isVideoOff, setIsVideoOff] = useState(false);
+
     const callStatusRef = useRef("idle");
     const callTypeRef = useRef(null);
     const isCallerRef = useRef(false);
     const callStartTimeRef = useRef(null);
 
-    // WebRTC Refs
     const peerConnectionRef = useRef(null);
     const localStreamRef = useRef(null);
     const remoteVideoRef = useRef(null);
@@ -39,13 +42,33 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         ? `${currentUser?.id}_${girl?.id}`
         : `${girl?.id}_${currentUser?.id}`;
 
-    // Custom setter to keep Ref and State synced
     const updateCallStatus = (status) => {
         setCallStatus(status);
         callStatusRef.current = status;
     };
 
-    // --- 1. CALL HISTORY LOGGER ---
+    // --- 1. CALL TIMER LOGIC ---
+    useEffect(() => {
+        let interval;
+        if (callStatus === 'active') {
+            interval = setInterval(() => {
+                if (callStartTimeRef.current) {
+                    setCallDuration(Math.floor((Date.now() - callStartTimeRef.current) / 1000));
+                }
+            }, 1000);
+        } else {
+            setCallDuration(0);
+        }
+        return () => clearInterval(interval);
+    }, [callStatus]);
+
+    const formatDuration = (seconds) => {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    };
+
+    // --- 2. CALL HISTORY LOGGER ---
     const logCallToChat = useCallback((messageText) => {
         if (!currentUser || !girl) return;
         const messageData = {
@@ -58,16 +81,15 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.emit("send_message", messageData);
     }, [currentUser, girl, roomId]);
 
-    // --- 2. CLEANUP & LOG FUNCTION ---
+    // --- 3. CLEANUP & LOG FUNCTION (HARDWARE LIGHT OFF LOGIC) ---
     const cleanupCall = useCallback(() => {
-        // Record Call History if user was the caller
         if (isCallerRef.current && callTypeRef.current) {
             if (callStatusRef.current === 'active' && callStartTimeRef.current) {
                 const durationMs = Date.now() - callStartTimeRef.current;
                 const totalSeconds = Math.floor(durationMs / 1000);
                 const mins = Math.floor(totalSeconds / 60);
                 const secs = (totalSeconds % 60).toString().padStart(2, '0');
-                logCallToChat(`✅ ${callTypeRef.current === 'video' ? 'Video' : 'Audio'} Call - ${mins}:${secs}`);
+                logCallToChat(`✅ ${callTypeRef.current === 'video' ? 'Video' : 'Audio'} Call - ${mins}m ${secs}s`);
             } else if (callStatusRef.current === 'calling') {
                 logCallToChat(`❌ Missed ${callTypeRef.current === 'video' ? 'Video' : 'Audio'} Call`);
             }
@@ -75,21 +97,37 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         updateCallStatus("idle");
         setFacingMode("user");
+        setIsMuted(false);
+        setIsVideoOff(false);
         isCallerRef.current = false;
         callStartTimeRef.current = null;
         callTypeRef.current = null;
 
+        // Force stop all tracks to turn off Camera/Mic Light instantly
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
         }
+
+        // Clear HTML video element sources to release hardware memory
+        if (localVideoRef.current) {
+            if (localVideoRef.current.srcObject) {
+                localVideoRef.current.srcObject.getTracks().forEach(t => t.stop());
+            }
+            localVideoRef.current.srcObject = null;
+        }
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = null;
+        }
+
+        // Close WebRTC Connection
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
         }
     }, [logCallToChat]);
 
-    // --- 3. WEBRTC SETUP FUNCTION ---
+    // --- 4. WEBRTC SETUP ---
     const setupWebRTC = useCallback(async (type, isCaller) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -134,7 +172,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     }, [roomId, cleanupCall]);
 
-    // --- 4. FETCH MESSAGES ---
+    // --- 5. FETCH MESSAGES ---
     useEffect(() => {
         const fetchOldMessages = async () => {
             if (!currentUser || !girl) return;
@@ -158,7 +196,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         fetchOldMessages();
     }, [currentUser, girl]);
 
-    // --- 5. SOCKET LISTENERS ---
+    // --- 6. SOCKET LISTENERS (BUG FIXED) ---
     useEffect(() => {
         socket.connect();
         socket.emit("join_room", roomId);
@@ -187,57 +225,91 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             }
         };
 
+        const handleIncomingCall = (data) => {
+            setCallType(data.type);
+            callTypeRef.current = data.type;
+            isCallerRef.current = false;
+            callStartTimeRef.current = null;
+            updateCallStatus("receiving");
+        };
+
+        const handleCallAccepted = async () => {
+            updateCallStatus("active");
+            callStartTimeRef.current = Date.now();
+            await setupWebRTC(callTypeRef.current, true);
+        };
+
+        const handleCallRejected = () => {
+            cleanupCall();
+        };
+
+        const handleCallEnded = () => {
+            cleanupCall();
+        };
+
+        const handleWebrtcOffer = async (offer) => {
+            try {
+                if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== "stable") return; // Anti-Crash check
+
+                updateCallStatus("active");
+                callStartTimeRef.current = Date.now();
+                await setupWebRTC(callTypeRef.current, false);
+
+                if (peerConnectionRef.current) {
+                    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await peerConnectionRef.current.createAnswer();
+                    await peerConnectionRef.current.setLocalDescription(answer);
+                    socket.emit("webrtc_answer", { room: roomId, answer });
+                }
+            } catch (err) { console.error("WebRTC Offer Error:", err); }
+        };
+
+        const handleWebrtcAnswer = async (answer) => {
+            try {
+                if (peerConnectionRef.current && peerConnectionRef.current.signalingState === "have-local-offer") {
+                    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+                }
+            } catch (err) { console.error("WebRTC Answer Error:", err); }
+        };
+
+        const handleWebrtcIceCandidate = async (candidate) => {
+            try {
+                if (peerConnectionRef.current && candidate) {
+                    await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                }
+            } catch (err) { console.error("Ice Candidate Error:", err); }
+        };
+
+        // Register Events
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", (usersArray) => setOnlineUsers(usersArray));
         socket.on("message_edited", (data) => setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, text: data.newText } : msg)));
         socket.on("message_deleted", (deletedId) => setMessages(prev => prev.filter(msg => String(msg.id) !== String(deletedId))));
         socket.on("messages_read_update", handleMessagesReadUpdate);
 
-        // Call & WebRTC Signals
-        socket.on("incoming_call", (data) => {
-            setCallType(data.type);
-            callTypeRef.current = data.type;
-            isCallerRef.current = false;
-            callStartTimeRef.current = null;
-            updateCallStatus("receiving");
-        });
-
-        socket.on("call_accepted", async () => {
-            updateCallStatus("active");
-            callStartTimeRef.current = Date.now();
-            await setupWebRTC(callTypeRef.current, true);
-        });
-
-        socket.on("call_rejected", () => {
-            cleanupCall();
-        });
-
-        socket.on("call_ended", cleanupCall);
-
-        socket.on("webrtc_offer", async (offer) => {
-            await setupWebRTC(callTypeRef.current, false);
-            if (peerConnectionRef.current) {
-                await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-                const answer = await peerConnectionRef.current.createAnswer();
-                await peerConnectionRef.current.setLocalDescription(answer);
-                socket.emit("webrtc_answer", { room: roomId, answer });
-            }
-        });
-
-        socket.on("webrtc_answer", async (answer) => {
-            if (peerConnectionRef.current) {
-                await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-            }
-        });
-
-        socket.on("webrtc_ice_candidate", async (candidate) => {
-            if (peerConnectionRef.current && candidate) {
-                await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-            }
-        });
+        socket.on("incoming_call", handleIncomingCall);
+        socket.on("call_accepted", handleCallAccepted);
+        socket.on("call_rejected", handleCallRejected);
+        socket.on("call_ended", handleCallEnded);
+        socket.on("webrtc_offer", handleWebrtcOffer);
+        socket.on("webrtc_answer", handleWebrtcAnswer);
+        socket.on("webrtc_ice_candidate", handleWebrtcIceCandidate);
 
         return () => {
             cleanupCall();
+            // 🚨 REMOVE ALL LISTENERS PROPERLY TO AVOID MEMORY LEAKS AND RED CRASH ERRORS 🚨
+            socket.off("receive_message", handleReceiveMessage);
+            socket.off("update_online_users");
+            socket.off("message_edited");
+            socket.off("message_deleted");
+            socket.off("messages_read_update");
+            socket.off("incoming_call");
+            socket.off("call_accepted");
+            socket.off("call_rejected");
+            socket.off("call_ended");
+            socket.off("webrtc_offer");
+            socket.off("webrtc_answer");
+            socket.off("webrtc_ice_candidate");
             socket.disconnect();
         };
     }, [roomId, currentUser.id, girl.id, setupWebRTC, cleanupCall]);
@@ -246,7 +318,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // --- 6. CALL ACTIONS ---
+    // --- 7. CALL ACTIONS ---
     const startCall = (type) => {
         setCallType(type);
         callTypeRef.current = type;
@@ -257,8 +329,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     };
 
     const acceptCall = () => {
-        updateCallStatus("active");
-        callStartTimeRef.current = Date.now();
         socket.emit("accept_call", { room: roomId, to: girl.id });
     };
 
@@ -274,13 +344,21 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     const toggleMic = () => {
         if (localStreamRef.current) {
-            localStreamRef.current.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+            const audioTrack = localStreamRef.current.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                setIsMuted(!audioTrack.enabled);
+            }
         }
     };
 
     const toggleVideo = () => {
         if (localStreamRef.current) {
-            localStreamRef.current.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+            const videoTrack = localStreamRef.current.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                setIsVideoOff(!videoTrack.enabled);
+            }
         }
     };
 
@@ -311,7 +389,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    // --- 7. MESSAGING FUNCTIONS ---
+    // --- 8. MESSAGING FUNCTIONS ---
     const sendMessage = (imageLink = null) => {
         if (!input.trim() && !imageLink) return;
         if (!currentUser) return;
@@ -411,6 +489,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     const prevMsg = index > 0 ? messages[index - 1] : null;
                     const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
 
+                    const isCallLog = msg.text && (msg.text.includes("✅") || msg.text.includes("❌"));
+
                     return (
                         <React.Fragment key={msg.id}>
                             {showDateDivider && (
@@ -419,27 +499,36 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                 </div>
                             )}
 
-                            <div className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`} onMouseEnter={() => setHoveredMsgId(msg.id)} onMouseLeave={() => setHoveredMsgId(null)}>
-                                <div className={`flex items-center gap-2 ${msg.sent ? "flex-row" : "flex-row-reverse"}`}>
-                                    {hoveredMsgId === msg.id && (
-                                        <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
-                                            {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
-                                                <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
-                                            )}
-                                            <button onClick={() => setMessageToDelete(msg)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
-                                        </div>
-                                    )}
-
-                                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
-                                        {msg.imageUrl && <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />}
-                                        {msg.text && <span>{msg.text}</span>}
+                            {isCallLog ? (
+                                <div className="flex justify-center my-1 w-full">
+                                    <div className="px-4 py-2 rounded-xl bg-[#16162A] border border-white/10 flex items-center gap-2 shadow-sm">
+                                        <span className="text-xs text-gray-300 font-semibold">{msg.text}</span>
+                                        <span className="text-[10px] text-gray-500 ml-2">{msg.time}</span>
                                     </div>
                                 </div>
-                                <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium flex items-center justify-end gap-1">
-                                    {msg.time}
-                                    {msg.sent && <span className={msg.is_read ? "text-blue-400 font-bold text-xs" : "text-gray-400 font-bold text-xs"}>{msg.is_read ? "✓✓" : "✓"}</span>}
+                            ) : (
+                                <div className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`} onMouseEnter={() => setHoveredMsgId(msg.id)} onMouseLeave={() => setHoveredMsgId(null)}>
+                                    <div className={`flex items-center gap-2 ${msg.sent ? "flex-row" : "flex-row-reverse"}`}>
+                                        {hoveredMsgId === msg.id && (
+                                            <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
+                                                {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
+                                                    <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
+                                                )}
+                                                <button onClick={() => setMessageToDelete(msg)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
+                                            </div>
+                                        )}
+
+                                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
+                                            {msg.imageUrl && <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />}
+                                            {msg.text && <span>{msg.text}</span>}
+                                        </div>
+                                    </div>
+                                    <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium flex items-center justify-end gap-1">
+                                        {msg.time}
+                                        {msg.sent && <span className={msg.is_read ? "text-blue-400 font-bold text-xs" : "text-gray-400 font-bold text-xs"}>{msg.is_read ? "✓✓" : "✓"}</span>}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </React.Fragment>
                     );
                 })}
@@ -485,78 +574,82 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </div>
             )}
 
-            {/* 🚨 WHATSAPP-STYLE CALLING & WEBRTC OVERLAY MODAL 🚨 */}
+            {/* 🚨 PREMIUM WHATSAPP/INSTA CALL UI 🚨 */}
             {callStatus !== "idle" && (
-                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-[#000000]' : 'bg-[#0D0D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6'} animate-fade-in overflow-hidden`}>
+                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-[#000000]' : 'bg-[#0D0D1A]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6'} animate-fade-in overflow-hidden flex flex-col justify-center`}>
 
-                    {/* 1. ACTIVE VIDEO CALL UI (FULL SCREEN) */}
-                    {callStatus === 'active' && callType === 'video' && (
+                    {!(callStatus === 'active' && callType === 'video') && (
                         <>
-                            {/* Remote Video (Full Screen Background) */}
-                            <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black" />
+                            <div className="absolute inset-0 z-0 pointer-events-none">
+                                <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt="bg" className="w-full h-full object-cover blur-3xl opacity-20 scale-110" />
+                                <div className="absolute inset-0 bg-black/50"></div>
+                            </div>
 
-                            {/* Top Header Overlay */}
-                            <div className="absolute top-0 left-0 right-0 px-6 py-8 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center gap-4 z-20">
-                                <button onClick={endCall} className="text-white text-3xl font-light hover:scale-110 transition drop-shadow-lg">←</button>
-                                <div className="flex items-center gap-3">
-                                    <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-12 h-12 rounded-full border-2 border-white/30 object-cover shadow-lg" />
-                                    <div className="text-white drop-shadow-md">
-                                        <div className="font-bold text-lg leading-none mb-1">{girl.name}</div>
-                                        <div className="text-xs text-green-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Connected
-                                        </div>
-                                    </div>
+                            <div className="z-10 flex flex-col items-center mt-[-10vh]">
+                                <div className="relative mb-6">
+                                    <div className={`absolute inset-0 rounded-full animate-ping opacity-30 ${callStatus === 'active' ? 'bg-green-500' : 'bg-pink-500'} scale-125`}></div>
+                                    <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 shadow-2xl relative z-10" />
                                 </div>
+
+                                <h2 className="text-3xl font-bold text-white mb-2 tracking-wide">{girl.name}</h2>
+                                <p className="text-gray-400 font-medium tracking-widest text-sm h-6">
+                                    {callStatus === "calling" && "Calling..."}
+                                    {callStatus === "receiving" && `Incoming ${callType} Call`}
+                                    {callStatus === "active" && <span className="font-mono text-gray-200">{formatDuration(callDuration)}</span>}
+                                </p>
                             </div>
 
-                            {/* Local Video (Floating PiP Bottom Right) */}
-                            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-32 right-6 w-28 h-40 sm:w-36 sm:h-48 rounded-2xl bg-black object-cover shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/20 z-10 hover:scale-105 transition" />
-
-                            {/* Floating Control Bar */}
-                            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 sm:gap-6 z-20 bg-black/60 px-6 py-4 rounded-full backdrop-blur-md border border-white/10 shadow-2xl">
-                                <button onClick={switchCamera} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition text-white">🔄</button>
-                                <button onClick={toggleVideo} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition text-white">📷</button>
-                                <button onClick={toggleMic} className="w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition text-white">🎙️</button>
-                                <button onClick={endCall} className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition text-white hover:scale-110">📵</button>
-                            </div>
+                            <video ref={remoteVideoRef} autoPlay playsInline className="hidden" />
+                            <video ref={localVideoRef} autoPlay playsInline muted className="hidden" />
                         </>
                     )}
 
-                    {/* 2. AUDIO CALL & RINGING UI */}
-                    {!(callStatus === 'active' && callType === 'video') && (
-                        <div className="flex flex-col items-center justify-center w-full h-full">
-                            <div className="relative mb-8">
-                                <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${callStatus === 'active' ? 'bg-green-500' : 'bg-pink-500'}`}></div>
-                                <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-36 h-36 rounded-full object-cover border-4 border-white/20 relative z-10 shadow-2xl" />
+                    {callStatus === 'active' && callType === 'video' && (
+                        <>
+                            <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black z-0 pointer-events-none" />
+
+                            <div className="absolute top-0 left-0 right-0 px-6 py-10 bg-gradient-to-b from-black/70 to-transparent flex justify-between items-start z-20">
+                                <div className="text-white drop-shadow-md">
+                                    <div className="font-bold text-xl mb-1">{girl.name}</div>
+                                    <div className="text-sm font-mono bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm inline-block">{formatDuration(callDuration)}</div>
+                                </div>
+                                <button onClick={switchCamera} className="w-10 h-10 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-xl transition text-white backdrop-blur-md">🔄</button>
                             </div>
 
-                            <h2 className="text-3xl font-extrabold text-white mb-2">{girl.name}</h2>
-                            <p className="text-gray-400 mb-16 uppercase tracking-widest text-sm font-bold flex items-center gap-2">
-                                {callStatus === "calling" && <>Calling <span className="animate-pulse">...</span></>}
-                                {callStatus === "receiving" && `Incoming ${callType} Call`}
-                                {callStatus === "active" && <><span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Connected</>}
-                            </p>
+                            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-36 right-6 w-28 h-40 sm:w-36 sm:h-48 rounded-2xl bg-gray-900 object-cover shadow-[0_10px_30px_rgba(0,0,0,0.6)] border-2 border-white/20 z-10 pointer-events-none" />
+                        </>
+                    )}
 
-                            <div className="flex gap-8">
-                                {callStatus === "receiving" && (
-                                    <button onClick={acceptCall} className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_25px_rgba(34,197,94,0.5)] transition hover:scale-110">
-                                        {callType === 'video' ? '📹' : '📞'}
+                    <div className="absolute bottom-12 w-full px-6 flex justify-center gap-6 z-20">
+                        {callStatus === "receiving" ? (
+                            <>
+                                <button onClick={acceptCall} className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(34,197,94,0.5)] transition hover:scale-110 animate-bounce">
+                                    {callType === 'video' ? '📹' : '📞'}
+                                </button>
+                                <button onClick={rejectCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">📵</button>
+                            </>
+                        ) : (
+                            <>
+                                <button onClick={toggleMic} className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition ${isMuted ? 'bg-white text-black shadow-lg' : 'bg-gray-800/80 text-white backdrop-blur-md border border-white/10'}`}>
+                                    {isMuted ? '🔇' : '🎙️'}
+                                </button>
+
+                                <button onClick={endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">
+                                    📵
+                                </button>
+
+                                {callType === 'video' ? (
+                                    <button onClick={toggleVideo} className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition ${isVideoOff ? 'bg-white text-black shadow-lg' : 'bg-gray-800/80 text-white backdrop-blur-md border border-white/10'}`}>
+                                        {isVideoOff ? '🚫' : '📹'}
+                                    </button>
+                                ) : (
+                                    <button className="w-14 h-14 bg-gray-800/80 text-white backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-xl transition pointer-events-none">
+                                        🔊
                                     </button>
                                 )}
-                                <button onClick={callStatus === "receiving" ? rejectCall : endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_25px_rgba(239,68,68,0.5)] transition hover:scale-110">📵</button>
-                            </div>
-
-                            {callStatus === "active" && callType === 'audio' && (
-                                <div className="flex gap-6 mt-12 bg-white/5 p-4 rounded-full backdrop-blur-md border border-white/5">
-                                    <button onClick={toggleMic} className="w-14 h-14 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-xl transition shadow-inner">🎙️</button>
-                                </div>
-                            )}
-
-                            {/* Hidden elements for Audio Call to not break WebRTC */}
-                            <video ref={remoteVideoRef} autoPlay playsInline className="hidden" />
-                            <video ref={localVideoRef} autoPlay playsInline muted className="hidden" />
-                        </div>
-                    )}
+                            </>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
