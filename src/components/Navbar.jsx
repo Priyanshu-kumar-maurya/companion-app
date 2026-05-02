@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 
-// 🚨 YAHAN DHYAN DEIN: Props mein 'socket' add kiya hai
 function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -19,22 +18,59 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
     const isBoy = boyUser !== null;
     const isGirl = girlUser !== null;
 
-    // --- SOCKET LOGIC FOR NOTIFICATIONS ---
+    // --- 🚨 GLOBAL UNREAD COUNT LOGIC 🚨 ---
     useEffect(() => {
-        if (!socket || !currentUser) return;
+        if (!currentUser) return;
 
-        const handleNewMessage = (data) => {
-            // Agar user currently Messages page par nahi hai, tabhi count badhao
-            if (page !== PAGES.MESSAGES) {
-                setUnreadCount((prev) => prev + 1);
+        // 1. Initial Load: Check backend for unread msgs across all chats
+        const fetchTotalUnread = async () => {
+            try {
+                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`);
+                if (res.ok) {
+                    const users = await res.json();
+                    let totalUnread = 0;
+
+                    await Promise.all(users.map(async (person) => {
+                        const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`);
+                        if (msgRes.ok) {
+                            const msgs = await msgRes.json();
+                            const unread = msgs.filter(m => String(m.sender_id) === String(person.id) && !m.is_read).length;
+                            totalUnread += unread;
+                        }
+                    }));
+                    setUnreadCount(totalUnread);
+                }
+            } catch (err) {
+                console.error("Error fetching unread count:", err);
             }
         };
 
-        socket.on("receive_message", handleNewMessage);
+        fetchTotalUnread();
 
-        return () => {
-            socket.off("receive_message", handleNewMessage);
-        };
+        // 2. Realtime Listener
+        if (socket) {
+            const handleNewMessage = (data) => {
+                // Agar user ussi ka chat khol kar nahi baitha hai aur message usko hi bheja gaya hai
+                if (page !== PAGES.CHAT && String(data.receiver_id) === String(currentUser.id)) {
+                    setUnreadCount((prev) => prev + 1);
+                }
+            };
+
+            const handleMessagesRead = (data) => {
+                // Jab receiver_id hum hain aur kisne hamare message read kiye ya humne kisi ke kiye (Chat open kiya)
+                if (String(data.receiver_id) === String(currentUser.id) || String(data.sender_id) === String(currentUser.id)) {
+                    fetchTotalUnread(); // Recalculate total unread
+                }
+            };
+
+            socket.on("receive_message", handleNewMessage);
+            socket.on("messages_read_update", handleMessagesRead);
+
+            return () => {
+                socket.off("receive_message", handleNewMessage);
+                socket.off("messages_read_update", handleMessagesRead);
+            };
+        }
     }, [socket, currentUser, page]);
 
 
@@ -47,9 +83,10 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
     };
 
     const handleNavClick = (targetPage) => {
-        // Agar user ne Messages click kiya, toh notifications reset kar do
-        if (targetPage === PAGES.MESSAGES) {
-            setUnreadCount(0);
+        // Agar user ne Messages/Chat click kiya, toh temporarily badge hide kar sakte hain
+        if (targetPage === PAGES.MESSAGES || targetPage === PAGES.CHAT) {
+            // Hum backend se sync kar rahe hain, isliye turant 0 set nahi karenge
+            // Padhne ke baad wo automatically update ho jayega
         }
         setPage(targetPage);
         setIsMenuOpen(false);
