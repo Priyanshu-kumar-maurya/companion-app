@@ -738,7 +738,8 @@ app.get('/api/feed', async (req, res) => {
                 u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
-                EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me
+                EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me,
+                EXISTS(SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = p.user_id) as is_followed_by_me
             FROM posts p
             JOIN users u ON p.user_id = u.id
             ORDER BY p.created_at DESC
