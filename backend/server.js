@@ -80,6 +80,21 @@ pool.connect()
                 status VARCHAR(50) DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );`);
+            await pool.query(`CREATE TABLE IF NOT EXISTS likes (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, post_id)
+            );`);
+
+            await pool.query(`CREATE TABLE IF NOT EXISTS comments (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                post_id INTEGER REFERENCES posts(id) ON DELETE CASCADE,
+                text TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );`);
             await pool.query(`CREATE TABLE IF NOT EXISTS follows (
                 id SERIAL PRIMARY KEY,
                 follower_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -713,7 +728,83 @@ app.delete('/api/posts/:postId', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+app.get('/api/feed', async (req, res) => {
+    try {
+        const { currentUserId } = req.query;
 
+        const feedQuery = `
+            SELECT 
+                p.id, p.image_url, p.caption, p.created_at,
+                u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
+                (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
+                (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
+                EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            ORDER BY p.created_at DESC
+            LIMIT 50;
+        `;
+
+        const feed = await pool.query(feedQuery, [currentUserId || null]);
+        res.status(200).json(feed.rows);
+    } catch (err) {
+        console.error("Feed fetch error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.post('/api/like', async (req, res) => {
+    try {
+        const { user_id, post_id } = req.body;
+
+        const checkLike = await pool.query("SELECT * FROM likes WHERE user_id = $1 AND post_id = $2", [user_id, post_id]);
+
+        if (checkLike.rows.length > 0) {
+            await pool.query("DELETE FROM likes WHERE user_id = $1 AND post_id = $2", [user_id, post_id]);
+            res.status(200).json({ message: "Post unliked", isLiked: false });
+        } else {
+            await pool.query("INSERT INTO likes (user_id, post_id) VALUES ($1, $2)", [user_id, post_id]);
+            res.status(200).json({ message: "Post liked", isLiked: true });
+        }
+    } catch (err) {
+        console.error("Like error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.post('/api/comment', async (req, res) => {
+    try {
+        const { user_id, post_id, text } = req.body;
+        if (!text || text.trim() === '') return res.status(400).json({ error: "Comment cannot be empty" });
+
+        const newComment = await pool.query(
+            "INSERT INTO comments (user_id, post_id, text) VALUES ($1, $2, $3) RETURNING *",
+            [user_id, post_id, text]
+        );
+        res.status(201).json(newComment.rows[0]);
+    } catch (err) {
+        console.error("Comment error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+app.get('/api/comments/:postId', async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const commentsQuery = `
+            SELECT c.id, c.text, c.created_at, u.name as user_name, u.profile_pic as user_pic
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.post_id = $1
+            ORDER BY c.created_at ASC
+        `;
+        const comments = await pool.query(commentsQuery, [postId]);
+        res.status(200).json(comments.rows);
+    } catch (err) {
+        console.error("Fetch comments error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 app.delete('/api/users/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
