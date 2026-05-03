@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "./components/Navbar";
+import Navbar from "./components/Navbar"; 
 import HomePage from "./components/HomePage";
 import AboutPage from "./components/AboutPage";
 import HelpPage from "./components/HelpPage";
@@ -10,8 +10,8 @@ import DetailsPage from "./components/shared/DetailsPage";
 import ChatPage from "./components/shared/ChatPage";
 import MessagesPage from "./components/shared/MessagesPage";
 import UnifiedRegister from "./components/UnifiedRegister";
-import UnifiedLogin from "./components/UnifiedLogin"; // 🚨 YEH IMPORT MISSING THA 🚨
-
+import UnifiedLogin from "./components/UnifiedLogin";
+import NotificationsPage from "./components/NotificationsPage";
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -32,6 +32,7 @@ export const PAGES = {
   DETAILS: "details",
   CHAT: "chat",
   MESSAGES: "messages",
+  NOTIFICATIONS: "notifications",
 };
 
 function App() {
@@ -39,7 +40,6 @@ function App() {
   const [selectedGirl, setSelectedGirl] = useState(null);
   const [girlUser, setGirlUser] = useState(null);
   const [boyUser, setBoyUser] = useState(null);
-
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -117,27 +117,26 @@ function App() {
   const renderPage = () => {
     switch (page) {
       case PAGES.HOME:
-        return <HomePage setPage={setPage} currentUser={boyUser || girlUser} />;
+        return <HomePage setPage={setPage} currentUser={boyUser || girlUser} setSelectedGirl={setSelectedGirl} />;
       case PAGES.ABOUT:
         return <AboutPage />;
       case PAGES.HELP:
         return <HelpPage />;
       case PAGES.MESSAGES:
         return (boyUser || girlUser) ? <MessagesPage currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} socket={socket} /> : <UnifiedLogin setPage={setPage} />;
+      case PAGES.NOTIFICATIONS:
+        return (boyUser || girlUser) ? <NotificationsPage currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} />;
       case PAGES.GIRL_LOGIN:
         return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
       case PAGES.BOY_LOGIN:
         return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
-
       case PAGES.GIRL_REGISTER:
       case PAGES.BOY_REGISTER:
         return <UnifiedRegister setPage={setPage} />;
-
       case PAGES.GIRL_DASHBOARD:
         return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
       case PAGES.BOY_DASHBOARD:
         return boyUser ? <BoyDashboard user={boyUser} setBoyUser={setBoyUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
-
       case PAGES.FIND:
         return <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       case PAGES.DETAILS:
@@ -145,7 +144,7 @@ function App() {
       case PAGES.CHAT:
         return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={boyUser || girlUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={boyUser || girlUser} />;
       default:
-        return <HomePage setPage={setPage} currentUser={boyUser || girlUser} />;
+        return <HomePage setPage={setPage} currentUser={boyUser || girlUser} setSelectedGirl={setSelectedGirl} />;
     }
   };
 

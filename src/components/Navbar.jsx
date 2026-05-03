@@ -3,26 +3,20 @@ import { PAGES } from "../App";
 
 function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-    // --- NAYE POST STATES (Instagram Style) ---
     const [showPostModal, setShowPostModal] = useState(false);
     const [postFile, setPostFile] = useState(null);
     const [postPreview, setPostPreview] = useState(null);
     const [postCaption, setPostCaption] = useState("");
     const [isPosting, setIsPosting] = useState(false);
-
-    // --- MESSAGES NOTIFICATION STATE ---
     const [unreadCount, setUnreadCount] = useState(0);
 
     const currentUser = boyUser || girlUser;
     const isBoy = boyUser !== null;
     const isGirl = girlUser !== null;
 
-    // --- 🚨 GLOBAL UNREAD COUNT LOGIC 🚨 ---
     useEffect(() => {
         if (!currentUser) return;
 
-        // 1. Initial Load: Check backend for unread msgs across all chats
         const fetchTotalUnread = async () => {
             try {
                 const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`);
@@ -40,26 +34,21 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                     }));
                     setUnreadCount(totalUnread);
                 }
-            } catch (err) {
-                console.error("Error fetching unread count:", err);
-            }
+            } catch (err) { }
         };
 
         fetchTotalUnread();
 
-        // 2. Realtime Listener
         if (socket) {
             const handleNewMessage = (data) => {
-                // Agar user ussi ka chat khol kar nahi baitha hai aur message usko hi bheja gaya hai
                 if (page !== PAGES.CHAT && String(data.receiver_id) === String(currentUser.id)) {
                     setUnreadCount((prev) => prev + 1);
                 }
             };
 
             const handleMessagesRead = (data) => {
-                // Jab receiver_id hum hain aur kisne hamare message read kiye ya humne kisi ke kiye (Chat open kiya)
                 if (String(data.receiver_id) === String(currentUser.id) || String(data.sender_id) === String(currentUser.id)) {
-                    fetchTotalUnread(); // Recalculate total unread
+                    fetchTotalUnread();
                 }
             };
 
@@ -73,7 +62,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
         }
     }, [socket, currentUser, page]);
 
-
     const getLinkStyle = (targetPage) => {
         const isActive = page === targetPage;
         return `px-3 py-1.5 text-sm transition-all duration-300 ${isActive
@@ -83,11 +71,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
     };
 
     const handleNavClick = (targetPage) => {
-        // Agar user ne Messages/Chat click kiya, toh temporarily badge hide kar sakte hain
-        if (targetPage === PAGES.MESSAGES || targetPage === PAGES.CHAT) {
-            // Hum backend se sync kar rahe hain, isliye turant 0 set nahi karenge
-            // Padhne ke baad wo automatically update ho jayega
-        }
         setPage(targetPage);
         setIsMenuOpen(false);
     };
@@ -120,12 +103,11 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                 body: formData
             });
             if (response.ok) {
-                alert("Post live ho gayi! 📸 (Apne profile par refresh karein)");
+                alert("Post live ho gayi! 📸");
                 closePostModal();
             }
         } catch (err) {
-            console.error(err);
-            alert("Upload fail ho gaya, fir se try karein.");
+            alert("Upload fail ho gaya.");
         } finally {
             setIsPosting(false);
         }
@@ -142,7 +124,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
 
     return (
         <>
-            {/* DESKTOP TOP BAR */}
             {!isHiddenScreen && (
                 <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur border-b border-pink-500/20 hidden md:block">
                     <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -164,7 +145,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                                 <>
                                     <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}>🔍 Find</button>
 
-                                    {/* 🚨 DESKTOP: MESSAGES BUTTON WITH BADGE 🚨 */}
                                     <button
                                         onClick={() => handleNavClick(PAGES.MESSAGES)}
                                         className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.MESSAGES ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
@@ -177,7 +157,13 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                                         )}
                                     </button>
 
-                                    {/* Desktop Post Button */}
+                                    <button
+                                        onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
+                                        className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.NOTIFICATIONS ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
+                                    >
+                                        ❤️ Activity
+                                    </button>
+
                                     <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
                                         <span className="text-sm">➕</span> Create
                                     </button>
@@ -204,7 +190,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                 </nav>
             )}
 
-            {/* TOP BAR MOBILE (Logo and Post Button) */}
             {!isHiddenScreen && (
                 <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur border-b border-white/10 h-14 flex items-center justify-between px-4">
                     <h3 className="text-xl font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent tracking-wider">
@@ -226,7 +211,6 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                 </div>
             )}
 
-            {/* MOBILE MENU (Guests Only) */}
             {isMenuOpen && !isHiddenScreen && !currentUser && (
                 <div className="md:hidden fixed top-14 left-0 w-full bg-[#16162A] border-b border-pink-500/20 py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}>Home</button>
@@ -240,23 +224,21 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                 </div>
             )}
 
-            {/* BOTTOM NAVIGATION BAR (Mobile Style) */}
             {!isHiddenScreen && (
                 <div className="fixed bottom-0 left-0 w-full bg-[#16162A]/95 backdrop-blur-xl border-t border-white/5 z-40 md:hidden pb-2 pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
-                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                            <span className="text-xl">🏠</span><span className="text-[10px] font-bold">Home</span>
+                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <span className="text-xl">🏠</span><span className="text-[9px] font-bold">Home</span>
                         </button>
 
                         {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">🔍</span><span className="text-[10px] font-bold">Explore</span>
+                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl">🔍</span><span className="text-[9px] font-bold">Explore</span>
                             </button>
                         )}
 
-                        {/* 🚨 MOBILE: MESSAGES BUTTON WITH BADGE 🚨 */}
                         {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl relative">
                                     💬
                                     {unreadCount > 0 && (
@@ -265,30 +247,35 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                                         </span>
                                     )}
                                 </span>
-                                <span className="text-[10px] font-bold">Inbox</span>
+                                <span className="text-[9px] font-bold">Inbox</span>
                             </button>
                         )}
 
                         {currentUser && (
-                            <button onClick={() => handleNavClick(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">👤</span><span className="text-[10px] font-bold">Profile</span>
+                            <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} className={`relative flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.NOTIFICATIONS ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl relative">❤️</span>
+                                <span className="text-[9px] font-bold">Activity</span>
+                            </button>
+                        )}
+
+                        {currentUser && (
+                            <button onClick={() => handleNavClick(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>
                             </button>
                         )}
 
                         {!currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-16 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">ℹ️</span><span className="text-[10px] font-bold">About</span>
+                            <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl">ℹ️</span><span className="text-[9px] font-bold">About</span>
                             </button>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* 🚨 INSTAGRAM STYLE POST MODAL 🚨 */}
             {showPostModal && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-0">
                     <div className="bg-[#16162A] sm:border border-white/10 sm:rounded-2xl w-full max-w-md h-full sm:h-auto overflow-hidden flex flex-col animate-slide-up sm:animate-none">
-
                         <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#0D0D1A]">
                             <button onClick={closePostModal} className="text-white text-2xl hover:text-red-400 transition">✕</button>
                             <h3 className="font-bold text-white text-lg">New Post</h3>
