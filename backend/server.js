@@ -440,7 +440,7 @@ const authenticateToken = (req, res, next) => {
 app.get('/api/me', authenticateToken, async (req, res) => {
     try {
         const userResult = await pool.query(
-            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private FROM users WHERE id = $1",
+            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private, kyc_status FROM users WHERE id = $1",
             [req.user.id]
         );
         if (userResult.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
