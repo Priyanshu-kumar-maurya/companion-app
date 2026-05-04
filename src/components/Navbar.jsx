@@ -263,11 +263,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                         )}
 
                         {isAdmin && (
-                            <button onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.ADMIN_DASHBOARD ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl text-yellow-500">👑</span><span className="text-[9px] font-bold text-yellow-500">Admin</span>
+                            <button
+                                onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)}
+                                className="px-2 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-1 text-xs lg:text-sm"
+                            >
+                                👑 Admin
                             </button>
                         )}
-
                         {currentUser ? (
                             <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>

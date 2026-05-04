@@ -12,7 +12,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
     // --- MODAL & FILTER STATES ---
     const [activeStatModal, setActiveStatModal] = useState(null);
-    const [bookingFilter, setBookingFilter] = useState('all'); // Naya state filter ke liye
+    const [bookingFilter, setBookingFilter] = useState('all');
     const [reviews, setReviews] = useState([]);
 
     useEffect(() => {
@@ -149,10 +149,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             )}
 
             <div className="max-w-5xl mx-auto px-4 py-6">
-                
+
                 <div className="flex justify-between items-start mb-6">
                     <div className="flex items-center gap-4">
-                        
+
                         <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
                             <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg">
                                 {user?.profile_pic ? (
@@ -166,7 +166,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                 <h1 className="text-xl sm:text-2xl font-bold text-white truncate max-w-[140px] sm:max-w-[250px]">{user.name} 🚀</h1>
                                 {user.kyc_status === 'verified' && <span className="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">✓</span>}
                             </div>
-                            
+
                             <div className="flex items-center gap-3 mt-1">
                                 <div className="flex flex-col items-center">
                                     <span className="text-sm font-bold text-white leading-none">{followStats.followers}</span>
@@ -186,7 +186,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     </button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-8 justify-start">
+                <div className="flex flex-wrap gap-2 justify-start">
                     {myTags.map((tag, i) => (
                         <span key={i} className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] rounded-full">
                             {tag.trim()}
@@ -194,7 +194,22 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     ))}
                 </div>
 
-                <div className="mb-6">
+                {/* BIO AUR SOCIAL LINK (ADDED HERE) */}
+                {(user.bio || user.social_link) && (
+                    <div className="mt-4 mb-8 bg-[#16162A] p-4 rounded-xl border border-white/5">
+                        {user.bio && (
+                            <p className="text-gray-300 text-sm mb-2 italic">"{user.bio}"</p>
+                        )}
+                        {user.social_link && (
+                            <a href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`} target="_blank" rel="noreferrer" className="text-pink-400 text-sm hover:underline flex items-center gap-1 w-fit mt-2">
+                                🔗 {user.social_link}
+                            </a>
+                        )}
+                    </div>
+                )}
+                {/* BIO ENDS */}
+
+                <div className="mb-6 mt-6">
                     {(!user.kyc_status || user.kyc_status === 'unverified') && (
                         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div>
@@ -290,7 +305,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 />
             )}
 
-            {/* --- STATS DETAIL & BOOKINGS MODALS --- */}
             {activeStatModal && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onClick={() => { setActiveStatModal(null); setBookingFilter('all'); }}>
                     <div className="bg-[#16162A] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
@@ -306,21 +320,18 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         </div>
 
                         <div className="overflow-y-auto p-5 space-y-4 custom-scrollbar">
-                            
-                            {/* --- FULL BOOKINGS VIEW WITH TABS --- */}
+
                             {activeStatModal === 'my_bookings' && (
                                 <>
-                                    {/* Tabs */}
                                     <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar shrink-0 sticky top-0 bg-[#16162A] z-10 -mt-2 pt-2">
                                         {['all', 'pending', 'accepted', 'completed', 'canceled'].map(filter => (
                                             <button
                                                 key={filter}
                                                 onClick={() => setBookingFilter(filter)}
-                                                className={`px-4 py-1.5 rounded-full text-[11px] font-bold capitalize whitespace-nowrap transition-all ${
-                                                    bookingFilter === filter
+                                                className={`px-4 py-1.5 rounded-full text-[11px] font-bold capitalize whitespace-nowrap transition-all ${bookingFilter === filter
                                                         ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20'
                                                         : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
-                                                }`}
+                                                    }`}
                                             >
                                                 {filter}
                                             </button>
@@ -348,7 +359,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                                         <div className="text-[11px] text-gray-400 flex items-center gap-2">📍 <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
                                                         {booking.meeting_details && <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">"{booking.meeting_details}"</div>}
                                                     </div>
-                
+
                                                     <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
                                                         {booking.status === 'pending' && (
                                                             (booking.sender_id === user.id || (!booking.sender_id && user.role === 'boy')) ? (
@@ -418,18 +429,18 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
                             {activeStatModal === 'notifications' && (
                                 notificationsList.length === 0 ? <p className="text-gray-500 text-center py-4 text-sm">No new notifications.</p> :
-                                notificationsList.map(notif => (
-                                    <div key={notif.id} className="flex justify-between items-center bg-[#0D0D1A] p-3 rounded-xl border border-white/5 hover:bg-white/5 cursor-pointer transition">
-                                        <div className="flex items-center gap-3">
-                                            <img src={notif.pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} className="w-10 h-10 rounded-full object-cover" alt="User" />
-                                            <div>
-                                                <p className="text-sm text-white">{notif.message}</p>
-                                                <p className="text-[10px] text-gray-500">{new Date(notif.time).toLocaleDateString()}</p>
+                                    notificationsList.map(notif => (
+                                        <div key={notif.id} className="flex justify-between items-center bg-[#0D0D1A] p-3 rounded-xl border border-white/5 hover:bg-white/5 cursor-pointer transition">
+                                            <div className="flex items-center gap-3">
+                                                <img src={notif.pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} className="w-10 h-10 rounded-full object-cover" alt="User" />
+                                                <div>
+                                                    <p className="text-sm text-white">{notif.message}</p>
+                                                    <p className="text-[10px] text-gray-500">{new Date(notif.time).toLocaleDateString()}</p>
+                                                </div>
                                             </div>
+                                            {notif.type === 'booking' && <span className="text-blue-400 text-[10px] bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 shrink-0">Action Needed</span>}
                                         </div>
-                                        {notif.type === 'booking' && <span className="text-blue-400 text-[10px] bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20 shrink-0">Action Needed</span>}
-                                    </div>
-                                ))
+                                    ))
                             )}
                         </div>
                     </div>
