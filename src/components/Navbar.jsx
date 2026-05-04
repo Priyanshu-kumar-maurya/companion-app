@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 
-function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, socket }) {
+function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
     const [postFile, setPostFile] = useState(null);
@@ -10,9 +10,9 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
     const [isPosting, setIsPosting] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
 
-    const currentUser = boyUser || girlUser;
+    const currentUser = boyUser || girlUser || adminUser;
     const isBoy = boyUser !== null;
-    const isGirl = girlUser !== null;
+    const isAdmin = adminUser !== null;
 
     useEffect(() => {
         if (!currentUser) return;
@@ -113,13 +113,8 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
         }
     };
 
-    const activeColor = isBoy
-        ? "text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]"
-        : isGirl
-            ? "text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]"
-            : "text-purple-400 drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]";
+    const activeColor = "text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]";
     const inactiveColor = "text-gray-500 hover:text-gray-300";
-
     const isHiddenScreen = page === PAGES.CHAT || page === PAGES.DETAILS;
 
     return (
@@ -164,21 +159,35 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                                         ❤️ Activity
                                     </button>
 
-                                    <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
-                                        <span className="text-sm">➕</span> Create
-                                    </button>
+                                    {/* 🚨 ADMIN BUTTON 🚨 */}
+                                    {isAdmin && (
+                                        <button
+                                            onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)}
+                                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition"
+                                        >
+                                            👑 Admin Panel
+                                        </button>
+                                    )}
+
+                                    {!isAdmin && (
+                                        <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
+                                            <span className="text-sm">➕</span> Create
+                                        </button>
+                                    )}
                                 </>
                             )}
 
                             {currentUser ? (
-                                <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
-                                    <button
-                                        onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
-                                        className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"}`}
-                                    >
-                                        👤 {currentUser.name.split(" ")[0]}
-                                    </button>
-                                </div>
+                                !isAdmin && (
+                                    <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
+                                        <button
+                                            onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
+                                            className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"}`}
+                                        >
+                                            👤 {currentUser.name.split(" ")[0]}
+                                        </button>
+                                    </div>
+                                )
                             ) : (
                                 <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
                                     <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-pink-500 text-pink-400 rounded-full hover:bg-pink-500 hover:text-white transition">Join as Girl</button>
@@ -196,7 +205,7 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                         RentGF
                     </h3>
 
-                    {currentUser ? (
+                    {currentUser && !isAdmin ? (
                         <button
                             onClick={() => setShowPostModal(true)}
                             className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition"
@@ -258,13 +267,17 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                             </button>
                         )}
 
-                        {currentUser && (
-                            <button onClick={() => handleNavClick(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>
-                            </button>
-                        )}
-
-                        {!currentUser && (
+                        {currentUser ? (
+                            isAdmin ? (
+                                <button onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ADMIN_DASHBOARD ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <span className="text-xl text-yellow-500">👑</span><span className="text-[9px] font-bold text-yellow-500">Admin</span>
+                                </button>
+                            ) : (
+                                <button onClick={() => handleNavClick(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>
+                                </button>
+                            )
+                        ) : (
                             <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">ℹ️</span><span className="text-[9px] font-bold">About</span>
                             </button>
@@ -282,7 +295,7 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                             <button
                                 onClick={handlePostSubmit}
                                 disabled={!postFile || isPosting}
-                                className={`font-bold text-lg transition ${postFile && !isPosting ? (isBoy ? 'text-blue-500 hover:text-blue-400' : 'text-pink-500 hover:text-pink-400') : 'text-gray-600'}`}
+                                className="font-bold text-lg transition text-pink-500 hover:text-pink-400"
                             >
                                 {isPosting ? "Posting..." : "Share"}
                             </button>
@@ -290,7 +303,7 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
 
                         <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
                             {!postPreview ? (
-                                <label className={`w-full aspect-square border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition ${isBoy ? 'hover:border-blue-500 hover:bg-blue-500/5' : 'hover:border-pink-500 hover:bg-pink-500/5'}`}>
+                                <label className="w-full aspect-square border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition hover:border-pink-500 hover:bg-pink-500/5">
                                     <span className="text-5xl mb-3">📸</span>
                                     <span className="text-white font-bold text-lg">Select Photo</span>
                                     <span className="text-gray-500 text-sm mt-1">Tap to browse files</span>
@@ -310,7 +323,7 @@ function Navbar({ page, setPage, girlUser, boyUser, setGirlUser, setBoyUser, soc
                                             placeholder="Write a caption..."
                                             value={postCaption}
                                             onChange={(e) => setPostCaption(e.target.value)}
-                                            className={`flex-1 bg-transparent border-b border-white/10 p-2 text-sm text-white resize-none h-20 outline-none transition ${isBoy ? 'focus:border-blue-500' : 'focus:border-pink-500'}`}
+                                            className="flex-1 bg-transparent border-b border-white/10 p-2 text-sm text-white resize-none h-20 outline-none transition focus:border-pink-500"
                                         />
                                     </div>
                                 </div>
