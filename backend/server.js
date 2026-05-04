@@ -626,9 +626,9 @@ app.get('/api/reviews/:userId', async (req, res) => {
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await pool.query(`
-            SELECT id, name, email, phone, role, kyc_status, id_proof_url, is_verified, created_at 
+            SELECT id, name, email, phone, role, kyc_status, id_proof_url, is_verified 
             FROM users 
-            ORDER BY created_at DESC
+            ORDER BY id DESC
         `);
         res.status(200).json(users.rows);
     } catch (err) {
