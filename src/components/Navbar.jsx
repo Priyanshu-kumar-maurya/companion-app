@@ -159,35 +159,30 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                         ❤️ Activity
                                     </button>
 
-                                    {/* 🚨 ADMIN BUTTON 🚨 */}
                                     {isAdmin && (
                                         <button
                                             onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)}
-                                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition"
+                                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-2"
                                         >
                                             👑 Admin Panel
                                         </button>
                                     )}
 
-                                    {!isAdmin && (
-                                        <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
-                                            <span className="text-sm">➕</span> Create
-                                        </button>
-                                    )}
+                                    <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
+                                        <span className="text-sm">➕</span> Create
+                                    </button>
                                 </>
                             )}
 
                             {currentUser ? (
-                                !isAdmin && (
-                                    <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
-                                        <button
-                                            onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
-                                            className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"}`}
-                                        >
-                                            👤 {currentUser.name.split(" ")[0]}
-                                        </button>
-                                    </div>
-                                )
+                                <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
+                                    <button
+                                        onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
+                                        className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"}`}
+                                    >
+                                        👤 {currentUser.name.split(" ")[0]}
+                                    </button>
+                                </div>
                             ) : (
                                 <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
                                     <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-pink-500 text-pink-400 rounded-full hover:bg-pink-500 hover:text-white transition">Join as Girl</button>
@@ -205,7 +200,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                         RentGF
                     </h3>
 
-                    {currentUser && !isAdmin ? (
+                    {currentUser ? (
                         <button
                             onClick={() => setShowPostModal(true)}
                             className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition"
@@ -236,18 +231,18 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             {!isHiddenScreen && (
                 <div className="fixed bottom-0 left-0 w-full bg-[#16162A]/95 backdrop-blur-xl border-t border-white/5 z-40 md:hidden pb-2 pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
-                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                             <span className="text-xl">🏠</span><span className="text-[9px] font-bold">Home</span>
                         </button>
 
                         {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">🔍</span><span className="text-[9px] font-bold">Explore</span>
                             </button>
                         )}
 
                         {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl relative">
                                     💬
                                     {unreadCount > 0 && (
@@ -261,22 +256,22 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                         )}
 
                         {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} className={`relative flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.NOTIFICATIONS ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} className={`relative flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.NOTIFICATIONS ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl relative">❤️</span>
                                 <span className="text-[9px] font-bold">Activity</span>
                             </button>
                         )}
 
+                        {isAdmin && (
+                            <button onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.ADMIN_DASHBOARD ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl text-yellow-500">👑</span><span className="text-[9px] font-bold text-yellow-500">Admin</span>
+                            </button>
+                        )}
+
                         {currentUser ? (
-                            isAdmin ? (
-                                <button onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ADMIN_DASHBOARD ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                    <span className="text-xl text-yellow-500">👑</span><span className="text-[9px] font-bold text-yellow-500">Admin</span>
-                                </button>
-                            ) : (
-                                <button onClick={() => handleNavClick(isBoy ? PAGES.BOY_DASHBOARD : PAGES.GIRL_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                    <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>
-                                </button>
-                            )
+                            <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>
+                            </button>
                         ) : (
                             <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <span className="text-xl">ℹ️</span><span className="text-[9px] font-bold">About</span>
