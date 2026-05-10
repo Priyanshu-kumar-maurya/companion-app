@@ -7,19 +7,38 @@ function AdminDashboard({ user, setPage }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const cachedStats = sessionStorage.getItem("adminStatsCache");
+        const cachedUsers = sessionStorage.getItem("adminUsersCache");
+
+        if (cachedStats && cachedUsers) {
+            setStats(JSON.parse(cachedStats));
+            setUsers(JSON.parse(cachedUsers));
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
+
         fetchAdminData();
     }, []);
 
     const fetchAdminData = async () => {
-        setLoading(true);
         try {
             const statsRes = await fetch("https://rentgf-and-bf.onrender.com/api/admin/stats");
             const usersRes = await fetch("https://rentgf-and-bf.onrender.com/api/admin/users");
 
-            if (statsRes.ok) setStats(await statsRes.json());
-            if (usersRes.ok) setUsers(await usersRes.json());
+            if (statsRes.ok) {
+                const statsData = await statsRes.json();
+                setStats(statsData);
+                sessionStorage.setItem("adminStatsCache", JSON.stringify(statsData));
+            }
+
+            if (usersRes.ok) {
+                const usersData = await usersRes.json();
+                setUsers(usersData);
+                sessionStorage.setItem("adminUsersCache", JSON.stringify(usersData));
+            }
         } catch (err) {
-            console.error("Error fetching admin data:", err);
+            console.error(err);
         } finally {
             setLoading(false);
         }
@@ -35,7 +54,7 @@ function AdminDashboard({ user, setPage }) {
 
             if (res.ok) {
                 alert(`KYC marked as ${status}!`);
-                fetchAdminData(); // Refresh data
+                fetchAdminData();
             }
         } catch (err) {
             console.error(err);
@@ -65,7 +84,6 @@ function AdminDashboard({ user, setPage }) {
                 </button>
             </div>
 
-            {/* STATS CARDS */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                 <div className="bg-[#16162A] border border-white/10 rounded-2xl p-5 shadow-lg">
                     <div className="text-gray-400 text-sm mb-1">Total Users</div>
@@ -93,7 +111,6 @@ function AdminDashboard({ user, setPage }) {
                 </div>
             </div>
 
-            {/* USERS TABLE */}
             <div className="bg-[#16162A] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
                 <div className="p-5 border-b border-white/10 bg-[#0D0D1A]">
                     <h2 className="text-xl font-bold text-white">Registered Users</h2>
@@ -120,8 +137,8 @@ function AdminDashboard({ user, setPage }) {
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded text-xs font-bold ${u.kyc_status === 'verified' ? 'bg-green-500/20 text-green-400' :
-                                                u.kyc_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                    'bg-red-500/20 text-red-400'
+                                            u.kyc_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                'bg-red-500/20 text-red-400'
                                             }`}>
                                             {u.kyc_status}
                                         </span>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SettingsModal from '../shared/SettingsModal';
+import imageCompression from 'browser-image-compression';
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "4.8" });
@@ -16,26 +17,59 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const [reviews, setReviews] = useState([]);
 
     useEffect(() => {
+        if (!user) return;
+
+        const cacheKey = `girlDashboardCache_${user.id}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            if (parsedData.stats) setStats(parsedData.stats);
+            if (parsedData.myPosts) setMyPosts(parsedData.myPosts);
+            if (parsedData.myBookings) setMyBookings(parsedData.myBookings);
+            if (parsedData.followStats) setFollowStats(parsedData.followStats);
+            if (parsedData.reviews) setReviews(parsedData.reviews);
+        }
+
         const fetchDashboardData = async () => {
-            if (!user) return;
             try {
+                let fetchedStats = { earnings: 0, sessions: 0, rating: "4.8" };
+                let fetchedPosts = [];
+                let fetchedBookings = [];
+                let fetchedFollowStats = { followers: 0, following: 0 };
+                let fetchedReviews = [];
+
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
-                if (statsRes.ok) setStats(await statsRes.json());
+                if (statsRes.ok) fetchedStats = await statsRes.json();
 
                 const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
-                if (postsRes.ok) setMyPosts(await postsRes.json());
+                if (postsRes.ok) fetchedPosts = await postsRes.json();
 
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
-                if (bookingsRes.ok) setMyBookings(await bookingsRes.json());
+                if (bookingsRes.ok) fetchedBookings = await bookingsRes.json();
 
                 const followRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${user.id}`);
-                if (followRes.ok) setFollowStats(await followRes.json());
+                if (followRes.ok) fetchedFollowStats = await followRes.json();
 
                 const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${user.id}`);
                 if (reviewRes.ok) {
                     const data = await reviewRes.json();
-                    setReviews(data.reviews);
+                    fetchedReviews = data.reviews;
                 }
+
+                setStats(fetchedStats);
+                setMyPosts(fetchedPosts);
+                setMyBookings(fetchedBookings);
+                setFollowStats(fetchedFollowStats);
+                setReviews(fetchedReviews);
+
+                sessionStorage.setItem(cacheKey, JSON.stringify({
+                    stats: fetchedStats,
+                    myPosts: fetchedPosts,
+                    myBookings: fetchedBookings,
+                    followStats: fetchedFollowStats,
+                    reviews: fetchedReviews
+                }));
             } catch (err) {
                 console.error("Dashboard error:", err);
             }
@@ -68,21 +102,31 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         const file = e.target.files[0];
         if (!file) return;
         setKycUploading(true);
-        const formData = new FormData();
-        formData.append("id_document", file);
 
         try {
+            const options = {
+                maxSizeMB: 0.5,
+                maxWidthOrHeight: 1024,
+                useWebWorker: true
+            };
+            const compressedFile = await imageCompression(file, options);
+
+            const formData = new FormData();
+            formData.append("id_document", compressedFile);
+
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/kyc/${user.id}`, {
                 method: "POST",
                 body: formData
             });
+
             if (response.ok) {
                 await response.json();
-                if (setGirlUser) setGirlUser({ ...user, kyc_status: 'pending' });
+                setGirlUser({ ...user, kyc_status: 'pending' });
                 alert("ID Submitted! Please wait 24 hours for verification. ⏳");
             }
         } catch (err) {
             console.error(err);
+            alert("Upload failed. Try again.");
         } finally {
             setKycUploading(false);
         }
@@ -326,8 +370,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                                 key={filter}
                                                 onClick={() => setBookingFilter(filter)}
                                                 className={`px-4 py-1.5 rounded-full text-[11px] font-bold capitalize whitespace-nowrap transition-all ${bookingFilter === filter
-                                                        ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20'
-                                                        : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                                                    ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20'
+                                                    : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
                                                     }`}
                                             >
                                                 {filter}

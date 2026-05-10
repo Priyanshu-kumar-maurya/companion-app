@@ -200,10 +200,17 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     }, [roomId, cleanupCall]);
 
-    // --- 5. FETCH MESSAGES ---
     useEffect(() => {
+        if (!currentUser || !girl) return;
+
+        const cacheKey = `chatCache_${currentUser.id}_${girl.id}`;
+        const cachedMessages = sessionStorage.getItem(cacheKey);
+
+        if (cachedMessages) {
+            setMessages(JSON.parse(cachedMessages));
+        }
+
         const fetchOldMessages = async () => {
-            if (!currentUser || !girl) return;
             try {
                 const response = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${girl.id}`);
                 if (response.ok) {
@@ -218,13 +225,12 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         };
                     });
                     setMessages(formattedMessages);
+                    sessionStorage.setItem(cacheKey, JSON.stringify(formattedMessages));
                 }
             } catch (error) { }
         };
         fetchOldMessages();
     }, [currentUser, girl]);
-
-    // --- 6. SOCKET LISTENERS ---
     useEffect(() => {
         socket.connect();
         socket.emit("join_room", roomId);

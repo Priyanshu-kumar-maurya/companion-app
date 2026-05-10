@@ -29,6 +29,9 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
 
             if (response.ok) {
                 localStorage.setItem("token", data.token);
+                // Nayi line: User data bhi local storage mein save karo
+                localStorage.setItem("user", JSON.stringify(data.user));
+
                 if (data.user.role === 'girl') {
                     if (setGirlUser) setGirlUser(data.user);
                     setPage(PAGES.GIRL_DASHBOARD);

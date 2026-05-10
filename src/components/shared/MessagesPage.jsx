@@ -11,15 +11,20 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
             return;
         }
 
-        const fetchChatsAndDetails = async () => {
+        const cachedInbox = sessionStorage.getItem("inboxCache");
+        if (cachedInbox) {
+            setChatHistory(JSON.parse(cachedInbox));
+            setLoading(false);
+        } else {
             setLoading(true);
+        }
+
+        const fetchChatsAndDetails = async () => {
             try {
-                // 1. Backend se un logo ki list laao jinse baat hui hai
                 const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`);
                 if (res.ok) {
                     const users = await res.json();
 
-                    // 2. Har user ke purane messages fetch karke unread count aur last message nikaalo
                     const chatsWithDetails = await Promise.all(users.map(async (person) => {
                         try {
                             const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`);
@@ -27,13 +32,12 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                                 const msgs = await msgRes.json();
                                 const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
 
-                                // Unread messages ginna (jo person ne bheje hain aur is_read false hai)
                                 const unreadCount = msgs.filter(m => String(m.sender_id) === String(person.id) && !m.is_read).length;
 
                                 let preview = '';
                                 if (lastMsg) {
                                     if (lastMsg.message && (lastMsg.message.includes('✅') || lastMsg.message.includes('❌'))) {
-                                        preview = lastMsg.message; // Call history text
+                                        preview = lastMsg.message;
                                     } else {
                                         preview = lastMsg.message || (lastMsg.image_url ? '📷 Photo' : 'Attachment');
                                     }
@@ -47,14 +51,14 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                                 };
                             }
                         } catch (e) {
-                            console.error("Error fetching msgs for", person.name);
+                            console.error(e);
                         }
                         return { ...person, lastMessagePreview: '', lastMessageTime: 0, unreadCount: 0 };
                     }));
 
-                    // 3. Sorting: Jiska sabse latest message hai, usko sabse upar (Top) rakho
                     chatsWithDetails.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
                     setChatHistory(chatsWithDetails);
+                    sessionStorage.setItem("inboxCache", JSON.stringify(chatsWithDetails));
                 }
             } catch (err) {
                 console.error(err);
@@ -62,10 +66,10 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                 setLoading(false);
             }
         };
+
         fetchChatsAndDetails();
     }, [currentUser, setPage]);
 
-    // --- REALTIME SOCKET LOGIC ---
     useEffect(() => {
         if (!socket || !currentUser) return;
 
@@ -98,7 +102,6 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     }, [socket, currentUser]);
 
     const handleChatClick = (person) => {
-        // Click karte hi badge clear kar do
         setChatHistory(prev => prev.map(p => String(p.id) === String(person.id) ? { ...p, unreadCount: 0 } : p));
         setSelectedGirl(person);
         setPage(PAGES.CHAT);

@@ -15,20 +15,42 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const isLoggedIn = !!localStorage.getItem("token") || !!currentUser;
 
     useEffect(() => {
+        if (isLoggedIn && currentUser) {
+            const cachedFeed = sessionStorage.getItem("homeFeedCache");
+            const cachedFollowing = sessionStorage.getItem("followingStateCache");
+
+            if (cachedFeed && cachedFollowing) {
+                setFeed(JSON.parse(cachedFeed));
+                setFollowingState(JSON.parse(cachedFollowing));
+                setLoading(false);
+            } else {
+                setLoading(true);
+            }
+        } else {
+            const cachedStats = sessionStorage.getItem("homeStatsCache");
+            if (cachedStats) {
+                setStats(JSON.parse(cachedStats));
+                setLoading(false);
+            } else {
+                setLoading(true);
+            }
+        }
+
         const fetchData = async () => {
-            setLoading(true);
             try {
                 if (isLoggedIn && currentUser) {
                     const response = await fetch(`https://rentgf-and-bf.onrender.com/api/feed?currentUserId=${currentUser.id}`);
                     if (response.ok) {
                         const data = await response.json();
                         setFeed(data);
+                        sessionStorage.setItem("homeFeedCache", JSON.stringify(data));
 
                         const followData = {};
                         data.forEach(post => {
                             followData[post.user_id] = post.is_followed_by_me;
                         });
                         setFollowingState(followData);
+                        sessionStorage.setItem("followingStateCache", JSON.stringify(followData));
                     }
                 } else {
                     const girlRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=girl");
@@ -40,12 +62,15 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     if (girlRes.ok) girlCount = (await girlRes.json()).length;
                     if (boyRes.ok) boyCount = (await boyRes.json()).length;
 
-                    setStats({
+                    const newStats = {
                         girls: girlCount,
                         boys: boyCount,
                         total: girlCount + boyCount,
                         connections: (girlCount + boyCount) * 15 + 120
-                    });
+                    };
+
+                    setStats(newStats);
+                    sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
                 }
             } catch (err) {
                 console.error(err);

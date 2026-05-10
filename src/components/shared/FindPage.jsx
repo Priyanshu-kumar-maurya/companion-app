@@ -15,6 +15,16 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     const targetRole = currentUser?.role === "girl" ? "boy" : "girl";
 
     useEffect(() => {
+        const cacheKey = `findPageCache_${targetRole}`;
+        const cachedUsers = sessionStorage.getItem(cacheKey);
+
+        if (cachedUsers) {
+            setUsers(JSON.parse(cachedUsers));
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
+
         const fetchProfiles = async () => {
             try {
                 const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users?role=${targetRole}`);
@@ -26,6 +36,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                         tags: user.tags ? (typeof user.tags === 'string' ? user.tags.split(',') : user.tags) : ["Coffee Date", "Movie"]
                     }));
                     setUsers(formattedData);
+                    sessionStorage.setItem(cacheKey, JSON.stringify(formattedData));
                 }
             } catch (err) {
                 console.error(err);

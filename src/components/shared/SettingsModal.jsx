@@ -69,6 +69,8 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
     const handleLogout = () => {
         if (window.confirm("Are you sure you want to logout?")) {
             localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            sessionStorage.clear();
             setUser(null);
             setPage(PAGES.HOME);
         }
@@ -80,6 +82,8 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
             try {
                 await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
                 localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                sessionStorage.clear();
                 setUser(null);
                 alert("Account deleted forever.");
                 setPage(PAGES.HOME);
@@ -127,7 +131,27 @@ function SettingsModal({ user, setUser, onClose, setPage }) {
                                 <span className="text-gray-500 text-lg">›</span>
                             </button>
 
-                            <div className="h-2 bg-[#0D0D1A]"></div>
+                            <div className="pt-4 pb-2 border-t border-white/5 bg-[#121222]">
+                                <h3 className="text-xs font-bold text-gray-500 px-5 mb-2 tracking-wider uppercase">Support & Info</h3>
+                                <button onClick={() => setPage(PAGES.HELP)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
+                                    <span className="flex items-center gap-3"><span className="text-lg">🎧</span> Help Center</span>
+                                    <span className="text-gray-500 text-lg">›</span>
+                                </button>
+                                <button onClick={() => setPage(PAGES.ABOUT)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
+                                    <span className="flex items-center gap-3"><span className="text-lg">ℹ️</span> About Us</span>
+                                    <span className="text-gray-500 text-lg">›</span>
+                                </button>
+                                <button onClick={() => setPage(PAGES.PRIVACY)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
+                                    <span className="flex items-center gap-3"><span className="text-lg">🛡️</span> Privacy Policy</span>
+                                    <span className="text-gray-500 text-lg">›</span>
+                                </button>
+                                <button onClick={() => setPage(PAGES.TERMS)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
+                                    <span className="flex items-center gap-3"><span className="text-lg">📄</span> Terms & Conditions</span>
+                                    <span className="text-gray-500 text-lg">›</span>
+                                </button>
+                            </div>
+
+                            <div className="h-2 bg-[#0D0D1A] border-t border-white/5"></div>
 
                             <button onClick={handleLogout} className="w-full text-left px-5 py-4 hover:bg-white/5 transition text-sm font-medium text-pink-400">
                                 <span className="flex items-center gap-3"><span className="text-lg">🚪</span> Log Out</span>

@@ -6,13 +6,23 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!currentUser) return;
+
+        const cachedNotifs = sessionStorage.getItem("notifCache");
+        if (cachedNotifs) {
+            setNotifications(JSON.parse(cachedNotifs));
+            setLoading(false);
+        } else {
+            setLoading(true);
+        }
+
         const fetchNotifications = async () => {
-            if (!currentUser) return;
             try {
                 const res = await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}`);
                 if (res.ok) {
                     const data = await res.json();
                     setNotifications(data);
+                    sessionStorage.setItem("notifCache", JSON.stringify(data));
                 }
             } catch (err) {
                 console.error(err);

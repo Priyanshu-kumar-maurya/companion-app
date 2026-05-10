@@ -28,6 +28,8 @@ function BoyLogin({ setPage, setBoyUser }) {
 
             if (response.ok) {
                 localStorage.setItem("token", data.token);
+                // Nayi line: User data bhi local storage mein save karo
+                localStorage.setItem("user", JSON.stringify(data.user));
 
                 setBoyUser(data.user);
                 setPage(PAGES.BOY_DASHBOARD);

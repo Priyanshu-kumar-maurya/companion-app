@@ -18,7 +18,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     const [newReviewText, setNewReviewText] = useState("");
     const [newRating, setNewRating] = useState(5);
 
-    // --- FOLLOW STATE ---
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0, isFollowing: false });
     const [followLoading, setFollowLoading] = useState(false);
 
@@ -35,41 +34,71 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     }, []);
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            if (!profile) return;
+        if (!profile) return;
 
-            // Fetch Posts
+        const cacheKey = `profile_data_${profile.id}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        if (cachedData) {
+            const parsedData = JSON.parse(cachedData);
+            if (parsedData.posts) setPosts(parsedData.posts);
+            if (parsedData.reviews) setReviews(parsedData.reviews);
+            if (parsedData.avgRating !== undefined) setAvgRating(parsedData.avgRating);
+            if (parsedData.followStats) setFollowStats(parsedData.followStats);
+        }
+
+        const fetchUserData = async () => {
+            let fetchedPosts = [];
+            let fetchedReviews = [];
+            let fetchedAvgRating = 0;
+            let fetchedFollowStats = { followers: 0, following: 0, isFollowing: false };
+
             if (!profile.is_private) {
                 try {
                     const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
-                    if (postRes.ok) setPosts(await postRes.json());
-                } catch (err) { }
+                    if (postRes.ok) fetchedPosts = await postRes.json();
+                } catch (err) {
+                    console.error(err);
+                }
             }
 
-            // Fetch Reviews
             try {
                 const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
                 if (reviewRes.ok) {
                     const data = await reviewRes.json();
-                    setReviews(data.reviews);
-                    setAvgRating(data.avgRating);
+                    fetchedReviews = data.reviews;
+                    fetchedAvgRating = data.avgRating;
                 }
-            } catch (err) { }
+            } catch (err) {
+                console.error(err);
+            }
 
-            // Fetch Follow Stats
             try {
                 const currentUserId = currentUser ? currentUser.id : '';
                 const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${profile.id}?currentUserId=${currentUserId}`);
                 if (statsRes.ok) {
-                    const statsData = await statsRes.json();
-                    setFollowStats(statsData);
+                    fetchedFollowStats = await statsRes.json();
                 }
-            } catch (err) { }
+            } catch (err) {
+                console.error(err);
+            }
+
+            setPosts(fetchedPosts);
+            setReviews(fetchedReviews);
+            setAvgRating(fetchedAvgRating);
+            setFollowStats(fetchedFollowStats);
+
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                posts: fetchedPosts,
+                reviews: fetchedReviews,
+                avgRating: fetchedAvgRating,
+                followStats: fetchedFollowStats
+            }));
         };
+
         fetchUserData();
     }, [profile, currentUser]);
 
-    // --- FOLLOW/UNFOLLOW FUNCTION ---
     const handleFollowToggle = async () => {
         if (!currentUser) return alert("Please login to follow!");
         if (currentUser.id === profile.id) return alert("You cannot follow yourself.");
@@ -163,7 +192,9 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                 setReviews(data.reviews);
                 setAvgRating(data.avgRating);
             }
-        } catch (error) { }
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     if (!profile) return null;
@@ -171,7 +202,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     let safeTags = profile.tags ? (typeof profile.tags === 'string' ? profile.tags.split(',') : profile.tags) : ["Coffee Date", "Movie"];
     const firstName = profile.name ? profile.name.split(" ")[0] : "User";
 
-    // Yahan hum decide karenge ki ring ka color kaisa hoga (Boy ke liye Blue, Girl ke liye Pink)
     const ringColor = profile.role === 'boy' ? "border-blue-500/30" : "border-pink-500/30";
     const gradientBg = profile.role === 'boy' ? "from-blue-500/30 to-purple-500/30" : "from-pink-500/30 to-purple-500/30";
 
@@ -180,10 +210,8 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
             <div className="max-w-3xl mx-auto px-6 py-8">
                 <button onClick={() => setPage(PAGES.FIND)} className="text-sm text-gray-400 hover:text-white transition mb-6 flex items-center gap-1">← Back to Explore</button>
 
-                {/* --- 🚨 NAYA CLEAN PROFILE HEADER (DASHBOARD STYLE) 🚨 --- */}
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 text-center sm:text-left">
 
-                    {/* DP - Gol aur choti, bina kisi badde dibbe ke */}
                     <div
                         className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full flex-shrink-0 border-[3px] ${ringColor} p-1 cursor-pointer`}
                         onClick={() => profile.profile_pic && setExpandedPost({ image_url: profile.profile_pic, caption: `${firstName}'s Profile Picture` })}
@@ -209,7 +237,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                             <span className="text-xs text-green-400 flex items-center gap-1"><span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Online</span>
                         </p>
 
-                        {/* Stats Row */}
                         <div className="flex gap-6 justify-center sm:justify-start mb-5 items-center bg-[#16162A] w-fit sm:mx-0 mx-auto px-6 py-3 rounded-2xl border border-white/5 shadow-sm">
                             <div className="flex flex-col items-center">
                                 <span className="text-lg font-bold text-white">{followStats.followers}</span>
@@ -235,7 +262,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     {safeTags.map((tag) => <span key={tag} className={`px-3 py-1.5 bg-white/5 border text-xs font-medium rounded-full ${profile.role === 'boy' ? 'border-blue-500/20 text-blue-400' : 'border-pink-500/20 text-pink-400'}`}>{tag.trim()}</span>)}
                 </div>
 
-                {/* --- ACTION BUTTONS --- */}
                 <div className="flex gap-3 flex-wrap justify-center sm:justify-start mb-10">
                     {currentUser && currentUser.id !== profile.id && (
                         <button
@@ -254,7 +280,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     </button>
                 </div>
 
-                {/* --- BOOKING SECTION --- */}
                 <div className="bg-[#16162A] border border-white/5 rounded-3xl p-6 md:p-8 mb-8 shadow-xl relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-bl-full pointer-events-none"></div>
                     <div className="text-xl font-extrabold mb-6 text-white relative z-10">📅 Book a Session</div>
