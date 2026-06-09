@@ -4,6 +4,15 @@ const authenticateToken = require('../middleware/auth');
 
 const router = express.Router();
 
+// Helper: Ensure user can only modify their OWN account
+const isOwner = (req, res, userId) => {
+    if (parseInt(req.user.id) !== parseInt(userId)) {
+        res.status(403).json({ error: "Forbidden: Tum sirf apna account modify kar sakte ho." });
+        return false;
+    }
+    return true;
+};
+
 // 1. Get Current Logged-in User Info
 router.get('/me', authenticateToken, async (req, res) => {
     try {
@@ -22,6 +31,9 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/users', async (req, res) => {
     try {
         const { role } = req.query;
+        if (!role || !['boy', 'girl'].includes(role)) {
+            return res.status(400).json({ error: "Valid role parameter required (boy/girl)." });
+        }
         const users = await pool.query(`
             SELECT u.id, u.name, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.kyc_status,
                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
@@ -38,14 +50,20 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// 3. Update User Profile Settings
-router.put('/users/:userId', async (req, res) => {
+// 3. Update User Profile Settings — AUTH REQUIRED + OWNERSHIP CHECK
+router.put('/users/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+        if (!isOwner(req, res, userId)) return;
+
         const { age, city, bio, price, tags, is_private } = req.body;
+
+        // Validate price is not negative
+        const safePrice = Math.max(0, parseInt(price) || 0);
+
         const updatedUser = await pool.query(
-            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6 WHERE id = $7 RETURNING *",
-            [age || null, city || '', bio || '', price || 0, tags || 'Coffee Date, Movie', is_private || false, userId]
+            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6 WHERE id = $7 RETURNING id, name, email, role, age, city, bio, price, tags, is_private, kyc_status",
+            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, userId]
         );
         res.status(200).json({ message: "Profile Updated", user: updatedUser.rows[0] });
     } catch (err) {
@@ -53,10 +71,14 @@ router.put('/users/:userId', async (req, res) => {
     }
 });
 
-// 4. Delete Account Forever
-router.delete('/users/:userId', async (req, res) => {
+// 4. Delete Account Forever — AUTH REQUIRED + OWNERSHIP CHECK
+router.delete('/users/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // Admins can delete any user; others can only delete their own
+        if (req.user.role !== 'admin' && !isOwner(req, res, userId)) return;
+
         await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
         await pool.query("DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1", [userId]);
         await pool.query("DELETE FROM bookings WHERE boy_id = $1 OR girl_id = $1", [userId]);
@@ -69,10 +91,15 @@ router.delete('/users/:userId', async (req, res) => {
     }
 });
 
-// 5. Follow User
-router.post('/follow', async (req, res) => {
+// 5. Follow User — AUTH REQUIRED
+router.post('/follow', authenticateToken, async (req, res) => {
     try {
         const { follower_id, following_id } = req.body;
+
+        // Ensure the requester can only follow as themselves
+        if (parseInt(req.user.id) !== parseInt(follower_id)) {
+            return res.status(403).json({ error: "Tum doosre ki taraf se follow nahi kar sakte." });
+        }
         if (follower_id === following_id) return res.status(400).json({ error: "You cannot follow yourself." });
 
         await pool.query("INSERT INTO follows (follower_id, following_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [follower_id, following_id]);
@@ -84,10 +111,15 @@ router.post('/follow', async (req, res) => {
     }
 });
 
-// 6. Unfollow User
-router.post('/unfollow', async (req, res) => {
+// 6. Unfollow User — AUTH REQUIRED
+router.post('/unfollow', authenticateToken, async (req, res) => {
     try {
         const { follower_id, following_id } = req.body;
+
+        if (parseInt(req.user.id) !== parseInt(follower_id)) {
+            return res.status(403).json({ error: "Tum doosre ki taraf se unfollow nahi kar sakte." });
+        }
+
         await pool.query("DELETE FROM follows WHERE follower_id = $1 AND following_id = $2", [follower_id, following_id]);
         res.status(200).json({ message: "Unfollowed successfully" });
     } catch (err) {
@@ -95,7 +127,7 @@ router.post('/unfollow', async (req, res) => {
     }
 });
 
-// 7. Get Follow Stats (Followers/Following Count)
+// 7. Get Follow Stats (Followers/Following Count) — Public
 router.get('/follow-stats/:profileId', async (req, res) => {
     try {
         const { profileId } = req.params;
@@ -119,10 +151,16 @@ router.get('/follow-stats/:profileId', async (req, res) => {
     }
 });
 
-// 8. Get Companion (Girl) Earnings Stats
-router.get('/girl/stats/:userId', async (req, res) => {
+// 8. Get Companion (Girl) Earnings Stats — AUTH REQUIRED + OWNERSHIP CHECK
+router.get('/girl/stats/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // Only the user themselves or admin can see stats
+        if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Sirf apni stats dekh sakte ho." });
+        }
+
         const statsQuery = `
             SELECT 
                 COALESCE(SUM(amount), 0) as total_earnings, 

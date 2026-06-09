@@ -1,13 +1,22 @@
 const express = require('express');
 const { pool } = require('../config/db');
+const authenticateToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-router.post('/kyc/:userId', upload.single('id_document'), async (req, res) => {
+// ─── KYC UPLOAD — AUTH REQUIRED + OWNERSHIP ─────────────────
+router.post('/kyc/:userId', authenticateToken, upload.single('id_document'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: "Koi document upload nahi hua!" });
         const { userId } = req.params;
+
+        // Only the user themselves can upload their own KYC
+        if (parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Sirf apna KYC upload kar sakte ho." });
+        }
+
+        if (!req.file) return res.status(400).json({ error: "Koi document upload nahi hua!" });
+
         const documentUrl = req.file.path;
         const updatedUser = await pool.query(
             "UPDATE users SET id_proof_url = $1, kyc_status = 'pending' WHERE id = $2 RETURNING kyc_status, id_proof_url",
@@ -22,10 +31,17 @@ router.post('/kyc/:userId', upload.single('id_document'), async (req, res) => {
     }
 });
 
-router.post('/upload/:userId', upload.single('profile_pic'), async (req, res) => {
+// ─── PROFILE PIC UPLOAD — AUTH REQUIRED + OWNERSHIP ─────────
+router.post('/upload/:userId', authenticateToken, upload.single('profile_pic'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: "Koi file upload nahi hui!" });
         const { userId } = req.params;
+
+        if (parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Sirf apni profile pic update kar sakte ho." });
+        }
+
+        if (!req.file) return res.status(400).json({ error: "Koi file upload nahi hui!" });
+
         const mediaUrl = req.file.path;
         await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [mediaUrl, userId]);
         res.status(200).json({ message: "Photo update ho gayi!", imageUrl: mediaUrl });
@@ -34,15 +50,26 @@ router.post('/upload/:userId', upload.single('profile_pic'), async (req, res) =>
     }
 });
 
-router.post('/posts/:userId', upload.single('post_image'), async (req, res) => {
+// ─── CREATE POST — AUTH REQUIRED + OWNERSHIP ─────────────────
+router.post('/posts/:userId', authenticateToken, upload.single('post_image'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: "Photo select karna zaroori hai!" });
         const { userId } = req.params;
+
+        if (parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Tum sirf apni post bana sakte ho." });
+        }
+
+        if (!req.file) return res.status(400).json({ error: "Photo select karna zaroori hai!" });
+
         const { caption } = req.body;
+
+        // Sanitize caption — strip any HTML tags
+        const safeCaption = (caption || "").replace(/<[^>]*>/g, '').slice(0, 500);
+
         const mediaUrl = req.file.path;
         const newPost = await pool.query(
             "INSERT INTO posts (user_id, image_url, caption) VALUES ($1, $2, $3) RETURNING *",
-            [userId, mediaUrl, caption || ""]
+            [userId, mediaUrl, safeCaption]
         );
         res.status(201).json({ message: "Post live ho gayi!", post: newPost.rows[0] });
     } catch (err) {
@@ -50,7 +77,8 @@ router.post('/posts/:userId', upload.single('post_image'), async (req, res) => {
     }
 });
 
-router.post('/chat-image', upload.single('image'), (req, res) => {
+// ─── CHAT IMAGE UPLOAD — AUTH REQUIRED ───────────────────────
+router.post('/chat-image', authenticateToken, upload.single('image'), (req, res) => {
     try {
         if (!req.file) return res.status(400).json({ error: "Koi photo select nahi ki!" });
         res.status(200).json({ imageUrl: req.file.path });
@@ -59,6 +87,7 @@ router.post('/chat-image', upload.single('image'), (req, res) => {
     }
 });
 
+// ─── GET POSTS BY USER — Public ───────────────────────────────
 router.get('/posts/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
@@ -69,9 +98,23 @@ router.get('/posts/:userId', async (req, res) => {
     }
 });
 
-router.delete('/posts/:postId', async (req, res) => {
+// ─── DELETE POST — AUTH REQUIRED + OWNERSHIP ─────────────────
+router.delete('/posts/:postId', authenticateToken, async (req, res) => {
     try {
         const { postId } = req.params;
+
+        // Verify the post belongs to the requesting user (or admin can delete any)
+        const postResult = await pool.query("SELECT user_id FROM posts WHERE id = $1", [postId]);
+        if (postResult.rows.length === 0) return res.status(404).json({ error: "Post nahi mili." });
+
+        const postOwnerId = postResult.rows[0].user_id;
+        if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(postOwnerId)) {
+            return res.status(403).json({ error: "Forbidden: Tum sirf apni post delete kar sakte ho." });
+        }
+
+        await pool.query("DELETE FROM likes WHERE post_id = $1", [postId]);
+        await pool.query("DELETE FROM comments WHERE post_id = $1", [postId]);
+        await pool.query("DELETE FROM notifications WHERE post_id = $1", [postId]);
         await pool.query("DELETE FROM posts WHERE id = $1", [postId]);
         res.status(200).json({ message: "Post deleted successfully" });
     } catch (err) {
@@ -79,6 +122,7 @@ router.delete('/posts/:postId', async (req, res) => {
     }
 });
 
+// ─── GET FEED — Public (with optional currentUserId) ─────────
 router.get('/feed', async (req, res) => {
     try {
         const { currentUserId } = req.query;
@@ -102,9 +146,14 @@ router.get('/feed', async (req, res) => {
     }
 });
 
-router.post('/like', async (req, res) => {
+// ─── LIKE / UNLIKE — AUTH REQUIRED ───────────────────────────
+router.post('/like', authenticateToken, async (req, res) => {
     try {
-        const { user_id, post_id } = req.body;
+        const { post_id } = req.body;
+        const user_id = req.user.id; // Always use authenticated user's ID
+
+        if (!post_id) return res.status(400).json({ error: "post_id required hai." });
+
         const checkLike = await pool.query("SELECT * FROM likes WHERE user_id = $1 AND post_id = $2", [user_id, post_id]);
 
         if (checkLike.rows.length > 0) {
@@ -117,7 +166,10 @@ router.post('/like', async (req, res) => {
             const postOwnerId = postOwnerRes.rows[0]?.user_id;
 
             if (postOwnerId && String(postOwnerId) !== String(user_id)) {
-                await pool.query("INSERT INTO notifications (user_id, sender_id, type, post_id) VALUES ($1, $2, 'like', $3)", [postOwnerId, user_id, post_id]);
+                await pool.query(
+                    "INSERT INTO notifications (user_id, sender_id, type, post_id) VALUES ($1, $2, 'like', $3)",
+                    [postOwnerId, user_id, post_id]
+                );
             }
 
             res.status(200).json({ message: "Post liked", isLiked: true });
@@ -127,21 +179,31 @@ router.post('/like', async (req, res) => {
     }
 });
 
-router.post('/comment', async (req, res) => {
+// ─── ADD COMMENT — AUTH REQUIRED ─────────────────────────────
+router.post('/comment', authenticateToken, async (req, res) => {
     try {
-        const { user_id, post_id, text } = req.body;
+        const { post_id, text } = req.body;
+        const user_id = req.user.id; // Always use authenticated user's ID
+
         if (!text || text.trim() === '') return res.status(400).json({ error: "Comment cannot be empty" });
+        if (!post_id) return res.status(400).json({ error: "post_id required hai." });
+
+        // Sanitize comment text
+        const safeText = text.replace(/<[^>]*>/g, '').trim().slice(0, 1000);
 
         const newComment = await pool.query(
             "INSERT INTO comments (user_id, post_id, text) VALUES ($1, $2, $3) RETURNING *",
-            [user_id, post_id, text]
+            [user_id, post_id, safeText]
         );
 
         const postOwnerRes = await pool.query("SELECT user_id FROM posts WHERE id = $1", [post_id]);
         const postOwnerId = postOwnerRes.rows[0]?.user_id;
 
         if (postOwnerId && String(postOwnerId) !== String(user_id)) {
-            await pool.query("INSERT INTO notifications (user_id, sender_id, type, post_id) VALUES ($1, $2, 'comment', $3)", [postOwnerId, user_id, post_id]);
+            await pool.query(
+                "INSERT INTO notifications (user_id, sender_id, type, post_id) VALUES ($1, $2, 'comment', $3)",
+                [postOwnerId, user_id, post_id]
+            );
         }
 
         res.status(201).json(newComment.rows[0]);
@@ -150,6 +212,7 @@ router.post('/comment', async (req, res) => {
     }
 });
 
+// ─── GET COMMENTS — Public ────────────────────────────────────
 router.get('/comments/:postId', async (req, res) => {
     try {
         const { postId } = req.params;
@@ -167,9 +230,16 @@ router.get('/comments/:postId', async (req, res) => {
     }
 });
 
-router.get('/notifications/:userId', async (req, res) => {
+// ─── GET NOTIFICATIONS — AUTH REQUIRED ───────────────────────
+router.get('/notifications/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // Users can only see their own notifications
+        if (parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Sirf apni notifications dekh sakte ho." });
+        }
+
         const notifQuery = `
             SELECT n.id, n.type, n.post_id, n.is_read, n.created_at,
                    u.name as sender_name, u.profile_pic as sender_pic,

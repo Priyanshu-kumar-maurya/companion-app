@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 import Footer from "./Footer";
+import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
+import { FaRegComment, FaInbox } from "react-icons/fa";
+import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
+import { BsBookmarkFill, BsBookmark, BsArrowRightCircle, BsGenderFemale, BsGenderMale } from "react-icons/bs";
+import { HiSparkles } from "react-icons/hi";
 
 function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [feed, setFeed] = useState([]);
@@ -97,10 +102,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         }));
 
         try {
+            const token = localStorage.getItem("token");
             await fetch("https://rentgf-and-bf.onrender.com/api/like", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: currentUser.id, post_id: postId })
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ post_id: postId })
             });
         } catch (err) {
             console.error(err);
@@ -125,9 +134,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         }));
 
         try {
+            const token = localStorage.getItem("token");
             await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     follower_id: currentUser.id,
                     following_id: targetUserId
@@ -162,15 +175,18 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         if (!newComment.trim() || !currentUser || !commentModal.postId) return;
 
         const commentData = {
-            user_id: currentUser.id,
             post_id: commentModal.postId,
             text: newComment
         };
 
         try {
+            const token = localStorage.getItem("token");
             const res = await fetch("https://rentgf-and-bf.onrender.com/api/comment", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(commentData)
             });
 
@@ -253,11 +269,11 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 <div className="w-full max-w-lg flex flex-col gap-6 px-4">
                     {loading ? (
                         <div className="flex justify-center items-center h-64">
-                            <span className="text-4xl animate-spin">🌀</span>
+                            <RiLoader4Line className="text-pink-500 text-5xl animate-spin" />
                         </div>
                     ) : feed.length === 0 ? (
                         <div className="text-center py-20 bg-[#16162A] rounded-2xl border border-white/5">
-                            <span className="text-5xl mb-4 block">📭</span>
+                            <FaInbox className="text-5xl text-gray-500 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-white mb-2">No Posts Yet</h3>
                             <p className="text-gray-400">Be the first to share a moment!</p>
                         </div>
@@ -307,17 +323,23 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                                 onClick={() => handleLike(post.id, post.is_liked_by_me)}
                                                 className="text-2xl hover:scale-110 transition active:scale-90"
                                             >
-                                                {post.is_liked_by_me ? "❤️" : "🤍"}
+                                                {post.is_liked_by_me
+                                                    ? <AiFillHeart className="text-pink-500 text-2xl" />
+                                                    : <AiOutlineHeart className="text-white text-2xl" />
+                                                }
                                             </button>
-                                            <button onClick={() => openComments(post.id)} className="text-2xl hover:scale-110 transition active:scale-90 opacity-90">
-                                                💬
+                                            <button onClick={() => openComments(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
+                                                <FaRegComment className="text-white text-2xl" />
                                             </button>
-                                            <button onClick={() => handleShare(post.id)} className="text-2xl hover:scale-110 transition active:scale-90 opacity-90">
-                                                ↗️
+                                            <button onClick={() => handleShare(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
+                                                <RiShareForwardLine className="text-white text-2xl" />
                                             </button>
                                         </div>
-                                        <button onClick={() => toggleSave(post.id)} className="text-2xl hover:scale-110 transition active:scale-90 opacity-90">
-                                            {savedPosts.includes(post.id) ? "📥" : "🔖"}
+                                        <button onClick={() => toggleSave(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
+                                            {savedPosts.includes(post.id)
+                                                ? <BsBookmarkFill className="text-pink-400 text-xl" />
+                                                : <BsBookmark className="text-white text-xl" />
+                                            }
                                         </button>
                                     </div>
 
@@ -356,7 +378,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
                             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                                 {loadingComments ? (
-                                    <div className="text-center text-gray-500 my-10">Loading comments...</div>
+                                    <div className="flex justify-center items-center my-10">
+                                        <RiLoader4Line className="text-pink-500 text-3xl animate-spin" />
+                                    </div>
                                 ) : commentModal.comments.length === 0 ? (
                                     <div className="text-center text-gray-500 my-10">No comments yet. Be the first!</div>
                                 ) : (
@@ -407,8 +431,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-pink-600/20 rounded-full blur-[100px] pointer-events-none"></div>
                 <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-                <div className="inline-block px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-pink-400 text-sm font-semibold mb-6 shadow-[0_0_15px_rgba(236,72,153,0.15)] relative z-10">
-                    ✨ India's #1 Companion App
+                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-pink-400 text-sm font-semibold mb-6 shadow-[0_0_15px_rgba(236,72,153,0.15)] relative z-10">
+                    <HiSparkles className="text-base" />
+                    India's #1 Companion App
                 </div>
 
                 <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight relative z-10">
@@ -426,7 +451,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     <div className="flex flex-col items-center w-full max-w-2xl mx-auto">
                         <div className="flex flex-col sm:flex-row gap-6 w-full mb-8">
                             <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-pink-500/20 rounded-2xl shadow-lg hover:border-pink-500/50 transition duration-300">
-                                <h3 className="text-pink-400 font-bold text-xl">For Girls 👩</h3>
+                                <h3 className="text-pink-400 font-bold text-xl flex items-center gap-2">
+                                    <BsGenderFemale className="text-2xl" /> For Girls
+                                </h3>
                                 <p className="text-sm text-gray-400 mb-2 flex-grow">Earn money by spending time as a companion.</p>
                                 <button
                                     onClick={() => setPage(PAGES.GIRL_REGISTER)}
@@ -437,8 +464,10 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             </div>
 
                             <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-blue-500/20 rounded-2xl shadow-lg hover:border-blue-500/50 transition duration-300">
-                                <h3 className="text-blue-400 font-bold text-xl">For Boys 👨</h3>
-                                <p className="text-sm text-gray-400 mb-2 flex-grow">Find companions for dates, events & hangouts.</p>
+                                <h3 className="text-blue-400 font-bold text-xl flex items-center gap-2">
+                                    <BsGenderMale className="text-2xl" /> For Boys
+                                </h3>
+                                <p className="text-sm text-gray-400 mb-2 flex-grow">Find companions for dates, events &amp; hangouts.</p>
                                 <button
                                     onClick={() => setPage(PAGES.BOY_REGISTER)}
                                     className="w-full px-6 py-3.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
@@ -454,7 +483,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 onClick={() => setPage(PAGES.BOY_LOGIN)}
                                 className="text-white font-bold text-lg hover:text-pink-400 transition flex items-center justify-center gap-2 w-full"
                             >
-                                Login to your account <span className="text-xl">➔</span>
+                                Login to your account <BsArrowRightCircle className="text-xl" />
                             </button>
                         </div>
                     </div>
@@ -468,7 +497,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-10 text-pink-500 animate-pulse">Loading live statistics...</div>
+                    <div className="flex justify-center items-center py-10">
+                        <RiLoader4Line className="text-pink-500 text-4xl animate-spin" />
+                    </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300">
