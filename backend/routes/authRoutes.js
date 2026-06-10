@@ -20,15 +20,15 @@ router.post('/register', authRateLimit, async (req, res) => {
         const { name, email, password, role, phone } = req.body;
 
         // Input validation
-        if (!name || !name.trim()) return res.status(400).json({ error: "Name required hai." });
-        if (!validateEmail(email)) return res.status(400).json({ error: "Valid email address dalo." });
-        if (!validatePassword(password)) return res.status(400).json({ error: "Password kam se kam 6 characters ka hona chahiye." });
-        if (!role || !['boy', 'girl'].includes(role)) return res.status(400).json({ error: "Valid role select karo (boy/girl)." });
+        if (!name || !name.trim()) return res.status(400).json({ error: "Name is required." });
+        if (!validateEmail(email)) return res.status(400).json({ error: "Please enter a valid email address." });
+        if (!validatePassword(password)) return res.status(400).json({ error: "Password must be at least 6 characters." });
+        if (!role || !['boy', 'girl'].includes(role)) return res.status(400).json({ error: "Please select a valid role (boy/girl)." });
 
         // Check if email already exists
         const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
         if (existingUser.rows.length > 0) {
-            return res.status(409).json({ error: "Ye email already registered hai. Login karo." });
+            return res.status(409).json({ error: "This email is already registered. Please login." });
         }
 
         // Hash password
@@ -47,12 +47,13 @@ router.post('/register', authRateLimit, async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        res.status(201).json({ message: "Registration successful! 🎉", token, user });
+        res.status(201).json({ message: "Registration successful!", token, user });
     } catch (err) {
         console.error("Register error:", err);
-        res.status(500).json({ error: "Server error. Dobara try karo." });
+        res.status(500).json({ error: "Server error. Please try again." });
     }
 });
+
 
 // ─── LOGIN ───────────────────────────────────────────────────
 router.post('/login', authRateLimit, async (req, res) => {
@@ -61,8 +62,8 @@ router.post('/login', authRateLimit, async (req, res) => {
         const emailOrPhone = req.body.email || req.body.emailOrPhone;
         const { password } = req.body;
 
-        if (!emailOrPhone) return res.status(400).json({ error: "Email ya phone number dalo." });
-        if (!password) return res.status(400).json({ error: "Password dalo." });
+        if (!emailOrPhone) return res.status(400).json({ error: "Please enter your email or phone number." });
+        if (!password) return res.status(400).json({ error: "Please enter your password." });
 
         // Find user by email OR phone
         const userResult = await pool.query(
@@ -70,7 +71,7 @@ router.post('/login', authRateLimit, async (req, res) => {
             [emailOrPhone.toLowerCase().trim()]
         );
         if (userResult.rows.length === 0) {
-            return res.status(401).json({ error: "Email/Phone ya password galat hai." });
+            return res.status(401).json({ error: "Incorrect email/phone or password." });
         }
 
         const user = userResult.rows[0];
@@ -91,7 +92,7 @@ router.post('/login', authRateLimit, async (req, res) => {
         }
 
         if (!isPasswordValid) {
-            return res.status(401).json({ error: "Email/Phone ya password galat hai." });
+            return res.status(401).json({ error: "Incorrect email/phone or password." });
         }
 
         // Generate JWT
@@ -115,7 +116,7 @@ router.post('/login', authRateLimit, async (req, res) => {
         });
     } catch (err) {
         console.error("Login error:", err);
-        res.status(500).json({ error: "Server error. Dobara try karo." });
+        res.status(500).json({ error: "Server error. Please try again." });
     }
 });
 
@@ -125,7 +126,7 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
         const { email } = req.body;
 
         if (!email || !validateEmail(email)) {
-            return res.status(400).json({ error: "Valid email dalo." });
+            return res.status(400).json({ error: "Please enter a valid email address." });
         }
 
         const userResult = await pool.query(
@@ -133,15 +134,12 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
             [email.toLowerCase().trim()]
         );
         if (userResult.rows.length === 0) {
-            // Generic message — don't reveal if email exists
-            return res.status(200).json({ message: "Agar ye email registered hai toh OTP bhej diya gaya hai." });
+            return res.status(200).json({ message: "If this email is registered, an OTP has been sent." });
         }
 
         const user = userResult.rows[0];
-
-        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
         await pool.query(
             "UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3",
@@ -188,49 +186,47 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
             `
         });
 
-        res.status(200).json({ message: "Password reset OTP bhej diya gaya! Email check karo." });
+        res.status(200).json({ message: "OTP sent successfully! Please check your email." });
     } catch (err) {
-        console.error("Forgot password error:", err);
-        res.status(500).json({ error: "OTP send karne mein error. Dobara try karo." });
+        console.error("Forgot password error — Full details:", err.message, err.code);
+        res.status(500).json({ error: "Failed to send OTP. Please check your email and try again. (" + (err.code || err.message) + ")" });
     }
 });
 
-// ─── RESET PASSWORD (Verify OTP + Set New Password) ───────────
+// ─── RESET PASSWORD ───────────────────────────────────────────
 router.post('/reset-password', authRateLimit, async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
 
-        if (!email || !validateEmail(email)) return res.status(400).json({ error: "Valid email dalo." });
-        if (!otp) return res.status(400).json({ error: "OTP dalo." });
-        if (!newPassword || newPassword.length < 5) return res.status(400).json({ error: "Naya password kam se kam 5 characters ka hona chahiye." });
+        if (!email || !validateEmail(email)) return res.status(400).json({ error: "Please enter a valid email." });
+        if (!otp) return res.status(400).json({ error: "Please enter the OTP." });
+        if (!newPassword || newPassword.length < 5) return res.status(400).json({ error: "New password must be at least 5 characters." });
 
         const userResult = await pool.query(
             "SELECT id, otp, otp_expiry FROM users WHERE email = $1",
             [email.toLowerCase().trim()]
         );
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: "Account nahi mila." });
-        }
+        if (userResult.rows.length === 0) return res.status(404).json({ error: "Account not found." });
 
         const user = userResult.rows[0];
 
-        if (!user.otp) return res.status(400).json({ error: "Pehle OTP request karo." });
-        if (new Date() > new Date(user.otp_expiry)) return res.status(400).json({ error: "OTP expire ho gaya. Naya OTP mangao." });
-        if (user.otp !== otp.toString()) return res.status(400).json({ error: "Galat OTP. Dobara check karo." });
+        if (!user.otp) return res.status(400).json({ error: "Please request an OTP first." });
+        if (new Date() > new Date(user.otp_expiry)) return res.status(400).json({ error: "OTP has expired. Please request a new one." });
+        if (user.otp !== otp.toString()) return res.status(400).json({ error: "Incorrect OTP. Please try again." });
 
-        // Hash new password and clear OTP
         const hashedPassword = await bcrypt.hash(newPassword, 12);
         await pool.query(
             "UPDATE users SET password = $1, otp = NULL, otp_expiry = NULL WHERE id = $2",
             [hashedPassword, user.id]
         );
 
-        res.status(200).json({ message: "Password successfully reset ho gaya! Ab login karo." });
+        res.status(200).json({ message: "Password reset successfully! Please login with your new password." });
     } catch (err) {
         console.error("Reset password error:", err);
-        res.status(500).json({ error: "Password reset karne mein error. Dobara try karo." });
+        res.status(500).json({ error: "Failed to reset password. Please try again." });
     }
 });
+
 
 // ─── SEND OTP ────────────────────────────────────────────────
 router.post('/send-otp', async (req, res) => {

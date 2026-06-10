@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
 
-// Step 1: Login form
-// Step 2: Forgot Password - enter email
-// Step 3: Enter OTP + New Password
-
 function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
     const [step, setStep] = useState("login"); // "login" | "forgot" | "reset"
     const [formData, setFormData] = useState({ emailOrPhone: "", password: "" });
@@ -71,10 +67,10 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
 
             const data = await response.json();
             if (response.ok) {
-                setSuccess("OTP bhej diya gaya! Apna email check karo.");
+                setSuccess("OTP sent! Please check your email.");
                 setTimeout(() => { setSuccess(""); setStep("reset"); }, 1500);
             } else {
-                setError(data.error || "Kuch galat hua. Dobara try karo.");
+                setError(data.error || "Something went wrong. Please try again.");
             }
         } catch (err) {
             setError("Server error. Please try again.");
@@ -91,12 +87,12 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
         setSuccess("");
 
         if (resetData.newPassword !== resetData.confirmPassword) {
-            setError("Dono passwords match nahi kar rahe.");
+            setError("Passwords do not match.");
             setLoading(false);
             return;
         }
         if (resetData.newPassword.length < 5) {
-            setError("Password kam se kam 5 characters ka hona chahiye.");
+            setError("Password must be at least 5 characters.");
             setLoading(false);
             return;
         }
@@ -114,7 +110,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
 
             const data = await response.json();
             if (response.ok) {
-                setSuccess("Password reset ho gaya! Ab login karo.");
+                setSuccess("Password reset successfully! Please login.");
                 setTimeout(() => {
                     setStep("login");
                     setForgotEmail("");
@@ -122,7 +118,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                     setSuccess("");
                 }, 2000);
             } else {
-                setError(data.error || "Password reset fail. Dobara try karo.");
+                setError(data.error || "Password reset failed. Please try again.");
             }
         } catch (err) {
             setError("Server error. Please try again.");
@@ -147,7 +143,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
 
                         <form onSubmit={handleLogin} className="space-y-4">
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Email OR Phone Number</label>
+                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Email or Phone Number</label>
                                 <input
                                     type="text"
                                     name="emailOrPhone"
@@ -171,14 +167,13 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                                 />
                             </div>
 
-                            {/* Forgot Password Link */}
                             <div className="text-right">
                                 <button
                                     type="button"
                                     onClick={() => { setStep("forgot"); setError(""); }}
                                     className="text-xs text-purple-400 hover:text-purple-300 transition hover:underline"
                                 >
-                                    Password bhool gaye?
+                                    Forgot Password?
                                 </button>
                             </div>
 
@@ -204,8 +199,8 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                         <button onClick={() => { setStep("login"); setError(""); setSuccess(""); }} className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-1 transition">
                             ← Back to Login
                         </button>
-                        <h2 className="text-2xl font-extrabold text-white mb-2">Password Reset</h2>
-                        <p className="text-gray-400 text-sm mb-6">Apna registered email dalo — hum OTP bhejenge.</p>
+                        <h2 className="text-2xl font-extrabold text-white mb-2">Reset Password</h2>
+                        <p className="text-gray-400 text-sm mb-6">Enter your registered email — we'll send you an OTP.</p>
 
                         {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
                         {success && <div className="bg-green-500/10 border border-green-500/50 text-green-400 text-sm p-3 rounded-xl mb-4 text-center">{success}</div>}
@@ -223,13 +218,13 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                                 />
                             </div>
                             <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-pink-500 to-purple-500 disabled:opacity-60">
-                                {loading ? "OTP bhej rahe hain..." : "OTP Bhejo"}
+                                {loading ? "Sending OTP..." : "Send OTP"}
                             </button>
                         </form>
 
                         <div className="mt-4 text-center">
                             <button onClick={() => { setStep("reset"); setError(""); }} className="text-xs text-gray-500 hover:text-purple-400 transition">
-                                OTP already mila hai? Reset karo →
+                                Already have an OTP? Reset now →
                             </button>
                         </div>
                     </>
@@ -241,8 +236,8 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                         <button onClick={() => { setStep("forgot"); setError(""); setSuccess(""); }} className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-1 transition">
                             ← Back
                         </button>
-                        <h2 className="text-2xl font-extrabold text-white mb-2">New Password Set Karo</h2>
-                        <p className="text-gray-400 text-sm mb-6">Email mein aaya OTP aur naya password dalo.</p>
+                        <h2 className="text-2xl font-extrabold text-white mb-2">Set New Password</h2>
+                        <p className="text-gray-400 text-sm mb-6">Enter the OTP from your email and choose a new password.</p>
 
                         {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
                         {success && <div className="bg-green-500/10 border border-green-500/50 text-green-400 text-sm p-3 rounded-xl mb-4 text-center">{success}</div>}
@@ -262,7 +257,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                                 </div>
                             )}
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">OTP Code (Email se)</label>
+                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">OTP Code (from email)</label>
                                 <input
                                     type="text"
                                     required
@@ -274,30 +269,30 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Naya Password</label>
+                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">New Password</label>
                                 <input
                                     type="password"
                                     required
                                     value={resetData.newPassword}
                                     onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
                                     className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
-                                    placeholder="Naya strong password"
+                                    placeholder="Create a strong password"
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Password Confirm Karo</label>
+                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Confirm Password</label>
                                 <input
                                     type="password"
                                     required
                                     value={resetData.confirmPassword}
                                     onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
                                     className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
-                                    placeholder="Same password dubara likho"
+                                    placeholder="Repeat your password"
                                 />
                             </div>
 
                             <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-green-500 to-teal-500 disabled:opacity-60">
-                                {loading ? "Password reset ho raha hai..." : "Password Reset Karo ✓"}
+                                {loading ? "Resetting password..." : "Reset Password"}
                             </button>
                         </form>
                     </>
