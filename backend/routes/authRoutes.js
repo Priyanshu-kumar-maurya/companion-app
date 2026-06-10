@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const { pool } = require('../config/db');
 const rateLimiter = require('../middleware/rateLimiter');
 
@@ -56,25 +57,41 @@ router.post('/register', authRateLimit, async (req, res) => {
 // ─── LOGIN ───────────────────────────────────────────────────
 router.post('/login', authRateLimit, async (req, res) => {
     try {
-        const { email, password } = req.body;
+        // Support both 'email' and 'emailOrPhone' field names from frontend
+        const emailOrPhone = req.body.email || req.body.emailOrPhone;
+        const { password } = req.body;
 
-        // Input validation
-        if (!validateEmail(email)) return res.status(400).json({ error: "Valid email dalo." });
+        if (!emailOrPhone) return res.status(400).json({ error: "Email ya phone number dalo." });
         if (!password) return res.status(400).json({ error: "Password dalo." });
 
-        // Find user
-        const userResult = await pool.query("SELECT * FROM users WHERE email = $1", [email.toLowerCase()]);
+        // Find user by email OR phone
+        const userResult = await pool.query(
+            "SELECT * FROM users WHERE email = $1 OR phone = $1",
+            [emailOrPhone.toLowerCase().trim()]
+        );
         if (userResult.rows.length === 0) {
-            // Generic message to prevent user enumeration
-            return res.status(401).json({ error: "Email ya password galat hai." });
+            return res.status(401).json({ error: "Email/Phone ya password galat hai." });
         }
 
         const user = userResult.rows[0];
 
-        // Verify password
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        // Verify password — supports both bcrypt hashed AND old plain-text passwords
+        let isPasswordValid = false;
+        if (user.password && user.password.startsWith('$2')) {
+            // bcrypt hashed password
+            isPasswordValid = await bcrypt.compare(password, user.password);
+        } else {
+            // Old plain-text password (legacy users)
+            isPasswordValid = (password === user.password);
+            if (isPasswordValid) {
+                // Auto-upgrade to bcrypt on successful login
+                const hashed = await bcrypt.hash(password, 12);
+                await pool.query("UPDATE users SET password = $1 WHERE id = $2", [hashed, user.id]);
+            }
+        }
+
         if (!isPasswordValid) {
-            return res.status(401).json({ error: "Email ya password galat hai." });
+            return res.status(401).json({ error: "Email/Phone ya password galat hai." });
         }
 
         // Generate JWT
@@ -99,6 +116,284 @@ router.post('/login', authRateLimit, async (req, res) => {
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Server error. Dobara try karo." });
+    }
+});
+
+// ─── FORGOT PASSWORD (Send OTP) ───────────────────────────────
+router.post('/forgot-password', authRateLimit, async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || !validateEmail(email)) {
+            return res.status(400).json({ error: "Valid email dalo." });
+        }
+
+        const userResult = await pool.query(
+            "SELECT id, name FROM users WHERE email = $1",
+            [email.toLowerCase().trim()]
+        );
+        if (userResult.rows.length === 0) {
+            // Generic message — don't reveal if email exists
+            return res.status(200).json({ message: "Agar ye email registered hai toh OTP bhej diya gaya hai." });
+        }
+
+        const user = userResult.rows[0];
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        await pool.query(
+            "UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3",
+            [otp, otpExpiry, user.id]
+        );
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+        });
+
+        await transporter.sendMail({
+            from: `"RentGF" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'RentGF — Password Reset Code',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <body style="margin:0;padding:0;background:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:40px 0;">
+                        <tr><td align="center">
+                            <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+                                <tr><td style="background:linear-gradient(135deg,#e91e8c,#ff6b6b);padding:36px 40px;text-align:center;">
+                                    <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">RentGF</h1>
+                                    <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Password Reset</p>
+                                </td></tr>
+                                <tr><td style="padding:40px;">
+                                    <p style="margin:0 0 16px;color:#333;font-size:16px;">Hi <strong>${user.name}</strong>,</p>
+                                    <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6;">Tumne password reset request ki hai. Niche diya OTP use karo. Ye code <strong>10 minutes</strong> mein expire ho jayega.</p>
+                                    <div style="background:linear-gradient(135deg,#fff0f6,#ffe4f0);border:2px solid #f48fb1;border-radius:12px;padding:28px;text-align:center;margin-bottom:24px;">
+                                        <p style="margin:0 0 8px;color:#c2185b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Reset OTP</p>
+                                        <p style="margin:0;color:#e91e8c;font-size:48px;font-weight:900;letter-spacing:12px;font-family:'Courier New',monospace;">${otp}</p>
+                                    </div>
+                                    <p style="margin:0;color:#aaa;font-size:12px;text-align:center;">Agar tumne ye request nahi ki, toh is email ko ignore karo.</p>
+                                </td></tr>
+                                <tr><td style="background:#fafafa;padding:20px 40px;border-top:1px solid #eee;text-align:center;">
+                                    <p style="margin:0;color:#bbb;font-size:12px;">© 2024 RentGF · All rights reserved</p>
+                                </td></tr>
+                            </table>
+                        </td></tr>
+                    </table>
+                </body>
+                </html>
+            `
+        });
+
+        res.status(200).json({ message: "Password reset OTP bhej diya gaya! Email check karo." });
+    } catch (err) {
+        console.error("Forgot password error:", err);
+        res.status(500).json({ error: "OTP send karne mein error. Dobara try karo." });
+    }
+});
+
+// ─── RESET PASSWORD (Verify OTP + Set New Password) ───────────
+router.post('/reset-password', authRateLimit, async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        if (!email || !validateEmail(email)) return res.status(400).json({ error: "Valid email dalo." });
+        if (!otp) return res.status(400).json({ error: "OTP dalo." });
+        if (!newPassword || newPassword.length < 5) return res.status(400).json({ error: "Naya password kam se kam 5 characters ka hona chahiye." });
+
+        const userResult = await pool.query(
+            "SELECT id, otp, otp_expiry FROM users WHERE email = $1",
+            [email.toLowerCase().trim()]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: "Account nahi mila." });
+        }
+
+        const user = userResult.rows[0];
+
+        if (!user.otp) return res.status(400).json({ error: "Pehle OTP request karo." });
+        if (new Date() > new Date(user.otp_expiry)) return res.status(400).json({ error: "OTP expire ho gaya. Naya OTP mangao." });
+        if (user.otp !== otp.toString()) return res.status(400).json({ error: "Galat OTP. Dobara check karo." });
+
+        // Hash new password and clear OTP
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await pool.query(
+            "UPDATE users SET password = $1, otp = NULL, otp_expiry = NULL WHERE id = $2",
+            [hashedPassword, user.id]
+        );
+
+        res.status(200).json({ message: "Password successfully reset ho gaya! Ab login karo." });
+    } catch (err) {
+        console.error("Reset password error:", err);
+        res.status(500).json({ error: "Password reset karne mein error. Dobara try karo." });
+    }
+});
+
+// ─── SEND OTP ────────────────────────────────────────────────
+router.post('/send-otp', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email || !validateEmail(email)) {
+            return res.status(400).json({ error: "Valid email dalo." });
+        }
+
+        // Find user by email
+        const userResult = await pool.query("SELECT id, name FROM users WHERE email = $1", [email.toLowerCase()]);
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: "Is email se koi account nahi mila." });
+        }
+
+        const user = userResult.rows[0];
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+        // Store OTP and expiry in DB
+        await pool.query(
+            "UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3",
+            [otp, otpExpiry, user.id]
+        );
+
+        // Configure nodemailer transporter
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        // HTML email template
+        const mailOptions = {
+            from: `"RentGF" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Your RentGF Verification Code',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                </head>
+                <body style="margin:0; padding:0; background-color:#f4f4f4; font-family: 'Segoe UI', Arial, sans-serif;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4; padding: 40px 0;">
+                        <tr>
+                            <td align="center">
+                                <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:16px; overflow:hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.10);">
+                                    <!-- Header -->
+                                    <tr>
+                                        <td style="background: linear-gradient(135deg, #e91e8c, #ff6b6b); padding: 36px 40px; text-align:center;">
+                                            <h1 style="margin:0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:1px;">💕 RentGF</h1>
+                                            <p style="margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">Email Verification</p>
+                                        </td>
+                                    </tr>
+                                    <!-- Body -->
+                                    <tr>
+                                        <td style="padding: 40px 40px 32px;">
+                                            <p style="margin:0 0 16px; color:#333333; font-size:16px;">Hi <strong>${user.name}</strong>,</p>
+                                            <p style="margin:0 0 28px; color:#555555; font-size:15px; line-height:1.6;">Use the verification code below to complete your sign-in. This code is valid for <strong>10 minutes</strong>.</p>
+                                            <!-- OTP Box -->
+                                            <div style="background: linear-gradient(135deg, #fff0f6, #ffe4f0); border: 2px solid #f48fb1; border-radius:12px; padding: 28px; text-align:center; margin-bottom:28px;">
+                                                <p style="margin:0 0 8px; color:#c2185b; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Your OTP Code</p>
+                                                <p style="margin:0; color:#e91e8c; font-size:48px; font-weight:900; letter-spacing:12px; font-family: 'Courier New', monospace;">${otp}</p>
+                                            </div>
+                                            <p style="margin:0 0 8px; color:#888888; font-size:13px; text-align:center;">⏱️ This code expires in <strong>10 minutes</strong>.</p>
+                                            <p style="margin:0; color:#aaaaaa; font-size:12px; text-align:center;">If you didn't request this, please ignore this email.</p>
+                                        </td>
+                                    </tr>
+                                    <!-- Footer -->
+                                    <tr>
+                                        <td style="background:#fafafa; padding: 20px 40px; border-top: 1px solid #eeeeee; text-align:center;">
+                                            <p style="margin:0; color:#bbbbbb; font-size:12px;">© 2024 RentGF · All rights reserved</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+                </html>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({ message: "OTP sent successfully! Email check karo. 📧" });
+    } catch (err) {
+        console.error("Send OTP error:", err);
+        res.status(500).json({ error: "OTP send karne mein error. Dobara try karo." });
+    }
+});
+
+// ─── VERIFY OTP ──────────────────────────────────────────────
+router.post('/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !validateEmail(email)) {
+            return res.status(400).json({ error: "Valid email dalo." });
+        }
+        if (!otp) {
+            return res.status(400).json({ error: "OTP dalo." });
+        }
+
+        // Find user by email
+        const userResult = await pool.query(
+            "SELECT id, name, email, role, otp, otp_expiry FROM users WHERE email = $1",
+            [email.toLowerCase()]
+        );
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: "Is email se koi account nahi mila." });
+        }
+
+        const user = userResult.rows[0];
+
+        // Check OTP exists
+        if (!user.otp) {
+            return res.status(400).json({ error: "Pehle OTP request karo." });
+        }
+
+        // Check OTP not expired
+        if (new Date() > new Date(user.otp_expiry)) {
+            return res.status(400).json({ error: "OTP expire ho gaya. Naya OTP request karo." });
+        }
+
+        // Check OTP matches
+        if (user.otp !== otp.toString()) {
+            return res.status(400).json({ error: "Galat OTP hai. Dobara check karo." });
+        }
+
+        // Mark verified and clear OTP fields
+        await pool.query(
+            "UPDATE users SET is_verified = true, otp = NULL, otp_expiry = NULL WHERE id = $1",
+            [user.id]
+        );
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        res.status(200).json({
+            message: "Email verified! Welcome to RentGF 🎉",
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (err) {
+        console.error("Verify OTP error:", err);
+        res.status(500).json({ error: "OTP verify karne mein error. Dobara try karo." });
     }
 });
 

@@ -179,4 +179,40 @@ router.get('/girl/stats/:userId', authenticateToken, async (req, res) => {
     }
 });
 
+// 9. Get Followers List — Public
+router.get('/followers-list/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query(`
+            SELECT u.id, u.name, u.profile_pic, u.role
+            FROM follows f
+            JOIN users u ON f.follower_id = u.id
+            WHERE f.following_id = $1
+            ORDER BY f.created_at DESC
+        `, [userId]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Followers list error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 10. Get Following List — Public
+router.get('/following-list/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query(`
+            SELECT u.id, u.name, u.profile_pic, u.role
+            FROM follows f
+            JOIN users u ON f.following_id = u.id
+            WHERE f.follower_id = $1
+            ORDER BY f.created_at DESC
+        `, [userId]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Following list error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;
