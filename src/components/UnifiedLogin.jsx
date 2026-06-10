@@ -58,22 +58,32 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
         setError("");
         setSuccess("");
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
         try {
             const response = await fetch("https://rentgf-and-bf.onrender.com/api/forgot-password", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: forgotEmail })
+                body: JSON.stringify({ email: forgotEmail }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             const data = await response.json();
             if (response.ok) {
-                setSuccess("OTP sent! Please check your email.");
-                setTimeout(() => { setSuccess(""); setStep("reset"); }, 1500);
+                setSuccess("OTP sent! Please check your email inbox and spam folder.");
+                setTimeout(() => { setSuccess(""); setStep("reset"); }, 2000);
             } else {
                 setError(data.error || "Something went wrong. Please try again.");
             }
         } catch (err) {
-            setError("Server error. Please try again.");
+            clearTimeout(timeoutId);
+            if (err.name === "AbortError") {
+                setError("Request timed out. The server may be starting up — please wait 30 seconds and try again.");
+            } else {
+                setError("Server error. Please try again.");
+            }
         } finally {
             setLoading(false);
         }
