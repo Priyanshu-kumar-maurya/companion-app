@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { pool } = require('../config/db');
 const rateLimiter = require('../middleware/rateLimiter');
 
@@ -146,14 +146,11 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
             [otp, otpExpiry, user.id]
         );
 
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-        });
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-        await transporter.sendMail({
-            from: `"RentGF" <${process.env.EMAIL_USER}>`,
-            to: email,
+        await resend.emails.send({
+            from: 'RentGF <onboarding@resend.dev>',
+            to: [email],
             subject: 'RentGF — Password Reset Code',
             html: `
                 <!DOCTYPE html>
@@ -168,15 +165,15 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
                                 </td></tr>
                                 <tr><td style="padding:40px;">
                                     <p style="margin:0 0 16px;color:#333;font-size:16px;">Hi <strong>${user.name}</strong>,</p>
-                                    <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6;">Tumne password reset request ki hai. Niche diya OTP use karo. Ye code <strong>10 minutes</strong> mein expire ho jayega.</p>
+                                    <p style="margin:0 0 24px;color:#555;font-size:15px;line-height:1.6;">You requested a password reset. Use the OTP below. This code expires in <strong>10 minutes</strong>.</p>
                                     <div style="background:linear-gradient(135deg,#fff0f6,#ffe4f0);border:2px solid #f48fb1;border-radius:12px;padding:28px;text-align:center;margin-bottom:24px;">
                                         <p style="margin:0 0 8px;color:#c2185b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Reset OTP</p>
                                         <p style="margin:0;color:#e91e8c;font-size:48px;font-weight:900;letter-spacing:12px;font-family:'Courier New',monospace;">${otp}</p>
                                     </div>
-                                    <p style="margin:0;color:#aaa;font-size:12px;text-align:center;">Agar tumne ye request nahi ki, toh is email ko ignore karo.</p>
+                                    <p style="margin:0;color:#aaa;font-size:12px;text-align:center;">If you did not request this, please ignore this email.</p>
                                 </td></tr>
                                 <tr><td style="background:#fafafa;padding:20px 40px;border-top:1px solid #eee;text-align:center;">
-                                    <p style="margin:0;color:#bbb;font-size:12px;">© 2024 RentGF · All rights reserved</p>
+                                    <p style="margin:0;color:#bbb;font-size:12px;">&copy; 2024 RentGF &middot; All rights reserved</p>
                                 </td></tr>
                             </table>
                         </td></tr>
@@ -188,8 +185,8 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
 
         res.status(200).json({ message: "OTP sent successfully! Please check your email." });
     } catch (err) {
-        console.error("Forgot password error — Full details:", err.message, err.code);
-        res.status(500).json({ error: "Failed to send OTP. Please check your email and try again. (" + (err.code || err.message) + ")" });
+        console.error("Forgot password error — Full details:", err.message, err);
+        res.status(500).json({ error: "Failed to send OTP. Please try again." });
     }
 });
 
