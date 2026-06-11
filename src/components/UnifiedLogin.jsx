@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
 
-function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
+function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole }) {
     const [step, setStep] = useState("login"); // "login" | "forgot" | "reset"
     const [formData, setFormData] = useState({ emailOrPhone: "", password: "" });
     const [forgotEmail, setForgotEmail] = useState("");
@@ -37,6 +37,9 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser }) {
                 if (data.user.role === 'girl') {
                     if (setGirlUser) setGirlUser(data.user);
                     setPage(PAGES.GIRL_DASHBOARD);
+                } else if (data.user.role === 'admin') {
+                    if (setAdminUser) setAdminUser(data.user);
+                    setPage(PAGES.ADMIN_DASHBOARD);
                 } else {
                     if (setBoyUser) setBoyUser(data.user);
                     setPage(PAGES.BOY_DASHBOARD);

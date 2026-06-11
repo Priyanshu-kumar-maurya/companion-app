@@ -135,9 +135,9 @@ function App() {
       case PAGES.NOTIFICATIONS:
         return currentUser ? <NotificationsPage currentUser={currentUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} />;
       case PAGES.GIRL_LOGIN:
-        return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
+        return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} setAdminUser={setAdminUser} defaultRole="girl" />;
       case PAGES.BOY_LOGIN:
-        return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="boy" />;
+        return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} setAdminUser={setAdminUser} defaultRole="boy" />;
       case PAGES.GIRL_REGISTER:
       case PAGES.BOY_REGISTER:
         return <UnifiedRegister setPage={setPage} />;

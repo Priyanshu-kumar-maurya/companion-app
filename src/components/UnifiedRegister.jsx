@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 function UnifiedRegister({ setPage }) {
     const [formData, setFormData] = useState({
@@ -141,14 +142,14 @@ function UnifiedRegister({ setPage }) {
                                 value={formData.password}
                                 onChange={handleChange}
                                 className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
-                                placeholder="••••••••"
+                                placeholder="Enter your password"
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition text-lg select-none"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
                             >
-                                {showPassword ? "🙈" : "👁️"}
+                                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                             </button>
                         </div>
                     </div>
