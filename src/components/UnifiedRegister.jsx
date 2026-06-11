@@ -6,6 +6,7 @@ function UnifiedRegister({ setPage }) {
         name: "", email: "", phone: "", dob: "", password: "", role: "boy"
     });
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const [showOtpModal, setShowOtpModal] = useState(false);
     const [otp, setOtp] = useState("");
@@ -102,7 +103,7 @@ function UnifiedRegister({ setPage }) {
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
                         <label className="block text-xs text-gray-400 mb-1.5 ml-1">Full Name</label>
-                        <input type="text" name="name" required value={formData.name} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="John Doe" />
+                        <input type="text" name="name" required value={formData.name} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="Your full name" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -126,13 +127,30 @@ function UnifiedRegister({ setPage }) {
                         </div>
                         <div>
                             <label className="block text-xs text-gray-400 mb-1.5 ml-1">Phone Number</label>
-                            <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="9876543210" pattern="[0-9]{10}" />
+                            <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="Enter your number" pattern="[0-9]{10}" />
                         </div>
                     </div>
 
                     <div>
                         <label className="block text-xs text-gray-400 mb-1.5 ml-1">Password</label>
-                        <input type="password" name="password" required value={formData.password} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="••••••••" />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                name="password"
+                                required
+                                value={formData.password}
+                                onChange={handleChange}
+                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                                placeholder="••••••••"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition text-lg select-none"
+                            >
+                                {showPassword ? "🙈" : "👁️"}
+                            </button>
+                        </div>
                     </div>
 
                     <button type="submit" disabled={loading} className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}>
