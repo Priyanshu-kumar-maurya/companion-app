@@ -231,40 +231,28 @@ router.post('/send-otp', async (req, res) => {
         const { email } = req.body;
 
         if (!email || !validateEmail(email)) {
-            return res.status(400).json({ error: "Valid email dalo." });
+            return res.status(400).json({ error: "Please enter a valid email address." });
         }
 
-        // Find user by email
         const userResult = await pool.query("SELECT id, name FROM users WHERE email = $1", [email.toLowerCase()]);
         if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: "Is email se koi account nahi mila." });
+            return res.status(404).json({ error: "No account found with this email." });
         }
 
         const user = userResult.rows[0];
-
-        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-        // Store OTP and expiry in DB
         await pool.query(
             "UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3",
             [otp, otpExpiry, user.id]
         );
 
-        // Configure nodemailer transporter
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            }
-        });
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
-        // HTML email template
-        const mailOptions = {
-            from: `"RentGF" <${process.env.EMAIL_USER}>`,
-            to: email,
+        await resend.emails.send({
+            from: 'RentGF <onboarding@resend.dev>',
+            to: [email],
             subject: 'Your RentGF Verification Code',
             html: `
                 <!DOCTYPE html>
@@ -273,53 +261,39 @@ router.post('/send-otp', async (req, res) => {
                     <meta charset="UTF-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 </head>
-                <body style="margin:0; padding:0; background-color:#f4f4f4; font-family: 'Segoe UI', Arial, sans-serif;">
-                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4; padding: 40px 0;">
-                        <tr>
-                            <td align="center">
-                                <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff; border-radius:16px; overflow:hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.10);">
-                                    <!-- Header -->
-                                    <tr>
-                                        <td style="background: linear-gradient(135deg, #e91e8c, #ff6b6b); padding: 36px 40px; text-align:center;">
-                                            <h1 style="margin:0; color:#ffffff; font-size:28px; font-weight:700; letter-spacing:1px;">💕 RentGF</h1>
-                                            <p style="margin:8px 0 0; color:rgba(255,255,255,0.85); font-size:14px;">Email Verification</p>
-                                        </td>
-                                    </tr>
-                                    <!-- Body -->
-                                    <tr>
-                                        <td style="padding: 40px 40px 32px;">
-                                            <p style="margin:0 0 16px; color:#333333; font-size:16px;">Hi <strong>${user.name}</strong>,</p>
-                                            <p style="margin:0 0 28px; color:#555555; font-size:15px; line-height:1.6;">Use the verification code below to complete your sign-in. This code is valid for <strong>10 minutes</strong>.</p>
-                                            <!-- OTP Box -->
-                                            <div style="background: linear-gradient(135deg, #fff0f6, #ffe4f0); border: 2px solid #f48fb1; border-radius:12px; padding: 28px; text-align:center; margin-bottom:28px;">
-                                                <p style="margin:0 0 8px; color:#c2185b; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:2px;">Your OTP Code</p>
-                                                <p style="margin:0; color:#e91e8c; font-size:48px; font-weight:900; letter-spacing:12px; font-family: 'Courier New', monospace;">${otp}</p>
-                                            </div>
-                                            <p style="margin:0 0 8px; color:#888888; font-size:13px; text-align:center;">⏱️ This code expires in <strong>10 minutes</strong>.</p>
-                                            <p style="margin:0; color:#aaaaaa; font-size:12px; text-align:center;">If you didn't request this, please ignore this email.</p>
-                                        </td>
-                                    </tr>
-                                    <!-- Footer -->
-                                    <tr>
-                                        <td style="background:#fafafa; padding: 20px 40px; border-top: 1px solid #eeeeee; text-align:center;">
-                                            <p style="margin:0; color:#bbbbbb; font-size:12px;">© 2024 RentGF · All rights reserved</p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </td>
-                        </tr>
+                <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:40px 0;">
+                        <tr><td align="center">
+                            <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+                                <tr><td style="background:linear-gradient(135deg,#e91e8c,#ff6b6b);padding:36px 40px;text-align:center;">
+                                    <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:1px;">RentGF</h1>
+                                    <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Email Verification</p>
+                                </td></tr>
+                                <tr><td style="padding:40px 40px 32px;">
+                                    <p style="margin:0 0 16px;color:#333333;font-size:16px;">Hi <strong>${user.name}</strong>,</p>
+                                    <p style="margin:0 0 28px;color:#555555;font-size:15px;line-height:1.6;">Use the verification code below to verify your email. This code is valid for <strong>10 minutes</strong>.</p>
+                                    <div style="background:linear-gradient(135deg,#fff0f6,#ffe4f0);border:2px solid #f48fb1;border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
+                                        <p style="margin:0 0 8px;color:#c2185b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Your OTP Code</p>
+                                        <p style="margin:0;color:#e91e8c;font-size:48px;font-weight:900;letter-spacing:12px;font-family:'Courier New',monospace;">${otp}</p>
+                                    </div>
+                                    <p style="margin:0 0 8px;color:#888888;font-size:13px;text-align:center;">This code expires in <strong>10 minutes</strong>.</p>
+                                    <p style="margin:0;color:#aaaaaa;font-size:12px;text-align:center;">If you didn't request this, please ignore this email.</p>
+                                </td></tr>
+                                <tr><td style="background:#fafafa;padding:20px 40px;border-top:1px solid #eeeeee;text-align:center;">
+                                    <p style="margin:0;color:#bbbbbb;font-size:12px;">&copy; 2024 RentGF &middot; All rights reserved</p>
+                                </td></tr>
+                            </table>
+                        </td></tr>
                     </table>
                 </body>
                 </html>
             `
-        };
+        });
 
-        await transporter.sendMail(mailOptions);
-
-        res.status(200).json({ message: "OTP sent successfully! Email check karo. 📧" });
+        res.status(200).json({ message: "OTP sent successfully! Please check your email." });
     } catch (err) {
         console.error("Send OTP error:", err);
-        res.status(500).json({ error: "OTP send karne mein error. Dobara try karo." });
+        res.status(500).json({ error: "Failed to send OTP. Please try again." });
     }
 });
 
@@ -329,45 +303,37 @@ router.post('/verify-otp', async (req, res) => {
         const { email, otp } = req.body;
 
         if (!email || !validateEmail(email)) {
-            return res.status(400).json({ error: "Valid email dalo." });
+            return res.status(400).json({ error: "Please enter a valid email address." });
         }
         if (!otp) {
-            return res.status(400).json({ error: "OTP dalo." });
+            return res.status(400).json({ error: "Please enter the OTP." });
         }
 
-        // Find user by email
         const userResult = await pool.query(
             "SELECT id, name, email, role, otp, otp_expiry FROM users WHERE email = $1",
             [email.toLowerCase()]
         );
         if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: "Is email se koi account nahi mila." });
+            return res.status(404).json({ error: "No account found with this email." });
         }
 
         const user = userResult.rows[0];
 
-        // Check OTP exists
         if (!user.otp) {
-            return res.status(400).json({ error: "Pehle OTP request karo." });
+            return res.status(400).json({ error: "Please request an OTP first." });
         }
-
-        // Check OTP not expired
         if (new Date() > new Date(user.otp_expiry)) {
-            return res.status(400).json({ error: "OTP expire ho gaya. Naya OTP request karo." });
+            return res.status(400).json({ error: "OTP has expired. Please request a new one." });
         }
-
-        // Check OTP matches
         if (user.otp !== otp.toString()) {
-            return res.status(400).json({ error: "Galat OTP hai. Dobara check karo." });
+            return res.status(400).json({ error: "Incorrect OTP. Please try again." });
         }
 
-        // Mark verified and clear OTP fields
         await pool.query(
             "UPDATE users SET is_verified = true, otp = NULL, otp_expiry = NULL WHERE id = $1",
             [user.id]
         );
 
-        // Generate JWT token
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
@@ -375,7 +341,7 @@ router.post('/verify-otp', async (req, res) => {
         );
 
         res.status(200).json({
-            message: "Email verified! Welcome to RentGF 🎉",
+            message: "Email verified! Welcome to RentGF!",
             token,
             user: {
                 id: user.id,
@@ -386,8 +352,9 @@ router.post('/verify-otp', async (req, res) => {
         });
     } catch (err) {
         console.error("Verify OTP error:", err);
-        res.status(500).json({ error: "OTP verify karne mein error. Dobara try karo." });
+        res.status(500).json({ error: "Failed to verify OTP. Please try again." });
     }
 });
 
 module.exports = router;
+
