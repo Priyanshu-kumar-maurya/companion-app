@@ -445,7 +445,12 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         const formData = new FormData();
         formData.append("image", file);
         try {
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/chat-image", { method: "POST", body: formData });
+            const token = localStorage.getItem('token');
+            const response = await fetch("https://rentgf-and-bf.onrender.com/api/chat-image", {
+                method: "POST",
+                body: formData,
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (response.ok) {
                 const data = await response.json();
                 sendMessage(data.imageUrl);

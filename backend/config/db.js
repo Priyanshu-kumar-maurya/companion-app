@@ -23,6 +23,7 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp VARCHAR(10);");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expiry TIMESTAMP;");
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS sender_id INTEGER;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS social_link TEXT;");
 
         await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
             id SERIAL PRIMARY KEY,

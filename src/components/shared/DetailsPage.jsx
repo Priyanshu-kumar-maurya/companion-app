@@ -29,8 +29,8 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     });
 
     useEffect(() => {
-        socket.connect();
-        return () => socket.disconnect();
+        if (!socket.connected) socket.connect();
+        // Don't disconnect on unmount — booking notification needs time to send
     }, []);
 
     useEffect(() => {
@@ -105,11 +105,15 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
 
         setFollowLoading(true);
         const endpoint = followStats.isFollowing ? '/api/unfollow' : '/api/follow';
+        const token = localStorage.getItem('token');
 
         try {
             const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ follower_id: currentUser.id, following_id: profile.id })
             });
 
@@ -119,6 +123,9 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     isFollowing: !prev.isFollowing,
                     followers: prev.isFollowing ? prev.followers - 1 : prev.followers + 1
                 }));
+            } else {
+                const data = await res.json();
+                alert(data.error || "Action failed. Please try again.");
             }
         } catch (err) {
             console.error("Follow action failed:", err);
@@ -138,9 +145,13 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
         const girl_id = currentUser.role === 'girl' ? currentUser.id : profile.id;
 
         try {
-            const response = await fetch('https://rentgf-and-bf.onrender.com/api/bookings', {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://rentgf-and-bf.onrender.com/api/bookings', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     boy_id,
                     girl_id,

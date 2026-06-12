@@ -18,7 +18,10 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl }) {
 
         const fetchNotifications = async () => {
             try {
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}`);
+                const token = localStorage.getItem('token');
+                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res.ok) {
                     const data = await res.json();
                     setNotifications(data);
@@ -30,6 +33,8 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl }) {
                 setLoading(false);
             }
         };
+        // Clear cache so fresh data is fetched
+        sessionStorage.removeItem("notifCache");
         fetchNotifications();
     }, [currentUser]);
 
