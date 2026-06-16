@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SettingsModal from '../shared/SettingsModal';
+import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield } from "react-icons/fi";
 import imageCompression from 'browser-image-compression';
 
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
@@ -14,6 +15,9 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [activeStatModal, setActiveStatModal] = useState(null);
     const [bookingFilter, setBookingFilter] = useState('all');
     const [reviews, setReviews] = useState([]);
+    const [showVerifiedBanner, setShowVerifiedBanner] = useState(() => {
+        return sessionStorage.getItem('verifiedBannerClosed') !== 'true';
+    });
 
     useEffect(() => {
         if (!user) return;
@@ -174,7 +178,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
             {newBookingAlert && (
                 <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
-                    <span className="text-2xl">🔔</span>
+                    <FiBell size={22} />
                     <div>
                         <div className="font-bold text-sm">New Booking Update!</div>
                         <div className="text-xs">{newBookingAlert.sender_name} sent a request for {newBookingAlert.hours} hrs</div>
@@ -182,45 +186,77 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 </div>
             )}
 
-            <div className="max-w-5xl mx-auto px-4 py-6">
+            <div className="max-w-3xl mx-auto px-4 py-6">
 
-                <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-4">
+                {/* ── Instagram-style Profile Header ── */}
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6 pb-6 border-b border-white/5">
 
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
-                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-blue-500/20 shadow-lg">
+                    {/* Profile Pic */}
+                    <div
+                        className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 cursor-pointer"
+                        onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}
+                    >
+                        <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] shadow-xl shadow-blue-500/20">
+                            <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A] flex items-center justify-center">
                                 {user?.profile_pic ? (
                                     <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                                ) : ("😎")}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col justify-center">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-xl sm:text-2xl font-bold text-white truncate max-w-[140px] sm:max-w-[250px]">{user.name} 🚀</h1>
-                                {user.kyc_status === 'verified' && <span className="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">✓</span>}
-                            </div>
-
-                            <div className="flex items-center gap-3 mt-1">
-                                <div className="flex flex-col items-center">
-                                    <span className="text-sm font-bold text-white leading-none">{followStats.followers}</span>
-                                    <span className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Followers</span>
-                                </div>
-                                <div className="w-px h-5 bg-white/10"></div>
-                                <div className="flex flex-col items-center">
-                                    <span className="text-sm font-bold text-white leading-none">{followStats.following}</span>
-                                    <span className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Following</span>
-                                </div>
+                                ) : (
+                                    <FiUser size={40} className="text-gray-400" />
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    <button onClick={() => setShowSettings(true)} className="px-3 py-1.5 bg-white/10 border border-white/20 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition flex items-center gap-1.5 shrink-0 self-start mt-1">
-                        ⚙️ Edit
-                    </button>
+                    {/* Name + Stats + Actions */}
+                    <div className="flex-1 w-full text-center sm:text-left">
+                        {/* Name row */}
+                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
+                            <h1 className="text-xl font-bold text-white">{user.name}</h1>
+                            {user.kyc_status === 'verified' && (
+                                <span className="flex items-center gap-1 text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-500/20">
+                                    <FiShield size={10} /> Verified
+                                </span>
+                            )}
+                            <button
+                                onClick={() => setShowSettings(true)}
+                                className="ml-auto sm:ml-4 px-3 py-1.5 bg-white/10 border border-white/20 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition flex items-center gap-1.5"
+                            >
+                                <FiSettings size={13} /> Edit Profile
+                            </button>
+                        </div>
+
+                        {/* Stats row */}
+                        <div className="flex items-center justify-center sm:justify-start gap-6 mb-3">
+                            <div className="flex flex-col items-center sm:items-start">
+                                <span className="text-base font-bold text-white leading-none">{myPosts.length}</span>
+                                <span className="text-[11px] text-gray-400 mt-0.5">Posts</span>
+                            </div>
+                            <div className="flex flex-col items-center sm:items-start">
+                                <span className="text-base font-bold text-white leading-none">{followStats.followers}</span>
+                                <span className="text-[11px] text-gray-400 mt-0.5">Followers</span>
+                            </div>
+                            <div className="flex flex-col items-center sm:items-start">
+                                <span className="text-base font-bold text-white leading-none">{followStats.following}</span>
+                                <span className="text-[11px] text-gray-400 mt-0.5">Following</span>
+                            </div>
+                        </div>
+
+                        {/* Bio */}
+                        {user.bio && <p className="text-gray-300 text-sm leading-relaxed mb-1">{user.bio}</p>}
+                        {user.social_link && (
+                            <a
+                                href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`}
+                                target="_blank" rel="noreferrer"
+                                className="text-blue-400 text-xs hover:underline flex items-center gap-1 w-fit mx-auto sm:mx-0 mt-1"
+                            >
+                                <FiLink size={12} /> {user.social_link}
+                            </a>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 justify-start">
+                {/* Tags */}
+                <div className="flex flex-wrap gap-2 justify-start mb-5">
                     {myTags.map((tag, i) => (
                         <span key={i} className="px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] rounded-full">
                             {tag.trim()}
@@ -228,25 +264,17 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     ))}
                 </div>
 
-                {(user.bio || user.social_link) && (
-                    <div className="mt-4 mb-8 bg-[#16162A] p-4 rounded-xl border border-white/5">
-                        {user.bio && (
-                            <p className="text-gray-300 text-sm mb-2 italic">"{user.bio}"</p>
-                        )}
-                        {user.social_link && (
-                            <a href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`} target="_blank" rel="noreferrer" className="text-pink-400 text-sm hover:underline flex items-center gap-1 w-fit mt-2">
-                                🔗 {user.social_link}
-                            </a>
-                        )}
-                    </div>
-                )}
+                {/* empty — bio/tags now inside header */}
 
-                <div className="mb-6 mt-6">
+                <div className="mb-5">
                     {(!user.kyc_status || user.kyc_status === 'unverified') && (
                         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">⚠️ KYC Verification Required</h3>
-                                <p className="text-xs text-gray-400 mt-1">Upload a valid Govt. ID (Aadhaar/PAN) to get the "Verified" badge and receive more bookings.</p>
+                            <div className="flex items-start gap-3">
+                                <FiAlertTriangle size={18} className="text-red-400 shrink-0 mt-0.5" />
+                                <div>
+                                    <h3 className="text-red-400 font-bold text-sm">KYC Verification Required</h3>
+                                    <p className="text-xs text-gray-400 mt-1">Upload a valid Govt. ID (Aadhaar/PAN) to get the Verified badge.</p>
+                                </div>
                             </div>
                             <label className="shrink-0 px-5 py-2.5 bg-red-500/20 hover:bg-red-500 text-white rounded-lg text-xs font-bold cursor-pointer transition border border-red-500/50">
                                 Upload ID Proof
@@ -256,35 +284,41 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                     {user.kyc_status === 'pending' && (
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center gap-3">
-                            <span className="text-2xl animate-spin">⏳</span>
+                            <FiClock size={20} className="text-yellow-400 shrink-0 animate-spin" />
                             <div>
                                 <h3 className="text-yellow-400 font-bold text-sm">KYC Under Review</h3>
-                                <p className="text-xs text-gray-400 mt-1">Your ID is being verified by our team. This usually takes 12-24 hours.</p>
+                                <p className="text-xs text-gray-400 mt-1">Your ID is being verified. Usually takes 12-24 hours.</p>
                             </div>
                         </div>
                     )}
-                    {user.kyc_status === 'verified' && (
+                    {user.kyc_status === 'verified' && showVerifiedBanner && (
                         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3">
-                            <span className="text-2xl">✅</span>
-                            <div>
+                            <FiCheckCircle size={20} className="text-green-400 shrink-0" />
+                            <div className="flex-1">
                                 <h3 className="text-green-400 font-bold text-sm">Account Verified</h3>
-                                <p className="text-xs text-gray-400 mt-1">Your identity is verified. You now have a trust badge on your profile!</p>
+                                <p className="text-xs text-gray-400 mt-1">Your identity is verified. Trust badge is active on your profile!</p>
                             </div>
+                            <button
+                                onClick={() => { setShowVerifiedBanner(false); sessionStorage.setItem('verifiedBannerClosed', 'true'); }}
+                                className="text-gray-400 hover:text-white transition p-1 rounded-full hover:bg-white/10"
+                            >
+                                <FiX size={16} />
+                            </button>
                         </div>
                     )}
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => setActiveStatModal('earnings')}>
-                        <div className="text-[11px] text-gray-400 mb-1">💳 Earnings</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('earnings')}>
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiCreditCard size={12} className="text-blue-400" /> Earnings</div>
                         <div className="text-xl font-bold text-blue-400">₹{totalEarnings}</div>
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => setActiveStatModal('rating')}>
-                        <div className="text-[11px] text-gray-400 mb-1">⭐ Rating</div>
-                        <div className="text-xl font-bold text-yellow-400">4.8 ⭐</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('rating')}>
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiStar size={12} className="text-yellow-400" /> Rating</div>
+                        <div className="text-xl font-bold text-yellow-400">4.8</div>
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative" onClick={() => setActiveStatModal('my_bookings')}>
-                        <div className="text-[11px] text-gray-400 mb-1">📅 Bookings</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative group" onClick={() => setActiveStatModal('my_bookings')}>
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiCalendar size={12} className="text-green-400" /> Bookings</div>
                         <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
                         {pendingBookings.length > 0 && (
                             <span className="absolute top-2 right-2 flex h-3 w-3">
@@ -293,23 +327,35 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             </span>
                         )}
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => setActiveStatModal('notifications')}>
-                        <div className="text-[11px] text-gray-400 mb-1">🔔 Notifications</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('notifications')}>
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiBell size={12} className="text-purple-400" /> Alerts</div>
                         <div className="text-xl font-bold text-purple-400">{notificationsList.length}</div>
                     </div>
                 </div>
 
-                <div className="bg-[#16162A] border border-white/5 rounded-2xl p-5 mb-6">
-                    <div className="text-base font-semibold mb-4 flex items-center justify-between">
-                        <span>🖼️ My Gallery</span>
+                {/* ── Instagram-style Posts Grid ── */}
+                <div className="mb-6">
+                    <div className="flex items-center gap-2 text-white font-semibold mb-4 border-t border-white/5 pt-5">
+                        <FiGrid size={16} className="text-gray-400" />
+                        <span className="text-sm uppercase tracking-wider text-gray-300">Posts</span>
                     </div>
-                    {myPosts.length === 0 ? <div className="text-sm text-gray-500 py-4 text-center">No photos posted yet.</div> : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {myPosts.length === 0 ? (
+                        <div className="text-sm text-gray-500 py-12 text-center flex flex-col items-center gap-2">
+                            <FiGrid size={40} className="text-gray-600" />
+                            <p>No photos posted yet.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-3 gap-0.5">
                             {myPosts.map(post => (
-                                <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer">
-                                    <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-110" />
-                                    {post.caption && <div className="absolute bottom-0 w-full bg-gradient-to-t from-black/80 to-transparent p-2 pt-5 text-[10px] text-white truncate">{post.caption}</div>}
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }} className="absolute top-2 right-2 bg-red-500/80 hover:bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg text-xs" title="Delete Post">🗑️</button>
+                                <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group aspect-square cursor-pointer overflow-hidden">
+                                    <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:brightness-75" />
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
+                                        className="absolute top-2 right-2 bg-red-500/90 text-white w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
+                                        title="Delete Post"
+                                    >
+                                        <FiTrash2 size={13} />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -387,8 +433,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                                         <div className="text-[10px] text-gray-500">{new Date(booking.created_at).toLocaleDateString()}</div>
                                                     </div>
                                                     <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
-                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2">📅 <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
-                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2">📍 <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
+                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2"><FiCalendar size={11} className="text-blue-400" /> <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
+                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2"><FiMapPin size={11} className="text-red-400" /> <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
                                                         {booking.meeting_details && <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">"{booking.meeting_details}"</div>}
                                                     </div>
 
@@ -396,8 +442,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                                         {booking.status === 'pending' && (
                                                             (booking.sender_id === user.id || (!booking.sender_id && user.role === 'boy')) ? (
                                                                 <>
-                                                                    <span className="text-yellow-400 text-xs font-bold border border-yellow-400/20 px-3 py-2 rounded-lg bg-yellow-400/10">
-                                                                        ⏳ Pending Approval
+                                                                    <span className="text-yellow-400 text-xs font-bold border border-yellow-400/20 px-3 py-2 rounded-lg bg-yellow-400/10 flex items-center gap-1">
+                                                                        <FiClock size={11} /> Pending Approval
                                                                     </span>
                                                                     <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
                                                                         Cancel Request
@@ -419,8 +465,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                                                 Mark Done
                                                             </button>
                                                         )}
-                                                        {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10">✅ Completed</span>}
-                                                        {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10">❌ Canceled / Rejected</span>}
+                                                        {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10 flex items-center gap-1"><FiCheckCircle size={12} /> Completed</span>}
+                                                        {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10 flex items-center gap-1"><FiX size={12} /> Canceled</span>}
                                                     </div>
                                                 </div>
                                             ))}
