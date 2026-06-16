@@ -16,7 +16,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [bookingFilter, setBookingFilter] = useState('all');
     const [reviews, setReviews] = useState([]);
     const [showVerifiedBanner, setShowVerifiedBanner] = useState(() => {
-        return sessionStorage.getItem('verifiedBannerClosed') !== 'true';
+        return localStorage.getItem('verifiedBannerClosed') !== 'true';
     });
 
     useEffect(() => {
@@ -299,7 +299,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                 <p className="text-xs text-gray-400 mt-1">Your identity is verified. Trust badge is active on your profile!</p>
                             </div>
                             <button
-                                onClick={() => { setShowVerifiedBanner(false); sessionStorage.setItem('verifiedBannerClosed', 'true'); }}
+                                onClick={() => { setShowVerifiedBanner(false); localStorage.setItem('verifiedBannerClosed', 'true'); }}
                                 className="text-gray-400 hover:text-white transition p-1 rounded-full hover:bg-white/10"
                             >
                                 <FiX size={16} />
