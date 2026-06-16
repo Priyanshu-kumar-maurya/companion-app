@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -489,151 +490,240 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     };
 
     return (
-        <div className="fixed inset-0 pt-16 flex flex-col bg-[#0D0D1A] z-50">
-            {/* HEADER */}
-            <div className="flex items-center gap-3 px-5 py-3.5 bg-[#16162A] border-b border-white/5 shrink-0 relative z-[40]">
-                <div onClick={handleViewProfile} className="flex items-center gap-3 flex-1 cursor-pointer hover:bg-white/5 p-1 rounded-xl transition duration-200">
+        <div className="fixed inset-0 flex flex-col z-50" style={{ background: '#0b141a' }}>
+
+            {/* ─── WhatsApp-style HEADER ─── */}
+            <div className="flex items-center gap-3 px-3 py-2.5 shrink-0" style={{ background: '#1f2c34' }}>
+                <button
+                    onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
+                    className="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-white transition rounded-full hover:bg-white/10"
+                >
+                    <FiArrowLeft size={22} />
+                </button>
+
+                <div onClick={handleViewProfile} className="flex items-center gap-3 flex-1 cursor-pointer">
                     {girl.profile_pic ? (
-                        <img src={girl.profile_pic} alt={girl.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]" />
+                        <img src={girl.profile_pic} alt={girl.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-xl flex-shrink-0">😊</div>
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#2a3942' }}>
+                            <span className="text-white font-bold text-base">{girl.name?.[0]?.toUpperCase()}</span>
+                        </div>
                     )}
                     <div>
                         <div className="text-sm font-semibold text-white">{girl.name}</div>
-                        {isOnline ? (
-                            <div className="text-xs text-green-400 flex items-center gap-1.5 mt-0.5"><span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />Online</div>
-                        ) : (
-                            <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-0.5"><span className="w-1.5 h-1.5 bg-gray-500 rounded-full" />Offline</div>
-                        )}
+                        <div className="text-xs mt-0.5" style={{ color: isOnline ? '#00a884' : '#8696a0' }}>
+                            {isOnline ? 'online' : 'last seen recently'}
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <button onClick={() => startCall('audio')} className="w-10 h-10 bg-green-500/15 border border-green-500/30 text-green-400 rounded-full flex items-center justify-center hover:bg-green-500/25 transition text-lg" title="Voice Call">📞</button>
-                    <button onClick={() => startCall('video')} className="w-10 h-10 bg-blue-500/15 border border-blue-500/30 text-blue-400 rounded-full flex items-center justify-center hover:bg-blue-500/25 transition text-lg" title="Video Call">📹</button>
-                    <button onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className="w-10 h-10 bg-white/5 border border-white/10 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition ml-1 text-lg">✕</button>
+                <div className="flex gap-1">
+                    <button onClick={() => startCall('video')} className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition rounded-full hover:bg-white/10">
+                        <FiVideo size={20} />
+                    </button>
+                    <button onClick={() => startCall('audio')} className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition rounded-full hover:bg-white/10">
+                        <FiPhone size={20} />
+                    </button>
+                    <button className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-white transition rounded-full hover:bg-white/10">
+                        <FiMoreVertical size={20} />
+                    </button>
                 </div>
             </div>
 
-            <div className="px-5 py-2 bg-purple-500/10 border-b border-purple-500/20 text-[11px] font-medium tracking-wide text-purple-300 flex items-center justify-center gap-2 shrink-0">
-                🔒 End-to-end encrypted chat
+            {/* ─── Encryption notice ─── */}
+            <div className="flex items-center justify-center gap-1.5 py-1.5 text-[11px] shrink-0" style={{ color: '#8696a0' }}>
+                <FiLock size={10} />
+                <span>Messages are end-to-end encrypted</span>
             </div>
 
-            {/* CHAT MESSAGES */}
-            <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            {/* ─── CHAT MESSAGES ─── */}
+            <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1" style={{ background: '#0b141a' }}>
                 {messages.map((msg, index) => {
                     const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
                     const prevMsg = index > 0 ? messages[index - 1] : null;
                     const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
-
-                    const isCallLog = msg.text && (msg.text.includes("✅") || msg.text.includes("❌"));
+                    const isMissedCall = msg.text && (msg.text.includes('Missed Video Call') || msg.text.includes('Missed Audio Call'));
+                    const isCompletedCall = msg.text && msg.text.includes('Call -');
+                    const isCallLog = isMissedCall || isCompletedCall;
 
                     return (
                         <React.Fragment key={msg.id}>
                             {showDateDivider && (
-                                <div className="flex justify-center my-2">
-                                    <span className="text-[10px] bg-white/5 text-gray-400 px-3 py-1 rounded-lg border border-white/10 shadow-sm font-medium tracking-wide">{formatMessageDate(msg.timestamp)}</span>
+                                <div className="flex justify-center my-3">
+                                    <span className="text-[11px] px-3 py-1 rounded-md font-medium" style={{ background: '#182229', color: '#8696a0' }}>
+                                        {formatMessageDate(msg.timestamp)}
+                                    </span>
                                 </div>
                             )}
 
                             {isCallLog ? (
-                                <div className="flex justify-center my-1 w-full">
-                                    <div className="px-4 py-2 rounded-xl bg-[#16162A] border border-white/10 flex items-center gap-2 shadow-sm">
-                                        <span className="text-xs text-gray-300 font-semibold">{msg.text}</span>
-                                        <span className="text-[10px] text-gray-500 ml-2">{msg.time}</span>
+                                // WhatsApp-style call log
+                                <div className="flex justify-center my-1">
+                                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs" style={{ background: '#202c33', color: '#8696a0' }}>
+                                        <FiPhoneMissed size={14} className={isMissedCall ? 'text-red-400' : 'text-green-400'} />
+                                        <span style={{ color: isMissedCall ? '#f87171' : '#4ade80' }}>{msg.text.replace('❌ ', '').replace('✅ ', '')}</span>
+                                        <span className="ml-1 text-[10px]" style={{ color: '#8696a0' }}>{msg.time}</span>
                                     </div>
                                 </div>
                             ) : (
-                                <div className={`flex flex-col ${msg.sent ? "items-end" : "items-start"} max-w-[80%] ${msg.sent ? "self-end" : "self-start"} group`} onMouseEnter={() => setHoveredMsgId(msg.id)} onMouseLeave={() => setHoveredMsgId(null)}>
-                                    <div className={`flex items-center gap-2 ${msg.sent ? "flex-row" : "flex-row-reverse"}`}>
+                                <div
+                                    className={`flex ${msg.sent ? 'justify-end' : 'justify-start'} group mb-0.5`}
+                                    onMouseEnter={() => setHoveredMsgId(msg.id)}
+                                    onMouseLeave={() => setHoveredMsgId(null)}
+                                >
+                                    <div className="relative max-w-[75%] sm:max-w-[60%]">
+                                        {/* Hover action buttons */}
                                         {hoveredMsgId === msg.id && (
-                                            <div className="flex gap-2 bg-[#16162A] px-2 py-1 rounded-lg border border-white/10 shadow-lg animate-fadeIn">
-                                                {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
-                                                    <button onClick={() => editMessage(msg.id, msg.text)} className="text-[11px] hover:text-pink-400 transition" title="Edit">✏️</button>
-                                                )}
-                                                <button onClick={() => setMessageToDelete(msg)} className="text-[11px] hover:text-red-400 transition" title="Delete">🗑️</button>
+                                            <div className={`absolute top-1 ${msg.sent ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} flex gap-1 z-10`}>
+                                                <div className="flex gap-1 rounded-lg px-1.5 py-1 shadow-lg" style={{ background: '#1f2c34' }}>
+                                                    {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
+                                                        <button onClick={() => editMessage(msg.id, msg.text)} className="p-1 hover:text-white transition" style={{ color: '#8696a0' }}>
+                                                            <FiEdit2 size={13} />
+                                                        </button>
+                                                    )}
+                                                    <button onClick={() => setMessageToDelete(msg)} className="p-1 hover:text-red-400 transition" style={{ color: '#8696a0' }}>
+                                                        <FiTrash2 size={13} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
 
-                                        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sent ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-br-sm" : "bg-[#16162A] border border-white/5 text-gray-100 rounded-bl-sm"}`}>
-                                            {msg.imageUrl && <img src={msg.imageUrl} alt="chat-attachment" className="w-full max-w-[250px] rounded-lg mb-2 object-contain cursor-pointer" onClick={() => window.open(msg.imageUrl, '_blank')} />}
-                                            {msg.text && <span>{msg.text}</span>}
+                                        {/* Message bubble */}
+                                        <div
+                                            className="relative px-3 py-1.5 rounded-lg text-sm leading-relaxed shadow-sm"
+                                            style={{
+                                                background: msg.sent ? '#005c4b' : '#202c33',
+                                                color: '#e9edef',
+                                                borderRadius: msg.sent
+                                                    ? '8px 8px 2px 8px'
+                                                    : '8px 8px 8px 2px'
+                                            }}
+                                        >
+                                            {msg.imageUrl && (
+                                                <img
+                                                    src={msg.imageUrl}
+                                                    alt="attachment"
+                                                    className="w-full max-w-[220px] rounded-md mb-1 object-contain cursor-pointer"
+                                                    onClick={() => window.open(msg.imageUrl, '_blank')}
+                                                />
+                                            )}
+                                            {msg.text && <span className="break-words">{msg.text}</span>}
+
+                                            {/* Timestamp + ticks inside bubble */}
+                                            <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
+                                                <span className="text-[10px] select-none" style={{ color: '#8696a0' }}>{msg.time}</span>
+                                                {msg.sent && (
+                                                    <span className="text-[11px]" style={{ color: msg.is_read ? '#53bdeb' : '#8696a0' }}>
+                                                        {msg.is_read ? '✓✓' : '✓'}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-[10px] text-gray-500 mt-1 px-2 font-medium flex items-center justify-end gap-1">
-                                        {msg.time}
-                                        {msg.sent && <span className={msg.is_read ? "text-blue-400 font-bold text-xs" : "text-gray-400 font-bold text-xs"}>{msg.is_read ? "✓✓" : "✓"}</span>}
                                     </div>
                                 </div>
                             )}
                         </React.Fragment>
                     );
                 })}
-                {uploadingImage && <div className="self-end max-w-[70%] mb-2"><div className="px-4 py-2 rounded-2xl bg-gradient-to-r from-pink-500/50 to-purple-500/50 text-white rounded-br-sm text-xs flex items-center gap-2 animate-pulse">⏳ Sending photo...</div></div>}
+
+                {uploadingImage && (
+                    <div className="flex justify-end mb-1">
+                        <div className="px-3 py-2 rounded-lg text-xs flex items-center gap-2 animate-pulse" style={{ background: '#005c4b', color: '#e9edef' }}>
+                            <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                            Sending...
+                        </div>
+                    </div>
+                )}
                 <div ref={bottomRef} />
             </div>
 
-            {/* INPUT AREA */}
+            {/* ─── Editing banner ─── */}
             {editingMsgId && (
-                <div className="bg-pink-500/20 text-pink-300 text-xs px-4 py-2 flex justify-between items-center border-t border-pink-500/30">
-                    <span>✏️ Editing message...</span><button onClick={() => { setEditingMsgId(null); setInput(""); }} className="hover:text-white font-bold px-2 py-1">Cancel</button>
+                <div className="flex justify-between items-center px-4 py-2 text-xs border-t shrink-0" style={{ background: '#1f2c34', borderColor: '#00a884', color: '#00a884' }}>
+                    <div className="flex items-center gap-2">
+                        <FiEdit2 size={13} />
+                        <span>Editing message</span>
+                    </div>
+                    <button onClick={() => { setEditingMsgId(null); setInput(''); }} className="hover:text-white transition">
+                        <FiX size={15} />
+                    </button>
                 </div>
             )}
 
-            <div className="flex items-end gap-2 px-4 py-3 border-t border-white/5 bg-[#16162A] shrink-0 z-[40]">
-                <label className="w-11 h-11 bg-white/5 hover:bg-white/10 text-gray-400 rounded-full flex items-center justify-center text-xl cursor-pointer transition shrink-0 border border-white/10" title="Attach Image">
-                    📎 <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || editingMsgId} />
+            {/* ─── WhatsApp-style INPUT BAR ─── */}
+            <div className="flex items-end gap-2 px-3 py-2 shrink-0" style={{ background: '#1f2c34' }}>
+                <label
+                    className="w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition flex-shrink-0 hover:bg-white/10"
+                    style={{ color: '#8696a0' }}
+                    title="Attach Image"
+                >
+                    <FiPaperclip size={20} />
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || !!editingMsgId} />
                 </label>
-                <textarea
-                    className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-2xl px-5 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-pink-500 transition resize-none min-h-[44px] max-h-32"
-                    placeholder="Message..." value={input} onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                    onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth" }), 100)} rows="1"
-                />
-                <button onClick={() => sendMessage(null)} disabled={!input.trim()} className={`w-11 h-11 rounded-full flex items-center justify-center text-white text-lg transition flex-shrink-0 ${input.trim() ? 'bg-gradient-to-r from-pink-500 to-purple-500 hover:scale-105 shadow-[0_0_15px_rgba(236,72,153,0.3)] cursor-pointer' : 'bg-white/10 text-gray-500 cursor-not-allowed'}`}>
-                    {editingMsgId ? "✓" : "➤"}
+
+                <div className="flex-1 flex items-end rounded-3xl px-4 py-2.5" style={{ background: '#2a3942', minHeight: 44 }}>
+                    <textarea
+                        className="flex-1 bg-transparent text-sm outline-none resize-none text-white placeholder-gray-400"
+                        style={{ maxHeight: 120, color: '#e9edef' }}
+                        placeholder="Message"
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                        onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth' }), 100)}
+                        rows={1}
+                    />
+                </div>
+
+                <button
+                    onClick={() => sendMessage(null)}
+                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:scale-110 active:scale-95"
+                    style={{ background: '#00a884' }}
+                >
+                    {input.trim() ? <FiSend size={18} style={{ color: 'white', transform: 'rotate(0deg)' }} /> : <FiMic size={18} style={{ color: 'white' }} />}
                 </button>
             </div>
 
-            {/* DELETE MODAL */}
+            {/* ─── DELETE MODAL ─── */}
             {messageToDelete && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-                    <div className="bg-[#16162A] border border-white/10 rounded-2xl w-full max-w-xs overflow-hidden shadow-2xl p-5 text-center">
-                        <h3 className="text-lg font-bold mb-4 text-white">Delete Message</h3>
-                        <div className="flex flex-col gap-3">
-                            {messageToDelete.sent && (Date.now() - messageToDelete.timestamp < 15 * 60 * 1000) && (
-                                <button onClick={handleDeleteForEveryone} className="py-2.5 bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 rounded-xl font-semibold transition">Delete for Everyone</button>
-                            )}
-                            <button onClick={handleDeleteForMe} className="py-2.5 bg-white/5 text-gray-300 hover:bg-white/10 border border-white/10 rounded-xl font-semibold transition">Delete for Me</button>
-                            <button onClick={() => setMessageToDelete(null)} className="py-2.5 mt-2 text-gray-500 hover:text-white font-semibold transition">Cancel</button>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+                    <div className="w-full max-w-xs overflow-hidden shadow-2xl" style={{ background: '#233138', borderRadius: 16 }}>
+                        <div className="px-6 py-5">
+                            <h3 className="text-base font-semibold mb-1" style={{ color: '#e9edef' }}>Delete message?</h3>
+                            <p className="text-xs mb-5" style={{ color: '#8696a0' }}>This action cannot be undone.</p>
+                            <div className="flex flex-col gap-2">
+                                {messageToDelete.sent && (Date.now() - messageToDelete.timestamp < 15 * 60 * 1000) && (
+                                    <button onClick={handleDeleteForEveryone} className="py-2.5 rounded-lg font-semibold text-sm transition hover:brightness-110" style={{ background: '#00a884', color: 'white' }}>Delete for Everyone</button>
+                                )}
+                                <button onClick={handleDeleteForMe} className="py-2.5 rounded-lg font-semibold text-sm transition hover:bg-white/10" style={{ color: '#8696a0', border: '1px solid #2a3942' }}>Delete for Me</button>
+                                <button onClick={() => setMessageToDelete(null)} className="py-2.5 rounded-lg font-semibold text-sm transition hover:bg-white/10" style={{ color: '#8696a0' }}>Cancel</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* 🚨 PREMIUM WHATSAPP/INSTA CALL UI 🚨 */}
-            {callStatus !== "idle" && (
-                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-[#000000]' : 'bg-[#0D0D1A]'} animate-fade-in overflow-hidden flex flex-col justify-center`}>
-                    
-                    {/* 1. AUDIO CALL & RINGING UI */}
+            {/* ─── CALL UI ─── */}
+            {callStatus !== 'idle' && (
+                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-black' : 'bg-[#0b141a]'} flex flex-col justify-center overflow-hidden`}>
+
+                    {/* Audio / Ringing UI */}
                     {!(callStatus === 'active' && callType === 'video') && (
                         <>
                             <div className="absolute inset-0 z-0 pointer-events-none">
-                                <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt="bg" className="w-full h-full object-cover blur-3xl opacity-20 scale-110" />
-                                <div className="absolute inset-0 bg-black/50"></div>
+                                <img src={girl.profile_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'} alt="bg" className="w-full h-full object-cover blur-3xl opacity-10 scale-110" />
+                                <div className="absolute inset-0" style={{ background: 'rgba(11,20,26,0.85)' }} />
                             </div>
 
                             <div className="z-10 flex flex-col items-center mt-[-10vh]">
                                 <div className="relative mb-6">
-                                    <div className={`absolute inset-0 rounded-full animate-ping opacity-30 ${callStatus === 'active' ? 'bg-green-500' : 'bg-pink-500'} scale-125`}></div>
-                                    <img src={girl.profile_pic || "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"} alt={girl.name} className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 shadow-2xl relative z-10" />
+                                    <div className={`absolute inset-0 rounded-full animate-ping opacity-20 scale-125 ${callStatus === 'active' ? 'bg-green-500' : 'bg-white'}`} />
+                                    <img src={girl.profile_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'} alt={girl.name} className="w-36 h-36 rounded-full object-cover border-4 shadow-2xl relative z-10" style={{ borderColor: '#1f2c34' }} />
                                 </div>
-
-                                <h2 className="text-3xl font-bold text-white mb-2 tracking-wide">{girl.name}</h2>
-                                <p className="text-gray-400 font-medium tracking-widest text-sm h-6">
-                                    {callStatus === "calling" && "Calling..."}
-                                    {callStatus === "receiving" && `Incoming ${callType} Call`}
-                                    {callStatus === "active" && <span className="font-mono text-gray-200">{formatDuration(callDuration)}</span>}
+                                <h2 className="text-2xl font-bold text-white mb-2">{girl.name}</h2>
+                                <p className="text-sm h-6 font-medium" style={{ color: '#8696a0' }}>
+                                    {callStatus === 'calling' && 'Calling...'}
+                                    {callStatus === 'receiving' && `Incoming ${callType === 'video' ? 'video' : 'voice'} call`}
+                                    {callStatus === 'active' && <span className="font-mono text-green-400">{formatDuration(callDuration)}</span>}
                                 </p>
                             </div>
 
@@ -642,52 +732,49 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </>
                     )}
 
-                    {/* 2. ACTIVE VIDEO CALL UI (FULL SCREEN) */}
+                    {/* Active Video Call */}
                     {callStatus === 'active' && callType === 'video' && (
                         <>
-                            <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black z-0 pointer-events-none" />
-                            
-                            <div className="absolute top-0 left-0 right-0 px-6 py-10 bg-gradient-to-b from-black/70 to-transparent flex justify-between items-start z-20">
-                                <div className="text-white drop-shadow-md">
-                                    <div className="font-bold text-xl mb-1">{girl.name}</div>
-                                    <div className="text-sm font-mono bg-black/40 px-2 py-0.5 rounded backdrop-blur-sm inline-block">{formatDuration(callDuration)}</div>
+                            <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black z-0" />
+                            <div className="absolute top-0 left-0 right-0 px-6 py-10 bg-gradient-to-b from-black/60 to-transparent flex justify-between items-start z-20">
+                                <div className="text-white">
+                                    <div className="font-bold text-lg mb-1">{girl.name}</div>
+                                    <div className="text-xs font-mono" style={{ color: '#00a884' }}>{formatDuration(callDuration)}</div>
                                 </div>
-                                <button onClick={switchCamera} className="w-10 h-10 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-xl transition text-white backdrop-blur-md">🔄</button>
+                                <button onClick={switchCamera} className="w-10 h-10 rounded-full flex items-center justify-center transition" style={{ background: 'rgba(0,0,0,0.5)' }}>
+                                    <span className="text-white text-lg">🔄</span>
+                                </button>
                             </div>
-
-                            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-36 right-6 w-28 h-40 sm:w-36 sm:h-48 rounded-2xl bg-gray-900 object-cover shadow-[0_10px_30px_rgba(0,0,0,0.6)] border-2 border-white/20 z-10 pointer-events-none" />
+                            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-36 right-5 w-28 h-40 rounded-2xl bg-gray-900 object-cover shadow-2xl border-2 border-white/20 z-10" />
                         </>
                     )}
 
-                    {/* 3. BOTTOM CONTROLS ROW */}
-                    <div className="absolute bottom-12 w-full px-6 flex justify-center gap-6 z-20">
-                        {callStatus === "receiving" ? (
+                    {/* Call Controls */}
+                    <div className="absolute bottom-16 w-full flex justify-center gap-8 z-20">
+                        {callStatus === 'receiving' ? (
                             <>
-                                <button onClick={acceptCall} className="w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(34,197,94,0.5)] transition hover:scale-110 animate-bounce">
-                                    {callType === 'video' ? '📹' : '📞'}
+                                <button onClick={acceptCall} className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 animate-bounce" style={{ background: '#00a884' }}>
+                                    {callType === 'video' ? <FiVideo size={26} className="text-white" /> : <FiPhone size={26} className="text-white" />}
                                 </button>
-                                <button onClick={rejectCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">📵</button>
+                                <button onClick={rejectCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110">
+                                    <FiPhoneOff size={26} className="text-white" />
+                                </button>
                             </>
                         ) : (
                             <>
-                                {/* Floating Premium Controls for Active/Calling */}
-                                <button onClick={toggleMic} className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition ${isMuted ? 'bg-white text-black shadow-lg' : 'bg-gray-800/80 text-white backdrop-blur-md border border-white/10'}`}>
-                                    {isMuted ? '🔇' : '🎙️'}
+                                <button onClick={toggleMic} className="w-14 h-14 rounded-full flex items-center justify-center transition" style={{ background: isMuted ? 'white' : 'rgba(255,255,255,0.15)' }}>
+                                    {isMuted ? <FiMicOff size={22} className="text-black" /> : <FiMic size={22} className="text-white" />}
                                 </button>
-                                
-                                <button onClick={endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(239,68,68,0.5)] transition hover:scale-110">
-                                    📵
+                                <button onClick={endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110">
+                                    <FiPhoneOff size={26} className="text-white" />
                                 </button>
-
-                                {/* Show Video toggle button if in video call OR if we want to turn video on in audio call */}
                                 {callType === 'video' ? (
-                                    <button onClick={toggleVideo} className={`w-14 h-14 rounded-full flex items-center justify-center text-xl transition ${isVideoOff ? 'bg-white text-black shadow-lg' : 'bg-gray-800/80 text-white backdrop-blur-md border border-white/10'}`}>
-                                        {isVideoOff ? '🚫' : '📹'}
+                                    <button onClick={toggleVideo} className="w-14 h-14 rounded-full flex items-center justify-center transition" style={{ background: isVideoOff ? 'white' : 'rgba(255,255,255,0.15)' }}>
+                                        {isVideoOff ? <FiVideoOff size={22} className="text-black" /> : <FiVideo size={22} className="text-white" />}
                                     </button>
                                 ) : (
-                                    // Audio Call 'Speaker' placeholder button to keep layout balanced
-                                    <button className="w-14 h-14 bg-gray-800/80 text-white backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center text-xl transition pointer-events-none">
-                                        🔊
+                                    <button className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                                        <span className="text-white text-xl">🔊</span>
                                     </button>
                                 )}
                             </>
@@ -698,5 +785,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         </div>
     );
 }
+
 
 export default ChatPage;
