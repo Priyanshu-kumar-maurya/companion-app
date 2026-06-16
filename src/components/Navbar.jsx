@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
+import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiX } from "react-icons/fi";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -98,16 +99,21 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         formData.append("caption", postCaption);
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${currentUser.id}`, {
                 method: "POST",
-                body: formData
+                body: formData,
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
-                alert("Post live ho gayi! 📸");
+                alert("Post shared successfully!");
                 closePostModal();
+            } else {
+                const data = await response.json();
+                alert(data.error || "Upload failed.");
             }
         } catch (err) {
-            alert("Upload fail ho gaya.");
+            alert("Upload failed. Please try again.");
         } finally {
             setIsPosting(false);
         }
@@ -138,13 +144,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
                             {currentUser && (
                                 <>
-                                    <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}>🔍 Find</button>
+                                    <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}><FiSearch className="inline mr-1" />Find</button>
 
                                     <button
                                         onClick={() => handleNavClick(PAGES.MESSAGES)}
                                         className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.MESSAGES ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
                                     >
-                                        💬 Messages
+                                        <FiMessageCircle size={17} /> Messages
                                         {unreadCount > 0 && (
                                             <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-bounce">
                                                 {unreadCount}
@@ -156,20 +162,20 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                         onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
                                         className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.NOTIFICATIONS ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
                                     >
-                                        ❤️ Activity
+                                        <FiBell size={17} /> Activity
                                     </button>
 
                                     {isAdmin && (
                                         <button
                                             onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)}
-                                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-2"
+                                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-2 flex items-center gap-1.5"
                                         >
-                                            👑 Admin Panel
+                                            <FiShield size={15} /> Admin Panel
                                         </button>
                                     )}
 
                                     <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
-                                        <span className="text-sm">➕</span> Create
+                                        <FiPlusCircle size={15} /> Create
                                     </button>
                                 </>
                             )}
@@ -180,7 +186,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                         onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
                                         className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"}`}
                                     >
-                                        👤 {currentUser.name.split(" ")[0]}
+                                        <FiUser size={15} className="inline mr-1" /> {currentUser.name.split(" ")[0]}
                                     </button>
                                 </div>
                             ) : (
@@ -205,7 +211,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                             onClick={() => setShowPostModal(true)}
                             className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition"
                         >
-                            <span className="text-sm">➕</span> Post
+                            <FiPlusCircle size={14} /> Post
                         </button>
                     ) : (
                         <button className="text-2xl text-white outline-none" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -232,19 +238,19 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 <div className="fixed bottom-0 left-0 w-full bg-[#16162A]/95 backdrop-blur-xl border-t border-white/5 z-40 md:hidden pb-2 pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
                         <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                            <span className="text-xl">🏠</span><span className="text-[9px] font-bold">Home</span>
+                            <FiHome size={21} /><span className="text-[9px] font-bold">Home</span>
                         </button>
 
                         {currentUser && (
                             <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">🔍</span><span className="text-[9px] font-bold">Explore</span>
+                                <FiSearch size={21} /><span className="text-[9px] font-bold">Explore</span>
                             </button>
                         )}
 
                         {currentUser && (
                             <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl relative">
-                                    💬
+                                <span className="relative">
+                                    <FiMessageCircle size={21} />
                                     {unreadCount > 0 && (
                                         <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-bounce shadow-lg">
                                             {unreadCount}
@@ -257,7 +263,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
                         {currentUser && (
                             <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} className={`relative flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.NOTIFICATIONS ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl relative">❤️</span>
+                                <FiBell size={21} />
                                 <span className="text-[9px] font-bold">Activity</span>
                             </button>
                         )}
@@ -265,18 +271,18 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                         {isAdmin && (
                             <button
                                 onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)}
-                                className="px-2 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-1 text-xs lg:text-sm"
+                                className="px-2 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-1 text-xs flex items-center gap-1"
                             >
-                                👑 Admin
+                                <FiShield size={14} /> Admin
                             </button>
                         )}
                         {currentUser ? (
                             <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">👤</span><span className="text-[9px] font-bold">Profile</span>
+                                <FiUser size={21} /><span className="text-[9px] font-bold">Profile</span>
                             </button>
                         ) : (
                             <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="text-xl">ℹ️</span><span className="text-[9px] font-bold">About</span>
+                                <FiUser size={21} /><span className="text-[9px] font-bold">About</span>
                             </button>
                         )}
                     </div>
@@ -301,7 +307,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                         <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
                             {!postPreview ? (
                                 <label className="w-full aspect-square border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition hover:border-pink-500 hover:bg-pink-500/5">
-                                    <span className="text-5xl mb-3">📸</span>
+                                    <FiCamera size={48} className="text-pink-400 mb-3" />
                                     <span className="text-white font-bold text-lg">Select Photo</span>
                                     <span className="text-gray-500 text-sm mt-1">Tap to browse files</span>
                                     <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
@@ -310,8 +316,8 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                 <div className="flex flex-col gap-4 animate-fade-in">
                                     <div className="relative">
                                         <img src={postPreview} alt="Preview" className="w-full aspect-square object-cover rounded-xl border border-white/10 shadow-lg" />
-                                        <button onClick={() => { setPostFile(null); setPostPreview(null); }} className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full backdrop-blur-md hover:bg-red-500 transition text-xs">
-                                            🗑️ Remove
+                                        <button onClick={() => { setPostFile(null); setPostPreview(null); }} className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full backdrop-blur-md hover:bg-red-500 transition flex items-center gap-1 text-xs">
+                                            <FiTrash2 size={13} /> Remove
                                         </button>
                                     </div>
                                     <div className="flex gap-3">

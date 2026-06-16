@@ -23,8 +23,11 @@ function AdminDashboard({ user, setPage }) {
 
     const fetchAdminData = async () => {
         try {
-            const statsRes = await fetch("https://rentgf-and-bf.onrender.com/api/admin/stats");
-            const usersRes = await fetch("https://rentgf-and-bf.onrender.com/api/admin/users");
+            const token = localStorage.getItem('token');
+            const headers = { 'Authorization': `Bearer ${token}` };
+
+            const statsRes = await fetch("https://rentgf-and-bf.onrender.com/api/admin/stats", { headers });
+            const usersRes = await fetch("https://rentgf-and-bf.onrender.com/api/admin/users", { headers });
 
             if (statsRes.ok) {
                 const statsData = await statsRes.json();
@@ -46,9 +49,13 @@ function AdminDashboard({ user, setPage }) {
 
     const handleKycUpdate = async (userId, status) => {
         try {
+            const token = localStorage.getItem('token');
             const res = await fetch(`https://rentgf-and-bf.onrender.com/api/admin/kyc/${userId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify({ status })
             });
 
@@ -64,8 +71,8 @@ function AdminDashboard({ user, setPage }) {
 
     if (loading || !stats) {
         return (
-            <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center text-pink-500 animate-pulse text-xl font-bold">
-                Loading Boss Mode... 👑
+            <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center text-yellow-500 animate-pulse text-xl font-bold">
+                Loading Admin Panel...
             </div>
         );
     }
@@ -75,7 +82,7 @@ function AdminDashboard({ user, setPage }) {
             <div className="flex items-center justify-between mb-8">
                 <div>
                     <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
-                        👑 Super Admin Panel
+                        Super Admin Panel
                     </h1>
                     <p className="text-gray-400 mt-1">Welcome Boss, here is what's happening on your app.</p>
                 </div>
