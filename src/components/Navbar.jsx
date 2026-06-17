@@ -126,79 +126,82 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     return (
         <>
             {!isHiddenScreen && (
-                <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur border-b border-pink-500/20 hidden md:block">
-                    <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-                        <h3 className="text-xl font-bold flex items-center gap-2">
-                            <svg className="w-8 h-8 shrink-0 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)] cursor-pointer" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" onClick={() => handleNavClick(PAGES.HOME)}>
-                                <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#ai-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#ai-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#ai-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <defs><linearGradient id="ai-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop stopColor="#ec4899" /><stop offset="1" stopColor="#a855f7" /></linearGradient></defs>
+                <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/95 backdrop-blur-xl border-b border-white/8 hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.4)]">
+                    <div className="max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
+
+                        {/* ─── LEFT: Logo ─── */}
+                        <button onClick={() => handleNavClick(PAGES.HOME)} className="flex items-center gap-2.5 shrink-0">
+                            <svg className="w-8 h-8 shrink-0 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <defs><linearGradient id="ai-grad2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop stopColor="#ec4899" /><stop offset="1" stopColor="#a855f7" /></linearGradient></defs>
                             </svg>
-                            RentGF
-                        </h3>
-                        <div className="hidden md:flex items-center gap-4">
-                            <button onClick={() => handleNavClick(PAGES.HOME)} className={getLinkStyle(PAGES.HOME)}>Home</button>
-                            <button onClick={() => handleNavClick(PAGES.ABOUT)} className={getLinkStyle(PAGES.ABOUT)}>About</button>
-                            <button onClick={() => handleNavClick(PAGES.HELP)} className={getLinkStyle(PAGES.HELP)}>Help</button>
+                            <span className="text-lg font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
+                        </button>
 
-                            {currentUser && (
+                        {/* ─── CENTER: Nav Icons ─── */}
+                        <div className="flex items-center gap-1 flex-1 justify-center">
+                            {!currentUser ? (
                                 <>
-                                    <button onClick={() => handleNavClick(PAGES.FIND)} className={getLinkStyle(PAGES.FIND)}><FiSearch className="inline mr-1" />Find</button>
-
-                                    <button
-                                        onClick={() => handleNavClick(PAGES.MESSAGES)}
-                                        className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.MESSAGES ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
-                                    >
-                                        <FiMessageCircle size={17} /> Messages
-                                        {unreadCount > 0 && (
-                                            <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-bounce">
-                                                {unreadCount}
-                                            </span>
-                                        )}
+                                    <button onClick={() => handleNavClick(PAGES.HOME)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HOME ? 'text-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Home</button>
+                                    <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.ABOUT ? 'text-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>About</button>
+                                    <button onClick={() => handleNavClick(PAGES.HELP)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HELP ? 'text-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Help</button>
+                                </>
+                            ) : (
+                                <>
+                                    <button onClick={() => handleNavClick(PAGES.HOME)} title="Home" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.HOME ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                        <FiHome size={20} /><span className="text-[9px] mt-0.5 font-semibold">Home</span>
                                     </button>
-
-                                    <button
-                                        onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
-                                        className={`relative flex items-center gap-2 px-3 py-2 rounded-lg font-semibold transition ${page === PAGES.NOTIFICATIONS ? "text-pink-400 bg-pink-500/10" : "text-gray-300 hover:text-white hover:bg-white/5"}`}
-                                    >
-                                        <FiBell size={17} /> Activity
+                                    <button onClick={() => handleNavClick(PAGES.FIND)} title="Find" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.FIND ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                        <FiSearch size={20} /><span className="text-[9px] mt-0.5 font-semibold">Find</span>
                                     </button>
-
-                                    {isAdmin && (
-                                        <button
-                                            onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)}
-                                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:scale-105 transition ml-2 flex items-center gap-1.5"
-                                        >
-                                            <FiShield size={15} /> Admin Panel
-                                        </button>
-                                    )}
-
-                                    <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition ml-2">
-                                        <FiPlusCircle size={15} /> Create
+                                    <button onClick={() => handleNavClick(PAGES.MESSAGES)} title="Messages" className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.MESSAGES ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                        <span className="relative"><FiMessageCircle size={20} />{unreadCount > 0 && <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[15px] text-center leading-[15px]">{unreadCount}</span>}</span>
+                                        <span className="text-[9px] mt-0.5 font-semibold">Inbox</span>
+                                    </button>
+                                    <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} title="Activity" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                        <FiBell size={20} /><span className="text-[9px] mt-0.5 font-semibold">Activity</span>
                                     </button>
                                 </>
                             )}
+                        </div>
 
+                        {/* ─── RIGHT: Actions ─── */}
+                        <div className="flex items-center gap-2 shrink-0">
                             {currentUser ? (
-                                <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
+                                <>
+                                    {isAdmin && (
+                                        <button onClick={() => handleNavClick(PAGES.ADMIN_DASHBOARD)} className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold rounded-lg shadow-md hover:opacity-90 transition shrink-0">
+                                            <FiShield size={13} /> Admin
+                                        </button>
+                                    )}
+                                    <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/15 hover:bg-white/20 rounded-full text-white transition shrink-0">
+                                        <FiPlusCircle size={14} /> Post
+                                    </button>
                                     <button
                                         onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
-                                        className={`px-4 py-1.5 text-sm rounded-full transition-all ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? "bg-pink-500 text-white font-bold shadow-[0_0_10px_rgba(236,72,153,0.5)]" : "bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:from-pink-500 hover:to-purple-500 text-white"}`}
+                                        className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-sm font-bold transition-all border shrink-0 ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? 'bg-pink-500 border-pink-400 text-white shadow-[0_0_14px_rgba(236,72,153,0.4)]' : 'bg-gradient-to-r from-pink-500/80 to-purple-500/80 border-pink-500/30 text-white hover:from-pink-500 hover:to-purple-500'}`}
                                     >
-                                        <FiUser size={15} className="inline mr-1" /> {currentUser.name.split(" ")[0]}
+                                        {currentUser.profile_pic ? (
+                                            <img src={currentUser.profile_pic} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-white/30 shrink-0" />
+                                        ) : (
+                                            <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold border-2 border-white/30 shrink-0">{currentUser.name?.[0]?.toUpperCase()}</span>
+                                        )}
+                                        {currentUser.name.split(" ")[0]}
                                     </button>
-                                </div>
+                                </>
                             ) : (
-                                <div className="flex items-center gap-3 ml-2 border-l border-white/10 pl-4">
-                                    <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-pink-500 text-pink-400 rounded-full hover:bg-pink-500 hover:text-white transition">Join as Girl</button>
-                                    <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-1.5 text-sm bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:opacity-90 transition">Find Companion</button>
-                                </div>
+                                <>
+                                    <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-pink-500/60 text-pink-400 rounded-full hover:bg-pink-500 hover:text-white transition font-medium">Join as Girl</button>
+                                    <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-1.5 text-sm bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:opacity-90 transition font-bold shadow-md">Find Companion</button>
+                                </>
                             )}
                         </div>
                     </div>
                 </nav>
             )}
+
 
             {!isHiddenScreen && (
                 <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur border-b border-white/10 h-14 flex items-center justify-between px-4">
