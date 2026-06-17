@@ -310,9 +310,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             </div>
                             <button
                                 onClick={() => { setShowVerifiedBanner(false); localStorage.setItem('verifiedBannerClosed', 'true'); }}
-                                className="text-gray-400 hover:text-white transition p-1 rounded-full hover:bg-white/10"
+                                className="shrink-0 w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10 active:bg-white/20"
+                                style={{ minWidth: 36, minHeight: 36 }}
                             >
-                                <FiX size={16} />
+                                <FiX size={18} />
                             </button>
                         </div>
                     )}

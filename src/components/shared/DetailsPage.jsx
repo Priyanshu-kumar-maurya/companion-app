@@ -246,11 +246,11 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                 </button>
             </div>
 
-            {/* ── PROFILE PIC + NAME (Always visible layout) ── */}
-            <div className="max-w-2xl mx-auto px-4">
+            {/* ── PROFILE PIC + NAME (Always visible) ── */}
+            <div className="relative z-10 max-w-2xl mx-auto px-4">
 
                 {/* Row: pic left + info right on SM+, stacked on mobile */}
-                <div className="flex flex-col sm:flex-row gap-4 -mt-14 sm:-mt-16 mb-4">
+                <div className="flex flex-col sm:flex-row gap-4 -mt-12 sm:-mt-14 mb-4">
 
                     {/* Profile pic with gradient ring */}
                     <div
