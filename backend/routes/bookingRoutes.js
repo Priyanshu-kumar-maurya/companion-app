@@ -7,13 +7,12 @@ const router = express.Router();
 // ─── CREATE BOOKING — AUTH REQUIRED ──────────────────────────
 router.post('/bookings', authenticateToken, async (req, res) => {
     try {
-        const { girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details } = req.body;
-        const boy_id = req.user.id;    // Always use authenticated user's ID
+        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details } = req.body;
         const sender_id = req.user.id;
 
         // Validate required fields
-        if (!girl_id || !hours || !amount) {
-            return res.status(400).json({ error: "girl_id, hours, aur amount required hain." });
+        if (!boy_id || !girl_id || !hours || !amount) {
+            return res.status(400).json({ error: "boy_id, girl_id, hours, aur amount required hain." });
         }
 
         // Validate hours and amount are positive numbers
@@ -22,8 +21,15 @@ router.post('/bookings', authenticateToken, async (req, res) => {
         }
 
         // Prevent booking yourself
-        if (parseInt(req.user.id) === parseInt(girl_id)) {
+        if (parseInt(req.user.id) === parseInt(girl_id) && parseInt(req.user.id) === parseInt(boy_id)) {
             return res.status(400).json({ error: "Tum khud ko book nahi kar sakte." });
+        }
+
+        // Validate sender is a participant
+        const senderIsBoy  = parseInt(req.user.id) === parseInt(boy_id);
+        const senderIsGirl = parseInt(req.user.id) === parseInt(girl_id);
+        if (!senderIsBoy && !senderIsGirl) {
+            return res.status(403).json({ error: "Unauthorized: Sirf participants hi booking kar sakte hain." });
         }
 
         const newBooking = await pool.query(
@@ -32,9 +38,11 @@ router.post('/bookings', authenticateToken, async (req, res) => {
         );
         res.status(201).json(newBooking.rows[0]);
     } catch (err) {
+        console.error('Booking error:', err);
         res.status(500).json({ error: "Server error" });
     }
 });
+
 
 // ─── GET BOOKINGS — AUTH REQUIRED + OWNERSHIP ────────────────
 router.get('/bookings/:userId', authenticateToken, async (req, res) => {

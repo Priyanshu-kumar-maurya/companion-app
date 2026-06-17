@@ -146,8 +146,8 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
         const girl_id = currentUser.role === 'girl' ? currentUser.id : profile.id;
 
         try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('https://rentgf-and-bf.onrender.com/api/bookings', {
+            const token = localStorage.getItem('token');
+            const response = await fetch('https://rentgf-and-bf.onrender.com/api/bookings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -175,12 +175,17 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                 });
                 setShowBookingModal(false);
                 setTimeout(() => setBookingStatus(null), 3000);
+            } else {
+                const errData = await response.json().catch(() => ({}));
+                setBookingStatus(null);
+                alert(errData.error || "Booking failed. Please try again.");
             }
         } catch (error) {
             setBookingStatus(null);
-            alert("Booking failed. Please try again.");
+            alert("Network error. Please check your connection and try again.");
         }
     };
+
 
     const submitReview = async () => {
         if (!newReviewText.trim() || !currentUser) return;
