@@ -18,6 +18,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [editingMsgId, setEditingMsgId] = useState(null);
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
     const [messageToDelete, setMessageToDelete] = useState(null);
+    const [lightboxImg, setLightboxImg] = useState(null); // fullscreen image viewer
 
     // --- CALLING & WEBRTC STATES ---
     const [callStatus, setCallStatus] = useState("idle"); 
@@ -601,8 +602,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                                 <img
                                                     src={msg.imageUrl}
                                                     alt="attachment"
-                                                    className="w-full max-w-[220px] rounded-md mb-1 object-contain cursor-pointer"
-                                                    onClick={() => window.open(msg.imageUrl, '_blank')}
+                                                    className="w-full max-w-[220px] rounded-md mb-1 object-contain cursor-pointer active:scale-95 transition-transform"
+                                                    onClick={() => setLightboxImg(msg.imageUrl)}
                                                 />
                                             )}
                                             {msg.text && <span className="break-words">{msg.text}</span>}
@@ -679,6 +680,36 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </button>
             </div>
 
+            {/* ─── FULLSCREEN IMAGE LIGHTBOX ─── */}
+            {lightboxImg && (
+                <div
+                    className="fixed inset-0 z-[150] bg-black/95 flex items-center justify-center p-4"
+                    onClick={() => setLightboxImg(null)}
+                >
+                    <button
+                        onClick={() => setLightboxImg(null)}
+                        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition z-10"
+                    >
+                        <FiX size={20} />
+                    </button>
+                    <img
+                        src={lightboxImg}
+                        alt="Full view"
+                        className="max-w-full max-h-full object-contain rounded-lg select-none"
+                        onClick={(e) => e.stopPropagation()}
+                        style={{ maxWidth: '95vw', maxHeight: '90vh' }}
+                    />
+                    <a
+                        href={lightboxImg}
+                        download
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold text-white bg-white/10 border border-white/20 hover:bg-white/20 transition"
+                    >
+                        <FiPaperclip size={13} /> Save Image
+                    </a>
+                </div>
+            )}
+
             {/* ─── DELETE MODAL ─── */}
             {messageToDelete && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
@@ -700,26 +731,32 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
             {/* ─── CALL UI ─── */}
             {callStatus !== 'idle' && (
-                <div className={`fixed inset-0 z-[200] ${callStatus === 'active' && callType === 'video' ? 'bg-black' : 'bg-[#0D0D1A]'} flex flex-col justify-center overflow-hidden`}>
+                <div className={`fixed inset-0 z-[200] flex flex-col overflow-hidden ${callStatus === 'active' && callType === 'video' ? 'bg-black' : 'bg-[#0D0D1A]'}`}>
 
-                    {/* Audio / Ringing UI */}
+                    {/* ── Audio / Ringing / Active-Audio UI ── */}
                     {!(callStatus === 'active' && callType === 'video') && (
                         <>
+                            {/* Blurred background */}
                             <div className="absolute inset-0 z-0 pointer-events-none">
                                 <img src={girl.profile_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'} alt="bg" className="w-full h-full object-cover blur-3xl opacity-10 scale-110" />
                                 <div className="absolute inset-0" style={{ background: 'rgba(13,13,26,0.88)' }} />
                             </div>
 
-                            <div className="z-10 flex flex-col items-center mt-[-10vh]">
-                                <div className="relative mb-6">
+                            {/* Center info */}
+                            <div className="z-10 flex flex-col items-center justify-center flex-1 px-6 pb-32">
+                                <div className="relative mb-5">
                                     <div className={`absolute inset-0 rounded-full animate-ping opacity-20 scale-125 ${callStatus === 'active' ? 'bg-pink-500' : 'bg-purple-500'}`} />
-                                    <img src={girl.profile_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'} alt={girl.name} className="w-36 h-36 rounded-full object-cover border-4 shadow-2xl relative z-10 border-pink-500/30" />
+                                    <img
+                                        src={girl.profile_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'}
+                                        alt={girl.name}
+                                        className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover border-4 shadow-2xl relative z-10 border-pink-500/30"
+                                    />
                                 </div>
-                                <h2 className="text-2xl font-bold text-white mb-2">{girl.name}</h2>
-                                <p className="text-sm h-6 font-medium text-gray-500">
+                                <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 text-center">{girl.name}</h2>
+                                <p className="text-sm font-medium text-gray-500 text-center">
                                     {callStatus === 'calling' && 'Calling...'}
                                     {callStatus === 'receiving' && `Incoming ${callType === 'video' ? 'video' : 'voice'} call`}
-                                    {callStatus === 'active' && <span className="font-mono text-pink-400">{formatDuration(callDuration)}</span>}
+                                    {callStatus === 'active' && <span className="font-mono text-pink-400 text-base">{formatDuration(callDuration)}</span>}
                                 </p>
                             </div>
 
@@ -728,50 +765,82 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </>
                     )}
 
-                    {/* Active Video Call */}
+                    {/* ── Active Video Call ── */}
                     {callStatus === 'active' && callType === 'video' && (
                         <>
                             <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black z-0" />
-                            <div className="absolute top-0 left-0 right-0 px-6 py-10 bg-gradient-to-b from-black/60 to-transparent flex justify-between items-start z-20">
+
+                            {/* Top bar */}
+                            <div className="absolute top-0 left-0 right-0 px-4 sm:px-6 pt-10 sm:pt-10 pb-6 bg-gradient-to-b from-black/70 to-transparent flex justify-between items-start z-20">
                                 <div className="text-white">
-                                    <div className="font-bold text-lg mb-1">{girl.name}</div>
-                                    <div className="text-xs font-mono text-pink-400">{formatDuration(callDuration)}</div>
+                                    <div className="font-bold text-base sm:text-lg">{girl.name}</div>
+                                    <div className="text-xs font-mono text-pink-400 mt-0.5">{formatDuration(callDuration)}</div>
                                 </div>
-                                <button onClick={switchCamera} className="w-10 h-10 rounded-full flex items-center justify-center transition bg-black/50 text-white text-lg">🔄</button>
+                                <button
+                                    onClick={switchCamera}
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition bg-black/50 text-white text-base"
+                                >🔄</button>
                             </div>
-                            <video ref={localVideoRef} autoPlay playsInline muted className="absolute bottom-36 right-5 w-28 h-40 rounded-2xl bg-gray-900 object-cover shadow-2xl border-2 border-pink-500/30 z-10" />
+
+                            {/* Local video PIP */}
+                            <video
+                                ref={localVideoRef}
+                                autoPlay playsInline muted
+                                className="absolute bottom-32 sm:bottom-36 right-3 sm:right-5 w-20 h-28 sm:w-28 sm:h-40 rounded-xl sm:rounded-2xl bg-gray-900 object-cover shadow-2xl border-2 border-pink-500/30 z-10"
+                            />
                         </>
                     )}
 
-                    {/* Call Controls */}
-                    <div className="absolute bottom-16 w-full flex justify-center gap-8 z-20">
+                    {/* ── Call Controls ── */}
+                    <div className="absolute bottom-8 sm:bottom-12 w-full flex justify-center gap-6 sm:gap-8 z-20 px-6">
                         {callStatus === 'receiving' ? (
-                            <>
-                                <button onClick={acceptCall} className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 animate-bounce bg-gradient-to-br from-pink-500 to-purple-600 shadow-pink-500/30">
-                                    {callType === 'video' ? <FiVideo size={26} className="text-white" /> : <FiPhone size={26} className="text-white" />}
-                                </button>
-                                <button onClick={rejectCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110">
-                                    <FiPhoneOff size={26} className="text-white" />
-                                </button>
-                            </>
+                            <div className="flex items-end gap-12 sm:gap-16">
+                                {/* Reject first (left), Accept right (right) */}
+                                <div className="flex flex-col items-center gap-2">
+                                    <button onClick={rejectCall} className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 active:scale-95">
+                                        <FiPhoneOff size={24} className="text-white" />
+                                    </button>
+                                    <span className="text-xs text-gray-400">Decline</span>
+                                </div>
+                                <div className="flex flex-col items-center gap-2">
+                                    <button onClick={acceptCall} className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 active:scale-95 animate-bounce bg-gradient-to-br from-pink-500 to-purple-600 shadow-pink-500/30">
+                                        {callType === 'video' ? <FiVideo size={24} className="text-white" /> : <FiPhone size={24} className="text-white" />}
+                                    </button>
+                                    <span className="text-xs text-gray-400">Accept</span>
+                                </div>
+                            </div>
                         ) : (
-                            <>
-                                <button onClick={toggleMic} className="w-14 h-14 rounded-full flex items-center justify-center transition" style={{ background: isMuted ? 'white' : 'rgba(255,255,255,0.15)' }}>
-                                    {isMuted ? <FiMicOff size={22} className="text-black" /> : <FiMic size={22} className="text-white" />}
-                                </button>
-                                <button onClick={endCall} className="w-16 h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110">
-                                    <FiPhoneOff size={26} className="text-white" />
-                                </button>
-                                {callType === 'video' ? (
-                                    <button onClick={toggleVideo} className="w-14 h-14 rounded-full flex items-center justify-center transition" style={{ background: isVideoOff ? 'white' : 'rgba(255,255,255,0.15)' }}>
-                                        {isVideoOff ? <FiVideoOff size={22} className="text-black" /> : <FiVideo size={22} className="text-white" />}
+                            <div className="flex items-center gap-5 sm:gap-8">
+                                {/* Mute */}
+                                <div className="flex flex-col items-center gap-1.5">
+                                    <button onClick={toggleMic} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition active:scale-90" style={{ background: isMuted ? 'white' : 'rgba(255,255,255,0.15)' }}>
+                                        {isMuted ? <FiMicOff size={20} className="text-black" /> : <FiMic size={20} className="text-white" />}
                                     </button>
-                                ) : (
-                                    <button className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                                        <span className="text-white text-xl">🔊</span>
+                                    <span className="text-[10px] text-gray-400">{isMuted ? 'Unmute' : 'Mute'}</span>
+                                </div>
+
+                                {/* End Call */}
+                                <div className="flex flex-col items-center gap-1.5">
+                                    <button onClick={endCall} className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 active:scale-95">
+                                        <FiPhoneOff size={24} className="text-white" />
                                     </button>
-                                )}
-                            </>
+                                    <span className="text-[10px] text-gray-400">End</span>
+                                </div>
+
+                                {/* Video / Speaker toggle */}
+                                <div className="flex flex-col items-center gap-1.5">
+                                    {callType === 'video' ? (
+                                        <button onClick={toggleVideo} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition active:scale-90" style={{ background: isVideoOff ? 'white' : 'rgba(255,255,255,0.15)' }}>
+                                            {isVideoOff ? <FiVideoOff size={20} className="text-black" /> : <FiVideo size={20} className="text-white" />}
+                                        </button>
+                                    ) : (
+                                        <button className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                                            <FiMic size={20} className="text-white" />
+                                        </button>
+                                    )}
+                                    <span className="text-[10px] text-gray-400">{callType === 'video' ? (isVideoOff ? 'Cam On' : 'Cam Off') : 'Speaker'}</span>
+                                </div>
+                            </div>
                         )}
                     </div>
                 </div>
