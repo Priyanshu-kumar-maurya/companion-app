@@ -19,6 +19,9 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const [showVerifiedBanner, setShowVerifiedBanner] = useState(() => {
         return localStorage.getItem('girlVerifiedBannerClosed') !== 'true';
     });
+    const [followList, setFollowList] = useState([]);
+    const [followListLoading, setFollowListLoading] = useState(false);
+
 
     useEffect(() => {
         if (!user) return;
@@ -166,6 +169,20 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         }
     };
 
+    const openFollowList = async (type) => {
+        setFollowList([]);
+        setFollowListLoading(true);
+        setActiveStatModal(type);
+        try {
+            const endpoint = type === 'followers'
+                ? `/api/followers-list/${user.id}`
+                : `/api/following-list/${user.id}`;
+            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`);
+            if (res.ok) setFollowList(await res.json());
+        } catch (e) { console.error(e); }
+        setFollowListLoading(false);
+    };
+
     const handleDeletePost = async (postId) => {
         if (!window.confirm("Are you sure you want to delete this photo?")) return;
         try {
@@ -226,15 +243,21 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             </div>
 
                             <div className="flex items-center gap-3 mt-1">
-                                <div className="flex flex-col items-center">
+                                <button
+                                    className="flex flex-col items-center cursor-pointer hover:opacity-70 transition"
+                                    onClick={() => openFollowList('followers')}
+                                >
                                     <span className="text-sm font-bold text-white leading-none">{followStats.followers}</span>
                                     <span className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Followers</span>
-                                </div>
+                                </button>
                                 <div className="w-px h-5 bg-white/10"></div>
-                                <div className="flex flex-col items-center">
+                                <button
+                                    className="flex flex-col items-center cursor-pointer hover:opacity-70 transition"
+                                    onClick={() => openFollowList('following')}
+                                >
                                     <span className="text-sm font-bold text-white leading-none">{followStats.following}</span>
                                     <span className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Following</span>
-                                </div>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -377,6 +400,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                 {activeStatModal === 'rating' && "Reviews & Ratings"}
                                 {activeStatModal === 'my_bookings' && "My Bookings"}
                                 {activeStatModal === 'notifications' && "Notifications"}
+                                {activeStatModal === 'followers' && `Followers (${followStats.followers})`}
+                                {activeStatModal === 'following' && `Following (${followStats.following})`}
                             </h2>
                             <button onClick={() => { setActiveStatModal(null); setBookingFilter('all'); }} className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/10 transition">✕</button>
                         </div>
@@ -503,6 +528,35 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                         </div>
                                     ))
                             )}
+                            {(activeStatModal === 'followers' || activeStatModal === 'following') && (
+                                followListLoading ? (
+                                    <div className="flex items-center justify-center py-10">
+                                        <div className="w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                                    </div>
+                                ) : followList.length === 0 ? (
+                                    <div className="text-center py-10 text-gray-500 text-sm">
+                                        <FiX size={36} className="mx-auto mb-2 text-gray-600" />
+                                        No {activeStatModal} yet.
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col gap-3">
+                                        {followList.map(u => (
+                                            <div key={u.id} className="flex items-center gap-3 bg-[#0D0D1A] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition">
+                                                <img
+                                                    src={u.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"}
+                                                    alt={u.name}
+                                                    className="w-11 h-11 rounded-full object-cover border border-white/10 shrink-0"
+                                                />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-semibold text-white truncate">{u.name}</p>
+                                                    <p className="text-[10px] text-gray-500 capitalize mt-0.5">{u.role}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )
+                            )}
+
                         </div>
                     </div>
                 </div>
