@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SettingsModal from '../shared/SettingsModal';
 import imageCompression from 'browser-image-compression';
+import { FiX, FiCheckCircle } from "react-icons/fi";
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "4.8" });
@@ -15,6 +16,9 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const [activeStatModal, setActiveStatModal] = useState(null);
     const [bookingFilter, setBookingFilter] = useState('all');
     const [reviews, setReviews] = useState([]);
+    const [showVerifiedBanner, setShowVerifiedBanner] = useState(() => {
+        return localStorage.getItem('girlVerifiedBannerClosed') !== 'true';
+    });
 
     useEffect(() => {
         if (!user) return;
@@ -283,13 +287,20 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             </div>
                         </div>
                     )}
-                    {user.kyc_status === 'verified' && (
+                    {user.kyc_status === 'verified' && showVerifiedBanner && (
                         <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3">
-                            <span className="text-2xl">✅</span>
-                            <div>
+                            <FiCheckCircle size={20} className="text-green-400 shrink-0" />
+                            <div className="flex-1">
                                 <h3 className="text-green-400 font-bold text-sm">Account Verified</h3>
                                 <p className="text-xs text-gray-400 mt-1">Your identity is verified. You now have a trust badge on your profile!</p>
                             </div>
+                            <button
+                                onClick={() => { setShowVerifiedBanner(false); localStorage.setItem('girlVerifiedBannerClosed', 'true'); }}
+                                className="shrink-0 w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10 active:bg-white/20"
+                                style={{ minWidth: 36, minHeight: 36 }}
+                            >
+                                <FiX size={18} />
+                            </button>
                         </div>
                     )}
                 </div>
