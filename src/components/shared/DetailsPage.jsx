@@ -21,18 +21,21 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
 
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0, isFollowing: false });
     const [followLoading, setFollowLoading] = useState(false);
+    const [isOnline, setIsOnline] = useState(false);
 
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [meetingInfo, setMeetingInfo] = useState({
-        date: "",
-        time: "",
-        location: ""
-    });
+    const [meetingInfo, setMeetingInfo] = useState({ date: "", time: "", location: "" });
 
     useEffect(() => {
         if (!socket.connected) socket.connect();
-        // Don't disconnect on unmount — booking notification needs time to send
-    }, []);
+        if (currentUser) socket.emit('user_connected', currentUser.id);
+
+        const handleOnlineUsers = (onlineIds) => {
+            if (profile) setIsOnline(onlineIds.map(String).includes(String(profile.id)));
+        };
+        socket.on('update_online_users', handleOnlineUsers);
+        return () => socket.off('update_online_users', handleOnlineUsers);
+    }, [profile, currentUser]);
 
     useEffect(() => {
         if (!profile) return;
@@ -243,13 +246,15 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                 </button>
             </div>
 
-            {/* ── PROFILE PIC + NAME ── */}
+            {/* ── PROFILE PIC + NAME (Always visible layout) ── */}
             <div className="max-w-2xl mx-auto px-4">
-                <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-16 sm:-mt-20 mb-4">
+
+                {/* Row: pic left + info right on SM+, stacked on mobile */}
+                <div className="flex flex-col sm:flex-row gap-4 -mt-14 sm:-mt-16 mb-4">
 
                     {/* Profile pic with gradient ring */}
                     <div
-                        className={`relative w-28 h-28 sm:w-36 sm:h-36 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 bg-gradient-to-br ${accentGrad}`}
+                        className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 mx-auto sm:mx-0 bg-gradient-to-br ${accentGrad}`}
                         onClick={() => profile.profile_pic && setExpandedPost({ image_url: profile.profile_pic, caption: `${firstName}'s Photo` })}
                     >
                         <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A]">
@@ -261,12 +266,12 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                                 </div>
                             )}
                         </div>
-                        {/* Online dot */}
-                        <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 border-2 border-[#0D0D1A] rounded-full" />
+                        {/* Real online dot */}
+                        {isOnline && <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 border-2 border-[#0D0D1A] rounded-full" />}
                     </div>
 
-                    {/* Name + verified + action buttons (sm: side-by-side) */}
-                    <div className="flex-1 text-center sm:text-left pb-1">
+                    {/* Name + verified + info — always below pic or beside it */}
+                    <div className="flex-1 pt-2 text-center sm:text-left">
                         <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
                             <h1 className="text-2xl sm:text-3xl font-bold text-white">{profile.name}</h1>
                             {profile.kyc_status === 'verified' && (
@@ -275,14 +280,20 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                                 </span>
                             )}
                         </div>
-                        <div className="flex items-center justify-center sm:justify-start gap-2 text-xs text-gray-400 mb-3">
+                        <div className="flex items-center justify-center sm:justify-start gap-2 text-xs text-gray-400 mb-3 flex-wrap">
                             <FiMapPin size={11} /> {profile.city || 'Unknown'}
                             <span className="w-1 h-1 bg-gray-600 rounded-full" />
                             {profile.age || 'N/A'} yrs
                             <span className="w-1 h-1 bg-gray-600 rounded-full" />
-                            <span className="text-green-400 flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Online
-                            </span>
+                            {isOnline ? (
+                                <span className="text-green-400 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Online
+                                </span>
+                            ) : (
+                                <span className="text-gray-500 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full" /> Offline
+                                </span>
+                            )}
                         </div>
 
                         {/* Action Buttons */}
