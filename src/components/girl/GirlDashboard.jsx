@@ -45,8 +45,11 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
                 if (postsRes.ok) fetchedPosts = await postsRes.json();
 
-                const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`);
+                const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
                 if (bookingsRes.ok) fetchedBookings = await bookingsRes.json();
+
 
                 const followRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${user.id}`);
                 if (followRes.ok) fetchedFollowStats = await followRes.json();
@@ -85,11 +88,14 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
         const handleReceiveBooking = (data) => {
             setNewBookingAlert(data);
-            fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`)
+            fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
                 .then(res => res.json())
                 .then(data => setMyBookings(data));
             setTimeout(() => setNewBookingAlert(null), 4000);
         };
+
 
         socket.on("receive_booking_notification", handleReceiveBooking);
 
@@ -136,9 +142,13 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         try {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                },
                 body: JSON.stringify({ status: newStatus })
             });
+
 
             if (response.ok) {
                 setMyBookings(myBookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
