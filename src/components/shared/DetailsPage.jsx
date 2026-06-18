@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock } from "react-icons/fi";
+import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -23,6 +23,17 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     const [followLoading, setFollowLoading] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
 
+    // 3-dot menu state
+    const [showMenu, setShowMenu] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportReason, setReportReason] = useState('');
+    const [reportDesc, setReportDesc] = useState('');
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportDone, setReportDone] = useState(false);
+    const [blockLoading, setBlockLoading] = useState(false);
+    const menuRef = useRef(null);
+
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [meetingInfo, setMeetingInfo] = useState({ date: "", time: "", location: "" });
 
@@ -36,6 +47,83 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
         socket.on('update_online_users', handleOnlineUsers);
         return () => socket.off('update_online_users', handleOnlineUsers);
     }, [profile, currentUser]);
+
+    // Fetch block status
+    useEffect(() => {
+        if (!currentUser || !profile || currentUser.id === profile.id) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        fetch(`https://rentgf-and-bf.onrender.com/api/block-status/${profile.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) setIsBlocked(data.isBlocked); })
+        .catch(() => {});
+    }, [profile, currentUser]);
+
+    // Close menu on outside click
+    useEffect(() => {
+        const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    // Block / Unblock
+    const handleBlockToggle = async () => {
+        if (!currentUser) return;
+        setBlockLoading(true);
+        setShowMenu(false);
+        const token = localStorage.getItem('token');
+        const endpoint = isBlocked ? '/api/unblock' : '/api/block';
+        try {
+            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ blocked_id: profile.id })
+            });
+            if (res.ok) {
+                setIsBlocked(!isBlocked);
+                if (!isBlocked) {
+                    // Blocked — unfollow locally too
+                    setFollowStats(prev => ({ ...prev, isFollowing: false }));
+                    alert(`${profile.name} has been blocked. They won't appear in your feed.`);
+                } else {
+                    alert(`${profile.name} has been unblocked.`);
+                }
+            }
+        } catch (e) { /* silent */ } finally { setBlockLoading(false); }
+    };
+
+    // Submit Report
+    const handleReportSubmit = async (e) => {
+        e.preventDefault();
+        if (!reportReason) return;
+        setReportSubmitting(true);
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('https://rentgf-and-bf.onrender.com/api/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reported_id: profile.id, reason: reportReason, description: reportDesc })
+            });
+            if (res.ok) {
+                setReportDone(true);
+                setTimeout(() => { setShowReportModal(false); setReportDone(false); setReportReason(''); setReportDesc(''); }, 2500);
+            }
+        } catch (e) { /* silent */ } finally { setReportSubmitting(false); }
+    };
+
+    // Share Profile
+    const handleShare = () => {
+        const url = window.location.href;
+        if (navigator.share) {
+            navigator.share({ title: `${profile.name}'s Profile`, url });
+        } else {
+            navigator.clipboard.writeText(url);
+            alert('Profile link copied!');
+        }
+        setShowMenu(false);
+    };
 
     useEffect(() => {
         if (!profile) return;
@@ -244,6 +332,57 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                 >
                     <FiArrowLeft size={18} />
                 </button>
+
+                {/* 3-DOT MENU BUTTON */}
+                {currentUser && currentUser.id !== profile.id && (
+                    <div ref={menuRef} className="absolute top-4 right-4 z-20">
+                        <button
+                            onClick={() => setShowMenu(prev => !prev)}
+                            className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition"
+                        >
+                            <FiMoreVertical size={18} />
+                        </button>
+
+                        {/* Dropdown */}
+                        {showMenu && (
+                            <div className="absolute right-0 top-11 w-52 bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                                {/* Block / Unblock */}
+                                <button
+                                    onClick={handleBlockToggle}
+                                    disabled={blockLoading}
+                                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition group"
+                                >
+                                    <FiSlash size={16} className={isBlocked ? 'text-green-400' : 'text-red-400'} />
+                                    <span className={isBlocked ? 'text-green-300' : 'text-red-300'}>
+                                        {blockLoading ? 'Please wait...' : isBlocked ? `Unblock ${profile.name?.split(' ')[0]}` : `Block ${profile.name?.split(' ')[0]}`}
+                                    </span>
+                                </button>
+
+                                <div className="h-px bg-white/5 mx-3" />
+
+                                {/* Report */}
+                                <button
+                                    onClick={() => { setShowReportModal(true); setShowMenu(false); }}
+                                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition"
+                                >
+                                    <FiFlag size={16} className="text-orange-400" />
+                                    <span className="text-orange-300">Report {profile.name?.split(' ')[0]}</span>
+                                </button>
+
+                                <div className="h-px bg-white/5 mx-3" />
+
+                                {/* Share */}
+                                <button
+                                    onClick={handleShare}
+                                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition"
+                                >
+                                    <FiShare2 size={16} className="text-blue-400" />
+                                    <span className="text-blue-300">Share Profile</span>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* ── PROFILE PIC + NAME (Always visible) ── */}
@@ -554,8 +693,79 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     </div>
                 </div>
             )}
+
+            {/* ─── REPORT MODAL ─── */}
+            {showReportModal && (
+                <div className="fixed inset-0 z-[150] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+                    <div className="w-full sm:max-w-md bg-[#16162A] rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl p-6">
+
+                        {reportDone ? (
+                            <div className="py-8 flex flex-col items-center gap-3">
+                                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
+                                    <FiCheckCircle size={32} className="text-green-400" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white">Report Submitted</h3>
+                                <p className="text-gray-400 text-sm text-center">Our team will review this report within 24 hours.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-center justify-between mb-5">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <FiAlertTriangle size={18} className="text-orange-400" />
+                                        Report {profile.name?.split(' ')[0]}
+                                    </h3>
+                                    <button onClick={() => setShowReportModal(false)} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-400 hover:text-white transition">
+                                        <FiX size={15} />
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleReportSubmit} className="space-y-4">
+                                    <p className="text-gray-400 text-xs mb-3">Select a reason for reporting this account:</p>
+
+                                    {/* Reason chips */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {['Fake Profile', 'Harassment', 'Spam', 'Inappropriate Content', 'Scam', 'Underage', 'Other'].map(reason => (
+                                            <button
+                                                key={reason}
+                                                type="button"
+                                                onClick={() => setReportReason(reason)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                                                    reportReason === reason
+                                                        ? 'bg-orange-500/20 border-orange-500/60 text-orange-300'
+                                                        : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/30'
+                                                }`}
+                                            >
+                                                {reason}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Description */}
+                                    <textarea
+                                        value={reportDesc}
+                                        onChange={(e) => setReportDesc(e.target.value)}
+                                        placeholder="Additional details (optional)..."
+                                        rows={3}
+                                        maxLength={300}
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-orange-500 transition resize-none placeholder-gray-600"
+                                    />
+
+                                    <button
+                                        type="submit"
+                                        disabled={!reportReason || reportSubmitting}
+                                        className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl font-bold text-sm transition disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90"
+                                    >
+                                        {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                                    </button>
+                                </form>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-export default DetailsPage;
+export default DetailsPage;
+

@@ -216,4 +216,80 @@ router.get('/following-list/:userId', async (req, res) => {
     }
 });
 
+// 11. Block a User — AUTH REQUIRED
+router.post('/block', authenticateToken, async (req, res) => {
+    try {
+        const { blocked_id } = req.body;
+        const blocker_id = req.user.id;
+        if (!blocked_id) return res.status(400).json({ error: "blocked_id required." });
+        if (parseInt(blocker_id) === parseInt(blocked_id)) return res.status(400).json({ error: "You cannot block yourself." });
+
+        await pool.query(
+            "INSERT INTO blocked_users (blocker_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            [blocker_id, blocked_id]
+        );
+        // Also unfollow both ways
+        await pool.query("DELETE FROM follows WHERE (follower_id = $1 AND following_id = $2) OR (follower_id = $2 AND following_id = $1)", [blocker_id, blocked_id]);
+
+        res.status(200).json({ message: "User blocked successfully." });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 12. Unblock a User — AUTH REQUIRED
+router.post('/unblock', authenticateToken, async (req, res) => {
+    try {
+        const { blocked_id } = req.body;
+        const blocker_id = req.user.id;
+        if (!blocked_id) return res.status(400).json({ error: "blocked_id required." });
+
+        await pool.query(
+            "DELETE FROM blocked_users WHERE blocker_id = $1 AND blocked_id = $2",
+            [blocker_id, blocked_id]
+        );
+        res.status(200).json({ message: "User unblocked successfully." });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 13. Check if a user is blocked — AUTH REQUIRED
+router.get('/block-status/:targetId', authenticateToken, async (req, res) => {
+    try {
+        const myId = req.user.id;
+        const { targetId } = req.params;
+
+        const result = await pool.query(
+            "SELECT id FROM blocked_users WHERE blocker_id = $1 AND blocked_id = $2",
+            [myId, targetId]
+        );
+        res.status(200).json({ isBlocked: result.rows.length > 0 });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 14. Report a User — AUTH REQUIRED
+router.post('/report', authenticateToken, async (req, res) => {
+    try {
+        const reporter_id = req.user.id;
+        const { reported_id, reason, description } = req.body;
+
+        if (!reported_id || !reason) return res.status(400).json({ error: "reported_id and reason required." });
+        if (parseInt(reporter_id) === parseInt(reported_id)) return res.status(400).json({ error: "You cannot report yourself." });
+
+        const validReasons = ['Fake Profile', 'Harassment', 'Spam', 'Inappropriate Content', 'Scam', 'Underage', 'Other'];
+        if (!validReasons.includes(reason)) return res.status(400).json({ error: "Invalid reason." });
+
+        await pool.query(
+            "INSERT INTO reports (reporter_id, reported_id, reason, description) VALUES ($1, $2, $3, $4)",
+            [reporter_id, reported_id, reason, description || null]
+        );
+        res.status(201).json({ message: "Report submitted. Our team will review it." });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;
