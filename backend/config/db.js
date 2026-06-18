@@ -24,6 +24,27 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS otp_expiry TIMESTAMP;");
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS sender_id INTEGER;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS social_link TEXT;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT false;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_blocked BOOLEAN DEFAULT false;");
+
+        // Block/Report tables
+        await pool.query(`CREATE TABLE IF NOT EXISTS blocked_users (
+            id SERIAL PRIMARY KEY,
+            blocker_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            blocked_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(blocker_id, blocked_id)
+        );`);
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS reports (
+            id SERIAL PRIMARY KEY,
+            reporter_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            reported_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            reason TEXT NOT NULL,
+            description TEXT,
+            status VARCHAR(20) DEFAULT 'pending',
+            created_at TIMESTAMPTZ DEFAULT NOW()
+        );`);
 
         await pool.query(`CREATE TABLE IF NOT EXISTS bookings (
             id SERIAL PRIMARY KEY,

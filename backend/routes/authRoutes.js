@@ -95,6 +95,14 @@ router.post('/login', authRateLimit, async (req, res) => {
             return res.status(401).json({ error: "Incorrect email/phone or password." });
         }
 
+        // Check if account is frozen or suspended
+        if (user.is_frozen) {
+            return res.status(403).json({ error: "Your account has been frozen by admin. Please contact support." });
+        }
+        if (user.is_platform_blocked && user.role !== 'admin') {
+            return res.status(403).json({ error: "Your account has been suspended. Please contact support." });
+        }
+
         // Generate JWT
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
