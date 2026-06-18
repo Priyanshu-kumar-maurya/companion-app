@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { PAGES } from "../App";
 
 function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole }) {
-    const [step, setStep] = useState("login"); // "login" | "forgot" | "reset"
+    const [step, setStep] = useState("login"); // "login" | "forgot" | "reset" | "verify"
     const [formData, setFormData] = useState({ emailOrPhone: "", password: "" });
     const [forgotEmail, setForgotEmail] = useState("");
     const [resetData, setResetData] = useState({ otp: "", newPassword: "", confirmPassword: "" });
+    const [verifyEmail, setVerifyEmail] = useState(""); // for unverified account OTP
+    const [verifyOtp, setVerifyOtp] = useState("");
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -31,6 +33,21 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             const data = await response.json();
 
             if (response.ok) {
+                // Check if account is verified
+                if (data.user.is_verified === false) {
+                    // Send OTP and go to verify step
+                    setVerifyEmail(data.user.email || formData.emailOrPhone);
+                    setVerifyOtp("");
+                    await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: data.user.email })
+                    });
+                    setStep("verify");
+                    setError("");
+                    return;
+                }
+
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("user", JSON.stringify(data.user));
 
@@ -49,6 +66,36 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             }
         } catch (err) {
             setError("Server error. Please try again later.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ── VERIFY OTP (for unverified accounts at login) ──
+    const handleVerifyOtpAtLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+        try {
+            const response = await fetch("https://rentgf-and-bf.onrender.com/api/verify-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: verifyEmail, otp: verifyOtp })
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setSuccess("Account verified! Logging you in...");
+                setTimeout(() => {
+                    localStorage.setItem("token", data.token);
+                    localStorage.setItem("user", JSON.stringify(data.user));
+                    if (data.user.role === 'girl') { if (setGirlUser) setGirlUser(data.user); setPage(PAGES.GIRL_DASHBOARD); }
+                    else { if (setBoyUser) setBoyUser(data.user); setPage(PAGES.BOY_DASHBOARD); }
+                }, 1000);
+            } else {
+                setError(data.error || "Invalid OTP.");
+            }
+        } catch (err) {
+            setError("Verification failed.");
         } finally {
             setLoading(false);
         }
@@ -145,6 +192,44 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 bg-purple-600/20"></div>
 
             <div className="bg-[#16162A] w-full max-w-md p-8 rounded-3xl border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] transition-colors duration-500">
+
+                {/* ── VERIFY STEP (unverified account detected at login) ── */}
+                {step === "verify" && (
+                    <>
+                        <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-pink-500/20">
+                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        </div>
+                        <h2 className="text-2xl font-extrabold text-center text-white mb-1">Verify Your Email</h2>
+                        <p className="text-gray-400 text-center text-sm mb-1">Your account is not verified yet.</p>
+                        <p className="text-pink-400 text-center text-sm font-semibold mb-6 break-all">{verifyEmail}</p>
+
+                        {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
+                        {success && <div className="bg-green-500/10 border border-green-500/50 text-green-400 text-sm p-3 rounded-xl mb-4 text-center">{success}</div>}
+
+                        <form onSubmit={handleVerifyOtpAtLogin} className="space-y-4">
+                            <input
+                                type="text"
+                                required
+                                maxLength="6"
+                                value={verifyOtp}
+                                onChange={(e) => setVerifyOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-pink-500 transition font-mono"
+                                placeholder="······"
+                                autoFocus
+                            />
+                            <button
+                                type="submit"
+                                disabled={loading || verifyOtp.length !== 6}
+                                className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold shadow-lg transition disabled:opacity-50 hover:opacity-90"
+                            >
+                                {loading ? "Verifying..." : "Verify & Login"}
+                            </button>
+                        </form>
+                        <button onClick={() => { setStep("login"); setError(""); }} className="mt-4 text-xs text-gray-500 hover:text-gray-300 transition w-full text-center">
+                            ← Back to Login
+                        </button>
+                    </>
+                )}
 
                 {/* ── LOGIN FORM ── */}
                 {step === "login" && (

@@ -111,7 +111,8 @@ router.post('/login', authRateLimit, async (req, res) => {
                 email: user.email,
                 role: user.role,
                 profile_pic: user.profile_pic,
-                kyc_status: user.kyc_status
+                kyc_status: user.kyc_status,
+                is_verified: user.is_verified
             }
         });
     } catch (err) {

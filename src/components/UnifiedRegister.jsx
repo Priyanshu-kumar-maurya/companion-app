@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
-import { FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiMail, FiX, FiRefreshCw, FiCheckCircle } from "react-icons/fi";
 
 function UnifiedRegister({ setPage }) {
     const [formData, setFormData] = useState({
@@ -12,6 +12,11 @@ function UnifiedRegister({ setPage }) {
     const [showOtpModal, setShowOtpModal] = useState(false);
     const [otp, setOtp] = useState("");
     const [verifying, setVerifying] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+
+    // Store registered user info so we can delete if cancelled
+    const [registeredUserId, setRegisteredUserId] = useState(null);
+    const [registeredToken, setRegisteredToken] = useState(null);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -47,7 +52,11 @@ function UnifiedRegister({ setPage }) {
 
             const data = await response.json();
             if (response.ok) {
+                // Save user id + token — needed for cancel/delete if user backs out
+                setRegisteredUserId(data.user?.id || null);
+                setRegisteredToken(data.token || null);
                 setShowOtpModal(true);
+                startResendCooldown();
             } else {
                 alert(data.error || "Registration failed.");
             }
@@ -58,6 +67,50 @@ function UnifiedRegister({ setPage }) {
             setLoading(false);
         }
     };
+
+    // Cancel registration — deletes the unverified account
+    const cancelRegistration = async () => {
+        if (registeredUserId && registeredToken) {
+            try {
+                await fetch(`https://rentgf-and-bf.onrender.com/api/users/${registeredUserId}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${registeredToken}` }
+                });
+            } catch (err) { /* silent fail */ }
+        }
+        setShowOtpModal(false);
+        setOtp("");
+        setRegisteredUserId(null);
+        setRegisteredToken(null);
+    };
+
+    // Start 30s resend cooldown
+    const startResendCooldown = () => {
+        setResendCooldown(30);
+        const interval = setInterval(() => {
+            setResendCooldown(prev => {
+                if (prev <= 1) { clearInterval(interval); return 0; }
+                return prev - 1;
+            });
+        }, 1000);
+    };
+
+    // Resend OTP
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0) return;
+        try {
+            await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: formData.email })
+            });
+            startResendCooldown();
+            alert("OTP resent! Please check your email.");
+        } catch (err) {
+            alert("Failed to resend OTP. Try again.");
+        }
+    };
+
 
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
@@ -169,14 +222,26 @@ function UnifiedRegister({ setPage }) {
                 </div>
             </div>
 
+            {/* ─── OTP VERIFICATION MODAL ─── */}
             {showOtpModal && (
                 <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-[#16162A] w-full max-w-sm p-8 rounded-3xl border border-white/10 shadow-2xl animate-fade-in text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-green-500/20">
-                            ✉️
+                    <div className="bg-[#16162A] w-full max-w-sm p-8 rounded-3xl border border-white/10 shadow-2xl text-center relative">
+
+                        {/* Close/Cancel button */}
+                        <button
+                            onClick={cancelRegistration}
+                            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-gray-400 flex items-center justify-center transition"
+                        >
+                            <FiX size={16} />
+                        </button>
+
+                        <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-pink-500/20">
+                            <FiMail size={28} className="text-white" />
                         </div>
-                        <h3 className="text-2xl font-bold text-white mb-2">Verify Email</h3>
-                        <p className="text-gray-400 text-sm mb-6">We've sent a 6-digit OTP to <br /><b className="text-white">{formData.email}</b></p>
+
+                        <h3 className="text-2xl font-bold text-white mb-1">Verify Email</h3>
+                        <p className="text-gray-400 text-sm mb-1">We've sent a 6-digit OTP to</p>
+                        <p className="text-pink-400 font-semibold text-sm mb-6 break-all">{formData.email}</p>
 
                         <form onSubmit={handleVerifyOtp} className="space-y-4">
                             <input
@@ -185,13 +250,38 @@ function UnifiedRegister({ setPage }) {
                                 maxLength="6"
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-widest text-white outline-none focus:border-green-500 transition"
-                                placeholder="------"
+                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-pink-500 transition font-mono"
+                                placeholder="······"
+                                autoFocus
                             />
-                            <button type="submit" disabled={verifying} className="w-full py-3.5 bg-green-500 hover:bg-green-400 text-white rounded-xl font-bold shadow-lg transition">
+                            <button
+                                type="submit"
+                                disabled={verifying || otp.length !== 6}
+                                className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 flex items-center justify-center gap-2"
+                            >
+                                <FiCheckCircle size={18} />
                                 {verifying ? "Verifying..." : "Verify Account"}
                             </button>
                         </form>
+
+                        {/* Resend OTP */}
+                        <div className="mt-4">
+                            {resendCooldown > 0 ? (
+                                <p className="text-gray-500 text-xs">Resend OTP in <span className="text-pink-400 font-bold">{resendCooldown}s</span></p>
+                            ) : (
+                                <button
+                                    onClick={handleResendOtp}
+                                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-pink-400 transition mx-auto"
+                                >
+                                    <FiRefreshCw size={12} /> Resend OTP
+                                </button>
+                            )}
+                        </div>
+
+                        <p className="mt-4 text-gray-600 text-xs">
+                            Changed your mind?{' '}
+                            <button onClick={cancelRegistration} className="text-red-400 hover:underline">Cancel registration</button>
+                        </p>
                     </div>
                 </div>
             )}
