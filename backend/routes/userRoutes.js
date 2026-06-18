@@ -40,7 +40,7 @@ router.get('/users', async (req, res) => {
                    COUNT(r.id) as review_count
             FROM users u
             LEFT JOIN reviews r ON u.id = r.companion_id
-            WHERE u.role = $1
+            WHERE u.role = $1 AND u.is_verified = true
             GROUP BY u.id
             ORDER BY avg_rating DESC, review_count DESC
         `, [role]);
@@ -49,6 +49,7 @@ router.get('/users', async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
+
 
 // 3. Update User Profile Settings — AUTH REQUIRED + OWNERSHIP CHECK
 router.put('/users/:userId', authenticateToken, async (req, res) => {
