@@ -18,7 +18,6 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
     const isLoggedIn = !!localStorage.getItem("token") || !!currentUser;
     const [activeSlide, setActiveSlide] = useState(0);
-    const [activeTab, setActiveTab] = useState("boy");
 
     useEffect(() => {
         if (!isLoggedIn) {
@@ -443,10 +442,10 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
                 {/* Two Column Layout: Left (Phone Mockup) | Right (Login/Signup Box) */}
-                <div className="flex flex-col md:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 w-full">
+                <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 w-full">
                     
-                    {/* LEFT COLUMN: Phone Mockup (hidden on small screens, shown on md and above) */}
-                    <div className="hidden md:block shrink-0">
+                    {/* LEFT COLUMN: Phone Mockup (visible on all screens, ordered second on mobile so card is first) */}
+                    <div className="shrink-0 scale-90 sm:scale-100 flex justify-center order-2 lg:order-1">
                         <div className="relative w-[280px] h-[550px] bg-black rounded-[45px] p-[10px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-[6px] border-[#22223b] overflow-hidden">
                             {/* Notch */}
                             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-black rounded-full z-30 flex items-center justify-center">
@@ -583,8 +582,8 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: Premium Instagram-Style Card */}
-                    <div className="w-full max-w-[360px] flex flex-col gap-4 animate-fade-in">
+                    {/* RIGHT COLUMN: Premium Instagram-Style Card (ordered first on mobile so it displays on top) */}
+                    <div className="w-full max-w-[360px] flex flex-col gap-4 animate-fade-in order-1 lg:order-2">
                         <div className="bg-[#16162A] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md relative overflow-hidden flex flex-col items-center">
                             
                             {/* Ambient card glows */}
@@ -607,81 +606,33 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
                             </div>
 
-                            {/* Tab selection */}
-                            <div className="w-full bg-white/5 rounded-xl p-1 mb-5 border border-white/5 flex gap-1">
-                                <button
-                                    onClick={() => setActiveTab("boy")}
-                                    className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-all ${activeTab === "boy" ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md" : "text-gray-400 hover:text-white"}`}
-                                >
-                                    Find Companion (Boy)
-                                </button>
-                                <button
-                                    onClick={() => setActiveTab("girl")}
-                                    className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-all ${activeTab === "girl" ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md" : "text-gray-400 hover:text-white"}`}
-                                >
-                                    Earn Money (Girl)
-                                </button>
-                            </div>
-
                             {/* Short Intro */}
-                            <p className="text-gray-400 text-xs text-center mb-6 leading-relaxed px-1 min-h-[40px]">
-                                {activeTab === "boy" 
-                                    ? "Connect with safe & verified partners for movies, coffee dates, events, and meaningful conversations."
-                                    : "Register, share your time on dates or events, chat and earn securely on your own terms."
-                                }
+                            <p className="text-gray-400 text-sm text-center mb-8 leading-relaxed px-1">
+                                India's #1 Companion Platform. Connect with safe &amp; verified partners for coffee dates, movies, events, and meaningful conversations.
                             </p>
 
                             {/* Login / Signup Buttons */}
-                            <div className="w-full flex flex-col gap-3">
+                            <div className="w-full flex flex-col gap-4">
                                 <button
-                                    onClick={() => setPage(activeTab === "boy" ? PAGES.BOY_LOGIN : PAGES.GIRL_LOGIN)}
-                                    className={`w-full py-3 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-xs text-white shadow-lg ${activeTab === "boy" ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-blue-500/20" : "bg-gradient-to-r from-pink-500 to-purple-600 hover:shadow-pink-500/20"}`}
+                                    onClick={() => setPage(PAGES.BOY_LOGIN)}
+                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-sm text-white shadow-lg shadow-pink-500/10 transition transform hover:-translate-y-0.5 active:scale-95"
                                 >
-                                    Log In as {activeTab === "boy" ? "Boy" : "Girl"}
+                                    Log In
                                 </button>
                                 
                                 <button
-                                    onClick={() => setPage(activeTab === "boy" ? PAGES.BOY_REGISTER : PAGES.GIRL_REGISTER)}
-                                    className="w-full py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-xs"
+                                    onClick={() => setPage(PAGES.BOY_REGISTER)}
+                                    className="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
                                 >
                                     Create New Account
                                 </button>
                             </div>
 
                             {/* Verified Trust Badge */}
-                            <div className="mt-6 flex items-center gap-1.5 text-[9px] text-gray-500">
+                            <div className="mt-8 flex items-center gap-1.5 text-[10px] text-gray-500">
                                 <span>🔒 Secure &amp; Encrypted</span>
                                 <span>•</span>
                                 <span>💯 Verified Profiles</span>
-                            </div>
-                        </div>
-
-                        {/* Extra Box: Admin access */}
-                        <div className="bg-[#16162A] border border-white/10 rounded-2xl p-4 text-center shadow-lg flex items-center justify-center gap-1 text-xs">
-                            <span className="text-gray-400">Are you an administrator?</span>
-                            <button 
-                                onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                className="text-pink-400 font-bold hover:text-pink-300 transition"
-                            >
-                                Admin Login
-                            </button>
-                        </div>
-
-                        {/* App Download Badges (Mock) */}
-                        <div className="flex justify-center gap-3 mt-1.5">
-                            <div className="px-3 py-1.5 bg-black border border-white/10 rounded-lg flex items-center gap-2 opacity-85 hover:opacity-100 transition cursor-pointer select-none">
-                                <span className="text-sm">🤖</span>
-                                <div className="text-left leading-none">
-                                    <span className="text-[7px] text-gray-500 uppercase font-bold">Get it on</span>
-                                    <p className="text-[9px] font-bold text-white mt-0.5">Google Play</p>
-                                </div>
-                            </div>
-                            <div className="px-3 py-1.5 bg-black border border-white/10 rounded-lg flex items-center gap-2 opacity-85 hover:opacity-100 transition cursor-pointer select-none">
-                                <span className="text-sm">🍎</span>
-                                <div className="text-left leading-none">
-                                    <span className="text-[7px] text-gray-500 uppercase font-bold">Download on the</span>
-                                    <p className="text-[9px] font-bold text-white mt-0.5">App Store</p>
-                                </div>
                             </div>
                         </div>
                     </div>
