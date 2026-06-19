@@ -4,8 +4,7 @@ import Footer from "./Footer";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
 import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
-import { BsBookmarkFill, BsBookmark, BsArrowRightCircle, BsGenderFemale, BsGenderMale } from "react-icons/bs";
-import { HiSparkles } from "react-icons/hi";
+import { BsBookmarkFill, BsBookmark } from "react-icons/bs";
 
 function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [feed, setFeed] = useState([]);
@@ -18,6 +17,17 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [savedPosts, setSavedPosts] = useState([]);
 
     const isLoggedIn = !!localStorage.getItem("token") || !!currentUser;
+    const [activeSlide, setActiveSlide] = useState(0);
+    const [activeTab, setActiveTab] = useState("boy");
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            const interval = setInterval(() => {
+                setActiveSlide((prev) => (prev + 1) % 3);
+            }, 3000);
+            return () => clearInterval(interval);
+        }
+    }, [isLoggedIn]);
 
     useEffect(() => {
         if (isLoggedIn && currentUser) {
@@ -426,67 +436,256 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
     return (
         <div className="min-h-[100dvh] bg-[#0D0D1A] pt-24 pb-10">
-            <div className="max-w-5xl mx-auto px-6 text-center mt-10 mb-20 relative">
+            {/* Main Hero Container */}
+            <div className="max-w-5xl mx-auto px-6 mt-6 md:mt-12 mb-16 relative">
+                {/* Ambient lights */}
+                <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-pink-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-                <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-pink-600/20 rounded-full blur-[100px] pointer-events-none"></div>
-                <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none"></div>
-
-                <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-pink-400 text-sm font-semibold mb-6 shadow-[0_0_15px_rgba(236,72,153,0.15)] relative z-10">
-                    <HiSparkles className="text-base" />
-                    India's #1 Companion App
-                </div>
-
-                <h1 className="text-5xl md:text-6xl font-extrabold mb-6 leading-tight relative z-10">
-                    Find Your Perfect <br />
-                    <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                        Companion Today
-                    </span>
-                </h1>
-
-                <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-12 relative z-10">
-                    Join our secure and private platform to connect with amazing people for coffee dates, movies, events, and meaningful conversations.
-                </p>
-
-                <div className="flex flex-col sm:flex-row justify-center gap-6 relative z-10">
-                    <div className="flex flex-col items-center w-full max-w-2xl mx-auto">
-                        <div className="flex flex-col sm:flex-row gap-6 w-full mb-8">
-                            <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-pink-500/20 rounded-2xl shadow-lg hover:border-pink-500/50 transition duration-300">
-                                <h3 className="text-pink-400 font-bold text-xl flex items-center gap-2">
-                                    <BsGenderFemale className="text-2xl" /> For Girls
-                                </h3>
-                                <p className="text-sm text-gray-400 mb-2 flex-grow">Earn money by spending time as a companion.</p>
-                                <button
-                                    onClick={() => setPage(PAGES.GIRL_REGISTER)}
-                                    className="w-full px-6 py-3.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
-                                >
-                                    Register as a Girl
-                                </button>
+                {/* Two Column Layout: Left (Phone Mockup) | Right (Login/Signup Box) */}
+                <div className="flex flex-col md:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 w-full">
+                    
+                    {/* LEFT COLUMN: Phone Mockup (hidden on small screens, shown on md and above) */}
+                    <div className="hidden md:block shrink-0">
+                        <div className="relative w-[280px] h-[550px] bg-black rounded-[45px] p-[10px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-[6px] border-[#22223b] overflow-hidden">
+                            {/* Notch */}
+                            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-black rounded-full z-30 flex items-center justify-center">
+                                <div className="w-10 h-1 bg-gray-800 rounded-full"></div>
+                                <div className="w-2 h-2 bg-gray-900 rounded-full ml-2 border border-gray-700"></div>
                             </div>
+                            
+                            {/* Side Buttons for Phone Mockup */}
+                            <div className="absolute left-0 top-24 w-[3px] h-10 bg-gray-800 rounded-r-md"></div>
+                            <div className="absolute left-0 top-38 w-[3px] h-14 bg-gray-800 rounded-r-md"></div>
+                            <div className="absolute right-0 top-32 w-[3px] h-16 bg-gray-800 rounded-l-md"></div>
 
-                            <div className="flex-1 flex flex-col gap-3 p-6 bg-[#16162A] border border-blue-500/20 rounded-2xl shadow-lg hover:border-blue-500/50 transition duration-300">
-                                <h3 className="text-blue-400 font-bold text-xl flex items-center gap-2">
-                                    <BsGenderMale className="text-2xl" /> For Boys
-                                </h3>
-                                <p className="text-sm text-gray-400 mb-2 flex-grow">Find companions for dates, events &amp; hangouts.</p>
-                                <button
-                                    onClick={() => setPage(PAGES.BOY_REGISTER)}
-                                    className="w-full px-6 py-3.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition"
-                                >
-                                    Register as a Boy
-                                </button>
+                            {/* Inner Screen */}
+                            <div className="relative w-full h-full rounded-[38px] overflow-hidden bg-[#0D0D1A]">
+                                {/* Slide 0: Discover Profiles */}
+                                <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 0 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
+                                    <div className="h-full w-full bg-[#111122] flex flex-col p-4 justify-between relative overflow-hidden">
+                                        <div className="flex justify-between items-center text-[9px] text-gray-400 z-10 pt-2">
+                                            <span>09:41</span>
+                                            <div className="flex gap-1 items-center">
+                                                <span>📶</span>
+                                                <span>🔋</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex-1 flex flex-col justify-center my-3 z-10">
+                                            <div className="bg-[#1C1C36] rounded-2xl overflow-hidden border border-pink-500/20 shadow-xl relative h-full flex flex-col justify-between">
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/20 to-purple-500/20 z-0"></div>
+                                                
+                                                <div className="flex-1 relative z-10 flex items-center justify-center p-3">
+                                                    <div className="w-20 h-20 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center text-3xl shadow-lg border-2 border-white/20">
+                                                        👩‍🦰
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="bg-black/50 backdrop-blur-md p-3 relative z-10 border-t border-white/5">
+                                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                                        <span className="font-extrabold text-[12px] text-white">Ananya, 21</span>
+                                                        <span className="bg-pink-500 text-white text-[7px] px-1 rounded-full font-bold">VERIFIED</span>
+                                                    </div>
+                                                    <p className="text-[9px] text-gray-300">Mumbai • Online 🟢</p>
+                                                    <div className="flex gap-1 mt-1.5 flex-wrap">
+                                                        <span className="bg-pink-500/30 text-pink-300 text-[7px] px-1.5 py-0.5 rounded-full font-bold">Coffee</span>
+                                                        <span className="bg-purple-500/30 text-purple-300 text-[7px] px-1.5 py-0.5 rounded-full font-bold">Movies</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="text-[8px] text-center text-gray-500 z-10 font-bold mb-1">Swipe to explore →</div>
+                                    </div>
+                                </div>
+
+                                {/* Slide 1: Premium Chat */}
+                                <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 1 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
+                                    <div className="h-full w-full bg-[#0E0E1F] flex flex-col p-4 justify-between">
+                                        <div className="flex justify-between items-center text-[9px] text-gray-400 pt-2">
+                                            <span>09:42</span>
+                                            <div className="flex gap-1 items-center">
+                                                <span>📶</span>
+                                                <span>🔋</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-center gap-2 border-b border-white/10 pb-2 mt-2">
+                                            <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-[10px] shadow">
+                                                👩‍🦰
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-[10px] text-white">Ananya</h4>
+                                                <span className="text-[7px] text-green-400">typing...</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex-1 flex flex-col gap-2 justify-end my-3 text-[9px]">
+                                            <div className="bg-[#1C1C36] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-white/5">
+                                                Hey! Ready for our coffee date? ☕
+                                            </div>
+                                            <div className="bg-pink-500 text-white p-2 rounded-2xl rounded-tr-none max-w-[85%] self-end shadow-md font-medium">
+                                                Absolutely! See you at 5. 😊
+                                            </div>
+                                            <div className="bg-[#1C1C36] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-white/5 animate-pulse">
+                                                Great! I'm on my way.
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="bg-white/5 rounded-full px-3 py-1 flex justify-between items-center border border-white/10 mb-1">
+                                            <span className="text-[8px] text-gray-500">Message...</span>
+                                            <span className="text-pink-500 text-[8px] font-bold">Send</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Slide 2: Video Calling */}
+                                <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 2 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
+                                    <div className="h-full w-full bg-[#111122] flex flex-col p-4 justify-between relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-[#0D0D1A] to-pink-900/20 z-0"></div>
+                                        
+                                        <div className="flex justify-between items-center text-[9px] text-gray-400 z-10 pt-2 w-full">
+                                            <span>09:43</span>
+                                            <span className="font-bold text-white uppercase tracking-wider text-[7px] bg-pink-500/25 px-1.5 py-0.5 rounded-full border border-pink-500/30">HD Video</span>
+                                            <div className="flex gap-1 items-center">
+                                                <span>📶</span>
+                                                <span>🔋</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex-1 flex flex-col items-center justify-center gap-1.5 z-10">
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(236,72,153,0.35)] border-2 border-white/30 animate-pulse relative">
+                                                👩‍🦰
+                                                <span className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border border-[#111122] flex items-center justify-center text-[8px]">🎙️</span>
+                                            </div>
+                                            <h4 className="font-bold text-[11px] text-white">Ananya Sharma</h4>
+                                            <span className="text-[8px] text-gray-400">Connected • 02:45</span>
+                                        </div>
+                                        
+                                        <div className="absolute top-10 right-4 w-10 h-14 bg-[#16162A] rounded-lg border border-white/20 z-20 overflow-hidden shadow-lg flex items-center justify-center text-[12px]">
+                                            👦
+                                        </div>
+                                        
+                                        <div className="flex justify-center gap-3 items-center z-10 mb-1">
+                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-[9px] text-white">
+                                                🎙️
+                                            </div>
+                                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-[11px] text-white shadow-lg animate-bounce">
+                                                📞
+                                            </div>
+                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-[9px] text-white">
+                                                📷
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-
-                        <div className="text-center bg-[#16162A] border border-white/5 py-4 px-10 rounded-2xl w-full sm:w-auto shadow-lg hover:border-white/10 transition">
-                            <p className="text-gray-400 text-sm mb-2">Already have an account?</p>
-                            <button
-                                onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                className="text-white font-bold text-lg hover:text-pink-400 transition flex items-center justify-center gap-2 w-full"
-                            >
-                                Login to your account <BsArrowRightCircle className="text-xl" />
-                            </button>
                         </div>
                     </div>
+
+                    {/* RIGHT COLUMN: Premium Instagram-Style Card */}
+                    <div className="w-full max-w-[360px] flex flex-col gap-4 animate-fade-in">
+                        <div className="bg-[#16162A] border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md relative overflow-hidden flex flex-col items-center">
+                            
+                            {/* Ambient card glows */}
+                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-pink-500/5 rounded-full blur-xl pointer-events-none"></div>
+                            <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
+                            
+                            {/* Platform Branding */}
+                            <div className="flex items-center gap-2.5 mb-6">
+                                <svg className="w-9 h-9 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    <defs>
+                                        <linearGradient id="hero-logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                                            <stop stopColor="#ec4899" />
+                                            <stop offset="1" stopColor="#a855f7" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
+                            </div>
+
+                            {/* Tab selection */}
+                            <div className="w-full bg-white/5 rounded-xl p-1 mb-5 border border-white/5 flex gap-1">
+                                <button
+                                    onClick={() => setActiveTab("boy")}
+                                    className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-all ${activeTab === "boy" ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md" : "text-gray-400 hover:text-white"}`}
+                                >
+                                    Find Companion (Boy)
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab("girl")}
+                                    className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-all ${activeTab === "girl" ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md" : "text-gray-400 hover:text-white"}`}
+                                >
+                                    Earn Money (Girl)
+                                </button>
+                            </div>
+
+                            {/* Short Intro */}
+                            <p className="text-gray-400 text-xs text-center mb-6 leading-relaxed px-1 min-h-[40px]">
+                                {activeTab === "boy" 
+                                    ? "Connect with safe & verified partners for movies, coffee dates, events, and meaningful conversations."
+                                    : "Register, share your time on dates or events, chat and earn securely on your own terms."
+                                }
+                            </p>
+
+                            {/* Login / Signup Buttons */}
+                            <div className="w-full flex flex-col gap-3">
+                                <button
+                                    onClick={() => setPage(activeTab === "boy" ? PAGES.BOY_LOGIN : PAGES.GIRL_LOGIN)}
+                                    className={`w-full py-3 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-xs text-white shadow-lg ${activeTab === "boy" ? "bg-gradient-to-r from-blue-500 to-indigo-600 hover:shadow-blue-500/20" : "bg-gradient-to-r from-pink-500 to-purple-600 hover:shadow-pink-500/20"}`}
+                                >
+                                    Log In as {activeTab === "boy" ? "Boy" : "Girl"}
+                                </button>
+                                
+                                <button
+                                    onClick={() => setPage(activeTab === "boy" ? PAGES.BOY_REGISTER : PAGES.GIRL_REGISTER)}
+                                    className="w-full py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-xs"
+                                >
+                                    Create New Account
+                                </button>
+                            </div>
+
+                            {/* Verified Trust Badge */}
+                            <div className="mt-6 flex items-center gap-1.5 text-[9px] text-gray-500">
+                                <span>🔒 Secure &amp; Encrypted</span>
+                                <span>•</span>
+                                <span>💯 Verified Profiles</span>
+                            </div>
+                        </div>
+
+                        {/* Extra Box: Admin access */}
+                        <div className="bg-[#16162A] border border-white/10 rounded-2xl p-4 text-center shadow-lg flex items-center justify-center gap-1 text-xs">
+                            <span className="text-gray-400">Are you an administrator?</span>
+                            <button 
+                                onClick={() => setPage(PAGES.BOY_LOGIN)}
+                                className="text-pink-400 font-bold hover:text-pink-300 transition"
+                            >
+                                Admin Login
+                            </button>
+                        </div>
+
+                        {/* App Download Badges (Mock) */}
+                        <div className="flex justify-center gap-3 mt-1.5">
+                            <div className="px-3 py-1.5 bg-black border border-white/10 rounded-lg flex items-center gap-2 opacity-85 hover:opacity-100 transition cursor-pointer select-none">
+                                <span className="text-sm">🤖</span>
+                                <div className="text-left leading-none">
+                                    <span className="text-[7px] text-gray-500 uppercase font-bold">Get it on</span>
+                                    <p className="text-[9px] font-bold text-white mt-0.5">Google Play</p>
+                                </div>
+                            </div>
+                            <div className="px-3 py-1.5 bg-black border border-white/10 rounded-lg flex items-center gap-2 opacity-85 hover:opacity-100 transition cursor-pointer select-none">
+                                <span className="text-sm">🍎</span>
+                                <div className="text-left leading-none">
+                                    <span className="text-[7px] text-gray-500 uppercase font-bold">Download on the</span>
+                                    <p className="text-[9px] font-bold text-white mt-0.5">App Store</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
