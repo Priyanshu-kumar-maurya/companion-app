@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff } from "react-icons/fi";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -19,6 +19,86 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
     const [messageToDelete, setMessageToDelete] = useState(null);
     const [lightboxImg, setLightboxImg] = useState(null); // fullscreen image viewer
+    
+    const [showMenu, setShowMenu] = useState(false);
+    const [isBlocked, setIsBlocked] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
+    const [reportReason, setReportReason] = useState("");
+    const [reportDesc, setReportDesc] = useState("");
+    const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [reportDone, setReportDone] = useState(false);
+    const [blockLoading, setBlockLoading] = useState(false);
+    const menuRef = useRef(null);
+
+    // Fetch block status
+    useEffect(() => {
+        if (!currentUser || !girl || currentUser.id === girl.id) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        fetch(`https://rentgf-and-bf.onrender.com/api/block-status/${girl.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => { if (data) setIsBlocked(data.isBlocked); })
+        .catch(() => {});
+    }, [girl, currentUser]);
+
+    // Close menu on outside click
+    useEffect(() => {
+        const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setShowMenu(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    // Block / Unblock
+    const handleBlockToggle = async () => {
+        if (!currentUser) return;
+        setBlockLoading(true);
+        setShowMenu(false);
+        const token = localStorage.getItem('token');
+        const endpoint = isBlocked ? '/api/unblock' : '/api/block';
+        try {
+            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ blocked_id: girl.id })
+            });
+            if (res.ok) {
+                setIsBlocked(!isBlocked);
+                if (!isBlocked) {
+                    alert(`${girl.name} has been blocked.`);
+                    setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD);
+                } else {
+                    alert(`${girl.name} has been unblocked.`);
+                }
+            }
+        } catch (e) { /* silent */ } finally { setBlockLoading(false); }
+    };
+
+    // Submit Report
+    const handleReportSubmit = async (e) => {
+        e.preventDefault();
+        if (!reportReason) return;
+        setReportSubmitting(true);
+        const token = localStorage.getItem('token');
+        try {
+            const res = await fetch('https://rentgf-and-bf.onrender.com/api/report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reported_id: girl.id, reason: reportReason, description: reportDesc })
+            });
+            if (res.ok) {
+                setReportDone(true);
+                setTimeout(() => { setShowReportModal(false); setReportDone(false); setReportReason(''); setReportDesc(''); }, 2500);
+            }
+        } catch (e) { /* silent */ } finally { setReportSubmitting(false); }
+    };
+
+    // View Profile Details
+    const handleViewProfileFromChat = () => {
+        if (setSelectedGirl) setSelectedGirl(girl);
+        setPage(PAGES.DETAILS);
+    };
 
     // --- CALLING & WEBRTC STATES ---
     const [callStatus, setCallStatus] = useState("idle"); 
@@ -518,16 +598,47 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     </div>
                 </div>
 
-                <div className="flex gap-1">
+                <div className="flex gap-1 relative" ref={menuRef}>
                     <button onClick={() => startCall('video')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
                         <FiVideo size={20} />
                     </button>
                     <button onClick={() => startCall('audio')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
                         <FiPhone size={20} />
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10">
+                    <button 
+                        onClick={() => setShowMenu(!showMenu)} 
+                        className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
+                    >
                         <FiMoreVertical size={20} />
                     </button>
+
+                    {/* Dropdown Menu */}
+                    {showMenu && (
+                        <div className="absolute right-0 top-12 bg-[#16162A] border border-white/10 rounded-xl shadow-2xl py-1.5 w-40 z-50 animate-fade-in">
+                            <button
+                                onClick={handleViewProfileFromChat}
+                                className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                            >
+                                <FiUser size={14} />
+                                View Profile
+                            </button>
+                            <button
+                                onClick={() => { setShowReportModal(true); setShowMenu(false); }}
+                                className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                            >
+                                <FiFlag size={14} />
+                                Report User
+                            </button>
+                            <button
+                                onClick={handleBlockToggle}
+                                disabled={blockLoading}
+                                className="w-full px-4 py-2 text-left text-xs font-semibold text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition disabled:opacity-50"
+                            >
+                                <FiSlash size={14} />
+                                {isBlocked ? 'Unblock User' : 'Block User'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -841,6 +952,70 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                     <span className="text-[10px] text-gray-400">{callType === 'video' ? (isVideoOff ? 'Cam On' : 'Cam Off') : 'Speaker'}</span>
                                 </div>
                             </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ─── REPORT MODAL ─── */}
+            {showReportModal && (
+                <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div className="bg-[#16162A] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl p-6 relative overflow-hidden animate-slide-up">
+                        {reportDone ? (
+                            <div className="text-center py-6">
+                                <FiCheckCircle className="text-pink-500 text-5xl mx-auto mb-4 animate-bounce" />
+                                <h3 className="text-lg font-bold text-white mb-2">Report Submitted</h3>
+                                <p className="text-xs text-gray-400 font-medium">Thank you. The admin team will review this user.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <button 
+                                    onClick={() => setShowReportModal(false)} 
+                                    className="absolute top-4 right-4 text-gray-500 hover:text-white transition"
+                                >
+                                    <FiX size={20} />
+                                </button>
+                                <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
+                                    <FiAlertTriangle className="text-pink-500" /> Report Profile
+                                </h3>
+                                <p className="text-xs text-gray-400 mb-5 font-medium">Help us keep our community safe. Please specify the reason.</p>
+                                
+                                <form onSubmit={handleReportSubmit} className="space-y-4">
+                                    <div>
+                                        <label className="block text-[10px] text-gray-400 uppercase font-semibold mb-1.5 ml-1">Reason</label>
+                                        <select 
+                                            required 
+                                            value={reportReason} 
+                                            onChange={(e) => setReportReason(e.target.value)}
+                                            className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-3.5 py-3 text-xs text-white outline-none focus:border-pink-500 transition"
+                                        >
+                                            <option value="">Select a reason...</option>
+                                            <option value="Spam / Fake Profile">Spam / Fake Profile</option>
+                                            <option value="Inappropriate Messages">Inappropriate Messages</option>
+                                            <option value="Harassment / Abuse">Harassment / Abuse</option>
+                                            <option value="Scam / Financial Fraud">Scam / Financial Fraud</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] text-gray-400 uppercase font-semibold mb-1.5 ml-1">Additional details (Optional)</label>
+                                        <textarea
+                                            value={reportDesc}
+                                            onChange={(e) => setReportDesc(e.target.value)}
+                                            placeholder="Provide more context..."
+                                            className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition h-20 resize-none"
+                                        />
+                                    </div>
+                                    
+                                    <button 
+                                        type="submit" 
+                                        disabled={reportSubmitting || !reportReason}
+                                        className="w-full py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold text-xs transition shadow-lg disabled:opacity-50 hover:opacity-95"
+                                    >
+                                        {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                                    </button>
+                                </form>
+                            </>
                         )}
                     </div>
                 </div>
