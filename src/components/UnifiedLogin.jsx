@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole }) {
     const [step, setStep] = useState("login"); // "login" | "forgot" | "reset" | "verify"
@@ -8,6 +9,9 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     const [resetData, setResetData] = useState({ otp: "", newPassword: "", confirmPassword: "" });
     const [verifyEmail, setVerifyEmail] = useState(""); // for unverified account OTP
     const [verifyOtp, setVerifyOtp] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -189,9 +193,12 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
 
     return (
         <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
-            <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 bg-purple-600/20"></div>
+            <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-pink-600/10"></div>
+            <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-purple-600/10"></div>
 
-            <div className="bg-[#16162A] w-full max-w-md p-8 rounded-3xl border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.1)] transition-colors duration-500">
+            <div className="bg-[#16162A]/90 w-full max-w-md p-8 rounded-2xl border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.8)] backdrop-blur-md relative overflow-hidden transition-colors duration-500">
+                <div className="absolute -top-12 -right-12 w-24 h-24 bg-pink-500/5 rounded-full blur-xl pointer-events-none"></div>
+                <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
 
                 {/* ── VERIFY STEP (unverified account detected at login) ── */}
                 {step === "verify" && (
@@ -234,7 +241,23 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 {/* ── LOGIN FORM ── */}
                 {step === "login" && (
                     <>
-                        <h2 className="text-3xl font-extrabold text-center text-white mb-2">Welcome Back</h2>
+                        {/* Platform Branding */}
+                        <div className="flex items-center justify-center gap-2.5 mb-6 cursor-pointer" onClick={() => setPage(PAGES.HOME)}>
+                            <svg className="w-8 h-8 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#login-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#login-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#login-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <defs>
+                                    <linearGradient id="login-logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                                        <stop stopColor="#ec4899" />
+                                        <stop offset="1" stopColor="#a855f7" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <span className="text-2xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
+                        </div>
+
+                        <h2 className="text-2xl font-extrabold text-center text-white mb-1">Welcome Back</h2>
                         <p className="text-gray-400 text-center text-sm mb-6">Login to your account</p>
 
                         {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
@@ -248,21 +271,30 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     required
                                     value={formData.emailOrPhone}
                                     onChange={handleChange}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
+                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-pink-500"
                                     placeholder="example@mail.com or 9876543210"
                                 />
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5 ml-1">Password</label>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
-                                    placeholder="••••••••"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        required
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                        placeholder="••••••••"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                                    >
+                                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="text-right">
@@ -368,25 +400,43 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5 ml-1">New Password</label>
-                                <input
-                                    type="password"
-                                    required
-                                    value={resetData.newPassword}
-                                    onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
-                                    placeholder="Create a strong password"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showNewPassword ? "text" : "password"}
+                                        required
+                                        value={resetData.newPassword}
+                                        onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                        placeholder="Create a strong password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPassword(!showNewPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                                    >
+                                        {showNewPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5 ml-1">Confirm Password</label>
-                                <input
-                                    type="password"
-                                    required
-                                    value={resetData.confirmPassword}
-                                    onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
-                                    placeholder="Repeat your password"
-                                />
+                                <div className="relative">
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        required
+                                        value={resetData.confirmPassword}
+                                        onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                        placeholder="Repeat your password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                                    >
+                                        {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                </div>
                             </div>
 
                             <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-green-500 to-teal-500 disabled:opacity-60">
