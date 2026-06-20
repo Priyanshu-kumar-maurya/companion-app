@@ -145,7 +145,18 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
             let fetchedAvgRating = 0;
             let fetchedFollowStats = { followers: 0, following: 0, isFollowing: false };
 
-            if (!profile.is_private) {
+            try {
+                const currentUserId = currentUser ? currentUser.id : '';
+                const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${profile.id}?currentUserId=${currentUserId}`);
+                if (statsRes.ok) {
+                    fetchedFollowStats = await statsRes.json();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+
+            const canViewPrivate = !profile.is_private || fetchedFollowStats.isFollowing || profile.id === currentUser?.id;
+            if (canViewPrivate) {
                 try {
                     const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
                     if (postRes.ok) fetchedPosts = await postRes.json();
@@ -160,16 +171,6 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                     const data = await reviewRes.json();
                     fetchedReviews = data.reviews;
                     fetchedAvgRating = data.avgRating;
-                }
-            } catch (err) {
-                console.error(err);
-            }
-
-            try {
-                const currentUserId = currentUser ? currentUser.id : '';
-                const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${profile.id}?currentUserId=${currentUserId}`);
-                if (statsRes.ok) {
-                    fetchedFollowStats = await statsRes.json();
                 }
             } catch (err) {
                 console.error(err);
@@ -546,7 +547,7 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                         <FiGrid size={15} />
                         Posts
                     </div>
-                    {profile.is_private ? (
+                    {(profile.is_private && !followStats.isFollowing && profile.id !== currentUser?.id) ? (
                         <div className="py-16 text-center flex flex-col items-center gap-3">
                             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
                                 <FiLock size={24} className="text-gray-500" />

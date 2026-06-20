@@ -2,11 +2,31 @@ const { pool } = require('../config/db');
 
 const onlineUsers = new Map();
 
+const broadcastOnlineUsers = async (io) => {
+    try {
+        const userIds = Array.from(onlineUsers.keys()).map(id => parseInt(id)).filter(id => !isNaN(id));
+        if (userIds.length === 0) {
+            io.emit("update_online_users", []);
+            return;
+        }
+        const placeholders = userIds.map((_, i) => `$${i + 1}`).join(',');
+        const result = await pool.query(
+            `SELECT id FROM users WHERE id IN (${placeholders}) AND show_online = true`,
+            userIds
+        );
+        const visibleOnlineUsers = result.rows.map(row => row.id.toString());
+        io.emit("update_online_users", visibleOnlineUsers);
+    } catch (err) {
+        console.error("Broadcast online users error:", err);
+        io.emit("update_online_users", Array.from(onlineUsers.keys()));
+    }
+};
+
 module.exports = (io) => {
     io.on("connection", (socket) => {
-        socket.on("user_connected", (userId) => {
+        socket.on("user_connected", async (userId) => {
             onlineUsers.set(userId.toString(), socket.id);
-            io.emit("update_online_users", Array.from(onlineUsers.keys()));
+            await broadcastOnlineUsers(io);
         });
 
         socket.on("join_own_room", (userId) => {
@@ -93,7 +113,11 @@ module.exports = (io) => {
             socket.to(`user_${data.receiver_id}`).emit("receive_booking_notification", data);
         });
 
-        socket.on("disconnect", () => {
+        socket.on("active_status_changed", async () => {
+            await broadcastOnlineUsers(io);
+        });
+
+        socket.on("disconnect", async () => {
             let disconnectedUserId = null;
             for (let [userId, socketId] of onlineUsers.entries()) {
                 if (socketId === socket.id) {
@@ -103,7 +127,7 @@ module.exports = (io) => {
                 }
             }
             if (disconnectedUserId) {
-                io.emit("update_online_users", Array.from(onlineUsers.keys()));
+                await broadcastOnlineUsers(io);
             }
         });
     });

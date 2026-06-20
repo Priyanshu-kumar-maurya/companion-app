@@ -415,6 +415,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     setUser={setBoyUser}
                     onClose={() => setShowSettings(false)}
                     setPage={setPage}
+                    socket={socket}
                 />
             )}
 

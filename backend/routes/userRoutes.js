@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ const isOwner = (req, res, userId) => {
 router.get('/me', authenticateToken, async (req, res) => {
     try {
         const userResult = await pool.query(
-            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private, kyc_status, social_link FROM users WHERE id = $1",
+            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, social_link FROM users WHERE id = $1",
             [req.user.id]
         );
         if (userResult.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
@@ -34,22 +35,56 @@ router.get('/users', async (req, res) => {
         if (!role || !['boy', 'girl'].includes(role)) {
             return res.status(400).json({ error: "Valid role parameter required (boy/girl)." });
         }
-        const users = await pool.query(`
-            SELECT u.id, u.name, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.kyc_status,
+
+        // Optional token verification to exclude blocked users
+        let currentUserId = null;
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                currentUserId = decoded.id;
+            } catch (e) {}
+        }
+
+        let query = `
+            SELECT u.id, u.name, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status,
                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
                    COUNT(r.id) as review_count
             FROM users u
             LEFT JOIN reviews r ON u.id = r.companion_id
-            WHERE u.role = $1 AND u.is_verified = true
+            WHERE u.role = $1 
+              AND u.is_verified = true 
+              AND u.is_frozen = false 
+              AND u.is_platform_blocked = false
+        `;
+        const params = [role];
+
+        if (currentUserId) {
+            query += `
+                AND u.id NOT IN (SELECT blocked_id FROM blocked_users WHERE blocker_id = $2)
+                AND u.id NOT IN (SELECT blocker_id FROM blocked_users WHERE blocked_id = $2)
+                AND (u.is_private = false OR u.id = $2 OR EXISTS(SELECT 1 FROM follows WHERE follower_id = $2 AND following_id = u.id))
+            `;
+            params.push(currentUserId);
+        } else {
+            query += `
+                AND u.is_private = false
+            `;
+        }
+
+        query += `
             GROUP BY u.id
             ORDER BY avg_rating DESC, review_count DESC
-        `, [role]);
+        `;
+
+        const users = await pool.query(query, params);
         res.status(200).json(users.rows);
     } catch (err) {
+        console.error("Get users list error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
-
 
 // 3. Update User Profile Settings — AUTH REQUIRED + OWNERSHIP CHECK
 router.put('/users/:userId', authenticateToken, async (req, res) => {
@@ -57,17 +92,18 @@ router.put('/users/:userId', authenticateToken, async (req, res) => {
         const { userId } = req.params;
         if (!isOwner(req, res, userId)) return;
 
-        const { age, city, bio, price, tags, is_private } = req.body;
+        const { age, city, bio, price, tags, is_private, show_online } = req.body;
 
         // Validate price is not negative
         const safePrice = Math.max(0, parseInt(price) || 0);
 
         const updatedUser = await pool.query(
-            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6 WHERE id = $7 RETURNING id, name, email, role, age, city, bio, price, tags, is_private, kyc_status",
-            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, userId]
+            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6, show_online = $7 WHERE id = $8 RETURNING id, name, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status",
+            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, show_online !== false, userId]
         );
         res.status(200).json({ message: "Profile Updated", user: updatedUser.rows[0] });
     } catch (err) {
+        console.error("Update profile error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -250,6 +286,24 @@ router.post('/unblock', authenticateToken, async (req, res) => {
         );
         res.status(200).json({ message: "User unblocked successfully." });
     } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 12.5. Get Blocked Users List — AUTH REQUIRED
+router.get('/blocked-users', authenticateToken, async (req, res) => {
+    try {
+        const blocker_id = req.user.id;
+        const result = await pool.query(`
+            SELECT u.id, u.name, u.profile_pic, u.role
+            FROM blocked_users bu
+            JOIN users u ON bu.blocked_id = u.id
+            WHERE bu.blocker_id = $1
+            ORDER BY bu.created_at DESC
+        `, [blocker_id]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Get blocked list error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

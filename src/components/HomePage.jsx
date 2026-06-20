@@ -66,6 +66,16 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         setFollowingState(followData);
                         sessionStorage.setItem("followingStateCache", JSON.stringify(followData));
                     }
+
+                    // Fetch saved post IDs
+                    const token = localStorage.getItem("token");
+                    const savedRes = await fetch("https://rentgf-and-bf.onrender.com/api/posts/saved", {
+                        headers: { "Authorization": `Bearer ${token}` }
+                    });
+                    if (savedRes.ok) {
+                        const savedData = await savedRes.json();
+                        setSavedPosts(savedData.map(p => p.id));
+                    }
                 } else {
                     const girlRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=girl");
                     const boyRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=boy");
@@ -218,11 +228,31 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         }
     };
 
-    const toggleSave = (postId) => {
-        if (savedPosts.includes(postId)) {
+    const toggleSave = async (postId) => {
+        const isSaved = savedPosts.includes(postId);
+        if (isSaved) {
             setSavedPosts(savedPosts.filter(id => id !== postId));
         } else {
             setSavedPosts([...savedPosts, postId]);
+        }
+
+        try {
+            const token = localStorage.getItem("token");
+            await fetch("https://rentgf-and-bf.onrender.com/api/posts/save", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ post_id: postId })
+            });
+        } catch (err) {
+            console.error("Save toggle error:", err);
+            if (isSaved) {
+                setSavedPosts(prev => [...prev, postId]);
+            } else {
+                setSavedPosts(prev => prev.filter(id => id !== postId));
+            }
         }
     };
 

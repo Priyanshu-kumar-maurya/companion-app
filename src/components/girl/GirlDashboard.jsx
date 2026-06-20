@@ -387,6 +387,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     setUser={setGirlUser}
                     onClose={() => setShowSettings(false)}
                     setPage={setPage}
+                    socket={socket}
                 />
             )}
 

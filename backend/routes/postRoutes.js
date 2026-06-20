@@ -133,7 +133,8 @@ router.get('/feed', async (req, res) => {
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
                 EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me,
-                EXISTS(SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = p.user_id) as is_followed_by_me
+                EXISTS(SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = p.user_id) as is_followed_by_me,
+                EXISTS(SELECT 1 FROM saved_posts WHERE post_id = p.id AND user_id = $1) as is_saved_by_me
             FROM posts p
             JOIN users u ON p.user_id = u.id
             ORDER BY p.created_at DESC
@@ -254,6 +255,81 @@ router.get('/notifications/:userId', authenticateToken, async (req, res) => {
         await pool.query("UPDATE notifications SET is_read = true WHERE user_id = $1", [userId]);
         res.status(200).json(notifications.rows);
     } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── SAVE / UNSAVE POST — AUTH REQUIRED ─────────────────────
+router.post('/posts/save', authenticateToken, async (req, res) => {
+    try {
+        const { post_id } = req.body;
+        const user_id = req.user.id;
+
+        if (!post_id) return res.status(400).json({ error: "post_id required." });
+
+        const checkSave = await pool.query("SELECT * FROM saved_posts WHERE user_id = $1 AND post_id = $2", [user_id, post_id]);
+
+        if (checkSave.rows.length > 0) {
+            await pool.query("DELETE FROM saved_posts WHERE user_id = $1 AND post_id = $2", [user_id, post_id]);
+            res.status(200).json({ message: "Post unsaved", isSaved: false });
+        } else {
+            await pool.query("INSERT INTO saved_posts (user_id, post_id) VALUES ($1, $2)", [user_id, post_id]);
+            res.status(200).json({ message: "Post saved", isSaved: true });
+        }
+    } catch (err) {
+        console.error("Save post error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── GET SAVED POSTS — AUTH REQUIRED ─────────────────────────
+router.get('/posts/saved', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id;
+        const savedPostsQuery = `
+            SELECT 
+                p.id, p.image_url, p.caption, p.created_at,
+                u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
+                (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
+                (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
+                EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me,
+                true as is_saved_by_me
+            FROM saved_posts sp
+            JOIN posts p ON sp.post_id = p.id
+            JOIN users u ON p.user_id = u.id
+            WHERE sp.user_id = $1
+            ORDER BY sp.created_at DESC;
+        `;
+        const result = await pool.query(savedPostsQuery, [user_id]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Get saved posts error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── GET LIKED POSTS — AUTH REQUIRED ─────────────────────────
+router.get('/posts/liked', authenticateToken, async (req, res) => {
+    try {
+        const user_id = req.user.id;
+        const likedPostsQuery = `
+            SELECT 
+                p.id, p.image_url, p.caption, p.created_at,
+                u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
+                (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
+                (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
+                true as is_liked_by_me,
+                EXISTS(SELECT 1 FROM saved_posts WHERE post_id = p.id AND user_id = $1) as is_saved_by_me
+            FROM likes l
+            JOIN posts p ON l.post_id = p.id
+            JOIN users u ON p.user_id = u.id
+            WHERE l.user_id = $1
+            ORDER BY l.created_at DESC;
+        `;
+        const result = await pool.query(likedPostsQuery, [user_id]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Get liked posts error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle } from "react-icons/fi";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -30,6 +30,19 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [blockLoading, setBlockLoading] = useState(false);
     const menuRef = useRef(null);
 
+    // WhatsApp style states
+    const [showContactInfo, setShowContactInfo] = useState(false);
+    const [showEncryptionModal, setShowEncryptionModal] = useState(false);
+    const [showStarredSubView, setShowStarredSubView] = useState(false);
+    const [isMuted, setIsMutedNotifications] = useState(() => {
+        return localStorage.getItem(`mute_${currentUser?.id}_${girl?.id}`) === "true";
+    });
+    const [starredMessages, setStarredMessages] = useState(() => {
+        const saved = localStorage.getItem(`stars_${currentUser?.id}_${girl?.id}`);
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [disappearingDuration, setDisappearingDuration] = useState("off"); // 'off' / '24h' / '7d' / '90d'
+
     // Fetch block status
     useEffect(() => {
         if (!currentUser || !girl || currentUser.id === girl.id) return;
@@ -49,6 +62,49 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    // Sync Starred Messages to LocalStorage
+    const toggleStarMessage = (msgId) => {
+        setStarredMessages(prev => {
+            const updated = prev.includes(msgId)
+                ? prev.filter(id => id !== msgId)
+                : [...prev, msgId];
+            localStorage.setItem(`stars_${currentUser?.id}_${girl?.id}`, JSON.stringify(updated));
+            return updated;
+        });
+    };
+
+    // Toggle Disappearing Settings
+    const handleDisappearingToggle = (duration) => {
+        setDisappearingDuration(duration);
+        localStorage.setItem(`disappear_${currentUser?.id}_${girl?.id}`, duration);
+
+        let durationText = "off";
+        if (duration === "24h") durationText = "24 hours";
+        else if (duration === "7d") durationText = "7 days";
+        else if (duration === "90d") durationText = "90 days";
+
+        const text = `📢 Disappearing messages set to ${durationText}`;
+        socket.emit("send_message", { 
+            sender_id: currentUser.id, 
+            receiver_id: girl.id, 
+            message: text, 
+            image_url: null, 
+            room: roomId 
+        });
+    };
+
+    // Parse disappearing settings from messages
+    useEffect(() => {
+        const systemNotices = messages.filter(m => m.text && m.text.startsWith('📢 Disappearing messages'));
+        if (systemNotices.length > 0) {
+            const latestNotice = systemNotices[systemNotices.length - 1].text;
+            if (latestNotice.includes('24 hours')) setDisappearingDuration('24h');
+            else if (latestNotice.includes('7 days')) setDisappearingDuration('7d');
+            else if (latestNotice.includes('90 days')) setDisappearingDuration('90d');
+            else if (latestNotice.includes('off')) setDisappearingDuration('off');
+        }
+    }, [messages]);
 
     // Block / Unblock
     const handleBlockToggle = async () => {
@@ -100,14 +156,81 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         setPage(PAGES.DETAILS);
     };
 
+    // Clear Chat History
+    const handleClearChat = async () => {
+        if (!window.confirm("Are you sure you want to clear all messages?")) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('https://rentgf-and-bf.onrender.com/api/messages/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ target_id: girl.id })
+            });
+            if (res.ok) {
+                setMessages([]);
+                alert("Chat cleared successfully.");
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // Delete Chat Completely
+    const handleDeleteChat = async () => {
+        if (!window.confirm("Are you sure you want to delete this chat? This will remove the conversation history.")) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('https://rentgf-and-bf.onrender.com/api/messages/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ target_id: girl.id })
+            });
+            if (res.ok) {
+                setMessages([]);
+                alert("Chat deleted.");
+                setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    // Toggle Mute Notifications
+    const handleToggleMute = () => {
+        const nextMute = !isMuted;
+        setIsMutedNotifications(nextMute);
+        localStorage.setItem(`mute_${currentUser?.id}_${girl?.id}`, nextMute ? "true" : "false");
+    };
+
+    // Filter disappearing messages
+    const getFilteredMessages = () => {
+        return messages.filter(msg => {
+            if (disappearingDuration === 'off') return true;
+            if (msg.text && msg.text.startsWith('📢')) return true;
+            
+            let limit = 0;
+            if (disappearingDuration === '24h') limit = 24 * 60 * 60 * 1000;
+            else if (disappearingDuration === '7d') limit = 7 * 24 * 60 * 60 * 1000;
+            else if (disappearingDuration === '90d') limit = 90 * 24 * 60 * 60 * 1000;
+            
+            return Date.now() - msg.timestamp < limit;
+        });
+    };
+
     // --- CALLING & WEBRTC STATES ---
     const [callStatus, setCallStatus] = useState("idle"); 
     const [callType, setCallType] = useState(null); 
     const [facingMode, setFacingMode] = useState("user"); 
     
-    // Naye States Timer aur Mute ke liye
+    // Timer and Mute for calls
     const [callDuration, setCallDuration] = useState(0);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isCallMuted, setIsCallMuted] = useState(false);
     const [isVideoOff, setIsVideoOff] = useState(false);
     
     const callStatusRef = useRef("idle");
@@ -120,7 +243,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const remoteVideoRef = useRef(null);
     const localVideoRef = useRef(null);
 
-    // 🚨 NAYA: AUDIO (RINGTONE) REFS 🚨
     const incomingRingRef = useRef(typeof Audio !== "undefined" ? new Audio('/ringtone.mp3') : null);
     const outgoingRingRef = useRef(typeof Audio !== "undefined" ? new Audio('/calling.mp3') : null);
 
@@ -133,13 +255,12 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         callStatusRef.current = status;
     };
 
-    // --- 🚨 RINGTONE LOGIC 🚨 ---
+    // Ringtone logic
     useEffect(() => {
         if (incomingRingRef.current && outgoingRingRef.current) {
             incomingRingRef.current.loop = true;
             outgoingRingRef.current.loop = true;
 
-            // Jab tum call mila rahe ho
             if (callStatus === 'calling') {
                 outgoingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
             } else {
@@ -147,7 +268,6 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 outgoingRingRef.current.currentTime = 0;
             }
 
-            // Jab kisi ki call aa rahi ho
             if (callStatus === 'receiving') {
                 incomingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
             } else {
@@ -157,7 +277,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     }, [callStatus]);
 
-    // --- 1. CALL TIMER LOGIC ---
+    // Timer logic
     useEffect(() => {
         let interval;
         if (callStatus === 'active') {
@@ -178,7 +298,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         return `${m}:${s}`;
     };
 
-    // --- 2. CALL HISTORY LOGGER ---
+    // Call Logger
     const logCallToChat = useCallback((messageText) => {
         if (!currentUser || !girl) return;
         const messageData = {
@@ -191,7 +311,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.emit("send_message", messageData);
     }, [currentUser, girl, roomId]);
 
-    // --- 3. CLEANUP & LOG FUNCTION (HARDWARE LIGHT OFF LOGIC) ---
+    // Hardware stream cleanup
     const cleanupCall = useCallback(() => {
         if (isCallerRef.current && callTypeRef.current) {
             if (callStatusRef.current === 'active' && callStartTimeRef.current) {
@@ -207,19 +327,17 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         updateCallStatus("idle");
         setFacingMode("user");
-        setIsMuted(false);
+        setIsCallMuted(false);
         setIsVideoOff(false);
         isCallerRef.current = false;
         callStartTimeRef.current = null;
         callTypeRef.current = null;
 
-        // Force stop all tracks to turn off Camera/Mic Light instantly
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
         }
 
-        // Clear HTML video element sources to release hardware memory
         if (localVideoRef.current) {
             if (localVideoRef.current.srcObject) {
                 localVideoRef.current.srcObject.getTracks().forEach(t => t.stop());
@@ -230,14 +348,13 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             remoteVideoRef.current.srcObject = null;
         }
 
-        // Close WebRTC Connection
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
         }
     }, [logCallToChat]);
 
-    // --- 4. WEBRTC SETUP ---
+    // WebRTC SETUP
     const setupWebRTC = useCallback(async (type, isCaller) => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({
@@ -282,6 +399,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     }, [roomId, cleanupCall]);
 
+    // Socket connections
     useEffect(() => {
         if (!currentUser || !girl) return;
 
@@ -313,6 +431,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         };
         fetchOldMessages();
     }, [currentUser, girl]);
+
     useEffect(() => {
         socket.connect();
         socket.emit("join_room", roomId);
@@ -342,6 +461,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         };
 
         const handleIncomingCall = (data) => {
+            if (isMuted) return; // Suppress ringing visual if muted
             setCallType(data.type);
             callTypeRef.current = data.type;
             isCallerRef.current = false;
@@ -426,13 +546,13 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             socket.off("webrtc_ice_candidate");
             socket.disconnect();
         };
-    }, [roomId, currentUser.id, girl.id, setupWebRTC, cleanupCall]);
+    }, [roomId, currentUser.id, girl.id, setupWebRTC, cleanupCall, isMuted]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
 
-    // --- 7. CALL ACTIONS ---
+    // --- CALL ACTIONS ---
     const startCall = (type) => {
         setCallType(type);
         callTypeRef.current = type;
@@ -461,7 +581,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             const audioTrack = localStreamRef.current.getAudioTracks()[0];
             if (audioTrack) {
                 audioTrack.enabled = !audioTrack.enabled;
-                setIsMuted(!audioTrack.enabled);
+                setIsCallMuted(!audioTrack.enabled);
             }
         }
     };
@@ -503,7 +623,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    // --- 8. MESSAGING FUNCTIONS ---
+    // --- MESSAGING FUNCTIONS ---
     const sendMessage = (imageLink = null) => {
         if (!input.trim() && !imageLink) return;
         if (!currentUser) return;
@@ -560,6 +680,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const handleViewProfile = () => { if (setSelectedGirl) setSelectedGirl(girl); setPage(PAGES.DETAILS); };
 
     const isOnline = onlineUsers.includes(girl.id) || onlineUsers.includes(String(girl.id));
+    
     const formatMessageDate = (timestamp) => {
         const date = new Date(timestamp);
         const today = new Date();
@@ -570,226 +691,418 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         else return date.toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
     };
 
+    const mediaList = messages.filter(m => m.imageUrl);
+    const filteredMessagesToShow = getFilteredMessages();
+
     return (
-        <div className="fixed inset-0 flex flex-col z-50" style={{ background: '#0D0D1A' }}>
+        <div className="fixed inset-0 flex z-50" style={{ background: '#0D0D1A' }}>
 
-            {/* ─── HEADER ─── */}
-            <div className="flex items-center gap-3 px-3 py-2.5 shrink-0 border-b" style={{ background: '#16162A', borderColor: 'rgba(255,255,255,0.08)' }}>
-                <button
-                    onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
-                    className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
-                >
-                    <FiArrowLeft size={22} />
-                </button>
+            {/* ─── MAIN CHAT AREA ─── */}
+            <div className="flex-1 flex flex-col h-full relative min-w-0">
+                {/* ─── HEADER ─── */}
+                <div className="flex items-center gap-3 px-3 py-2.5 shrink-0 border-b" style={{ background: '#16162A', borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <button
+                        onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
+                        className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
+                    >
+                        <FiArrowLeft size={22} />
+                    </button>
 
-                <div onClick={handleViewProfile} className="flex items-center gap-3 flex-1 cursor-pointer">
-                    {girl.profile_pic ? (
-                        <img src={girl.profile_pic} alt={girl.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/10" />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-pink-500/30 to-purple-500/30 border border-white/10">
-                            <span className="text-white font-bold text-base">{girl.name?.[0]?.toUpperCase()}</span>
+                    <div onClick={() => setShowContactInfo(true)} className="flex items-center gap-3 flex-1 cursor-pointer min-w-0">
+                        {girl.profile_pic ? (
+                            <img src={girl.profile_pic} alt={girl.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-white/10" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-pink-500/30 to-purple-500/30 border border-white/10">
+                                <span className="text-white font-bold text-base">{girl.name?.[0]?.toUpperCase()}</span>
+                            </div>
+                        )}
+                        <div className="min-w-0">
+                            <div className="text-sm font-semibold text-white truncate">{girl.name}</div>
+                            <div className="text-xs mt-0.5" style={{ color: isOnline ? '#4ade80' : '#6b7280' }}>
+                                {isOnline ? 'online' : 'last seen recently'}
+                            </div>
                         </div>
-                    )}
-                    <div>
-                        <div className="text-sm font-semibold text-white">{girl.name}</div>
-                        <div className="text-xs mt-0.5" style={{ color: isOnline ? '#4ade80' : '#6b7280' }}>
-                            {isOnline ? 'online' : 'last seen recently'}
-                        </div>
+                    </div>
+
+                    <div className="flex gap-1 relative shrink-0" ref={menuRef}>
+                        <button onClick={() => startCall('video')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
+                            <FiVideo size={20} />
+                        </button>
+                        <button onClick={() => startCall('audio')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
+                            <FiPhone size={20} />
+                        </button>
+                        <button 
+                            onClick={() => setShowMenu(!showMenu)} 
+                            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
+                        >
+                            <FiMoreVertical size={20} />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {showMenu && (
+                            <div className="absolute right-0 top-12 bg-[#16162A] border border-white/10 rounded-xl shadow-2xl py-1.5 w-44 z-50 animate-fade-in text-left">
+                                <button
+                                    onClick={() => { setShowContactInfo(true); setShowMenu(false); }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                                >
+                                    <FiInfo size={14} />
+                                    Contact Info
+                                </button>
+                                <button
+                                    onClick={handleViewProfileFromChat}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                                >
+                                    <FiUser size={14} />
+                                    View Companion Profile
+                                </button>
+                                <button
+                                    onClick={() => { setShowReportModal(true); setShowMenu(false); }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                                >
+                                    <FiFlag size={14} />
+                                    Report User
+                                </button>
+                                <button
+                                    onClick={handleBlockToggle}
+                                    disabled={blockLoading}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition disabled:opacity-50"
+                                >
+                                    <FiSlash size={14} />
+                                    {isBlocked ? 'Unblock User' : 'Block User'}
+                                </button>
+                                <div className="h-px bg-white/5 my-1" />
+                                <button
+                                    onClick={() => { handleClearChat(); setShowMenu(false); }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-400 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                                >
+                                    <FiTrash2 size={14} />
+                                    Clear Chat
+                                </button>
+                                <button
+                                    onClick={() => { handleDeleteChat(); setShowMenu(false); }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition"
+                                >
+                                    <FiTrash2 size={14} className="text-red-400" />
+                                    Delete Chat
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex gap-1 relative" ref={menuRef}>
-                    <button onClick={() => startCall('video')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
-                        <FiVideo size={20} />
-                    </button>
-                    <button onClick={() => startCall('audio')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
-                        <FiPhone size={20} />
-                    </button>
-                    <button 
-                        onClick={() => setShowMenu(!showMenu)} 
-                        className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
-                    >
-                        <FiMoreVertical size={20} />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {showMenu && (
-                        <div className="absolute right-0 top-12 bg-[#16162A] border border-white/10 rounded-xl shadow-2xl py-1.5 w-40 z-50 animate-fade-in">
-                            <button
-                                onClick={handleViewProfileFromChat}
-                                className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
-                            >
-                                <FiUser size={14} />
-                                View Profile
-                            </button>
-                            <button
-                                onClick={() => { setShowReportModal(true); setShowMenu(false); }}
-                                className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
-                            >
-                                <FiFlag size={14} />
-                                Report User
-                            </button>
-                            <button
-                                onClick={handleBlockToggle}
-                                disabled={blockLoading}
-                                className="w-full px-4 py-2 text-left text-xs font-semibold text-red-400 hover:bg-red-500/10 flex items-center gap-2 transition disabled:opacity-50"
-                            >
-                                <FiSlash size={14} />
-                                {isBlocked ? 'Unblock User' : 'Block User'}
-                            </button>
-                        </div>
-                    )}
+                {/* ─── Encryption notice ─── */}
+                <div onClick={() => setShowEncryptionModal(true)} className="flex items-center justify-center gap-1.5 py-1.5 text-[11px] shrink-0 cursor-pointer hover:underline" style={{ color: '#6b7280' }}>
+                    <FiLock size={10} />
+                    <span>Messages are end-to-end encrypted • Click to verify</span>
                 </div>
-            </div>
 
-            {/* ─── Encryption notice ─── */}
-            <div className="flex items-center justify-center gap-1.5 py-1.5 text-[11px] shrink-0" style={{ color: '#6b7280' }}>
-                <FiLock size={10} />
-                <span>Messages are end-to-end encrypted</span>
-            </div>
+                {/* ─── CHAT MESSAGES ─── */}
+                <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1" style={{ background: '#0D0D1A' }}>
+                    {filteredMessagesToShow.map((msg, index) => {
+                        const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
+                        const prevMsg = index > 0 ? filteredMessagesToShow[index - 1] : null;
+                        const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
+                        const isMissedCall = msg.text && (msg.text.includes('Missed Video Call') || msg.text.includes('Missed Audio Call'));
+                        const isCompletedCall = msg.text && msg.text.includes('Call -');
+                        const isCallLog = isMissedCall || isCompletedCall;
 
-            {/* ─── CHAT MESSAGES ─── */}
-            <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1" style={{ background: '#0D0D1A' }}>
-                {messages.map((msg, index) => {
-                    const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
-                    const prevMsg = index > 0 ? messages[index - 1] : null;
-                    const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
-                    const isMissedCall = msg.text && (msg.text.includes('Missed Video Call') || msg.text.includes('Missed Audio Call'));
-                    const isCompletedCall = msg.text && msg.text.includes('Call -');
-                    const isCallLog = isMissedCall || isCompletedCall;
+                        const isSystemNotice = msg.text && msg.text.startsWith('📢');
 
-                    return (
-                        <React.Fragment key={msg.id}>
-                            {showDateDivider && (
-                                <div className="flex justify-center my-3">
-                                    <span className="text-[11px] px-3 py-1 rounded-md font-medium" style={{ background: '#13132A', color: '#6b7280' }}>
-                                        {formatMessageDate(msg.timestamp)}
-                                    </span>
-                                </div>
-                            )}
-
-                            {isCallLog ? (
-                                <div className="flex justify-center my-1">
-                                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs border border-white/5" style={{ background: '#16162A', color: '#6b7280' }}>
-                                        <FiPhoneMissed size={14} className={isMissedCall ? 'text-red-400' : 'text-green-400'} />
-                                        <span style={{ color: isMissedCall ? '#f87171' : '#4ade80' }}>{msg.text.replace('❌ ', '').replace('✅ ', '')}</span>
-                                        <span className="ml-1 text-[10px]" style={{ color: '#6b7280' }}>{msg.time}</span>
+                        return (
+                            <React.Fragment key={msg.id}>
+                                {showDateDivider && (
+                                    <div className="flex justify-center my-3">
+                                        <span className="text-[11px] px-3 py-1 rounded-md font-medium" style={{ background: '#13132A', color: '#6b7280' }}>
+                                            {formatMessageDate(msg.timestamp)}
+                                        </span>
                                     </div>
-                                </div>
-                            ) : (
-                                <div
-                                    className={`flex ${msg.sent ? 'justify-end' : 'justify-start'} group mb-0.5`}
-                                    onMouseEnter={() => setHoveredMsgId(msg.id)}
-                                    onMouseLeave={() => setHoveredMsgId(null)}
-                                >
-                                    <div className="relative max-w-[75%] sm:max-w-[60%]">
-                                        {/* Hover action buttons */}
-                                        {hoveredMsgId === msg.id && (
-                                            <div className={`absolute top-1 ${msg.sent ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} flex gap-1 z-10`}>
-                                                <div className="flex gap-1 rounded-lg px-1.5 py-1 shadow-lg border border-white/10" style={{ background: '#16162A' }}>
-                                                    {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
-                                                        <button onClick={() => editMessage(msg.id, msg.text)} className="p-1 text-gray-500 hover:text-pink-400 transition">
-                                                            <FiEdit2 size={13} />
+                                )}
+
+                                {isSystemNotice ? (
+                                    <div className="flex justify-center my-2.5">
+                                        <span className="text-[10px] px-3.5 py-1.5 rounded-xl text-center font-medium bg-[#13132A] text-pink-400 border border-pink-500/10">
+                                            {msg.text.replace('📢', '').trim()}
+                                        </span>
+                                    </div>
+                                ) : isCallLog ? (
+                                    <div className="flex justify-center my-1">
+                                        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs border border-white/5" style={{ background: '#16162A', color: '#6b7280' }}>
+                                            <FiPhoneMissed size={14} className={isMissedCall ? 'text-red-400' : 'text-green-400'} />
+                                            <span style={{ color: isMissedCall ? '#f87171' : '#4ade80' }}>{msg.text.replace('❌ ', '').replace('✅ ', '')}</span>
+                                            <span className="ml-1 text-[10px]" style={{ color: '#6b7280' }}>{msg.time}</span>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div
+                                        className={`flex ${msg.sent ? 'justify-end' : 'justify-start'} group mb-0.5`}
+                                        onMouseEnter={() => setHoveredMsgId(msg.id)}
+                                        onMouseLeave={() => setHoveredMsgId(null)}
+                                    >
+                                        <div className="relative max-w-[75%] sm:max-w-[60%]">
+                                            {/* Hover action buttons */}
+                                            {hoveredMsgId === msg.id && (
+                                                <div className={`absolute top-1 ${msg.sent ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} flex gap-1 z-10`}>
+                                                    <div className="flex gap-1 rounded-lg px-1.5 py-1 shadow-lg border border-white/10" style={{ background: '#16162A' }}>
+                                                        {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
+                                                            <button onClick={() => editMessage(msg.id, msg.text)} className="p-1 text-gray-500 hover:text-pink-400 transition" title="Edit">
+                                                                <FiEdit2 size={13} />
+                                                            </button>
+                                                        )}
+                                                        <button onClick={() => toggleStarMessage(msg.id)} className="p-1 text-gray-500 hover:text-yellow-400 transition" title="Star Message">
+                                                            <FiStar size={13} className={starredMessages.includes(msg.id) ? "fill-yellow-400 text-yellow-400" : ""} />
                                                         </button>
-                                                    )}
-                                                    <button onClick={() => setMessageToDelete(msg)} className="p-1 text-gray-500 hover:text-red-400 transition">
-                                                        <FiTrash2 size={13} />
-                                                    </button>
+                                                        <button onClick={() => setMessageToDelete(msg)} className="p-1 text-gray-500 hover:text-red-400 transition" title="Delete">
+                                                            <FiTrash2 size={13} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-
-                                        {/* Message bubble */}
-                                        <div
-                                            className="relative px-3 py-1.5 text-sm leading-relaxed shadow-sm"
-                                            style={{
-                                                background: msg.sent ? '#2d1457' : '#16162A',
-                                                color: '#f1f5f9',
-                                                borderRadius: msg.sent ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
-                                                border: msg.sent ? '1px solid rgba(236,72,153,0.15)' : '1px solid rgba(255,255,255,0.06)'
-                                            }}
-                                        >
-                                            {msg.imageUrl && (
-                                                <img
-                                                    src={msg.imageUrl}
-                                                    alt="attachment"
-                                                    className="w-full max-w-[220px] rounded-md mb-1 object-contain cursor-pointer active:scale-95 transition-transform"
-                                                    onClick={() => setLightboxImg(msg.imageUrl)}
-                                                />
                                             )}
-                                            {msg.text && <span className="break-words">{msg.text}</span>}
 
-                                            {/* Timestamp + ticks */}
-                                            <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
-                                                <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
-                                                {msg.sent && (
-                                                    <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
-                                                        {msg.is_read ? '✓✓' : '✓'}
-                                                    </span>
+                                            {/* Message bubble */}
+                                            <div
+                                                className="relative px-3 py-1.5 text-sm leading-relaxed shadow-sm"
+                                                style={{
+                                                    background: msg.sent ? '#2d1457' : '#16162A',
+                                                    color: '#f1f5f9',
+                                                    borderRadius: msg.sent ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+                                                    border: msg.sent ? '1px solid rgba(236,72,153,0.15)' : '1px solid rgba(255,255,255,0.06)'
+                                                }}
+                                            >
+                                                {msg.imageUrl && (
+                                                    <img
+                                                        src={msg.imageUrl}
+                                                        alt="attachment"
+                                                        className="w-full max-w-[220px] rounded-md mb-1 object-contain cursor-pointer active:scale-95 transition-transform"
+                                                        onClick={() => setLightboxImg(msg.imageUrl)}
+                                                    />
                                                 )}
+                                                {msg.text && <span className="break-words">{msg.text}</span>}
+
+                                                {/* Timestamp + ticks */}
+                                                <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
+                                                    {starredMessages.includes(msg.id) && (
+                                                        <span className="text-yellow-400 text-[10px] mr-1">★</span>
+                                                    )}
+                                                    <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
+                                                    {msg.sent && (
+                                                        <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
+                                                            {msg.is_read ? '✓✓' : '✓'}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
-                        </React.Fragment>
-                    );
-                })}
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
 
-                {uploadingImage && (
-                    <div className="flex justify-end mb-1">
-                        <div className="px-3 py-2 rounded-lg text-xs flex items-center gap-2 animate-pulse" style={{ background: '#2d1457', color: '#f1f5f9' }}>
-                            <div className="w-3 h-3 border-2 border-pink-400/40 border-t-pink-400 rounded-full animate-spin" />
-                            Sending...
+                    {uploadingImage && (
+                        <div className="flex justify-end mb-1">
+                            <div className="px-3 py-2 rounded-lg text-xs flex items-center gap-2 animate-pulse" style={{ background: '#2d1457', color: '#f1f5f9' }}>
+                                <div className="w-3 h-3 border-2 border-pink-400/40 border-t-pink-400 rounded-full animate-spin" />
+                                Sending...
+                            </div>
                         </div>
+                    )}
+                    <div ref={bottomRef} />
+                </div>
+
+                {/* ─── Editing banner ─── */}
+                {editingMsgId && (
+                    <div className="flex justify-between items-center px-4 py-2 text-xs border-t shrink-0" style={{ background: '#16162A', borderColor: '#ec4899', color: '#ec4899' }}>
+                        <div className="flex items-center gap-2">
+                            <FiEdit2 size={13} />
+                            <span>Editing message</span>
+                        </div>
+                        <button onClick={() => { setEditingMsgId(null); setInput(''); }} className="hover:text-white transition">
+                            <FiX size={15} />
+                        </button>
                     </div>
                 )}
-                <div ref={bottomRef} />
-            </div>
 
-            {/* ─── Editing banner ─── */}
-            {editingMsgId && (
-                <div className="flex justify-between items-center px-4 py-2 text-xs border-t shrink-0" style={{ background: '#16162A', borderColor: '#ec4899', color: '#ec4899' }}>
-                    <div className="flex items-center gap-2">
-                        <FiEdit2 size={13} />
-                        <span>Editing message</span>
+                {/* ─── INPUT BAR ─── */}
+                <div className="flex items-end gap-2 px-3 py-2 shrink-0 border-t" style={{ background: '#16162A', borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <label
+                        className="w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition flex-shrink-0 text-gray-500 hover:text-pink-400 hover:bg-white/10"
+                        title="Attach Image"
+                    >
+                        <FiPaperclip size={20} />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || !!editingMsgId} />
+                    </label>
+
+                    <div className="flex-1 flex items-end rounded-2xl px-4 py-2.5 border border-white/10" style={{ background: '#0D0D1A', minHeight: 44 }}>
+                        <textarea
+                            className="flex-1 bg-transparent text-sm outline-none resize-none placeholder-gray-600 border-none"
+                            style={{ maxHeight: 120, color: '#f1f5f9' }}
+                            placeholder="Message..."
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                            onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth' }), 100)}
+                            rows={1}
+                        />
                     </div>
-                    <button onClick={() => { setEditingMsgId(null); setInput(''); }} className="hover:text-white transition">
-                        <FiX size={15} />
+
+                    <button
+                        onClick={() => sendMessage(null)}
+                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:scale-110 active:scale-95 bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20"
+                    >
+                        {input.trim() ? <FiSend size={17} className="text-white" /> : <FiMic size={17} className="text-white" />}
                     </button>
                 </div>
-            )}
-
-            {/* ─── INPUT BAR ─── */}
-            <div className="flex items-end gap-2 px-3 py-2 shrink-0 border-t" style={{ background: '#16162A', borderColor: 'rgba(255,255,255,0.08)' }}>
-                <label
-                    className="w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition flex-shrink-0 text-gray-500 hover:text-pink-400 hover:bg-white/10"
-                    title="Attach Image"
-                >
-                    <FiPaperclip size={20} />
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || !!editingMsgId} />
-                </label>
-
-                <div className="flex-1 flex items-end rounded-2xl px-4 py-2.5 border border-white/10" style={{ background: '#0D0D1A', minHeight: 44 }}>
-                    <textarea
-                        className="flex-1 bg-transparent text-sm outline-none resize-none placeholder-gray-600"
-                        style={{ maxHeight: 120, color: '#f1f5f9' }}
-                        placeholder="Message..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                        onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth' }), 100)}
-                        rows={1}
-                    />
-                </div>
-
-                <button
-                    onClick={() => sendMessage(null)}
-                    className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:scale-110 active:scale-95 bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20"
-                >
-                    {input.trim() ? <FiSend size={17} className="text-white" /> : <FiMic size={17} className="text-white" />}
-                </button>
             </div>
+
+            {/* ─── WHATSAPP STYLE CONTACT INFO SIDEBAR ─── */}
+            {showContactInfo && (
+                <div className="w-full sm:w-80 bg-[#16162A] border-l border-white/10 shrink-0 z-35 flex flex-col h-full relative text-left">
+                    <div className="px-4 py-3.5 border-b border-white/5 flex items-center gap-3 bg-[#121222]">
+                        <button onClick={() => { setShowContactInfo(false); setShowStarredSubView(false); }} className="text-gray-400 hover:text-white transition">
+                            <FiX size={20} />
+                        </button>
+                        <h3 className="text-sm font-bold text-white">Contact info</h3>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5">
+                        
+                        {/* Avatar Card */}
+                        <div className="flex flex-col items-center text-center bg-[#0D0D1A]/50 border border-white/5 p-5 rounded-2xl">
+                            <div className="w-24 h-24 rounded-full overflow-hidden mb-3.5 border-2 border-pink-500/30 shadow-lg">
+                                <img src={girl.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"} alt={girl.name} className="w-full h-full object-cover" />
+                            </div>
+                            <h4 className="text-base font-bold text-white mb-0.5">{girl.name}</h4>
+                            <p className="text-xs text-gray-500 uppercase tracking-wider">{girl.role}</p>
+                        </div>
+
+                        {/* About Bio */}
+                        {girl.bio && (
+                            <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl">
+                                <h5 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-2">About & Status</h5>
+                                <p className="text-xs text-gray-200 leading-relaxed">{girl.bio}</p>
+                            </div>
+                        )}
+
+                        {/* Media Links and Docs */}
+                        <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl">
+                            <div className="flex justify-between items-center mb-3">
+                                <h5 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider flex items-center gap-1.5">
+                                    <FiFolder size={11} className="text-pink-400" />
+                                    Media, links & docs
+                                </h5>
+                                <span className="text-[10px] bg-white/5 border border-white/10 px-2 py-0.5 rounded-full text-gray-400 font-semibold">{mediaList.length}</span>
+                            </div>
+                            {mediaList.length === 0 ? (
+                                <p className="text-[11px] text-gray-600 text-center py-2">No media shared</p>
+                            ) : (
+                                <div className="grid grid-cols-4 gap-1.5">
+                                    {mediaList.slice(0, 4).map(m => (
+                                        <div key={m.id} onClick={() => setLightboxImg(m.imageUrl)} className="aspect-square rounded-md overflow-hidden cursor-pointer border border-white/5">
+                                            <img src={m.imageUrl} alt="" className="w-full h-full object-cover hover:brightness-75 transition" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Starred Messages Access */}
+                        <button 
+                            onClick={() => setShowStarredSubView(true)}
+                            className="w-full flex justify-between items-center bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl hover:bg-white/5 transition text-left"
+                        >
+                            <span className="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                                <FiStar size={13} className="text-yellow-400" /> Starred messages
+                            </span>
+                            <span className="text-gray-500 text-base">›</span>
+                        </button>
+
+                        {/* Disappearing Messages */}
+                        <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl space-y-3">
+                            <h5 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider flex items-center gap-1.5">
+                                ⏳ Disappearing messages
+                            </h5>
+                            <div className="flex flex-wrap gap-1.5">
+                                {['off', '24h', '7d', '90d'].map(d => (
+                                    <button 
+                                        key={d} 
+                                        onClick={() => handleDisappearingToggle(d)} 
+                                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold transition border ${
+                                            disappearingDuration === d 
+                                                ? 'bg-pink-500/10 border-pink-500/50 text-pink-400' 
+                                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        {d === 'off' ? 'Off' : d === '24h' ? '24 Hrs' : d === '7d' ? '7 Days' : '90 Days'}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Mute Notifications */}
+                        <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-300">Mute notifications</span>
+                            <label className="relative inline-flex items-center cursor-pointer select-none">
+                                <input type="checkbox" checked={isMuted} onChange={handleToggleMute} className="sr-only peer" />
+                                <div className="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
+                            </label>
+                        </div>
+
+                        {/* Security encryption info */}
+                        <button 
+                            onClick={() => setShowEncryptionModal(true)}
+                            className="w-full bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl text-left hover:bg-white/5 transition"
+                        >
+                            <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider block mb-1">Encryption</span>
+                            <p className="text-[11px] text-gray-400 leading-normal flex items-center gap-1.5">
+                                <FiLock size={12} className="text-green-400 shrink-0" />
+                                Messages and calls are end-to-end encrypted. Click to verify.
+                            </p>
+                        </button>
+
+                        {/* Bottom destructive actions */}
+                        <div className="pt-2 flex flex-col gap-2">
+                            <button onClick={handleClearChat} className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold text-gray-300 transition">
+                                Clear chat
+                            </button>
+                            <button onClick={handleDeleteChat} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-xs font-bold text-red-400 transition">
+                                Delete chat
+                            </button>
+                            <button onClick={handleBlockToggle} className="w-full py-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 rounded-xl text-xs font-bold text-red-400 transition">
+                                {isBlocked ? "Unblock contact" : "Block contact"}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Starred Messages Sub View inside sidebar */}
+                    {showStarredSubView && (
+                        <div className="absolute inset-0 bg-[#16162A] z-[90] flex flex-col">
+                            <div className="px-4 py-3.5 border-b border-white/5 flex items-center gap-3 bg-[#121222]">
+                                <button onClick={() => setShowStarredSubView(false)} className="text-gray-400 hover:text-white transition">
+                                    ←
+                                </button>
+                                <h3 className="text-sm font-bold text-white">Starred messages</h3>
+                            </div>
+                            <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-4">
+                                {messages.filter(m => starredMessages.includes(m.id)).length === 0 ? (
+                                    <div className="text-center text-gray-500 text-xs py-10">No starred messages.</div>
+                                ) : (
+                                    messages.filter(m => starredMessages.includes(m.id)).map(m => (
+                                        <div key={m.id} className="bg-white/5 border border-white/5 rounded-2xl p-4 text-xs leading-relaxed relative">
+                                            <button onClick={() => toggleStarMessage(m.id)} className="absolute top-3 right-3 text-yellow-400 hover:text-gray-500 transition text-sm">
+                                                ★
+                                            </button>
+                                            <div className="text-[10px] text-pink-400 font-semibold mb-1.5">{m.sent ? "You" : girl.name}</div>
+                                            {m.imageUrl && <img src={m.imageUrl} alt="" className="w-full max-w-[120px] rounded-lg mb-2 object-cover border border-white/5" />}
+                                            {m.text && <p className="text-gray-200 break-words">{m.text}</p>}
+                                            <span className="text-[9px] text-gray-500 block mt-1.5">{m.time}</span>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* ─── FULLSCREEN IMAGE LIGHTBOX ─── */}
             {lightboxImg && (
@@ -823,11 +1136,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
             {/* ─── DELETE MODAL ─── */}
             {messageToDelete && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
-                    <div className="w-full max-w-xs overflow-hidden shadow-2xl border border-white/10" style={{ background: '#16162A', borderRadius: 16 }}>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div className="w-full max-w-xs overflow-hidden shadow-2xl border border-white/10 bg-[#16162A]" style={{ borderRadius: 16 }}>
                         <div className="px-6 py-5">
                             <h3 className="text-base font-semibold mb-1 text-white">Delete message?</h3>
-                            <p className="text-xs mb-5 text-gray-500">This action cannot be undone.</p>
+                            <p className="text-xs mb-5 text-gray-500 font-medium">This action cannot be undone.</p>
                             <div className="flex flex-col gap-2">
                                 {messageToDelete.sent && (Date.now() - messageToDelete.timestamp < 15 * 60 * 1000) && (
                                     <button onClick={handleDeleteForEveryone} className="py-2.5 rounded-lg font-semibold text-sm transition bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90">Delete for Everyone</button>
@@ -840,11 +1153,34 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 </div>
             )}
 
+            {/* ─── ENCRYPTION MODAL ─── */}
+            {showEncryptionModal && (
+                <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setShowEncryptionModal(false)}>
+                    <div className="bg-[#16162A] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl p-6 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="w-16 h-16 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mx-auto mb-4">
+                            <FiLock className="text-pink-500 text-2xl" />
+                        </div>
+                        <h3 className="text-lg font-bold text-white mb-2">Verify encryption</h3>
+                        <p className="text-xs text-gray-400 leading-relaxed mb-6 font-medium">
+                            Messages and voice/video calls in this chat are end-to-end encrypted with a secure verification code. No one outside of this chat, not even RentGF, can read or listen to them.
+                        </p>
+                        <div className="flex justify-center gap-2 mb-6">
+                            <span className="font-mono text-sm tracking-wider text-pink-400 bg-white/5 border border-white/10 px-4 py-2.5 rounded-xl">
+                                8937 4028 1029 4829
+                            </span>
+                        </div>
+                        <button onClick={() => setShowEncryptionModal(false)} className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl text-xs font-bold transition shadow-lg">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* ─── CALL UI ─── */}
             {callStatus !== 'idle' && (
                 <div className={`fixed inset-0 z-[200] flex flex-col overflow-hidden ${callStatus === 'active' && callType === 'video' ? 'bg-black' : 'bg-[#0D0D1A]'}`}>
 
-                    {/* ── Audio / Ringing / Active-Audio UI ── */}
+                    {/* Audio / Ringing / Active-Audio UI */}
                     {!(callStatus === 'active' && callType === 'video') && (
                         <>
                             {/* Blurred background */}
@@ -854,7 +1190,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             </div>
 
                             {/* Center info */}
-                            <div className="z-10 flex flex-col items-center justify-center flex-1 px-6 pb-32">
+                            <div className="z-10 flex flex-col items-center justify-center flex-1 px-6 pb-32 text-center">
                                 <div className="relative mb-5">
                                     <div className={`absolute inset-0 rounded-full animate-ping opacity-20 scale-125 ${callStatus === 'active' ? 'bg-pink-500' : 'bg-purple-500'}`} />
                                     <img
@@ -876,7 +1212,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </>
                     )}
 
-                    {/* ── Active Video Call ── */}
+                    {/* Active Video Call */}
                     {callStatus === 'active' && callType === 'video' && (
                         <>
                             <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover bg-black z-0" />
@@ -902,43 +1238,39 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </>
                     )}
 
-                    {/* ── Call Controls ── */}
+                    {/* Call Controls */}
                     <div className="absolute bottom-8 sm:bottom-12 w-full flex justify-center gap-6 sm:gap-8 z-20 px-6">
                         {callStatus === 'receiving' ? (
                             <div className="flex items-end gap-12 sm:gap-16">
-                                {/* Reject first (left), Accept right (right) */}
                                 <div className="flex flex-col items-center gap-2">
                                     <button onClick={rejectCall} className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 active:scale-95">
                                         <FiPhoneOff size={24} className="text-white" />
                                     </button>
-                                    <span className="text-xs text-gray-400">Decline</span>
+                                    <span className="text-xs text-gray-400 font-semibold">Decline</span>
                                 </div>
                                 <div className="flex flex-col items-center gap-2">
                                     <button onClick={acceptCall} className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 active:scale-95 animate-bounce bg-gradient-to-br from-pink-500 to-purple-600 shadow-pink-500/30">
                                         {callType === 'video' ? <FiVideo size={24} className="text-white" /> : <FiPhone size={24} className="text-white" />}
                                     </button>
-                                    <span className="text-xs text-gray-400">Accept</span>
+                                    <span className="text-xs text-gray-400 font-semibold">Accept</span>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex items-center gap-5 sm:gap-8">
-                                {/* Mute */}
                                 <div className="flex flex-col items-center gap-1.5">
-                                    <button onClick={toggleMic} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition active:scale-90" style={{ background: isMuted ? 'white' : 'rgba(255,255,255,0.15)' }}>
-                                        {isMuted ? <FiMicOff size={20} className="text-black" /> : <FiMic size={20} className="text-white" />}
+                                    <button onClick={toggleMic} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition active:scale-90" style={{ background: isCallMuted ? 'white' : 'rgba(255,255,255,0.15)' }}>
+                                        {isCallMuted ? <FiMicOff size={20} className="text-black" /> : <FiMic size={20} className="text-white" />}
                                     </button>
-                                    <span className="text-[10px] text-gray-400">{isMuted ? 'Unmute' : 'Mute'}</span>
+                                    <span className="text-[10px] text-gray-400 font-medium">{isCallMuted ? 'Unmute' : 'Mute'}</span>
                                 </div>
 
-                                {/* End Call */}
                                 <div className="flex flex-col items-center gap-1.5">
                                     <button onClick={endCall} className="w-14 h-14 sm:w-16 sm:h-16 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center shadow-lg transition hover:scale-110 active:scale-95">
                                         <FiPhoneOff size={24} className="text-white" />
                                     </button>
-                                    <span className="text-[10px] text-gray-400">End</span>
+                                    <span className="text-[10px] text-gray-400 font-medium">End</span>
                                 </div>
 
-                                {/* Video / Speaker toggle */}
                                 <div className="flex flex-col items-center gap-1.5">
                                     {callType === 'video' ? (
                                         <button onClick={toggleVideo} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition active:scale-90" style={{ background: isVideoOff ? 'white' : 'rgba(255,255,255,0.15)' }}>
@@ -949,7 +1281,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                             <FiMic size={20} className="text-white" />
                                         </button>
                                     )}
-                                    <span className="text-[10px] text-gray-400">{callType === 'video' ? (isVideoOff ? 'Cam On' : 'Cam Off') : 'Speaker'}</span>
+                                    <span className="text-[10px] text-gray-400 font-medium">{callType === 'video' ? (isVideoOff ? 'Cam On' : 'Cam Off') : 'Speaker'}</span>
                                 </div>
                             </div>
                         )}
@@ -1023,6 +1355,5 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         </div>
     );
 }
-
 
 export default ChatPage;
