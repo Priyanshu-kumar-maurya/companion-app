@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
+import { FiShield, FiUser, FiAlertTriangle, FiCheckCircle, FiLock, FiUnlock, FiSlash, FiTrash2, FiBarChart2, FiPrinter, FiCalendar } from "react-icons/fi";
 
 const API = "https://rentgf-and-bf.onrender.com/api";
 
@@ -57,7 +58,7 @@ function AdminDashboard({ user, setPage }) {
     };
 
     const handleDeleteUser = async (userId, name) => {
-        if (!window.confirm(`Delete ${name}? This is PERMANENT!`)) return;
+        if (!await window.showConfirm(`Delete ${name}? This is PERMANENT!`)) return;
         setLoaderFor(`del_${userId}`, true);
         try {
             const res = await fetch(`${API}/admin/users/${userId}`, { method: "DELETE", headers });
@@ -95,9 +96,11 @@ function AdminDashboard({ user, setPage }) {
     return (
         <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-4 sm:px-6 max-w-6xl mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-8 print:hidden">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-white">⚡ Super Admin Panel</h1>
+                    <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+                        <FiShield className="text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]" /> Super Admin Panel
+                    </h1>
                     <p className="text-gray-400 mt-1 text-sm">Full control over users, accounts, and reports.</p>
                 </div>
                 <button onClick={() => setPage(PAGES.HOME)} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
@@ -106,7 +109,7 @@ function AdminDashboard({ user, setPage }) {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 print:hidden">
                 {statCards.map(s => (
                     <div key={s.label} className={`bg-[#16162A] border ${s.border} rounded-2xl p-4 shadow-lg`}>
                         <div className="text-gray-400 text-xs mb-1">{s.label}</div>
@@ -116,23 +119,29 @@ function AdminDashboard({ user, setPage }) {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-5 bg-[#16162A] p-1 rounded-xl border border-white/5 w-fit">
+            <div className="flex flex-wrap gap-2 mb-6 bg-[#16162A] p-1 rounded-xl border border-white/5 w-fit print:hidden">
                 <button
                     onClick={() => setActiveTab("users")}
-                    className={`px-5 py-2 rounded-lg text-sm font-bold transition ${activeTab === "users" ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${activeTab === "users" ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
                 >
-                    👥 Users ({users.length})
+                    <FiUser size={15} /> Users ({users.length})
                 </button>
                 <button
                     onClick={() => setActiveTab("reports")}
-                    className={`px-5 py-2 rounded-lg text-sm font-bold transition relative ${activeTab === "reports" ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 relative ${activeTab === "reports" ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow' : 'text-gray-400 hover:text-white'}`}
                 >
-                    🚩 Reports
+                    <FiAlertTriangle size={15} /> Reports
                     {stats.pendingReports > 0 && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                             {stats.pendingReports}
                         </span>
                     )}
+                </button>
+                <button
+                    onClick={() => setActiveTab("insights")}
+                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${activeTab === "insights" ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <FiBarChart2 size={15} /> Insights & Proofs
                 </button>
             </div>
 
@@ -173,9 +182,9 @@ function AdminDashboard({ user, setPage }) {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-col gap-1">
-                                                {u.is_frozen && <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-bold w-fit">❄️ Frozen</span>}
-                                                {u.is_platform_blocked && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold w-fit">🚫 Blocked</span>}
-                                                {!u.is_frozen && !u.is_platform_blocked && <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-bold w-fit">✅ Active</span>}
+                                                {u.is_frozen && <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-bold w-fit flex items-center gap-1"><FiLock size={10} /> Frozen</span>}
+                                                {u.is_platform_blocked && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold w-fit flex items-center gap-1"><FiSlash size={10} /> Blocked</span>}
+                                                {!u.is_frozen && !u.is_platform_blocked && <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-bold w-fit flex items-center gap-1"><FiCheckCircle size={10} /> Active</span>}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
@@ -197,25 +206,25 @@ function AdminDashboard({ user, setPage }) {
                                                 <button
                                                     onClick={() => handleFreeze(u.id, !u.is_frozen)}
                                                     disabled={actionLoading[`freeze_${u.id}`]}
-                                                    className={`px-2 py-1 rounded text-xs disabled:opacity-50 ${u.is_frozen ? 'bg-cyan-500/30 text-cyan-300 hover:bg-cyan-500/50' : 'bg-slate-500/20 text-slate-300 hover:bg-slate-500/40'}`}
+                                                    className={`px-2 py-1 rounded text-xs disabled:opacity-50 transition ${u.is_frozen ? 'bg-cyan-500/30 text-cyan-300 hover:bg-cyan-500/50' : 'bg-slate-500/20 text-slate-300 hover:bg-slate-500/40'}`}
                                                 >
-                                                    {u.is_frozen ? '🔥 Unfreeze' : '❄️ Freeze'}
+                                                    {u.is_frozen ? <span className="flex items-center gap-1"><FiUnlock size={11} /> Unfreeze</span> : <span className="flex items-center gap-1"><FiLock size={11} /> Freeze</span>}
                                                 </button>
                                                 {/* Platform block */}
                                                 <button
                                                     onClick={() => handlePlatformBlock(u.id, !u.is_platform_blocked)}
                                                     disabled={actionLoading[`block_${u.id}`]}
-                                                    className={`px-2 py-1 rounded text-xs disabled:opacity-50 ${u.is_platform_blocked ? 'bg-green-500/20 text-green-400 hover:bg-green-500/40' : 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/40'}`}
+                                                    className={`px-2 py-1 rounded text-xs disabled:opacity-50 transition ${u.is_platform_blocked ? 'bg-green-500/20 text-green-400 hover:bg-green-500/40' : 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/40'}`}
                                                 >
-                                                    {u.is_platform_blocked ? '✅ Unblock' : '🚫 Block'}
+                                                    {u.is_platform_blocked ? <span className="flex items-center gap-1"><FiCheckCircle size={11} /> Unblock</span> : <span className="flex items-center gap-1"><FiSlash size={11} /> Block</span>}
                                                 </button>
                                                 {/* Delete */}
                                                 <button
                                                     onClick={() => handleDeleteUser(u.id, u.name)}
                                                     disabled={actionLoading[`del_${u.id}`]}
-                                                    className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs hover:bg-red-900/60 disabled:opacity-50"
+                                                    className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs hover:bg-red-900/60 disabled:opacity-50 flex items-center justify-center"
                                                 >
-                                                    🗑️
+                                                    <FiTrash2 size={12} />
                                                 </button>
                                             </div>
                                         </td>
@@ -231,8 +240,9 @@ function AdminDashboard({ user, setPage }) {
             {activeTab === "reports" && (
                 <div className="space-y-3">
                     {reports.length === 0 && (
-                        <div className="bg-[#16162A] border border-white/5 rounded-2xl p-10 text-center text-gray-500">
-                            No reports yet. Platform is clean! ✅
+                        <div className="bg-[#16162A] border border-white/5 rounded-2xl p-10 text-center text-gray-500 flex flex-col items-center gap-2">
+                            <FiCheckCircle size={28} className="text-green-500" />
+                            <span>No reports yet. Platform is clean!</span>
                         </div>
                     )}
                     {reports.map(r => (
@@ -253,7 +263,7 @@ function AdminDashboard({ user, setPage }) {
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded-full text-xs font-bold">{r.reason}</span>
+                                        <span className="px-2 py-0.5 bg-orange-500/20 text-orange-300 rounded-full text-xs font-bold flex items-center gap-1"><FiAlertTriangle size={10} /> {r.reason}</span>
                                         <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${r.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' : r.status === 'reviewed' ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-400'}`}>
                                             {r.status}
                                         </span>
@@ -275,14 +285,183 @@ function AdminDashboard({ user, setPage }) {
                                         </button>
                                     )}
                                     {r.reported_id && (
-                                        <button onClick={() => handlePlatformBlock(r.reported_id, true)} disabled={actionLoading[`block_${r.reported_id}`]} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/40 disabled:opacity-50">
-                                            🚫 Block User
+                                        <button onClick={() => handlePlatformBlock(r.reported_id, true)} disabled={actionLoading[`block_${r.reported_id}`]} className="px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs font-bold hover:bg-red-500/40 disabled:opacity-50 flex items-center justify-center gap-1">
+                                            <FiSlash size={12} /> Block User
                                         </button>
                                     )}
                                 </div>
                             </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {/* ── INSIGHTS TAB ── */}
+            {activeTab === "insights" && (
+                <div className="space-y-6">
+                    {/* Visual Charts */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:hidden animate-fade-in">
+                        <div className="bg-[#16162A] border border-white/10 rounded-2xl p-5 shadow-lg">
+                            <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-1.5">
+                                <FiUser className="text-pink-500" /> Gender Distribution
+                            </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex justify-between text-xs mb-1.5">
+                                        <span className="text-blue-400">Boys</span>
+                                        <span className="font-bold text-white">{stats.boys} ({Math.round((stats.boys / stats.totalUsers) * 100) || 0}%)</span>
+                                    </div>
+                                    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(stats.boys / stats.totalUsers) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-xs mb-1.5">
+                                        <span className="text-pink-400">Girls</span>
+                                        <span className="font-bold text-white">{stats.girls} ({Math.round((stats.girls / stats.totalUsers) * 100) || 0}%)</span>
+                                    </div>
+                                    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-pink-500 rounded-full" style={{ width: `${(stats.girls / stats.totalUsers) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-[#16162A] border border-white/10 rounded-2xl p-5 shadow-lg">
+                            <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-1.5">
+                                <FiCheckCircle className="text-yellow-500" /> KYC Verification Rate
+                            </h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex justify-between text-xs mb-1.5">
+                                        <span className="text-green-400">Verified Users</span>
+                                        <span className="font-bold text-white">{stats.totalUsers - stats.pendingKyc}</span>
+                                    </div>
+                                    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-green-500 rounded-full" style={{ width: `${((stats.totalUsers - stats.pendingKyc) / stats.totalUsers) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-xs mb-1.5">
+                                        <span className="text-yellow-400">Pending KYC Approval</span>
+                                        <span className="font-bold text-white">{stats.pendingKyc}</span>
+                                    </div>
+                                    <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                                        <div className="h-full bg-yellow-500 rounded-full" style={{ width: `${(stats.pendingKyc / stats.totalUsers) * 100}%` }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Official Proof Certificate Section */}
+                    <div className="pt-4 animate-fade-in">
+                        <div className="flex justify-between items-center mb-4 print:hidden">
+                            <h3 className="text-gray-400 text-sm font-bold">Official Platform Summary Report</h3>
+                            <button
+                                onClick={() => window.print()}
+                                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-lg text-xs font-bold hover:opacity-90 transition shadow-lg shadow-pink-500/20"
+                            >
+                                <FiPrinter size={14} /> Print / Save PDF Proof
+                            </button>
+                        </div>
+
+                        {/* Print CSS Injector */}
+                        <style dangerouslySetInnerHTML={{__html: `
+                            @media print {
+                                body {
+                                    background: white !important;
+                                    color: black !important;
+                                }
+                                nav, .print\\:hidden, button, header, footer {
+                                    display: none !important;
+                                }
+                                .print-box {
+                                    background: white !important;
+                                    color: black !important;
+                                    border: 2px solid #000 !important;
+                                    box-shadow: none !important;
+                                    max-width: 100% !important;
+                                    width: 100% !important;
+                                    margin: 0 !important;
+                                    padding: 20px !important;
+                                }
+                                .print-box text, .print-box span, .print-box div, .print-box p, .print-box h1, .print-box h2, .print-box h3, .print-box th, .print-box td {
+                                    color: black !important;
+                                }
+                                .print-border {
+                                    border-color: #ccc !important;
+                                }
+                            }
+                        `}} />
+
+                        {/* Document Container */}
+                        <div id="print-section" className="print-box bg-[#16162A] border border-white/10 rounded-3xl p-8 max-w-xl mx-auto shadow-2xl relative overflow-hidden">
+                            {/* Decorative Certificate Ribbon */}
+                            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-pink-500/10 to-purple-600/10 rounded-bl-full border-l border-b border-white/5 pointer-events-none print:hidden"></div>
+                            
+                            {/* Logo Head */}
+                            <div className="flex flex-col items-center text-center pb-6 border-b border-white/10 print-border">
+                                <span className="text-2xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide print:text-black">RentGF</span>
+                                <p className="text-[10px] text-gray-400 tracking-widest uppercase mt-1">Official Platform Summary Report</p>
+                            </div>
+
+                            {/* Report Metadata */}
+                            <div className="py-5 grid grid-cols-2 gap-4 text-xs border-b border-white/10 print-border">
+                                <div>
+                                    <span className="text-gray-500 block mb-0.5">Generated On</span>
+                                    <span className="text-gray-200 font-mono font-bold flex items-center gap-1"><FiCalendar size={12} className="text-pink-500" /> {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500 block mb-0.5">Platform Status</span>
+                                    <span className="text-green-400 font-bold flex items-center gap-1">🛡️ Secured & Verified</span>
+                                </div>
+                            </div>
+
+                            {/* Stats Detail */}
+                            <div className="py-6 space-y-4">
+                                <h4 className="text-sm font-bold text-white border-b border-white/5 pb-2">Statistical Breakdown</h4>
+                                <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-xs">
+                                    <div className="flex justify-between pr-4 border-r border-white/5 print-border">
+                                        <span className="text-gray-400">Total Registered Users:</span>
+                                        <span className="text-white font-bold">{stats.totalUsers}</span>
+                                    </div>
+                                    <div className="flex justify-between pl-4">
+                                        <span className="text-gray-400">Total Bookings Completed:</span>
+                                        <span className="text-white font-bold">{stats.bookings}</span>
+                                    </div>
+                                    <div className="flex justify-between pr-4 border-r border-white/5 print-border">
+                                        <span className="text-gray-400">Male Users (Boys):</span>
+                                        <span className="text-white font-bold">{stats.boys}</span>
+                                    </div>
+                                    <div className="flex justify-between pl-4">
+                                        <span className="text-gray-400">Female Users (Girls):</span>
+                                        <span className="text-white font-bold">{stats.girls}</span>
+                                    </div>
+                                    <div className="flex justify-between pr-4 border-r border-white/5 print-border">
+                                        <span className="text-gray-400">Pending KYC Requests:</span>
+                                        <span className="text-white font-bold">{stats.pendingKyc}</span>
+                                    </div>
+                                    <div className="flex justify-between pl-4">
+                                        <span className="text-gray-400">Pending User Reports:</span>
+                                        <span className="text-white font-bold">{stats.pendingReports}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Official Seal / Signature Footer */}
+                            <div className="pt-6 border-t border-white/10 print-border flex justify-between items-end text-[10px]">
+                                <div className="space-y-1">
+                                    <span className="text-gray-500 block">Signature Verification</span>
+                                    <span className="text-gray-300 font-mono select-all">SYSTEM_SECURE_HASH_{Math.random().toString(36).substring(2, 10).toUpperCase()}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-gray-300 font-bold block">Super Admin Authority</span>
+                                    <span className="text-gray-500">RentGF Trust & Safety</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

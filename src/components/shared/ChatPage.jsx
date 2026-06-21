@@ -158,7 +158,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     // Clear Chat History
     const handleClearChat = async () => {
-        if (!window.confirm("Are you sure you want to clear all messages?")) return;
+        if (!await window.showConfirm("Are you sure you want to clear all messages?")) return;
         try {
             const token = localStorage.getItem('token');
             const res = await fetch('https://rentgf-and-bf.onrender.com/api/messages/clear', {
@@ -180,7 +180,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     // Delete Chat Completely
     const handleDeleteChat = async () => {
-        if (!window.confirm("Are you sure you want to delete this chat? This will remove the conversation history.")) return;
+        if (!await window.showConfirm("Are you sure you want to delete this chat? This will remove the conversation history.")) return;
         try {
             const token = localStorage.getItem('token');
             const res = await fetch('https://rentgf-and-bf.onrender.com/api/messages/clear', {

@@ -78,8 +78,8 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         } catch (err) { console.error(err); } finally { setUploading(false); }
     };
 
-    const handleLogout = () => {
-        if (window.confirm("Are you sure you want to logout?")) {
+    const handleLogout = async () => {
+        if (await window.showConfirm("Are you sure you want to logout?")) {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             sessionStorage.clear();
@@ -89,7 +89,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleDeleteAccount = async () => {
-        const confirmDelete = window.confirm("WARNING: This will permanently delete your account, chats, and bookings. Type 'YES' to confirm.");
+        const confirmDelete = await window.showConfirm("WARNING: This will permanently delete your account, chats, and bookings.");
         if (confirmDelete) {
             try {
                 await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
@@ -198,7 +198,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleUnblock = async (blockedId) => {
-        if (!window.confirm("Are you sure you want to unblock this user?")) return;
+        if (!await window.showConfirm("Are you sure you want to unblock this user?")) return;
         try {
             const token = localStorage.getItem("token");
             const res = await fetch("https://rentgf-and-bf.onrender.com/api/unblock", {

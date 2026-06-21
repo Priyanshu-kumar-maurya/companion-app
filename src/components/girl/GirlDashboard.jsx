@@ -184,7 +184,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     };
 
     const handleDeletePost = async (postId) => {
-        if (!window.confirm("Are you sure you want to delete this photo?")) return;
+        if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
         try {
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
             if (response.ok) {
