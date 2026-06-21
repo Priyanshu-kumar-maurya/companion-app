@@ -284,6 +284,7 @@ function UnifiedRegister({ setPage }) {
                             Changed your mind?{' '}
                             <button onClick={cancelRegistration} className="text-red-400 hover:underline">Cancel registration</button>
                         </p>
+                    </div>
                 </div>
             )}
 
