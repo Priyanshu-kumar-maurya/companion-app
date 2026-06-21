@@ -215,77 +215,79 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             )}
 
             <div className="max-w-3xl mx-auto px-4 py-6">
-
                 {/* ── Instagram-style Profile Header ── */}
-                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-6 pb-6 border-b border-white/5">
-
-                    {/* Profile Pic */}
-                    <div
-                        className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 cursor-pointer"
-                        onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}
-                    >
-                        <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] shadow-xl shadow-blue-500/20">
-                            <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A] flex items-center justify-center">
-                                {user?.profile_pic ? (
-                                    <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <FiUser size={40} className="text-gray-400" />
-                                )}
+                <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-white/5">
+                    {/* Top Row: Avatar on Left, Stats on Right */}
+                    <div className="flex items-center justify-between sm:justify-start gap-6 w-full">
+                        {/* Profile Pic */}
+                        <div
+                            className="relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 cursor-pointer"
+                            onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}
+                        >
+                            <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] shadow-xl shadow-blue-500/20">
+                                <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A] flex items-center justify-center">
+                                    {user?.profile_pic ? (
+                                        <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <FiUser size={36} className="text-gray-400" />
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Name + Stats + Actions */}
-                    <div className="flex-1 w-full text-center sm:text-left">
-                        {/* Name row */}
-                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-3">
-                            <h1 className="text-xl font-bold text-white">{user.name}</h1>
-                            {user.kyc_status === 'verified' && (
-                                <span className="flex items-center gap-1 text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-500/20">
-                                    <FiShield size={10} /> Verified
-                                </span>
-                            )}
-                            <button
-                                onClick={() => setShowSettings(true)}
-                                className="ml-auto sm:ml-4 px-3 py-1.5 bg-white/10 border border-white/20 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition flex items-center gap-1.5"
-                            >
-                                <FiSettings size={13} /> Edit Profile
-                            </button>
-                        </div>
-
-                        {/* Stats row */}
-                        <div className="flex items-center justify-center sm:justify-start gap-6 mb-3">
+                        {/* Stats columns */}
+                        <div className="flex-1 flex justify-around sm:justify-start sm:gap-12 max-w-sm">
                             <div className="flex flex-col items-center sm:items-start">
-                                <span className="text-base font-bold text-white leading-none">{myPosts.length}</span>
-                                <span className="text-[11px] text-gray-400 mt-0.5">Posts</span>
+                                <span className="text-sm sm:text-base font-bold text-white leading-none">{myPosts.length}</span>
+                                <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-wider">Posts</span>
                             </div>
                             <button
                                 className="flex flex-col items-center sm:items-start cursor-pointer hover:opacity-70 transition"
                                 onClick={() => openFollowList('followers')}
                             >
-                                <span className="text-base font-bold text-white leading-none">{followStats.followers}</span>
-                                <span className="text-[11px] text-gray-400 mt-0.5">Followers</span>
+                                <span className="text-sm sm:text-base font-bold text-white leading-none">{followStats.followers}</span>
+                                <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-wider">Followers</span>
                             </button>
                             <button
                                 className="flex flex-col items-center sm:items-start cursor-pointer hover:opacity-70 transition"
                                 onClick={() => openFollowList('following')}
                             >
-                                <span className="text-base font-bold text-white leading-none">{followStats.following}</span>
-                                <span className="text-[11px] text-gray-400 mt-0.5">Following</span>
+                                <span className="text-sm sm:text-base font-bold text-white leading-none">{followStats.following}</span>
+                                <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-wider">Following</span>
                             </button>
                         </div>
+                    </div>
 
-                        {/* Bio */}
+                    {/* Name + Bio + Link (Left-aligned) */}
+                    <div className="text-left w-full">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <h1 className="text-base sm:text-lg font-bold text-white">{user.name}</h1>
+                            {user.kyc_status === 'verified' && (
+                                <span className="flex items-center gap-1 text-[9px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-500/20">
+                                    <FiShield size={9} /> Verified
+                                </span>
+                            )}
+                        </div>
                         {user.bio && <p className="text-gray-300 text-sm leading-relaxed mb-1">{user.bio}</p>}
                         {user.social_link && (
                             <a
                                 href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`}
                                 target="_blank" rel="noreferrer"
-                                className="text-blue-400 text-xs hover:underline flex items-center gap-1 w-fit mx-auto sm:mx-0 mt-1"
+                                className="text-blue-400 text-xs hover:underline flex items-center gap-1 w-fit mt-1.5"
                             >
                                 <FiLink size={12} /> {user.social_link}
                             </a>
                         )}
+                    </div>
+
+                    {/* Full-width action button for Edit Profile */}
+                    <div className="w-full flex gap-3">
+                        <button
+                            onClick={() => setShowSettings(true)}
+                            className="flex-1 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition flex items-center justify-center gap-1.5"
+                        >
+                            <FiSettings size={13} /> Edit Profile
+                        </button>
                     </div>
                 </div>
 

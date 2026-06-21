@@ -26,9 +26,14 @@ router.post('/register', authRateLimit, async (req, res) => {
         if (!role || !['boy', 'girl'].includes(role)) return res.status(400).json({ error: "Please select a valid role (boy/girl)." });
 
         // Check if email already exists
-        const existingUser = await pool.query("SELECT id FROM users WHERE email = $1", [email.toLowerCase()]);
+        const existingUser = await pool.query("SELECT id, is_verified FROM users WHERE email = $1", [email.toLowerCase()]);
         if (existingUser.rows.length > 0) {
-            return res.status(409).json({ error: "This email is already registered. Please login." });
+            if (existingUser.rows[0].is_verified === false) {
+                // Delete unverified user to allow clean re-registration
+                await pool.query("DELETE FROM users WHERE id = $1", [existingUser.rows[0].id]);
+            } else {
+                return res.status(409).json({ error: "This email is already registered. Please login." });
+            }
         }
 
         // Hash password

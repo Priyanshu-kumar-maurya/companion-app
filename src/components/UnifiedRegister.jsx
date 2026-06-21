@@ -13,6 +13,8 @@ function UnifiedRegister({ setPage }) {
     const [otp, setOtp] = useState("");
     const [verifying, setVerifying] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
+    const [customAlert, setCustomAlert] = useState({ show: false, message: "" });
+    const showAlert = (msg) => setCustomAlert({ show: true, message: msg });
 
     // Store registered user info so we can delete if cancelled
     const [registeredUserId, setRegisteredUserId] = useState(null);
@@ -38,7 +40,7 @@ function UnifiedRegister({ setPage }) {
 
         const age = calculateAge(formData.dob);
         if (age < 18) {
-            alert("You must be at least 18 years old to join.");
+            showAlert("You must be at least 18 years old to join.");
             return;
         }
 
@@ -58,11 +60,11 @@ function UnifiedRegister({ setPage }) {
                 setShowOtpModal(true);
                 startResendCooldown();
             } else {
-                alert(data.error || "Registration failed.");
+                showAlert(data.error || "Registration failed.");
             }
         } catch (err) {
             console.error(err);
-            alert("Server error. Please try again later.");
+            showAlert("Server error. Please try again later.");
         } finally {
             setLoading(false);
         }
@@ -105,9 +107,9 @@ function UnifiedRegister({ setPage }) {
                 body: JSON.stringify({ email: formData.email })
             });
             startResendCooldown();
-            alert("OTP resent! Please check your email.");
+            showAlert("OTP resent! Please check your email.");
         } catch (err) {
-            alert("Failed to resend OTP. Try again.");
+            showAlert("Failed to resend OTP. Try again.");
         }
     };
 
@@ -115,7 +117,7 @@ function UnifiedRegister({ setPage }) {
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
         if (otp.length !== 6) {
-            alert("Please enter a valid 6-digit OTP.");
+            showAlert("Please enter a valid 6-digit OTP.");
             return;
         }
 
@@ -129,15 +131,15 @@ function UnifiedRegister({ setPage }) {
 
             const data = await response.json();
             if (response.ok) {
-                alert("Account verified successfully! Please login.");
+                showAlert("Account verified successfully! Please login.");
                 setShowOtpModal(false);
                 setPage(formData.role === 'girl' ? PAGES.GIRL_LOGIN : PAGES.BOY_LOGIN);
             } else {
-                alert(data.error || "Invalid OTP.");
+                showAlert(data.error || "Invalid OTP.");
             }
         } catch (err) {
             console.error(err);
-            alert("Verification failed.");
+            showAlert("Verification failed.");
         } finally {
             setVerifying(false);
         }
@@ -282,6 +284,23 @@ function UnifiedRegister({ setPage }) {
                             Changed your mind?{' '}
                             <button onClick={cancelRegistration} className="text-red-400 hover:underline">Cancel registration</button>
                         </p>
+                </div>
+            )}
+
+            {/* Custom Alert Popup */}
+            {customAlert.show && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+                    <div className="w-full max-w-xs overflow-hidden shadow-2xl border border-white/10 bg-[#16162A]" style={{ borderRadius: 16 }}>
+                        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-pink-500 to-purple-600"></div>
+                        <div className="px-6 py-5">
+                            <p className="text-sm text-gray-200 font-medium mb-5 text-center leading-relaxed">{customAlert.message}</p>
+                            <button
+                                onClick={() => setCustomAlert({ show: false, message: "" })}
+                                className="w-full py-2.5 rounded-lg font-bold text-xs transition bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-pink-500/20"
+                            >
+                                OK
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -226,67 +226,87 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
             <div className="max-w-5xl mx-auto px-4 py-6">
 
-                <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-4">
-                        <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer" onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}>
+                {/* ── Instagram-style Profile Header ── */}
+                <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-white/5">
+                    {/* Top Row: Avatar on Left, Stats on Right */}
+                    <div className="flex items-center justify-between sm:justify-start gap-6 w-full">
+                        {/* Profile Pic */}
+                        <div
+                            className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 cursor-pointer"
+                            onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}
+                        >
                             <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-pink-500/30 to-purple-500/30 flex items-center justify-center text-4xl border-4 border-pink-500/20 shadow-lg">
                                 {user?.profile_pic ? (
                                     <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                                ) : ("😊")}
+                                ) : (
+                                    "😊"
+                                )}
                             </div>
                         </div>
 
-                        <div className="flex flex-col justify-center">
-                            <div className="flex items-center gap-2 mb-1">
-                                <h1 className="text-xl sm:text-2xl font-bold text-white truncate max-w-[140px] sm:max-w-[250px]">{user.name} 💕</h1>
-                                {user.kyc_status === 'verified' && <span className="text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">✓</span>}
+                        {/* Stats columns */}
+                        <div className="flex-1 flex justify-around sm:justify-start sm:gap-12 max-w-sm">
+                            <div className="flex flex-col items-center sm:items-start">
+                                <span className="text-sm sm:text-base font-bold text-white leading-none">{myPosts.length}</span>
+                                <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-wider">Posts</span>
                             </div>
-
-                            <div className="flex items-center gap-3 mt-1">
-                                <button
-                                    className="flex flex-col items-center cursor-pointer hover:opacity-70 transition"
-                                    onClick={() => openFollowList('followers')}
-                                >
-                                    <span className="text-sm font-bold text-white leading-none">{followStats.followers}</span>
-                                    <span className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Followers</span>
-                                </button>
-                                <div className="w-px h-5 bg-white/10"></div>
-                                <button
-                                    className="flex flex-col items-center cursor-pointer hover:opacity-70 transition"
-                                    onClick={() => openFollowList('following')}
-                                >
-                                    <span className="text-sm font-bold text-white leading-none">{followStats.following}</span>
-                                    <span className="text-[9px] uppercase tracking-wider text-gray-500 mt-0.5">Following</span>
-                                </button>
-                            </div>
+                            <button
+                                className="flex flex-col items-center sm:items-start cursor-pointer hover:opacity-70 transition"
+                                onClick={() => openFollowList('followers')}
+                            >
+                                <span className="text-sm sm:text-base font-bold text-white leading-none">{followStats.followers}</span>
+                                <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-wider">Followers</span>
+                            </button>
+                            <button
+                                className="flex flex-col items-center sm:items-start cursor-pointer hover:opacity-70 transition"
+                                onClick={() => openFollowList('following')}
+                            >
+                                <span className="text-sm sm:text-base font-bold text-white leading-none">{followStats.following}</span>
+                                <span className="text-[10px] sm:text-[11px] text-gray-500 mt-1 uppercase tracking-wider">Following</span>
+                            </button>
                         </div>
                     </div>
 
-                    <button onClick={() => setShowSettings(true)} className="px-3 py-1.5 bg-white/10 border border-white/20 text-white rounded-lg text-xs font-semibold hover:bg-white/20 transition flex items-center gap-1.5 shrink-0 self-start mt-1">
-                        ⚙️ Edit
-                    </button>
+                    {/* Name + Bio + Link (Left-aligned) */}
+                    <div className="text-left w-full">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <h1 className="text-base sm:text-lg font-bold text-white">{user.name} 💕</h1>
+                            {user.kyc_status === 'verified' && (
+                                <span className="flex items-center gap-1 text-[9px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">
+                                    ✓ Verified
+                                </span>
+                            )}
+                        </div>
+                        {user.bio && <p className="text-gray-300 text-sm leading-relaxed mb-1 italic">"{user.bio}"</p>}
+                        {user.social_link && (
+                            <a
+                                href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`}
+                                target="_blank" rel="noreferrer"
+                                className="text-pink-400 text-sm hover:underline flex items-center gap-1 w-fit mt-1.5"
+                            >
+                                🔗 {user.social_link}
+                            </a>
+                        )}
+                    </div>
+
+                    {/* Full-width action button for Edit Profile */}
+                    <div className="w-full flex gap-3">
+                        <button
+                            onClick={() => setShowSettings(true)}
+                            className="flex-1 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition flex items-center justify-center gap-1.5"
+                        >
+                            ⚙️ Edit Profile
+                        </button>
+                    </div>
                 </div>
 
-                <div className="flex flex-wrap gap-2 justify-start">
+                <div className="flex flex-wrap gap-2 justify-start mb-6">
                     {myTags.map((tag, i) => (
                         <span key={i} className="px-3 py-1.5 bg-pink-500/10 border border-pink-500/20 text-pink-400 text-[11px] rounded-full">
                             {tag.trim()}
                         </span>
                     ))}
                 </div>
-
-                {(user.bio || user.social_link) && (
-                    <div className="mt-4 mb-8 bg-[#16162A] p-4 rounded-xl border border-white/5">
-                        {user.bio && (
-                            <p className="text-gray-300 text-sm mb-2 italic">"{user.bio}"</p>
-                        )}
-                        {user.social_link && (
-                            <a href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`} target="_blank" rel="noreferrer" className="text-pink-400 text-sm hover:underline flex items-center gap-1 w-fit mt-2">
-                                🔗 {user.social_link}
-                            </a>
-                        )}
-                    </div>
-                )}
 
                 <div className="mb-6 mt-6">
                     {(!user.kyc_status || user.kyc_status === 'unverified') && (
