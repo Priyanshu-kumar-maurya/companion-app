@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import SettingsModal from '../shared/SettingsModal';
 import imageCompression from 'browser-image-compression';
-import { FiX, FiCheckCircle } from "react-icons/fi";
+import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle } from "react-icons/fi";
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "4.8" });
@@ -284,7 +284,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                 target="_blank" rel="noreferrer"
                                 className="text-pink-400 text-sm hover:underline flex items-center gap-1 w-fit mt-1.5"
                             >
-                                🔗 {user.social_link}
+                                <FiLink size={12} /> {user.social_link}
                             </a>
                         )}
                     </div>
@@ -295,7 +295,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             onClick={() => setShowSettings(true)}
                             className="flex-1 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition flex items-center justify-center gap-1.5"
                         >
-                            ⚙️ Edit Profile
+                            <FiSettings size={13} /> Edit Profile
                         </button>
                     </div>
                 </div>
@@ -312,7 +312,9 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     {(!user.kyc_status || user.kyc_status === 'unverified') && (
                         <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div>
-                                <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">⚠️ KYC Verification Required</h3>
+                                <h3 className="text-red-400 font-bold text-sm flex items-center gap-2">
+                                    <FiAlertTriangle size={14} /> KYC Verification Required
+                                </h3>
                                 <p className="text-xs text-gray-400 mt-1">Upload a valid Govt. ID (Aadhaar/PAN) to get the "Verified" badge and receive more bookings.</p>
                             </div>
                             <label className="shrink-0 px-5 py-2.5 bg-red-500/20 hover:bg-red-500 text-white rounded-lg text-xs font-bold cursor-pointer transition border border-red-500/50">

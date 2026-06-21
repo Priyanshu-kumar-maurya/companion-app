@@ -859,37 +859,89 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                             )}
 
                                             {/* Message bubble */}
+                                            {/* Message bubble */}
                                             <div
-                                                className="relative px-3 py-1.5 text-sm leading-relaxed shadow-sm"
+                                                className="relative shadow-sm text-sm leading-relaxed"
                                                 style={{
                                                     background: msg.sent ? '#2d1457' : '#16162A',
                                                     color: '#f1f5f9',
                                                     borderRadius: msg.sent ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
-                                                    border: msg.sent ? '1px solid rgba(236,72,153,0.15)' : '1px solid rgba(255,255,255,0.06)'
+                                                    border: msg.sent ? '1px solid rgba(236,72,153,0.15)' : '1px solid rgba(255,255,255,0.06)',
+                                                    padding: (msg.imageUrl && !msg.text) ? '3px' : (msg.imageUrl && msg.text) ? '4px 4px 6px 4px' : '6px 12px'
                                                 }}
                                             >
-                                                {msg.imageUrl && (
-                                                    <img
-                                                        src={msg.imageUrl}
-                                                        alt="attachment"
-                                                        className="w-full max-w-[220px] rounded-md mb-1 object-contain cursor-pointer active:scale-95 transition-transform"
-                                                        onClick={() => setLightboxImg(msg.imageUrl)}
-                                                    />
+                                                {msg.imageUrl && !msg.text && (
+                                                    <div className="relative overflow-hidden" style={{ borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px' }}>
+                                                        <img
+                                                            src={msg.imageUrl}
+                                                            alt="attachment"
+                                                            className="w-full max-w-[260px] xs:max-w-[280px] object-cover cursor-pointer active:scale-95 transition-transform block"
+                                                            style={{
+                                                                maxHeight: '300px',
+                                                                borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px'
+                                                            }}
+                                                            onClick={() => setLightboxImg(msg.imageUrl)}
+                                                        />
+                                                        {/* Timestamp overlay on image */}
+                                                        <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/50 px-1.5 py-0.5 rounded-md backdrop-blur-[1px] text-[9px] text-white/90 select-none pointer-events-none">
+                                                            {starredMessages.includes(msg.id) && (
+                                                                <span className="text-yellow-400 text-[10px]">★</span>
+                                                            )}
+                                                            <span>{msg.time}</span>
+                                                            {msg.sent && (
+                                                                <span className="text-[10px]" style={{ color: msg.is_read ? '#a78bfa' : '#ffffff80' }}>
+                                                                    {msg.is_read ? '✓✓' : '✓'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 )}
-                                                {msg.text && <span className="break-words">{msg.text}</span>}
 
-                                                {/* Timestamp + ticks */}
-                                                <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
-                                                    {starredMessages.includes(msg.id) && (
-                                                        <span className="text-yellow-400 text-[10px] mr-1">★</span>
-                                                    )}
-                                                    <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
-                                                    {msg.sent && (
-                                                        <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
-                                                            {msg.is_read ? '✓✓' : '✓'}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                {msg.imageUrl && msg.text && (
+                                                    <>
+                                                        <img
+                                                            src={msg.imageUrl}
+                                                            alt="attachment"
+                                                            className="w-full max-w-[260px] xs:max-w-[280px] object-cover cursor-pointer active:scale-95 transition-transform block mb-1.5"
+                                                            style={{
+                                                                maxHeight: '300px',
+                                                                borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px'
+                                                            }}
+                                                            onClick={() => setLightboxImg(msg.imageUrl)}
+                                                        />
+                                                        <div className="px-1.5 pb-1">
+                                                            <span className="break-words text-gray-200">{msg.text}</span>
+                                                            <div className="flex items-center justify-end gap-1 mt-1 -mb-0.5 ml-3">
+                                                                {starredMessages.includes(msg.id) && (
+                                                                    <span className="text-yellow-400 text-[10px] mr-1">★</span>
+                                                                )}
+                                                                <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
+                                                                {msg.sent && (
+                                                                    <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
+                                                                        {msg.is_read ? '✓✓' : '✓'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                )}
+
+                                                {!msg.imageUrl && (
+                                                    <>
+                                                        {msg.text && <span className="break-words">{msg.text}</span>}
+                                                        <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
+                                                            {starredMessages.includes(msg.id) && (
+                                                                <span className="text-yellow-400 text-[10px] mr-1">★</span>
+                                                            )}
+                                                            <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
+                                                            {msg.sent && (
+                                                                <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
+                                                                    {msg.is_read ? '✓✓' : '✓'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

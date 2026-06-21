@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../../App";
+import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader } from "react-icons/fi";
 
 const CITIES = ["Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur", "Kolkata", "Noida"];
 
@@ -48,7 +49,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 if (socket) {
                     socket.emit("active_status_changed");
                 }
-                alert("✅ Settings Updated Successfully!");
+                alert("Settings Updated Successfully!");
                 setActiveView('menu');
             } else {
                 alert("Update failed!");
@@ -72,7 +73,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             if (response.ok) {
                 const data = await response.json();
                 setUser({ ...user, profile_pic: data.imageUrl });
-                alert("Profile picture updated! 📸");
+                alert("Profile picture updated!");
             }
         } catch (err) { console.error(err); } finally { setUploading(false); }
     };
@@ -88,7 +89,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleDeleteAccount = async () => {
-        const confirmDelete = window.confirm("⚠️ WARNING: This will permanently delete your account, chats, and bookings. Type 'YES' to confirm.");
+        const confirmDelete = window.confirm("WARNING: This will permanently delete your account, chats, and bookings. Type 'YES' to confirm.");
         if (confirmDelete) {
             try {
                 await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
@@ -231,12 +232,12 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             </button>
                         )}
                         <h2 className="text-lg font-bold text-white">
-                            {activeView === 'menu' && "⚙️ Settings"}
+                            {activeView === 'menu' && <span className="flex items-center gap-2"><FiSettings size={18} className="text-pink-500" /> Settings</span>}
                             {activeView === 'edit_profile' && "Edit Profile"}
                             {activeView === 'privacy' && "Privacy & Visibility"}
-                            {activeView === 'saved_posts' && "🔖 Saved Posts"}
-                            {activeView === 'liked_posts' && "❤️ Liked Posts"}
-                            {activeView === 'blocked_accounts' && "🚫 Blocked Accounts"}
+                            {activeView === 'saved_posts' && <span className="flex items-center gap-2"><FiBookmark size={18} className="text-pink-500" /> Saved Posts</span>}
+                            {activeView === 'liked_posts' && <span className="flex items-center gap-2"><FiHeart size={18} className="text-pink-500" /> Liked Posts</span>}
+                            {activeView === 'blocked_accounts' && <span className="flex items-center gap-2"><FiSlash size={18} className="text-pink-500" /> Blocked Accounts</span>}
                             {activeView === 'danger' && "Delete Account"}
                         </h2>
                     </div>
@@ -250,26 +251,26 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     {activeView === 'menu' && (
                         <div className="flex flex-col divide-y divide-white/5">
                             <button onClick={() => setActiveView('edit_profile')} className="w-full text-left px-5 py-4 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                <span className="flex items-center gap-3"><span className="text-lg">👤</span> Edit Profile Details</span>
+                                <span className="flex items-center gap-3"><FiUser size={18} className="text-gray-400" /> Edit Profile Details</span>
                                 <span className="text-gray-500 text-lg">›</span>
                             </button>
                             <button onClick={() => setActiveView('privacy')} className="w-full text-left px-5 py-4 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                <span className="flex items-center gap-3"><span className="text-lg">🔒</span> Privacy & Security</span>
+                                <span className="flex items-center gap-3"><FiLock size={18} className="text-gray-400" /> Privacy & Security</span>
                                 <span className="text-gray-500 text-lg">›</span>
                             </button>
 
                             <div className="pt-2 pb-2 bg-[#121222]/50 border-t border-b border-white/5">
                                 <h3 className="text-[10px] font-bold text-gray-500 px-5 mb-1.5 tracking-wider uppercase">My Activity</h3>
                                 <button onClick={() => { setActiveView('saved_posts'); fetchSavedPosts(); }} className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                    <span className="flex items-center gap-3"><span className="text-lg">🔖</span> Saved Posts</span>
+                                    <span className="flex items-center gap-3"><FiBookmark size={18} className="text-gray-400" /> Saved Posts</span>
                                     <span className="text-gray-500 text-lg">›</span>
                                 </button>
                                 <button onClick={() => { setActiveView('liked_posts'); fetchLikedPosts(); }} className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                    <span className="flex items-center gap-3"><span className="text-lg">❤️</span> Liked Posts</span>
+                                    <span className="flex items-center gap-3"><FiHeart size={18} className="text-gray-400" /> Liked Posts</span>
                                     <span className="text-gray-500 text-lg">›</span>
                                 </button>
                                 <button onClick={() => { setActiveView('blocked_accounts'); fetchBlockedUsers(); }} className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                    <span className="flex items-center gap-3"><span className="text-lg">🚫</span> Blocked Accounts</span>
+                                    <span className="flex items-center gap-3"><FiSlash size={18} className="text-gray-400" /> Blocked Accounts</span>
                                     <span className="text-gray-500 text-lg">›</span>
                                 </button>
                             </div>
@@ -277,11 +278,11 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             <div className="pt-4 pb-2 bg-[#121222]">
                                 <h3 className="text-xs font-bold text-gray-500 px-5 mb-2 tracking-wider uppercase">Support & Info</h3>
                                 <button onClick={() => setPage(PAGES.HELP)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                    <span className="flex items-center gap-3"><span className="text-lg">🎧</span> Help Center</span>
+                                    <span className="flex items-center gap-3"><FiHelpCircle size={18} className="text-gray-400" /> Help Center</span>
                                     <span className="text-gray-500 text-lg">›</span>
                                 </button>
                                 <button onClick={() => setPage(PAGES.ABOUT)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
-                                    <span className="flex items-center gap-3"><span className="text-lg">ℹ️</span> About Us</span>
+                                    <span className="flex items-center gap-3"><FiInfo size={18} className="text-gray-400" /> About Us</span>
                                     <span className="text-gray-500 text-lg">›</span>
                                 </button>
                             </div>
@@ -289,10 +290,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             <div className="h-2 bg-[#0D0D1A] border-t border-white/5"></div>
 
                             <button onClick={handleLogout} className="w-full text-left px-5 py-4 hover:bg-white/5 transition text-sm font-medium text-pink-400">
-                                <span className="flex items-center gap-3"><span className="text-lg">🚪</span> Log Out</span>
+                                <span className="flex items-center gap-3"><FiLogOut size={18} className="text-pink-400" /> Log Out</span>
                             </button>
                             <button onClick={() => setActiveView('danger')} className="w-full text-left px-5 py-4 hover:bg-red-500/10 transition flex justify-between items-center text-sm font-medium text-red-500">
-                                <span className="flex items-center gap-3"><span className="text-lg">⚠️</span> Delete Account</span>
+                                <span className="flex items-center gap-3"><FiAlertTriangle size={18} className="text-red-500" /> Delete Account</span>
                                 <span className="text-red-500/50 text-lg">›</span>
                             </button>
                         </div>
@@ -303,13 +304,15 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
                             <div className="flex flex-col items-center mb-6">
                                 <div className="relative w-24 h-24 mb-3">
-                                    <div className={`w-full h-full rounded-full overflow-hidden bg-gradient-to-br ${isGirl ? 'from-pink-500/30 to-purple-500/30 border-pink-500/20' : 'from-blue-500/30 to-purple-500/30 border-blue-500/20'} flex items-center justify-center text-4xl border-4 shadow-lg`}>
+                                    <div className={`w-full h-full rounded-full overflow-hidden bg-gradient-to-br ${isGirl ? 'from-pink-500/30 to-purple-500/30 border-pink-500/20' : 'from-blue-500/30 to-purple-500/30 border-blue-500/20'} flex items-center justify-center border-4 shadow-lg`}>
                                         {user?.profile_pic ? (
                                             <img src={user.profile_pic} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : ("😊")}
+                                        ) : (
+                                            <FiUser size={38} className="text-white/60" />
+                                        )}
                                     </div>
                                     <label className={`absolute bottom-0 right-0 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] text-sm ${isGirl ? 'bg-pink-500' : 'bg-blue-500'}`} title="Upload Profile Picture">
-                                        {uploading ? "⏳" : "📷"}
+                                        {uploading ? <FiLoader className="animate-spin" size={13} /> : <FiCamera size={13} />}
                                         <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
                                     </label>
                                 </div>
@@ -397,7 +400,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             {listLoading ? (
                                 <div className="text-center py-10 text-pink-500 animate-pulse text-sm">Loading saved posts...</div>
                             ) : savedPosts.length === 0 ? (
-                                <div className="text-center py-12 text-gray-500 text-xs">No saved posts. Bookmarks will show up here! 🔖</div>
+                                <div className="text-center py-12 text-gray-500 text-xs flex flex-col items-center gap-2">
+                                    <FiBookmark size={24} className="text-gray-600" />
+                                    <span>No saved posts yet. Bookmarked posts will show up here!</span>
+                                </div>
                             ) : (
                                 <div className="grid grid-cols-3 gap-1">
                                     {savedPosts.map(post => (
@@ -415,7 +421,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             {listLoading ? (
                                 <div className="text-center py-10 text-pink-500 animate-pulse text-sm">Loading liked posts...</div>
                             ) : likedPosts.length === 0 ? (
-                                <div className="text-center py-12 text-gray-500 text-xs">No liked posts yet. ❤️</div>
+                                <div className="text-center py-12 text-gray-500 text-xs flex flex-col items-center gap-2">
+                                    <FiHeart size={24} className="text-gray-600" />
+                                    <span>No liked posts yet.</span>
+                                </div>
                             ) : (
                                 <div className="grid grid-cols-3 gap-1">
                                     {likedPosts.map(post => (
@@ -433,7 +442,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             {listLoading ? (
                                 <div className="text-center py-10 text-pink-500 animate-pulse text-sm">Loading blocked list...</div>
                             ) : blockedUsers.length === 0 ? (
-                                <div className="text-center py-12 text-gray-500 text-xs">No blocked users. 🛡️</div>
+                                <div className="text-center py-12 text-gray-500 text-xs flex flex-col items-center gap-2">
+                                    <FiSlash size={24} className="text-gray-600" />
+                                    <span>No blocked users.</span>
+                                </div>
                             ) : (
                                 blockedUsers.map(u => (
                                     <div key={u.id} className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/10">
@@ -456,7 +468,9 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     {activeView === 'danger' && (
                         <div className="p-5 space-y-4">
                             <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-xl">
-                                <h3 className="text-red-400 font-bold mb-2 flex items-center gap-2">⚠️ Warning</h3>
+                                <h3 className="text-red-400 font-bold mb-2 flex items-center gap-2">
+                                    <FiAlertTriangle size={16} /> Warning
+                                </h3>
                                 <p className="text-xs text-gray-400 leading-relaxed">
                                     Deleting your account is permanent and cannot be undone. All your photos, chats, reviews, and booking history will be erased from our servers immediately.
                                 </p>

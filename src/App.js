@@ -114,7 +114,7 @@ function App() {
     return (
       <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center text-white">
         <div className="text-xl font-semibold text-pink-500 animate-pulse">
-          Loading your dating experience... 💕
+          Loading your dating experience...
         </div>
       </div>
     );
