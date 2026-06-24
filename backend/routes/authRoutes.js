@@ -107,7 +107,7 @@ router.post('/register', authRateLimit, async (req, res) => {
             console.error("Mail send error during registration:", mailErr);
             // Clean up inserted user so they can try again immediately
             await pool.query("DELETE FROM users WHERE id = $1", [user.id]);
-            return res.status(500).json({ error: "Failed to send verification email. Please try again." });
+            return res.status(500).json({ error: "Failed to send verification email: " + mailErr.message });
         }
 
         res.status(201).json({ message: "Registration successful!", token, user });
@@ -256,7 +256,7 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
         res.status(200).json({ message: "OTP sent successfully! Please check your email." });
     } catch (err) {
         console.error("Forgot password error — Full details:", err.message, err);
-        res.status(500).json({ error: "Failed to send OTP. Please try again." });
+        res.status(500).json({ error: "Failed to send OTP: " + err.message });
     }
 });
 
@@ -361,7 +361,7 @@ router.post('/send-otp', async (req, res) => {
         res.status(200).json({ message: "OTP sent successfully! Please check your email." });
     } catch (err) {
         console.error("Send OTP error:", err);
-        res.status(500).json({ error: "Failed to send OTP. Please try again." });
+        res.status(500).json({ error: "Failed to send OTP: " + err.message });
     }
 });
 
