@@ -75,7 +75,7 @@ app.use(helmet({
 
 // 2. CORS
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // preflight
+app.options('/{*splat}', cors(corsOptions)); // preflight
 
 // 3. Request size limits — 5MB for JSON, 10MB for files
 app.use(express.json({ limit: '5mb' }));
