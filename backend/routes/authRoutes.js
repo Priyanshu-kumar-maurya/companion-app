@@ -1,11 +1,19 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const { pool } = require('../config/db');
 const rateLimiter = require('../middleware/rateLimiter');
 
 const router = express.Router();
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
 // Strict rate limiter for auth routes — 5 attempts per minute per IP
 const authRateLimit = rateLimiter(5, 60 * 1000);
@@ -39,10 +47,13 @@ router.post('/register', authRateLimit, async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Create user
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Create user with OTP info
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password, role, phone) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role",
-            [name.trim(), email.toLowerCase(), hashedPassword, role, phone || null]
+            "INSERT INTO users (name, email, password, role, phone, otp, otp_expiry) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, email, role",
+            [name.trim(), email.toLowerCase(), hashedPassword, role, phone || null, otp, otpExpiry]
         );
 
         const user = newUser.rows[0];
@@ -51,6 +62,53 @@ router.post('/register', authRateLimit, async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
+
+        try {
+            await transporter.sendMail({
+                from: `"RentGF" <${process.env.EMAIL_USER}>`,
+                to: email.toLowerCase().trim(),
+                subject: 'Your RentGF Verification Code',
+                html: `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    </head>
+                    <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:'Segoe UI',Arial,sans-serif;">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f4;padding:40px 0;">
+                            <tr><td align="center">
+                                <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+                                    <tr><td style="background:linear-gradient(135deg,#e91e8c,#ff6b6b);padding:36px 40px;text-align:center;">
+                                        <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:1px;">RentGF</h1>
+                                        <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Email Verification</p>
+                                    </td></tr>
+                                    <tr><td style="padding:40px 40px 32px;">
+                                        <p style="margin:0 0 16px;color:#333333;font-size:16px;">Hi <strong>${user.name}</strong>,</p>
+                                        <p style="margin:0 0 28px;color:#555555;font-size:15px;line-height:1.6;">Use the verification code below to verify your email. This code is valid for <strong>10 minutes</strong>.</p>
+                                        <div style="background:linear-gradient(135deg,#fff0f6,#ffe4f0);border:2px solid #f48fb1;border-radius:12px;padding:28px;text-align:center;margin-bottom:28px;">
+                                            <p style="margin:0 0 8px;color:#c2185b;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:2px;">Your OTP Code</p>
+                                            <p style="margin:0;color:#e91e8c;font-size:48px;font-weight:900;letter-spacing:12px;font-family:'Courier New',monospace;">${otp}</p>
+                                        </div>
+                                        <p style="margin:0 0 8px;color:#888888;font-size:13px;text-align:center;">This code expires in <strong>10 minutes</strong>.</p>
+                                        <p style="margin:0;color:#aaaaaa;font-size:12px;text-align:center;">If you didn't request this, please ignore this email.</p>
+                                    </td></tr>
+                                    <tr><td style="background:#fafafa;padding:20px 40px;border-top:1px solid #eeeeee;text-align:center;">
+                                        <p style="margin:0;color:#bbbbbb;font-size:12px;">&copy; 2024 RentGF &middot; All rights reserved</p>
+                                    </td></tr>
+                                </table>
+                            </td></tr>
+                        </table>
+                    </body>
+                    </html>
+                `
+            });
+        } catch (mailErr) {
+            console.error("Mail send error during registration:", mailErr);
+            // Clean up inserted user so they can try again immediately
+            await pool.query("DELETE FROM users WHERE id = $1", [user.id]);
+            return res.status(500).json({ error: "Failed to send verification email. Please try again." });
+        }
 
         res.status(201).json({ message: "Registration successful!", token, user });
     } catch (err) {
@@ -160,11 +218,9 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
             [otp, otpExpiry, user.id]
         );
 
-        const resend = new Resend(process.env.RESEND_API_KEY);
-
-        await resend.emails.send({
-            from: 'RentGF <onboarding@resend.dev>',
-            to: [email],
+        await transporter.sendMail({
+            from: `"RentGF" <${process.env.EMAIL_USER}>`,
+            to: email,
             subject: 'RentGF — Password Reset Code',
             html: `
                 <!DOCTYPE html>
@@ -262,11 +318,9 @@ router.post('/send-otp', async (req, res) => {
             [otp, otpExpiry, user.id]
         );
 
-        const resend = new Resend(process.env.RESEND_API_KEY);
-
-        await resend.emails.send({
-            from: 'RentGF <onboarding@resend.dev>',
-            to: [email],
+        await transporter.sendMail({
+            from: `"RentGF" <${process.env.EMAIL_USER}>`,
+            to: email,
             subject: 'Your RentGF Verification Code',
             html: `
                 <!DOCTYPE html>
