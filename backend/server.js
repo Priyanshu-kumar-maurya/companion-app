@@ -22,6 +22,7 @@ const server = http.createServer(app);
 
 // ─── Allowed Origins (CORS Whitelist) ────────────────────────
 const ALLOWED_ORIGINS = [
+    'https://rentgf-app.vercel.app',
     'https://companion-app-jade.vercel.app',
     'https://companion-app.vercel.app',
     'http://localhost:5173',
