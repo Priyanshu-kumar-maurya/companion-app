@@ -14,6 +14,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [loadingMsg, setLoadingMsg] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
@@ -111,18 +112,40 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
         setLoading(true);
         setError("");
         setSuccess("");
+        setLoadingMsg("Sending OTP...");
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+        const sendOtpRequest = async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+            try {
+                const response = await fetch("https://rentgf-and-bf.onrender.com/api/forgot-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: forgotEmail }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (err) {
+                clearTimeout(timeoutId);
+                throw err;
+            }
+        };
 
         try {
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/forgot-password", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: forgotEmail }),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
+            let response;
+            try {
+                response = await sendOtpRequest();
+            } catch (firstErr) {
+                if (firstErr.name === "AbortError") {
+                    // Auto-retry once — server was waking up
+                    setLoadingMsg("Server start ho raha hai... dobara try kar rahe hain (30s)...");
+                    await new Promise(r => setTimeout(r, 5000));
+                    response = await sendOtpRequest();
+                } else {
+                    throw firstErr;
+                }
+            }
 
             const data = await response.json();
             if (response.ok) {
@@ -132,14 +155,14 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 setError(data.error || "Something went wrong. Please try again.");
             }
         } catch (err) {
-            clearTimeout(timeoutId);
             if (err.name === "AbortError") {
-                setError("Request timed out. The server may be starting up — please wait 30 seconds and try again.");
+                setError("Server abhi bhi start ho raha hai. Please 30 seconds baad dobara try karein.");
             } else {
                 setError("Server error. Please try again.");
             }
         } finally {
             setLoading(false);
+            setLoadingMsg("");
         }
     };
 
@@ -348,7 +371,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                 />
                             </div>
                             <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-pink-500 to-purple-500 disabled:opacity-60">
-                                {loading ? "Sending OTP..." : "Send OTP"}
+                                {loading ? (loadingMsg || "Sending OTP...") : "Send OTP"}
                             </button>
                         </form>
 

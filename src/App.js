@@ -73,6 +73,21 @@ function App() {
     };
   }, []);
 
+  // ── Server Wake-Up Ping (Render free tier sleeps after 15 min) ──
+  useEffect(() => {
+    const wakeUpServer = async () => {
+      try {
+        await fetch("https://rentgf-and-bf.onrender.com/", { method: "GET" });
+      } catch (e) {
+        // Silently ignore — just a wake-up ping
+      }
+    };
+    wakeUpServer();
+    // Ping every 10 minutes to keep server awake during active session
+    const interval = setInterval(wakeUpServer, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const handleHashChange = () => {
       const currentHash = window.location.hash.replace("#", "");
