@@ -7,44 +7,21 @@ const rateLimiter = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-let sendEmail;
+// ─── Gmail SMTP Email Transporter ────────────────────────────
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 
-if (process.env.RESEND_API_KEY) {
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    sendEmail = async ({ to, subject, html }) => {
-        const from = process.env.EMAIL_FROM || 'RentGF <onboarding@resend.dev>';
-        const { data, error } = await resend.emails.send({
-            from,
-            to: [to],
-            subject,
-            html
-        });
-        if (error) {
-            throw new Error(error.message || 'Resend error');
-        }
-        return data;
-    };
-    console.log('Email service initialized: Resend API (HTTP)');
-} else {
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
-        }
-    });
-    sendEmail = async ({ to, subject, html }) => {
-        const from = process.env.EMAIL_FROM || `"RentGF" <${process.env.EMAIL_USER}>`;
-        return await transporter.sendMail({
-            from,
-            to,
-            subject,
-            html
-        });
-    };
-    console.log('Email service initialized: Nodemailer SMTP (Gmail)');
-}
+const sendEmail = async ({ to, subject, html }) => {
+    const from = process.env.EMAIL_FROM || `"RentGF" <${process.env.EMAIL_USER}>`;
+    return await transporter.sendMail({ from, to, subject, html });
+};
+
+console.log('Email service initialized: Nodemailer SMTP (Gmail)');
 
 // Strict rate limiter for auth routes — 5 attempts per minute per IP
 const authRateLimit = rateLimiter(5, 60 * 1000);
