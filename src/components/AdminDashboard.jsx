@@ -85,19 +85,19 @@ function AdminDashboard({ user, setPage }) {
     }
 
     // ── Filtered Users Logic ──────────────────────────────────
+    // is_verified can be true, false, or null (old users who were never asked to verify)
     const unverifiedUsers = users.filter(u => u.is_verified === false);
-    const verifiedUsers = users.filter(u => u.is_verified !== false);
 
     const getFilteredUsers = () => {
-        let base = activeFilter === "unverified" ? unverifiedUsers : verifiedUsers;
+        let base = users; // default: show ALL users
         switch (activeFilter) {
-            case "girls":       base = verifiedUsers.filter(u => u.role === 'girl'); break;
-            case "boys":        base = verifiedUsers.filter(u => u.role === 'boy'); break;
-            case "frozen":      base = verifiedUsers.filter(u => u.is_frozen); break;
-            case "blocked":     base = verifiedUsers.filter(u => u.is_platform_blocked); break;
-            case "pendingKyc":  base = verifiedUsers.filter(u => u.kyc_status === 'pending'); break;
+            case "girls":       base = users.filter(u => u.role === 'girl'); break;
+            case "boys":        base = users.filter(u => u.role === 'boy'); break;
+            case "frozen":      base = users.filter(u => u.is_frozen); break;
+            case "blocked":     base = users.filter(u => u.is_platform_blocked); break;
+            case "pendingKyc":  base = users.filter(u => u.kyc_status === 'pending'); break;
             case "unverified":  base = unverifiedUsers; break;
-            default:            base = verifiedUsers; break;
+            default:            base = users; break;
         }
         if (searchQuery.trim()) {
             const q = searchQuery.toLowerCase();
@@ -232,7 +232,7 @@ function AdminDashboard({ user, setPage }) {
                     onClick={() => { setActiveTab("users"); setActiveFilter("all"); }}
                     className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 ${activeTab === "users" ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
                 >
-                    <FiUser size={15} /> Users ({verifiedUsers.length})
+                    <FiUser size={15} /> Users ({users.length})
                 </button>
                 <button
                     onClick={() => { setActiveTab("unverified"); }}

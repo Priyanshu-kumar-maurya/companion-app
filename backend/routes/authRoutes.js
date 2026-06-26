@@ -1,27 +1,45 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const { pool } = require('../config/db');
 const rateLimiter = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
-// ─── Gmail SMTP Email Transporter ────────────────────────────
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
+// ─── Email Service (Brevo HTTP API — works on Render, no SMTP ports needed) ──
 const sendEmail = async ({ to, subject, html }) => {
-    const from = process.env.EMAIL_FROM || `"RentGF" <${process.env.EMAIL_USER}>`;
-    return await transporter.sendMail({ from, to, subject, html });
+    const apiKey = process.env.BREVO_API_KEY;
+    const senderEmail = process.env.EMAIL_USER || 'noreply@rentgf.com';
+    const senderName = process.env.EMAIL_FROM_NAME || 'RentGF';
+
+    if (!apiKey) {
+        throw new Error('BREVO_API_KEY is not set in environment variables');
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json',
+            'api-key': apiKey,
+            'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: to }],
+            subject: subject,
+            htmlContent: html
+        })
+    });
+
+    if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || `Brevo API error: ${response.status}`);
+    }
+
+    return await response.json();
 };
 
-console.log('Email service initialized: Nodemailer SMTP (Gmail)');
+console.log('Email service initialized: Brevo HTTP API');
 
 // Strict rate limiter for auth routes — 5 attempts per minute per IP
 const authRateLimit = rateLimiter(5, 60 * 1000);
