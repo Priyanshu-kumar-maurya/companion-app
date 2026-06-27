@@ -83,8 +83,9 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             sessionStorage.clear();
-            setUser(null);
-            setPage(PAGES.HOME);
+            // Full reload to clear ALL React state (girlUser, boyUser, adminUser)
+            window.location.href = window.location.origin + '/#home';
+            window.location.reload();
         }
     };
 

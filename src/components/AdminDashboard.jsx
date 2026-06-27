@@ -27,9 +27,13 @@ function AdminDashboard({ user, setPage }) {
                 fetch(`${API}/admin/reports`, { headers }),
             ]);
             if (statsRes.ok) setStats(await statsRes.json());
-            if (usersRes.ok) setUsers(await usersRes.json());
+            if (usersRes.ok) {
+                setUsers(await usersRes.json());
+            } else {
+                console.error('Admin users API failed:', usersRes.status, await usersRes.text().catch(() => ''));
+            }
             if (reportsRes.ok) setReports(await reportsRes.json());
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error('Admin fetchAll error:', err); }
         finally { setLoading(false); }
     };
 
