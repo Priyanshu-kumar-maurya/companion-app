@@ -117,6 +117,24 @@ module.exports = (io) => {
             await broadcastOnlineUsers(io);
         });
 
+        // ── SOS Emergency Alert — Broadcast to all admins ──
+        socket.on("sos_alert", async (data) => {
+            try {
+                // Get all admin users
+                const admins = await pool.query("SELECT id FROM users WHERE role = 'admin'");
+                admins.rows.forEach(admin => {
+                    io.to(`user_${admin.id}`).emit("sos_notification", {
+                        ...data,
+                        type: "sos",
+                        message: `🚨 SOS Alert from ${data.userName}!`
+                    });
+                });
+                console.log(`🚨 SOS Alert broadcast to ${admins.rows.length} admins`);
+            } catch (err) {
+                console.error("SOS socket error:", err);
+            }
+        });
+
         socket.on("disconnect", async () => {
             let disconnectedUserId = null;
             for (let [userId, socketId] of onlineUsers.entries()) {

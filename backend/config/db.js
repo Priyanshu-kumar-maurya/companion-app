@@ -113,6 +113,28 @@ const connectDB = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`);
 
+        await pool.query(`CREATE TABLE IF NOT EXISTS emergency_contacts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            name VARCHAR(100) NOT NULL,
+            phone VARCHAR(20) NOT NULL,
+            email VARCHAR(255),
+            relationship VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`);
+
+        await pool.query(`CREATE TABLE IF NOT EXISTS sos_alerts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL,
+            latitude DECIMAL(10, 8),
+            longitude DECIMAL(11, 8),
+            message TEXT,
+            status VARCHAR(20) DEFAULT 'active',
+            resolved_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`);
+
         console.log('✅ Database Auto-Fixed: Tables ready!');
     } catch (err) {
         console.error('❌ Database connection error:', err.stack);

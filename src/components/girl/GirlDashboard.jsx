@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import SettingsModal from '../shared/SettingsModal';
+import SOSButton from '../shared/SOSButton';
 import imageCompression from 'browser-image-compression';
 import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle } from "react-icons/fi";
 
@@ -584,6 +585,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     </div>
                 </div>
             )}
+            <SOSButton user={user} socket={socket} />
         </div>
     );
 }

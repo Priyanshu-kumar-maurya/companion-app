@@ -16,6 +16,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const postRoutes = require('./routes/postRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const sosRoutes = require('./routes/sosRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -111,6 +112,7 @@ app.use('/api', bookingRoutes);
 app.use('/api', postRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', chatRoutes);
+app.use('/api', sosRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────
 app.get('/', (req, res) => {
