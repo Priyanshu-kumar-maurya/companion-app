@@ -28,9 +28,23 @@ function AdminDashboard({ user, setPage }) {
             ]);
             if (statsRes.ok) setStats(await statsRes.json());
             if (usersRes.ok) {
-                setUsers(await usersRes.json());
+                const usersData = await usersRes.json();
+                console.log('Admin users loaded:', usersData.length);
+                setUsers(usersData);
             } else {
-                console.error('Admin users API failed:', usersRes.status, await usersRes.text().catch(() => ''));
+                const errText = await usersRes.text().catch(() => '');
+                console.error('Admin users API failed:', usersRes.status, errText);
+                // Retry once after 2 seconds
+                setTimeout(async () => {
+                    try {
+                        const retry = await fetch(`${API}/admin/users`, { headers });
+                        if (retry.ok) {
+                            const retryData = await retry.json();
+                            console.log('Admin users retry success:', retryData.length);
+                            setUsers(retryData);
+                        }
+                    } catch (e) { console.error('Retry also failed:', e); }
+                }, 2000);
             }
             if (reportsRes.ok) setReports(await reportsRes.json());
         } catch (err) { console.error('Admin fetchAll error:', err); }
@@ -195,9 +209,14 @@ function AdminDashboard({ user, setPage }) {
                     </h1>
                     <p className="text-gray-400 mt-1 text-sm">Full control over users, accounts, and reports.</p>
                 </div>
-                <button onClick={() => setPage(PAGES.HOME)} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
-                    ← Home
-                </button>
+                <div className="flex gap-2">
+                    <button onClick={() => { setLoading(true); fetchAll(); }} className="px-4 py-2 bg-pink-500/20 text-pink-400 rounded-lg hover:bg-pink-500/30 transition text-sm font-bold">
+                        🔄 Refresh
+                    </button>
+                    <button onClick={() => setPage(PAGES.HOME)} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
+                        ← Home
+                    </button>
+                </div>
             </div>
 
             {/* ── Stats Grid (clickable) ── */}

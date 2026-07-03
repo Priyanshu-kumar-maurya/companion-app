@@ -19,13 +19,15 @@ router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => 
             SELECT u.id, u.name, u.email, u.phone, u.role, u.kyc_status, u.id_proof_url,
                    u.is_verified, u.is_frozen, u.is_platform_blocked,
                    u.profile_pic, u.city, u.created_at,
-                   (SELECT COUNT(*) FROM reports WHERE reported_id = u.id) as report_count
+                   COALESCE((SELECT COUNT(*) FROM reports WHERE reported_id = u.id), 0) as report_count
             FROM users u
             ORDER BY u.id DESC
         `);
+        console.log(`✅ Admin users fetched: ${users.rows.length} users`);
         res.status(200).json(users.rows);
     } catch (err) {
-        res.status(500).json({ error: "Server error" });
+        console.error('❌ Admin /admin/users error:', err.message, err.stack);
+        res.status(500).json({ error: "Server error fetching users", details: err.message });
     }
 });
 
