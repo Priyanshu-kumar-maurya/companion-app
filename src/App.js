@@ -13,6 +13,7 @@ import MessagesPage from "./components/shared/MessagesPage";
 import UnifiedRegister from "./components/UnifiedRegister";
 import UnifiedLogin from "./components/UnifiedLogin";
 import NotificationsPage from "./components/NotificationsPage";
+import LegalPages from "./components/shared/LegalPages";
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -35,6 +36,7 @@ export const PAGES = {
   CHAT: "chat",
   MESSAGES: "messages",
   NOTIFICATIONS: "notifications",
+  LEGAL: "legal",
 };
 
 function App() {
@@ -209,6 +211,8 @@ function App() {
         return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} currentUser={currentUser} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
       case PAGES.CHAT:
         return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={currentUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
+      case PAGES.LEGAL:
+        return <LegalPages setPage={setPage} />;
       default:
         return <HomePage setPage={setPage} currentUser={currentUser} setSelectedGirl={setSelectedGirl} />;
     }

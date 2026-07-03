@@ -63,8 +63,9 @@ function Footer({ setPage }) {
                         <h3 className="font-semibold mb-4 text-white">Legal & Support</h3>
                         <ul className="space-y-2 text-sm text-gray-400">
                             <li><span onClick={() => setPage && setPage(PAGES.HELP)} className="hover:text-pink-400 transition cursor-pointer">Help Center</span></li>
-                            <li><span onClick={() => alert("Privacy Policy page coming soon! 🚀")} className="hover:text-pink-400 transition cursor-pointer">Privacy Policy</span></li>
-                            <li><span onClick={() => alert("Terms of Service page coming soon! 🚀")} className="hover:text-pink-400 transition cursor-pointer">Terms of Service</span></li>
+                            <li><span onClick={() => setPage && setPage(PAGES.LEGAL)} className="hover:text-pink-400 transition cursor-pointer">Privacy Policy</span></li>
+                            <li><span onClick={() => setPage && setPage(PAGES.LEGAL)} className="hover:text-pink-400 transition cursor-pointer">Terms of Service</span></li>
+                            <li><span onClick={() => setPage && setPage(PAGES.LEGAL)} className="hover:text-pink-400 transition cursor-pointer">Safety Guidelines</span></li>
                         </ul>
                     </div>
                 </div>

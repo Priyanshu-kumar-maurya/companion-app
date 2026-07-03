@@ -283,11 +283,14 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
         if (!newReviewText.trim() || !currentUser) return;
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch('https://rentgf-and-bf.onrender.com/api/reviews', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
-                    reviewer_id: currentUser.id,
                     companion_id: profile.id,
                     rating: newRating,
                     comment: newReviewText
@@ -296,13 +299,19 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
 
             if (response.ok) {
                 setNewReviewText("");
+                setNewRating(5);
                 const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
                 const data = await reviewRes.json();
                 setReviews(data.reviews);
                 setAvgRating(data.avgRating);
+                alert("Review submitted! ⭐");
+            } else {
+                const err = await response.json().catch(() => ({}));
+                alert(err.error || "Review submit nahi hua, try again.");
             }
         } catch (error) {
             console.error(error);
+            alert("Network error, try again.");
         }
     };
 
@@ -589,6 +598,40 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                         <span className="text-xs bg-white/5 text-gray-400 px-2.5 py-1 rounded-full border border-white/10">{reviews.length}</span>
                     </div>
 
+                    {/* ── Rating Summary ── */}
+                    {reviews.length > 0 && (
+                        <div className="rounded-2xl p-5 mb-5 border border-white/5 flex gap-6 items-center" style={{ background: '#16162A' }}>
+                            {/* Big average */}
+                            <div className="text-center shrink-0">
+                                <div className="text-4xl font-black text-white">{avgRating || 0}</div>
+                                <div className="flex gap-0.5 justify-center mt-1">
+                                    {[1,2,3,4,5].map(s => (
+                                        <span key={s} className={`text-sm ${s <= Math.round(avgRating) ? 'text-yellow-400' : 'text-gray-700'}`}>★</span>
+                                    ))}
+                                </div>
+                                <div className="text-[10px] text-gray-500 mt-1">{reviews.length} reviews</div>
+                            </div>
+                            {/* Star distribution bars */}
+                            <div className="flex-1 space-y-1">
+                                {[5,4,3,2,1].map(star => {
+                                    const count = reviews.filter(r => r.rating === star).length;
+                                    const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                                    return (
+                                        <div key={star} className="flex items-center gap-2">
+                                            <span className="text-[10px] text-gray-400 w-3 text-right">{star}</span>
+                                            <span className="text-yellow-400 text-[10px]">★</span>
+                                            <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                                                <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                                            </div>
+                                            <span className="text-[10px] text-gray-500 w-6 text-right">{count}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Write Review ── */}
                     {currentUser && currentUser.id !== profile.id && (
                         <div className="rounded-2xl p-5 mb-5 border border-white/5" style={{ background: '#16162A' }}>
                             <div className="text-xs text-gray-400 uppercase tracking-wider font-bold mb-3">Rate your experience</div>
@@ -598,40 +641,61 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                                         ★
                                     </button>
                                 ))}
+                                <span className="text-xs text-gray-500 ml-2 self-center">{newRating}/5</span>
                             </div>
                             <textarea
                                 value={newReviewText}
                                 onChange={(e) => setNewReviewText(e.target.value)}
                                 placeholder="Share your experience..."
                                 rows={3}
-                                className="w-full rounded-xl px-4 py-3 text-sm text-white outline-none resize-none mb-3 border border-white/10 transition"
+                                maxLength={500}
+                                className="w-full rounded-xl px-4 py-3 text-sm text-white outline-none resize-none mb-1 border border-white/10 transition focus:border-pink-500"
                                 style={{ background: '#0D0D1A', color: '#e9edef' }}
                             />
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-[10px] text-gray-600">{newReviewText.length}/500</span>
+                            </div>
                             <button
                                 onClick={submitReview}
                                 disabled={!newReviewText.trim()}
                                 className={`px-5 py-2 rounded-lg text-sm font-bold transition ${newReviewText.trim() ? `bg-gradient-to-r ${accentGrad} text-white shadow-lg` : 'bg-white/5 text-gray-600 cursor-not-allowed'}`}
                             >
-                                Submit
+                                Submit Review ⭐
                             </button>
                         </div>
                     )}
 
+                    {/* ── Review Cards ── */}
                     <div className="space-y-3">
                         {reviews.length === 0 ? (
                             <div className="py-10 text-center text-gray-600 text-sm">No reviews yet. Be the first!</div>
-                        ) : reviews.map((rev) => (
-                            <div key={rev.id} className="flex gap-3 p-4 rounded-2xl border border-white/5 hover:bg-white/5 transition" style={{ background: '#16162A' }}>
-                                <img src={rev.reviewer_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'} alt={rev.reviewer_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-semibold text-sm text-white">{rev.reviewer_name}</span>
-                                        <span className="text-yellow-400 text-xs bg-yellow-400/10 px-2 py-0.5 rounded-full border border-yellow-400/20">{rev.rating} ★</span>
+                        ) : reviews.map((rev) => {
+                            const timeAgo = rev.created_at ? (() => {
+                                const diff = Date.now() - new Date(rev.created_at).getTime();
+                                const mins = Math.floor(diff / 60000);
+                                if (mins < 60) return `${mins}m ago`;
+                                const hrs = Math.floor(mins / 60);
+                                if (hrs < 24) return `${hrs}h ago`;
+                                const days = Math.floor(hrs / 24);
+                                if (days < 30) return `${days}d ago`;
+                                return `${Math.floor(days/30)}mo ago`;
+                            })() : '';
+                            return (
+                                <div key={rev.id} className="flex gap-3 p-4 rounded-2xl border border-white/5 hover:bg-white/5 transition" style={{ background: '#16162A' }}>
+                                    <img src={rev.reviewer_pic || 'https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg'} alt={rev.reviewer_name} className="w-10 h-10 rounded-full object-cover shrink-0" />
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-semibold text-sm text-white">{rev.reviewer_name}</span>
+                                            <span className="text-yellow-400 text-xs bg-yellow-400/10 px-2 py-0.5 rounded-full border border-yellow-400/20">
+                                                {rev.rating} ★
+                                            </span>
+                                            {timeAgo && <span className="text-[10px] text-gray-600 ml-auto">{timeAgo}</span>}
+                                        </div>
+                                        <p className="text-gray-400 text-sm">{rev.comment}</p>
                                     </div>
-                                    <p className="text-gray-400 text-sm">{rev.comment}</p>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>
