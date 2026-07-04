@@ -14,6 +14,7 @@ import UnifiedRegister from "./components/UnifiedRegister";
 import UnifiedLogin from "./components/UnifiedLogin";
 import NotificationsPage from "./components/NotificationsPage";
 import LegalPages from "./components/shared/LegalPages";
+import PWAInstallBanner from "./components/shared/PWAInstallBanner";
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -231,7 +232,7 @@ function App() {
         socket={socket}
       />
       {renderPage()}
-
+      <PWAInstallBanner />
       {/* Global Alert & Confirm Dialog (Instagram Style) */}
       {globalAlert && (
         <div className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-fade-in">

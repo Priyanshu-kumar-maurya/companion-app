@@ -136,7 +136,25 @@ const connectDB = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`);
 
-        console.log('✅ Database Auto-Fixed: Tables ready!');
+        // ─── Performance Indexes ───────────────────────────────────
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_users_kyc ON users(kyc_status);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_boy ON bookings(boy_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_girl ON bookings(girl_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_reviews_companion ON reviews(companion_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_reports_reported ON reports(reported_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_sos_alerts_user ON sos_alerts(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_emergency_contacts_user ON emergency_contacts(user_id);");
+
+        console.log('✅ Database Auto-Fixed: Tables & Indexes ready!');
     } catch (err) {
         console.error('❌ Database connection error:', err.stack);
     }
