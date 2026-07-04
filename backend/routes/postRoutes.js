@@ -2,6 +2,7 @@ const express = require('express');
 const { pool } = require('../config/db');
 const authenticateToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
+const { checkProfanity, cleanText, moderateContent } = require('../middleware/contentFilter');
 
 const router = express.Router();
 
@@ -63,8 +64,15 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
 
         const { caption } = req.body;
 
-        // Sanitize caption — strip any HTML tags
-        const safeCaption = (caption || "").replace(/<[^>]*>/g, '').slice(0, 500);
+        // Profanity check on caption
+        const profCheck = checkProfanity(caption || '');
+        if (profCheck.severity === 'high') {
+            return res.status(400).json({ error: "⚠️ Caption mein inappropriate language hai. Please clean caption likhein." });
+        }
+
+        // Sanitize caption — strip HTML + clean profanity
+        let safeCaption = (caption || "").replace(/<[^>]*>/g, '').slice(0, 500);
+        if (!profCheck.isClean) safeCaption = cleanText(safeCaption);
 
         const mediaUrl = req.file.path;
         const newPost = await pool.query(
@@ -181,7 +189,7 @@ router.post('/like', authenticateToken, async (req, res) => {
 });
 
 // ─── ADD COMMENT — AUTH REQUIRED ─────────────────────────────
-router.post('/comment', authenticateToken, async (req, res) => {
+router.post('/comment', authenticateToken, moderateContent, async (req, res) => {
     try {
         const { post_id, text } = req.body;
         const user_id = req.user.id; // Always use authenticated user's ID

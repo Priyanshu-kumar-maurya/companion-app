@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const { moderateContent } = require('../middleware/contentFilter');
 
 const router = express.Router();
 
@@ -105,7 +106,7 @@ router.put('/bookings/:bookingId', authenticateToken, async (req, res) => {
 });
 
 // ─── SUBMIT REVIEW — AUTH REQUIRED ───────────────────────────
-router.post('/reviews', authenticateToken, async (req, res) => {
+router.post('/reviews', authenticateToken, moderateContent, async (req, res) => {
     try {
         const { companion_id, rating, comment } = req.body;
         const reviewer_id = req.user.id; // Always use authenticated user's ID

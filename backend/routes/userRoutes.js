@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../config/db');
 const authenticateToken = require('../middleware/auth');
+const { moderateContent } = require('../middleware/contentFilter');
 const jwt = require('jsonwebtoken');
 
 const router = express.Router();
@@ -87,7 +88,7 @@ router.get('/users', async (req, res) => {
 });
 
 // 3. Update User Profile Settings — AUTH REQUIRED + OWNERSHIP CHECK
-router.put('/users/:userId', authenticateToken, async (req, res) => {
+router.put('/users/:userId', authenticateToken, moderateContent, async (req, res) => {
     try {
         const { userId } = req.params;
         if (!isOwner(req, res, userId)) return;

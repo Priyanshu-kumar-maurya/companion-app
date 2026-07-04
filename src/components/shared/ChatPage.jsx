@@ -530,6 +530,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         socket.on("webrtc_answer", handleWebrtcAnswer);
         socket.on("webrtc_ice_candidate", handleWebrtcIceCandidate);
 
+        // Content moderation: blocked message warning
+        socket.on("message_blocked", (data) => {
+            alert(data.error || "⚠️ Message blocked — please use respectful language.");
+        });
+
         return () => {
             cleanupCall();
             socket.off("receive_message", handleReceiveMessage);
@@ -544,6 +549,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             socket.off("webrtc_offer");
             socket.off("webrtc_answer");
             socket.off("webrtc_ice_candidate");
+            socket.off("message_blocked");
             socket.disconnect();
         };
     }, [roomId, currentUser.id, girl.id, setupWebRTC, cleanupCall, isMuted]);

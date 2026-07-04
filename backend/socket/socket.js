@@ -39,19 +39,41 @@ module.exports = (io) => {
 
         socket.on("send_message", async (data) => {
             try {
+                const { checkProfanity, cleanText, checkContactInfo } = require('../middleware/contentFilter');
+                let messageText = data.text || data.message || "";
+
+                // Profanity check
+                const profanityResult = checkProfanity(messageText);
+                if (profanityResult.severity === 'high') {
+                    socket.emit("message_blocked", {
+                        error: "⚠️ Message blocked — please use respectful language.",
+                        room: data.room
+                    });
+                    return;
+                }
+                if (!profanityResult.isClean) {
+                    messageText = cleanText(messageText);
+                }
+
+                // Contact info detection (flag only, don't block)
+                const contactCheck = checkContactInfo(messageText);
+
                 const result = await pool.query(
                     "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at, is_read",
-                    [data.sender_id, data.receiver_id, data.text || data.message || "", data.image_url || null]
+                    [data.sender_id, data.receiver_id, messageText, data.image_url || null]
                 );
                 const savedMessage = result.rows[0];
                 data.id = savedMessage.id;
+                data.text = messageText;
+                data.message = messageText;
                 data.created_at = savedMessage.created_at;
                 data.is_read = savedMessage.is_read;
+                if (contactCheck.hasContactInfo) data._contactShared = true;
                 io.to(data.room).emit("receive_message", data);
                 if (data.receiver_id) {
                     socket.to(data.receiver_id.toString()).emit("receive_message", data);
                 }
-            } catch (err) { }
+            } catch (err) { console.error("send_message error:", err); }
         });
 
         socket.on("mark_messages_read", async (data) => {
