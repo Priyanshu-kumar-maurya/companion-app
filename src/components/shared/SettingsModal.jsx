@@ -38,9 +38,13 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         e.preventDefault();
         setLoading(true);
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
                 body: JSON.stringify(formData)
             });
             const data = await response.json();
@@ -93,7 +97,11 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         const confirmDelete = await window.showConfirm("WARNING: This will permanently delete your account, chats, and bookings.");
         if (confirmDelete) {
             try {
-                await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, { method: "DELETE" });
+                const token = localStorage.getItem('token');
+                await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
                 sessionStorage.clear();
