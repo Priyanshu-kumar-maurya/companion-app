@@ -20,6 +20,19 @@ function UnifiedRegister({ setPage }) {
     const [registeredUserId, setRegisteredUserId] = useState(null);
     const [registeredToken, setRegisteredToken] = useState(null);
 
+    const [dobParts, setDobParts] = useState({ day: "", month: "", year: "" });
+
+    React.useEffect(() => {
+        if (dobParts.day && dobParts.month && dobParts.year) {
+            setFormData(prev => ({ 
+                ...prev, 
+                dob: `${dobParts.year}-${dobParts.month}-${dobParts.day}` 
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, dob: "" }));
+        }
+    }, [dobParts]);
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -170,9 +183,58 @@ function UnifiedRegister({ setPage }) {
                                 <option value="girl">Female</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 ml-1">Date of Birth</label>
-                            <input type="date" name="dob" required value={formData.dob} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} />
+                        {/* Hidden input to store combined date of birth */}
+                        <input type="hidden" name="dob" value={formData.dob} required />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Date of Birth</label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {/* Day */}
+                            <select 
+                                required
+                                value={dobParts.day} 
+                                onChange={(e) => setDobParts(prev => ({ ...prev, day: e.target.value }))}
+                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-2 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                            >
+                                <option value="">Day</option>
+                                {Array.from({ length: 31 }, (_, i) => {
+                                    const d = String(i + 1).padStart(2, '0');
+                                    return <option key={d} value={d}>{d}</option>;
+                                })}
+                            </select>
+
+                            {/* Month */}
+                            <select 
+                                required
+                                value={dobParts.month} 
+                                onChange={(e) => setDobParts(prev => ({ ...prev, month: e.target.value }))}
+                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-2 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                            >
+                                <option value="">Month</option>
+                                {[
+                                    { v: "01", n: "Jan" }, { v: "02", n: "Feb" }, { v: "03", n: "Mar" },
+                                    { v: "04", n: "Apr" }, { v: "05", n: "May" }, { v: "06", n: "Jun" },
+                                    { v: "07", n: "Jul" }, { v: "08", n: "Aug" }, { v: "09", n: "Sep" },
+                                    { v: "10", n: "Oct" }, { v: "11", n: "Nov" }, { v: "12", n: "Dec" }
+                                ].map(m => (
+                                    <option key={m.v} value={m.v}>{m.n}</option>
+                                ))}
+                            </select>
+
+                            {/* Year */}
+                            <select 
+                                required
+                                value={dobParts.year} 
+                                onChange={(e) => setDobParts(prev => ({ ...prev, year: e.target.value }))}
+                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-2 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                            >
+                                <option value="">Year</option>
+                                {Array.from({ length: 70 }, (_, i) => {
+                                    const y = String(2008 - i);
+                                    return <option key={y} value={y}>{y}</option>;
+                                })}
+                            </select>
                         </div>
                     </div>
 
