@@ -51,7 +51,7 @@ const validatePassword = (password) => password && password.length >= 6;
 // ─── REGISTER ───────────────────────────────────────────────
 router.post('/register', authRateLimit, async (req, res) => {
     try {
-        const { name, email, password, role, phone } = req.body;
+        const { name, email, password, role, phone, dob, age } = req.body;
 
         // Input validation
         if (!name || !name.trim()) return res.status(400).json({ error: "Name is required." });
@@ -76,10 +76,10 @@ router.post('/register', authRateLimit, async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-        // Create user with OTP info
+        // Create user with OTP info, dob, and age
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password, role, phone, otp, otp_expiry) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, name, email, role",
-            [name.trim(), email.toLowerCase(), hashedPassword, role, phone || null, otp, otpExpiry]
+            "INSERT INTO users (name, email, password, role, phone, otp, otp_expiry, dob, age) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, email, role",
+            [name.trim(), email.toLowerCase(), hashedPassword, role, phone || null, otp, otpExpiry, dob || null, age || null]
         );
 
         const user = newUser.rows[0];

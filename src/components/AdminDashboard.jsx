@@ -13,6 +13,7 @@ function AdminDashboard({ user, setPage }) {
     const [activeFilter, setActiveFilter] = useState("all"); // "all" | "girls" | "boys" | "frozen" | "blocked" | "pendingKyc" | "unverified"
     const [actionLoading, setActionLoading] = useState({});
     const [searchQuery, setSearchQuery] = useState("");
+    const [selectedUser, setSelectedUser] = useState(null);
 
     const token = localStorage.getItem('token');
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -330,95 +331,88 @@ function AdminDashboard({ user, setPage }) {
                         <span className="text-gray-600">— {filteredUsers.length} user{filteredUsers.length !== 1 ? 's' : ''}</span>
                     </div>
 
-                    <div className="bg-[#16162A] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
-                        <div className="overflow-x-auto">
-                            {filteredUsers.length === 0 ? (
-                                <div className="p-10 text-center text-gray-500 flex flex-col items-center gap-2">
-                                    <FiUser size={28} className="text-gray-700" />
-                                    <span>Koi user nahi mila is filter mein.</span>
-                                </div>
-                            ) : (
-                                <table className="w-full text-left text-sm text-gray-300">
-                                    <thead className="text-xs text-gray-400 uppercase bg-white/5">
-                                        <tr>
-                                            <th className="px-4 py-3">User</th>
-                                            <th className="px-4 py-3">Role</th>
-                                            <th className="px-4 py-3">Contact</th>
-                                            <th className="px-4 py-3">Status</th>
-                                            <th className="px-4 py-3">KYC</th>
-                                            <th className="px-4 py-3">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-white/5">
-                                        {filteredUsers.map((u) => (
-                                            <tr key={u.id} className={`hover:bg-white/5 transition ${u.is_frozen ? 'opacity-60' : ''}`}>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        {u.profile_pic
-                                                            ? <img src={u.profile_pic} alt="" className="w-8 h-8 rounded-full object-cover" />
-                                                            : <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">{u.name?.[0]}</div>
-                                                        }
-                                                        <div>
-                                                            <div className="font-medium text-white">{u.name}</div>
-                                                            {u.report_count > 0 && <span className="text-[10px] text-orange-400">🚩 {u.report_count} reports</span>}
+                    <div>
+                        {filteredUsers.length === 0 ? (
+                            <div className="p-12 bg-[#16162A] border border-white/10 rounded-2xl text-center text-gray-500 flex flex-col items-center gap-2 shadow-xl">
+                                <FiUser size={32} className="text-gray-600" />
+                                <span className="font-bold text-sm">No users found under this filter.</span>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {filteredUsers.map((u) => {
+                                    const isGirl = u.role === 'girl';
+                                    return (
+                                        <div
+                                            key={u.id}
+                                            onClick={() => setSelectedUser(u)}
+                                            className={`relative bg-gradient-to-br from-[#181832] to-[#121224] border border-white/8 hover:border-pink-500/40 p-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl hover:shadow-pink-500/5 cursor-pointer flex flex-col justify-between ${u.is_frozen || u.is_platform_blocked ? 'opacity-70' : ''}`}
+                                        >
+                                            {/* Top info */}
+                                            <div>
+                                                <div className="flex items-center gap-3">
+                                                    {u.profile_pic ? (
+                                                        <img src={u.profile_pic} alt="" className="w-12 h-12 rounded-full object-cover border border-white/10" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-base font-extrabold shadow-inner">
+                                                            {u.name?.[0]?.toUpperCase() || 'U'}
                                                         </div>
+                                                    )}
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3 className="font-bold text-white text-sm truncate flex items-center gap-1.5">
+                                                            {u.name}
+                                                            {u.report_count > 0 && (
+                                                                <span className="shrink-0 text-[10px] bg-orange-500/10 text-orange-400 px-1.5 py-0.5 rounded-full font-extrabold border border-orange-500/20">
+                                                                    🚩 {u.report_count}
+                                                                </span>
+                                                            )}
+                                                        </h3>
+                                                        <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded mt-1 ${isGirl ? 'bg-pink-500/15 text-pink-400 border border-pink-500/20' : 'bg-blue-500/15 text-blue-400 border border-blue-500/20'}`}>
+                                                            {u.role}
+                                                        </span>
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3 uppercase text-xs">{u.role}</td>
-                                                <td className="px-4 py-3">
-                                                    <div className="text-xs">{u.email}</div>
-                                                    <div className="text-xs text-gray-500">{u.phone}</div>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex flex-col gap-1">
-                                                        {u.is_frozen && <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-bold w-fit flex items-center gap-1"><FiLock size={10} /> Frozen</span>}
-                                                        {u.is_platform_blocked && <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold w-fit flex items-center gap-1"><FiSlash size={10} /> Blocked</span>}
-                                                        {!u.is_frozen && !u.is_platform_blocked && <span className="text-[10px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded font-bold w-fit flex items-center gap-1"><FiCheckCircle size={10} /> Active</span>}
+                                                </div>
+
+                                                {/* Details */}
+                                                <div className="mt-4 space-y-2 border-t border-white/5 pt-3 text-xs text-gray-400">
+                                                    <div className="flex justify-between items-center">
+                                                        <span>Email:</span>
+                                                        <span className="text-white font-mono truncate max-w-[150px]">{u.email}</span>
                                                     </div>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <span className={`px-2 py-1 rounded text-xs font-bold ${u.kyc_status === 'verified' ? 'bg-green-500/20 text-green-400' : u.kyc_status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                        {u.kyc_status}
-                                                    </span>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {u.kyc_status === 'pending' && u.id_proof_url && (
-                                                            <>
-                                                                <a href={u.id_proof_url} target="_blank" rel="noreferrer" className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs hover:bg-blue-500/40">ID</a>
-                                                                <button onClick={() => handleKycUpdate(u.id, 'verified')} disabled={actionLoading[`kyc_${u.id}`]} className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs hover:bg-green-500/40 disabled:opacity-50">✓ OK</button>
-                                                                <button onClick={() => handleKycUpdate(u.id, 'rejected')} disabled={actionLoading[`kyc_${u.id}`]} className="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs hover:bg-red-500/40 disabled:opacity-50">✗ No</button>
-                                                            </>
-                                                        )}
-                                                        <button
-                                                            onClick={() => handleFreeze(u.id, !u.is_frozen)}
-                                                            disabled={actionLoading[`freeze_${u.id}`]}
-                                                            className={`px-2 py-1 rounded text-xs disabled:opacity-50 transition ${u.is_frozen ? 'bg-cyan-500/30 text-cyan-300 hover:bg-cyan-500/50' : 'bg-slate-500/20 text-slate-300 hover:bg-slate-500/40'}`}
-                                                        >
-                                                            {u.is_frozen ? <span className="flex items-center gap-1"><FiUnlock size={11} /> Unfreeze</span> : <span className="flex items-center gap-1"><FiLock size={11} /> Freeze</span>}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handlePlatformBlock(u.id, !u.is_platform_blocked)}
-                                                            disabled={actionLoading[`block_${u.id}`]}
-                                                            className={`px-2 py-1 rounded text-xs disabled:opacity-50 transition ${u.is_platform_blocked ? 'bg-green-500/20 text-green-400 hover:bg-green-500/40' : 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/40'}`}
-                                                        >
-                                                            {u.is_platform_blocked ? <span className="flex items-center gap-1"><FiCheckCircle size={11} /> Unblock</span> : <span className="flex items-center gap-1"><FiSlash size={11} /> Block</span>}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteUser(u.id, u.name)}
-                                                            disabled={actionLoading[`del_${u.id}`]}
-                                                            className="px-2 py-1 bg-red-900/30 text-red-400 rounded text-xs hover:bg-red-900/60 disabled:opacity-50 flex items-center justify-center"
-                                                        >
-                                                            <FiTrash2 size={12} />
-                                                        </button>
+                                                    {u.phone && (
+                                                        <div className="flex justify-between items-center">
+                                                            <span>Phone:</span>
+                                                            <span className="text-white font-mono">{u.phone}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between items-center">
+                                                        <span>KYC:</span>
+                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${u.kyc_status === 'verified' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : u.kyc_status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                                            {u.kyc_status || 'unverified'}
+                                                        </span>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Status Badge & CTA */}
+                                            <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                                <div className="flex items-center gap-1">
+                                                    {u.is_platform_blocked ? (
+                                                        <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-bold">Blocked</span>
+                                                    ) : u.is_frozen ? (
+                                                        <span className="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full font-bold">Frozen</span>
+                                                    ) : (
+                                                        <span className="text-[10px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full font-bold">Active</span>
+                                                    )}
+                                                </div>
+                                                <span className="text-[11px] text-pink-400 font-extrabold hover:text-pink-300 transition flex items-center gap-0.5">
+                                                    Click to Manage →
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -696,6 +690,184 @@ function AdminDashboard({ user, setPage }) {
                     </div>
                 </div>
             )}
+
+            {/* ── USER DETAIL MODAL (Redesigned) ── */}
+            {selectedUser && (() => {
+                const u = users.find(x => x.id === selectedUser.id) || selectedUser;
+                const isGirl = u.role === 'girl';
+                const createdDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+                
+                return (
+                    <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fade-in" onClick={() => setSelectedUser(null)}>
+                        <div 
+                            className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl animate-scale-up"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className="bg-gradient-to-r from-[#181832] to-[#121224] p-5 border-b border-white/5 flex justify-between items-center">
+                                <h2 className="font-extrabold text-white text-base flex items-center gap-2">
+                                    🛡️ User Management
+                                </h2>
+                                <button 
+                                    onClick={() => setSelectedUser(null)}
+                                    className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition"
+                                >
+                                    <FiX size={18} />
+                                </button>
+                            </div>
+
+                            {/* Modal Content */}
+                            <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                                {/* Profile Card */}
+                                <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    {u.profile_pic ? (
+                                        <a href={u.profile_pic} target="_blank" rel="noreferrer" title="Click to view full photo">
+                                            <img src={u.profile_pic} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-pink-500/50 hover:opacity-80 transition" />
+                                        </a>
+                                    ) : (
+                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xl font-black">
+                                            {u.name?.[0]?.toUpperCase()}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h3 className="font-black text-white text-base">{u.name}</h3>
+                                        <span className={`inline-block text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded mt-1 ${isGirl ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
+                                            {u.role}
+                                        </span>
+                                        <div className="text-[10px] text-gray-500 mt-1 font-semibold">Joined: {createdDate}</div>
+                                    </div>
+                                </div>
+
+                                {/* General Details Grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                                    <div className="space-y-1">
+                                        <span className="text-gray-500 block">Email Address:</span>
+                                        <span className="text-white font-semibold font-mono">{u.email}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-gray-500 block">Phone Number:</span>
+                                        <span className="text-white font-semibold font-mono">{u.phone || 'Not Provided'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-gray-500 block">Date of Birth (DOB):</span>
+                                        <span className="text-white font-semibold">{u.dob || 'Not Provided'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-gray-500 block">Age:</span>
+                                        <span className="text-white font-semibold">{u.age ? `${u.age} Years` : 'Not Provided'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-gray-500 block">Location (City):</span>
+                                        <span className="text-white font-semibold">{u.city || 'Not Provided'}</span>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <span className="text-gray-500 block">Hourly Price:</span>
+                                        <span className="text-pink-400 font-bold">₹{u.price || 0}/hour</span>
+                                    </div>
+                                </div>
+
+                                {/* Bio & Tags */}
+                                <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5 text-xs">
+                                    <div>
+                                        <span className="text-gray-500 block mb-1">Bio / Description:</span>
+                                        <p className="text-white bg-[#0D0D1A]/50 p-2.5 rounded-xl border border-white/5 leading-relaxed italic">{u.bio || 'No bio written.'}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500 block mb-1">Tags / Services:</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {(u.tags || 'Coffee Date').split(',').map((tag, i) => (
+                                                <span key={i} className="px-2 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-white font-semibold text-[10px] border border-white/5">
+                                                    {tag.trim()}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* KYC ID Document Section */}
+                                <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <h4 className="text-xs font-bold text-white flex justify-between items-center">
+                                        <span>KYC Status:</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${u.kyc_status === 'verified' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : u.kyc_status === 'pending' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                            {u.kyc_status}
+                                        </span>
+                                    </h4>
+
+                                    {u.id_proof_url ? (
+                                        <div className="space-y-2">
+                                            <span className="text-[10px] text-gray-500 block">Uploaded ID Proof:</span>
+                                            <div className="relative group overflow-hidden rounded-xl border border-white/10 max-h-[200px]">
+                                                <img src={u.id_proof_url} alt="KYC proof" className="w-full h-full object-contain bg-black/60" />
+                                                <a 
+                                                    href={u.id_proof_url} 
+                                                    target="_blank" 
+                                                    rel="noreferrer" 
+                                                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all"
+                                                >
+                                                    🔍 View Full Size Image
+                                                </a>
+                                            </div>
+                                            {/* KYC Action buttons */}
+                                            <div className="flex gap-2 pt-2">
+                                                <button
+                                                    onClick={() => handleKycUpdate(u.id, 'verified')}
+                                                    disabled={actionLoading[`kyc_${u.id}`]}
+                                                    className="flex-1 py-2 bg-green-500/20 hover:bg-green-500/35 border border-green-500/30 text-green-400 rounded-xl text-xs font-black transition disabled:opacity-50"
+                                                >
+                                                    ✓ Approve KYC
+                                                </button>
+                                                <button
+                                                    onClick={() => handleKycUpdate(u.id, 'rejected')}
+                                                    disabled={actionLoading[`kyc_${u.id}`]}
+                                                    className="flex-1 py-2 bg-red-500/20 hover:bg-red-500/35 border border-red-500/30 text-red-400 rounded-xl text-xs font-black transition disabled:opacity-50"
+                                                >
+                                                    ✗ Reject KYC
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/10 text-xs text-gray-500">
+                                            No ID proof uploaded yet.
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Security and Account Action panel */}
+                                <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                    <h4 className="text-xs font-bold text-white">Administrative Actions</h4>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button
+                                            onClick={() => handleFreeze(u.id, !u.is_frozen)}
+                                            disabled={actionLoading[`freeze_${u.id}`]}
+                                            className={`py-2 px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 ${u.is_frozen ? 'bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/40' : 'bg-slate-500/10 border border-white/10 text-slate-300 hover:bg-white/5'}`}
+                                        >
+                                            {u.is_frozen ? <><FiUnlock size={13} /> Unfreeze</> : <><FiLock size={13} /> Freeze Account</>}
+                                        </button>
+                                        <button
+                                            onClick={() => handlePlatformBlock(u.id, !u.is_platform_blocked)}
+                                            disabled={actionLoading[`block_${u.id}`]}
+                                            className={`py-2 px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 ${u.is_platform_blocked ? 'bg-green-500/25 border border-green-500/30 text-green-300 hover:bg-green-500/40' : 'bg-orange-500/15 border border-orange-500/20 text-orange-400 hover:bg-orange-500/25'}`}
+                                        >
+                                            {u.is_platform_blocked ? <><FiCheckCircle size={13} /> Unblock User</> : <><FiSlash size={13} /> Block User</>}
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={async () => {
+                                            if (await handleDeleteUser(u.id, u.name)) {
+                                                setSelectedUser(null);
+                                            }
+                                        }}
+                                        disabled={actionLoading[`del_${u.id}`]}
+                                        className="w-full py-2 bg-red-900/20 hover:bg-red-900/35 border border-red-900/35 text-red-400 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5"
+                                    >
+                                        <FiTrash2 size={13} /> Delete Account Permanently
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 }

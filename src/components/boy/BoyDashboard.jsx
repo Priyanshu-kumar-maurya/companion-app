@@ -120,9 +120,11 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             const formData = new FormData();
             formData.append("id_document", compressedFile);
 
+            const token = localStorage.getItem('token');
             const response = await fetch(`https://rentgf-and-bf.onrender.com/api/kyc/${user.id}`, {
                 method: "POST",
-                body: formData
+                body: formData,
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {

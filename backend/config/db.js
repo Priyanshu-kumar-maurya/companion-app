@@ -28,6 +28,7 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_frozen BOOLEAN DEFAULT false;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_blocked BOOLEAN DEFAULT false;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(20);");
 
         // Saved posts table
         await pool.query(`CREATE TABLE IF NOT EXISTS saved_posts (

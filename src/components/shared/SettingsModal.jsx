@@ -73,7 +73,12 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         const uploadFormData = new FormData();
         uploadFormData.append("profile_pic", file);
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, { method: "POST", body: uploadFormData });
+            const token = localStorage.getItem('token');
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, {
+                method: "POST",
+                body: uploadFormData,
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (response.ok) {
                 const data = await response.json();
                 setUser({ ...user, profile_pic: data.imageUrl });

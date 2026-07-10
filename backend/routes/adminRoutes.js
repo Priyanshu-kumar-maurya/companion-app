@@ -18,7 +18,7 @@ router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => 
         const users = await pool.query(`
             SELECT u.id, u.name, u.email, u.phone, u.role, u.kyc_status, u.id_proof_url,
                    u.is_verified, u.is_frozen, u.is_platform_blocked,
-                   u.profile_pic, u.city, u.created_at,
+                   u.profile_pic, u.city, u.created_at, u.bio, u.price, u.tags, u.dob, u.age,
                    COALESCE((SELECT COUNT(*) FROM reports WHERE reported_id = u.id), 0) as report_count
             FROM users u
             ORDER BY u.id DESC
