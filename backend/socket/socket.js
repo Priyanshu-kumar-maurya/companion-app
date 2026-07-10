@@ -1,4 +1,6 @@
 const { pool } = require('../config/db');
+let contentFilter;
+try { contentFilter = require('../middleware/contentFilter'); } catch(e) { console.error('ContentFilter load failed:', e.message); }
 
 const onlineUsers = new Map();
 
@@ -39,24 +41,24 @@ module.exports = (io) => {
 
         socket.on("send_message", async (data) => {
             try {
-                const { checkProfanity, cleanText, checkContactInfo } = require('../middleware/contentFilter');
                 let messageText = data.text || data.message || "";
 
-                // Profanity check
-                const profanityResult = checkProfanity(messageText);
-                if (profanityResult.severity === 'high') {
-                    socket.emit("message_blocked", {
-                        error: "⚠️ Message blocked — please use respectful language.",
-                        room: data.room
-                    });
-                    return;
-                }
-                if (!profanityResult.isClean) {
-                    messageText = cleanText(messageText);
-                }
-
-                // Contact info detection (flag only, don't block)
-                const contactCheck = checkContactInfo(messageText);
+                // Profanity check (non-blocking)
+                try {
+                    if (contentFilter) {
+                        const profanityResult = contentFilter.checkProfanity(messageText);
+                        if (profanityResult.severity === 'high') {
+                            socket.emit("message_blocked", {
+                                error: "⚠️ Message blocked — please use respectful language.",
+                                room: data.room
+                            });
+                            return;
+                        }
+                        if (!profanityResult.isClean) {
+                            messageText = contentFilter.cleanText(messageText);
+                        }
+                    }
+                } catch (modErr) { console.error('Chat moderation error:', modErr.message); }
 
                 const result = await pool.query(
                     "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at, is_read",
@@ -68,7 +70,6 @@ module.exports = (io) => {
                 data.message = messageText;
                 data.created_at = savedMessage.created_at;
                 data.is_read = savedMessage.is_read;
-                if (contactCheck.hasContactInfo) data._contactShared = true;
                 io.to(data.room).emit("receive_message", data);
                 if (data.receiver_id) {
                     socket.to(data.receiver_id.toString()).emit("receive_message", data);

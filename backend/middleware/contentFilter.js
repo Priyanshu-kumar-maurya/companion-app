@@ -105,8 +105,15 @@ function cleanText(text) {
     let cleaned = text;
 
     for (const word of PROFANITY_LIST) {
-        const regex = new RegExp(`\\b${word}\\b`, 'gi');
-        cleaned = cleaned.replace(regex, '*'.repeat(word.length));
+        // Escape special regex chars in the word
+        const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        try {
+            const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
+            cleaned = cleaned.replace(regex, '*'.repeat(word.length));
+        } catch (e) {
+            // If regex fails for this word, do simple replace
+            cleaned = cleaned.split(new RegExp(word, 'gi')).join('*'.repeat(word.length));
+        }
     }
 
     return cleaned;
@@ -115,43 +122,43 @@ function cleanText(text) {
 /**
  * Express middleware: Moderate request body fields
  * Checks: message, comment, text, bio, description
+ * IMPORTANT: Wrapped in try-catch — never crashes the server
  */
 function moderateContent(req, res, next) {
-    const fieldsToCheck = ['message', 'comment', 'text', 'bio', 'description', 'reason'];
-    let hasIssue = false;
-    let issueType = '';
+    try {
+        const fieldsToCheck = ['message', 'comment', 'text', 'bio', 'description', 'reason'];
 
-    for (const field of fieldsToCheck) {
-        if (req.body && req.body[field] && typeof req.body[field] === 'string') {
-            const profanityCheck = checkProfanity(req.body[field]);
+        for (const field of fieldsToCheck) {
+            if (req.body && req.body[field] && typeof req.body[field] === 'string') {
+                const profanityCheck = checkProfanity(req.body[field]);
 
-            if (profanityCheck.severity === 'high') {
-                return res.status(400).json({
-                    error: "⚠️ Aapka message bahut inappropriate hai. Please respectful language use karein.",
-                    moderation: { type: 'profanity', severity: 'high' }
-                });
-            }
-
-            if (profanityCheck.severity === 'medium') {
-                // Clean the text but allow sending
-                req.body[field] = cleanText(req.body[field]);
-                req.body._moderated = true;
-            }
-
-            // Check for contact info sharing in chat
-            if (field === 'message') {
-                const contactCheck = checkContactInfo(req.body[field]);
-                if (contactCheck.hasContactInfo) {
-                    // Don't block, just flag — admin can review
-                    req.body._contactShared = true;
-                    req.body._contactType = contactCheck.type;
+                if (profanityCheck.severity === 'high') {
+                    return res.status(400).json({
+                        error: "⚠️ Aapka message bahut inappropriate hai. Please respectful language use karein.",
+                        moderation: { type: 'profanity', severity: 'high' }
+                    });
                 }
 
-                if (isSpam(req.body[field])) {
-                    req.body._isSpam = true;
+                if (profanityCheck.severity === 'medium') {
+                    req.body[field] = cleanText(req.body[field]);
+                    req.body._moderated = true;
+                }
+
+                if (field === 'message') {
+                    const contactCheck = checkContactInfo(req.body[field]);
+                    if (contactCheck.hasContactInfo) {
+                        req.body._contactShared = true;
+                        req.body._contactType = contactCheck.type;
+                    }
+                    if (isSpam(req.body[field])) {
+                        req.body._isSpam = true;
+                    }
                 }
             }
         }
+    } catch (err) {
+        // NEVER block requests due to moderation errors
+        console.error('Content moderation error (non-blocking):', err.message);
     }
 
     next();

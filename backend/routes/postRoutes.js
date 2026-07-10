@@ -64,15 +64,19 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
 
         const { caption } = req.body;
 
-        // Profanity check on caption
-        const profCheck = checkProfanity(caption || '');
-        if (profCheck.severity === 'high') {
-            return res.status(400).json({ error: "⚠️ Caption mein inappropriate language hai. Please clean caption likhein." });
-        }
-
-        // Sanitize caption — strip HTML + clean profanity
+        // Sanitize caption — strip HTML
         let safeCaption = (caption || "").replace(/<[^>]*>/g, '').slice(0, 500);
-        if (!profCheck.isClean) safeCaption = cleanText(safeCaption);
+
+        // Profanity check (non-blocking — if it fails, just use original caption)
+        try {
+            const profCheck = checkProfanity(safeCaption);
+            if (profCheck.severity === 'high') {
+                return res.status(400).json({ error: "⚠️ Caption mein inappropriate language hai. Please clean caption likhein." });
+            }
+            if (!profCheck.isClean) safeCaption = cleanText(safeCaption);
+        } catch (modErr) {
+            console.error('Post moderation error (non-blocking):', modErr.message);
+        }
 
         const mediaUrl = req.file.path;
         const newPost = await pool.query(
