@@ -354,7 +354,12 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     </div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('rating')}>
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiStar size={12} className="text-yellow-400" /> Rating</div>
-                        <div className="text-xl font-bold text-yellow-400">4.8</div>
+                        <div className="text-xl font-bold text-yellow-400">
+                            {reviews.length > 0 
+                                ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) 
+                                : "No Rating"
+                            }
+                        </div>
                     </div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative group" onClick={() => setActiveStatModal('my_bookings')}>
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiCalendar size={12} className="text-green-400" /> Bookings</div>

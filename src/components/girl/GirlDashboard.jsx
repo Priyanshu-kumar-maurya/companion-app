@@ -5,7 +5,7 @@ import imageCompression from 'browser-image-compression';
 import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle } from "react-icons/fi";
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
-    const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "4.8" });
+    const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "No Rating" });
     const [myPosts, setMyPosts] = useState([]);
     const [kycUploading, setKycUploading] = useState(false);
     const [expandedPost, setExpandedPost] = useState(null);
@@ -41,7 +41,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
         const fetchDashboardData = async () => {
             try {
-                let fetchedStats = { earnings: 0, sessions: 0, rating: "4.8" };
+                let fetchedStats = { earnings: 0, sessions: 0, rating: "No Rating" };
                 let fetchedPosts = [];
                 let fetchedBookings = [];
                 let fetchedFollowStats = { followers: 0, following: 0 };

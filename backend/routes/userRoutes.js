@@ -206,13 +206,25 @@ router.get('/girl/stats/:userId', authenticateToken, async (req, res) => {
             FROM bookings 
             WHERE girl_id = $1 AND status = 'completed'
         `;
-        const stats = await pool.query(statsQuery, [userId]);
+        const ratingQuery = `
+            SELECT COALESCE(AVG(rating), 0) as avg_rating 
+            FROM reviews 
+            WHERE companion_id = $1
+        `;
+        const [stats, ratingRes] = await Promise.all([
+            pool.query(statsQuery, [userId]),
+            pool.query(ratingQuery, [userId])
+        ]);
+        
+        const avgRating = parseFloat(ratingRes.rows[0].avg_rating || 0).toFixed(1);
+        
         res.status(200).json({
             earnings: stats.rows[0].total_earnings,
             sessions: stats.rows[0].total_sessions,
-            rating: "4.8"
+            rating: avgRating === '0.0' ? 'No Rating' : avgRating
         });
     } catch (err) {
+        console.error("Girl stats error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
