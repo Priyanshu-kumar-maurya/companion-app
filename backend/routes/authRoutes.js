@@ -76,10 +76,26 @@ router.post('/register', authRateLimit, async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-        // Create user with OTP info, dob, and age
+        // Generate unique username from name
+        let baseUsername = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (!baseUsername) baseUsername = 'user';
+        let isUnique = false;
+        let username = baseUsername;
+        let counter = 1;
+        while (!isUnique) {
+            const checkDup = await pool.query("SELECT id FROM users WHERE username = $1", [username]);
+            if (checkDup.rows.length === 0) {
+                isUnique = true;
+            } else {
+                username = `${baseUsername}${counter}`;
+                counter++;
+            }
+        }
+
+        // Create user with OTP info, dob, username, and age
         const newUser = await pool.query(
-            "INSERT INTO users (name, email, password, role, phone, otp, otp_expiry, dob, age) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, name, email, role",
-            [name.trim(), email.toLowerCase(), hashedPassword, role, phone || null, otp, otpExpiry, dob || null, age || null]
+            "INSERT INTO users (name, username, email, password, role, phone, otp, otp_expiry, dob, age) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, name, username, email, role",
+            [name.trim(), username, email.toLowerCase(), hashedPassword, role, phone || null, otp, otpExpiry, dob || null, age || null]
         );
 
         const user = newUser.rows[0];
@@ -204,6 +220,7 @@ router.post('/login', authRateLimit, async (req, res) => {
             user: {
                 id: user.id,
                 name: user.name,
+                username: user.username,
                 email: user.email,
                 role: user.role,
                 profile_pic: user.profile_pic,
@@ -437,6 +454,7 @@ router.post('/verify-otp', async (req, res) => {
             user: {
                 id: user.id,
                 name: user.name,
+                username: user.username,
                 email: user.email,
                 role: user.role
             }

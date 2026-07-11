@@ -183,7 +183,10 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                         </div>
 
                                         <div className="p-4 flex-1 flex flex-col">
-                                            <div className="text-base font-semibold">{u.name.split(' ')[0]}</div>
+                                            <div className="flex flex-col">
+                                                <span className="text-base font-bold text-white leading-tight">{u.name}</span>
+                                                <span className="text-[10px] text-gray-400 font-semibold tracking-wide">@{u.username || u.name.toLowerCase().replace(/\s+/g, '')}</span>
+                                            </div>
                                             <div className="text-xs text-gray-400 mt-0.5">📍 {u.city || "Unknown"} · {u.age || "N/A"} years</div>
                                             <div className="text-xs text-yellow-400 mt-1">
                                                 ⭐ {u.avg_rating > 0 ? `${u.avg_rating} ` : "New "}

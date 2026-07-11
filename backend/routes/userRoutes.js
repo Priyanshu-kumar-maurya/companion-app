@@ -19,7 +19,7 @@ const isOwner = (req, res, userId) => {
 router.get('/me', authenticateToken, async (req, res) => {
     try {
         const userResult = await pool.query(
-            "SELECT id, name, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, social_link FROM users WHERE id = $1",
+            "SELECT id, name, username, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, social_link FROM users WHERE id = $1",
             [req.user.id]
         );
         if (userResult.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
@@ -55,7 +55,7 @@ router.get('/users', async (req, res) => {
 
         let paramIndex = params.length + 1;
         let query = `
-            SELECT u.id, u.name, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status,
+            SELECT u.id, u.name, u.username, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status,
                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
                    COUNT(r.id) as review_count
             FROM users u
@@ -99,14 +99,30 @@ router.put('/users/:userId', authenticateToken, moderateContent, async (req, res
         const { userId } = req.params;
         if (!isOwner(req, res, userId)) return;
 
-        const { age, city, bio, price, tags, is_private, show_online } = req.body;
+        const { age, city, bio, price, tags, is_private, show_online, name, username } = req.body;
+
+        // Validate username uniqueness and characters
+        let cleanUsername = null;
+        if (username) {
+            cleanUsername = username.toLowerCase().trim().replace(/\s+/g, '');
+            if (!/^[a-z0-9_.]+$/.test(cleanUsername)) {
+                return res.status(400).json({ error: "Username mein sirf letters, numbers, underscores ( _ ) aur dots ( . ) use kar sakte hain." });
+            }
+            const checkDup = await pool.query("SELECT id FROM users WHERE username = $1 AND id != $2", [cleanUsername, userId]);
+            if (checkDup.rows.length > 0) {
+                return res.status(400).json({ error: "Yeh username pehle se kisi aur ka hai. Koi doosra username select karein!" });
+            }
+        }
 
         // Validate price is not negative
         const safePrice = Math.max(0, parseInt(price) || 0);
 
         const updatedUser = await pool.query(
-            "UPDATE users SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6, show_online = $7 WHERE id = $8 RETURNING id, name, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status",
-            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, show_online !== false, userId]
+            `UPDATE users 
+             SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6, show_online = $7, name = $8, username = $9 
+             WHERE id = $10 
+             RETURNING id, name, username, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status`,
+            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, show_online !== false, name || '', cleanUsername, userId]
         );
         res.status(200).json({ message: "Profile Updated", user: updatedUser.rows[0] });
     } catch (err) {

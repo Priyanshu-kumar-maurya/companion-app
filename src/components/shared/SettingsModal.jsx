@@ -9,6 +9,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
     const [formData, setFormData] = useState({
         name: user.name || "",
+        username: user.username || "",
         age: user.age || "",
         city: user.city || "Mumbai",
         bio: user.bio || "",
@@ -56,7 +57,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 alert("Settings Updated Successfully!");
                 setActiveView('menu');
             } else {
-                alert("Update failed!");
+                alert(data.error || "Update failed!");
             }
         } catch (error) {
             console.error(error);
@@ -334,8 +335,33 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             </div>
 
                             <div>
-                                <label className="block text-xs text-gray-400 mb-1 ml-1">Full Name</label>
-                                <input type="text" name="name" value={formData.name} onChange={handleChange} required className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} />
+                                <label className="block text-xs text-gray-400 mb-1 ml-1 font-semibold">Username</label>
+                                <input 
+                                    type="text" 
+                                    name="username" 
+                                    value={formData.username} 
+                                    onChange={(e) => {
+                                        const val = e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, '');
+                                        setFormData({ ...formData, username: val });
+                                    }} 
+                                    required 
+                                    placeholder="e.g. alka_patel"
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} 
+                                />
+                                <span className="text-[10px] text-gray-500 block mt-1 ml-1">Must be unique. Lowercase, numbers, underscores ( _ ) and dots ( . ) only.</span>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1 ml-1 font-semibold">Name (Display Name)</label>
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    value={formData.name} 
+                                    onChange={handleChange} 
+                                    required 
+                                    placeholder="e.g. Alka Patel"
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} 
+                                />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">

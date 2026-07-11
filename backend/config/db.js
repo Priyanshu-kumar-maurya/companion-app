@@ -29,6 +29,28 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_blocked BOOLEAN DEFAULT false;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(20);");
+        
+        // --- Username Column Migration & Unique Constraint ---
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");
+        const checkNullUsernames = await pool.query("SELECT id, name FROM users WHERE username IS NULL OR username = '';");
+        for (const u of checkNullUsernames.rows) {
+            let baseUsername = u.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (!baseUsername) baseUsername = `user${u.id}`;
+            let isUnique = false;
+            let tempUsername = baseUsername;
+            let counter = 1;
+            while (!isUnique) {
+                const checkDup = await pool.query("SELECT id FROM users WHERE username = $1 AND id != $2;", [tempUsername, u.id]);
+                if (checkDup.rows.length === 0) {
+                    isUnique = true;
+                } else {
+                    tempUsername = `${baseUsername}${counter}`;
+                    counter++;
+                }
+            }
+            await pool.query("UPDATE users SET username = $1 WHERE id = $2;", [tempUsername, u.id]);
+        }
+        await pool.query("ALTER TABLE users ADD CONSTRAINT unique_username UNIQUE (username);").catch(() => {});
 
         // Saved posts table
         await pool.query(`CREATE TABLE IF NOT EXISTS saved_posts (

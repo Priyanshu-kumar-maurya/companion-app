@@ -385,8 +385,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                     >
                         <FiArrowLeft size={18} />
                     </button>
-                    <span className="font-bold text-sm tracking-wide text-gray-200">
-                        {profile.name?.split(' ')[0]}'s Profile
+                    <span className="font-bold text-xs tracking-wide text-gray-200">
+                        {profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
                     </span>
                     
                     {/* 3-DOT MENU BUTTON */}
@@ -464,7 +464,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                         {/* Row 1: Username & Action Buttons */}
                         <div className="flex flex-col sm:flex-row items-center gap-3.5 mb-4 w-full justify-center md:justify-start">
                             <span className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
-                                {profile.name?.toLowerCase().replace(/\s+/g, '')}
+                                {profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
                                 {profile.kyc_status === 'verified' && (
                                     <span className="text-blue-400" title="Verified Companion">✔</span>
                                 )}
