@@ -1,5 +1,6 @@
 const express = require('express');
 const { pool } = require('../config/db');
+const jwt = require('jsonwebtoken');
 const authenticateToken = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { checkProfanity, cleanText, moderateContent } = require('../middleware/contentFilter');
@@ -106,6 +107,39 @@ router.get('/posts/:userId', async (req, res) => {
         const posts = await pool.query("SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC", [userId]);
         res.status(200).json(posts.rows);
     } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── GET SINGLE POST DETAIL — OPTIONAL AUTH ─────────────────
+router.get('/posts/detail/:postId', async (req, res) => {
+    try {
+        const { postId } = req.params;
+        
+        let currentUserId = null;
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                currentUserId = decoded.id;
+            } catch (e) {}
+        }
+
+        const postQuery = `
+            SELECT p.*,
+                   u.name as user_name, u.profile_pic as user_pic, u.role as user_role, u.city as user_city,
+                   COALESCE((SELECT COUNT(*) FROM likes WHERE post_id = p.id), 0) as total_likes,
+                   EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.id = $2
+        `;
+        const result = await pool.query(postQuery, [currentUserId || null, postId]);
+        if (result.rows.length === 0) return res.status(404).json({ error: "Post not found." });
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error("Get post detail error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

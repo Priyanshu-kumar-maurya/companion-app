@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
+import InstagramPostModal from "./InstagramPostModal";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2 } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -794,69 +795,13 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
             {/* ── EXPANDED POST ── */}
             {expandedPost && (
-                <div 
-                    className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[120] flex items-center justify-center p-4 animate-fade-in"
-                    onClick={() => setExpandedPost(null)}
-                >
-                    <div 
-                        className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl flex flex-col relative"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 bg-[#16162A]">
-                            <div className="flex items-center gap-3">
-                                {profile.profile_pic ? (
-                                    <img src={profile.profile_pic} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
-                                ) : (
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shadow-inner">
-                                        {profile.name?.[0]?.toUpperCase()}
-                                    </div>
-                                )}
-                                <div>
-                                    <span className="font-bold text-white text-xs block">{profile.name.split(' ')[0]}</span>
-                                    <span className="text-[9px] text-gray-500 block">📍 {profile.city || "India"}</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {/* Delete button in modal if viewed profile is the current logged-in user */}
-                                {expandedPost.id && profile.id === currentUser?.id && (
-                                    <button
-                                        onClick={() => handleDeletePost(expandedPost.id)}
-                                        className="w-8 h-8 rounded-full bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition"
-                                        title="Delete Post"
-                                    >
-                                        <FiTrash2 size={14} />
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() => setExpandedPost(null)}
-                                    className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Image Area */}
-                        <div className="bg-black/40 flex items-center justify-center aspect-square overflow-hidden relative">
-                            <img 
-                                src={expandedPost.image_url} 
-                                alt="Expanded" 
-                                className="w-full h-full object-contain"
-                            />
-                        </div>
-
-                        {/* Footer (Caption) */}
-                        {expandedPost.caption && (
-                            <div className="p-4 border-t border-white/5 bg-[#121224]">
-                                <p className="text-xs text-gray-300 leading-relaxed">
-                                    <span className="font-bold text-white mr-1.5">{profile.name.split(' ')[0]}</span>
-                                    {expandedPost.caption}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <InstagramPostModal 
+                    post={expandedPost}
+                    postOwner={profile}
+                    currentUser={currentUser}
+                    onClose={() => setExpandedPost(null)}
+                    onDelete={handleDeletePost}
+                />
             )}
 
             {/* ─── REPORT MODAL ─── */}
