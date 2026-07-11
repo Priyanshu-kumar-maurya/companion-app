@@ -33,8 +33,13 @@ router.get('/me', authenticateToken, async (req, res) => {
 router.get('/users', async (req, res) => {
     try {
         const { role } = req.query;
-        if (!role || !['boy', 'girl'].includes(role)) {
-            return res.status(400).json({ error: "Valid role parameter required (boy/girl)." });
+        
+        let roleFilter = '';
+        const params = [];
+        
+        if (role && ['boy', 'girl'].includes(role)) {
+            roleFilter = `AND u.role = $1`;
+            params.push(role);
         }
 
         // Optional token verification to exclude blocked users
@@ -48,26 +53,27 @@ router.get('/users', async (req, res) => {
             } catch (e) {}
         }
 
+        let paramIndex = params.length + 1;
         let query = `
             SELECT u.id, u.name, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status,
                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
                    COUNT(r.id) as review_count
             FROM users u
             LEFT JOIN reviews r ON u.id = r.companion_id
-            WHERE u.role = $1 
-              AND u.is_verified = true 
+            WHERE u.is_verified = true 
               AND u.is_frozen = false 
               AND u.is_platform_blocked = false
+              ${roleFilter}
         `;
-        const params = [role];
 
         if (currentUserId) {
             query += `
-                AND u.id NOT IN (SELECT blocked_id FROM blocked_users WHERE blocker_id = $2)
-                AND u.id NOT IN (SELECT blocker_id FROM blocked_users WHERE blocked_id = $2)
-                AND (u.is_private = false OR u.id = $2 OR EXISTS(SELECT 1 FROM follows WHERE follower_id = $2 AND following_id = u.id))
+                AND u.id NOT IN (SELECT blocked_id FROM blocked_users WHERE blocker_id = $${paramIndex})
+                AND u.id NOT IN (SELECT blocker_id FROM blocked_users WHERE blocked_id = $${paramIndex})
+                AND (u.is_private = false OR u.id = $${paramIndex} OR EXISTS(SELECT 1 FROM follows WHERE follower_id = $${paramIndex} AND following_id = u.id))
             `;
             params.push(currentUserId);
+            paramIndex++;
         } else {
             query += `
                 AND u.is_private = false

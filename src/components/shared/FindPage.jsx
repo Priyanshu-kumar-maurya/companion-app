@@ -12,10 +12,10 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const targetRole = currentUser?.role === "girl" ? "boy" : "girl";
+    const [genderFilter, setGenderFilter] = useState(currentUser?.role === "girl" ? "boy" : "girl");
 
     useEffect(() => {
-        const cacheKey = `findPageCache_${targetRole}`;
+        const cacheKey = `findPageCache_${genderFilter}`;
         const cachedUsers = sessionStorage.getItem(cacheKey);
 
         if (cachedUsers) {
@@ -32,9 +32,11 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                 if (token) {
                     headers["Authorization"] = `Bearer ${token}`;
                 }
-                const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users?role=${targetRole}`, {
-                    headers
-                });
+                const url = genderFilter === "all" 
+                    ? `https://rentgf-and-bf.onrender.com/api/users`
+                    : `https://rentgf-and-bf.onrender.com/api/users?role=${genderFilter}`;
+                
+                const response = await fetch(url, { headers });
                 const data = await response.json();
 
                 if (response.ok) {
@@ -53,7 +55,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
         };
 
         fetchProfiles();
-    }, [targetRole]);
+    }, [genderFilter]);
 
     const filtered = users.filter(
         (u) =>
@@ -90,6 +92,30 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                     value={searchQ}
                     onChange={(e) => setSearchQ(e.target.value)}
                 />
+
+                <div className="flex gap-2 flex-wrap items-center mb-5 pb-3 border-b border-white/5">
+                    <span className="text-xs text-gray-500">View:</span>
+                    {[
+                        { v: "girl", l: "Girls Only 👧" },
+                        { v: "boy", l: "Boys Only 👦" },
+                        { v: "all", l: "Show All 👥" }
+                    ].map((g) => (
+                        <button
+                            key={g.v}
+                            onClick={() => setGenderFilter(g.v)}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 ${genderFilter === g.v
+                                ? g.v === "girl"
+                                    ? "bg-pink-500/10 border-pink-500 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.2)]"
+                                    : g.v === "boy"
+                                        ? "bg-blue-500/10 border-blue-500 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
+                                        : "bg-purple-500/10 border-purple-500 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
+                                : "border-white/5 bg-[#121224]/30 text-gray-400 hover:border-white/20 hover:text-white"
+                            }`}
+                        >
+                            {g.l}
+                        </button>
+                    ))}
+                </div>
 
                 <div className="flex gap-2 flex-wrap items-center mb-3">
                     <span className="text-xs text-gray-500">City:</span>
@@ -129,53 +155,56 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                     <div className="text-center py-20 text-gray-500">No companions found. Try different filters.</div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {filtered.map((u) => (
-                            <div
-                                key={u.id}
-                                className="bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:border-pink-500/30 hover:-translate-y-1 transition flex flex-col"
-                                onClick={() => handleProfileClick(u)}
-                            >
-                                <div className="relative h-48 flex items-center justify-center bg-gradient-to-br from-pink-500/30 to-purple-500/30">
-                                    {u.profile_pic ? (
-                                        <img
-                                            src={u.profile_pic}
-                                            alt={u.name}
-                                            className="w-full h-full object-cover transition duration-500 hover:scale-110"
-                                        />
-                                    ) : (
-                                        <div className="text-6xl text-white/70">😊</div>
-                                    )}
+                            {filtered.map((u) => {
+                                const isTargetGirl = u.role === 'girl';
+                                return (
+                                    <div
+                                        key={u.id}
+                                        className={`bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden cursor-pointer hover:-translate-y-1 transition flex flex-col ${isTargetGirl ? 'hover:border-pink-500/30' : 'hover:border-blue-500/30'}`}
+                                        onClick={() => handleProfileClick(u)}
+                                    >
+                                        <div className={`relative h-48 flex items-center justify-center bg-gradient-to-br ${isTargetGirl ? 'from-pink-500/20 to-purple-500/20' : 'from-blue-500/20 to-indigo-500/20'}`}>
+                                            {u.profile_pic ? (
+                                                <img
+                                                    src={u.profile_pic}
+                                                    alt={u.name}
+                                                    className="w-full h-full object-cover transition duration-500 hover:scale-110"
+                                                />
+                                            ) : (
+                                                <div className="text-5xl text-white/50">{isTargetGirl ? '👧' : '👦'}</div>
+                                            )}
 
-                                    {u.kyc_status === 'verified' && (
-                                        <div className="absolute top-3 left-3 bg-purple-500/20 border border-purple-500/40 rounded-full px-2 py-0.5 text-xs text-purple-300 backdrop-blur-sm">
-                                            ✓ Verified
+                                            {u.kyc_status === 'verified' && (
+                                                <div className="absolute top-3 left-3 bg-purple-500/20 border border-purple-500/40 rounded-full px-2 py-0.5 text-xs text-purple-300 backdrop-blur-sm">
+                                                    ✓ Verified
+                                                </div>
+                                            )}
+                                            <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#16162A] to-transparent h-16" />
                                         </div>
-                                    )}
-                                    <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#16162A] to-transparent h-16" />
-                                </div>
 
-                                <div className="p-4 flex-1 flex flex-col">
-                                    <div className="text-base font-semibold">{u.name.split(' ')[0]}</div>
-                                    <div className="text-xs text-gray-400 mt-0.5">📍 {u.city || "Unknown"} · {u.age || "N/A"} years</div>
-                                    <div className="text-xs text-yellow-400 mt-1">
-                                        ⭐ {u.avg_rating > 0 ? `${u.avg_rating} ` : "New "}
-                                        <span className="text-gray-500">
-                                            {u.avg_rating > 0 ? `(${u.review_count} reviews)` : ""}
-                                        </span>
-                                    </div>
+                                        <div className="p-4 flex-1 flex flex-col">
+                                            <div className="text-base font-semibold">{u.name.split(' ')[0]}</div>
+                                            <div className="text-xs text-gray-400 mt-0.5">📍 {u.city || "Unknown"} · {u.age || "N/A"} years</div>
+                                            <div className="text-xs text-yellow-400 mt-1">
+                                                ⭐ {u.avg_rating > 0 ? `${u.avg_rating} ` : "New "}
+                                                <span className="text-gray-500">
+                                                    {u.avg_rating > 0 ? `(${u.review_count} reviews)` : ""}
+                                                </span>
+                                            </div>
 
-                                    <div className="mt-auto pt-4 flex items-center justify-between">
-                                        <div>
-                                            <span className="text-lg font-bold text-pink-400">₹{u.price || 1000}</span>
-                                            <span className="text-xs text-gray-500">/hr</span>
+                                            <div className="mt-auto pt-4 flex items-center justify-between">
+                                                <div>
+                                                    <span className={`text-lg font-bold ${isTargetGirl ? 'text-pink-400' : 'text-blue-400'}`}>₹{u.price || 1000}</span>
+                                                    <span className="text-xs text-gray-500">/hr</span>
+                                                </div>
+                                                <button className={`px-3 py-1.5 text-white text-xs rounded-xl font-semibold hover:opacity-85 transition ${isTargetGirl ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500'}`}>
+                                                    View Profile
+                                                </button>
+                                            </div>
                                         </div>
-                                        <button className="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white text-xs rounded-xl font-semibold hover:opacity-85 transition">
-                                            View Profile
-                                        </button>
                                     </div>
-                                </div>
-                            </div>
-                        ))}
+                                );
+                            })}
                     </div>
                 )}
             </div>
