@@ -74,6 +74,55 @@ function UnifiedRegister({ setPage }) {
         }
     }, [dobParts]);
 
+    const [currentStep, setCurrentStep] = useState(1);
+
+    const handleNextStep = () => {
+        if (currentStep === 1) {
+            if (!formData.name.trim() || formData.name.trim().split(" ").length < 2) {
+                showAlert("Please enter your full name (First name & Last name).");
+                return;
+            }
+        }
+        if (currentStep === 2) {
+            if (!formData.role) {
+                showAlert("Please select your gender.");
+                return;
+            }
+        }
+        if (currentStep === 3) {
+            if (!formData.dob) {
+                showAlert("Please enter your complete Date of Birth.");
+                return;
+            }
+            const age = calculateAge(formData.dob);
+            if (age < 18) {
+                showAlert("You must be at least 18 years old to join.");
+                return;
+            }
+        }
+        if (currentStep === 4) {
+            if (!formData.email.trim() || !formData.phone.trim()) {
+                showAlert("Please enter both your email and phone number.");
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                showAlert("Please enter a valid email address.");
+                return;
+            }
+            if (!/^\d{10}$/.test(formData.phone)) {
+                showAlert("Please enter a valid 10-digit phone number.");
+                return;
+            }
+        }
+        setCurrentStep(prev => prev + 1);
+    };
+
+    const handlePrevStep = () => {
+        if (currentStep > 1) {
+            setCurrentStep(prev => prev - 1);
+        }
+    };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -206,119 +255,246 @@ function UnifiedRegister({ setPage }) {
             <div className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? 'bg-blue-600/20' : 'bg-pink-600/20'}`}></div>
 
             <div className={`bg-[#16162A] w-full max-w-md p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? 'border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]' : 'border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]'}`}>
-
-                <h2 className="text-3xl font-extrabold text-center text-white mb-2">Create Account</h2>
-                <p className="text-gray-400 text-center text-sm mb-6">Join our platform today</p>
-
-                <form onSubmit={handleRegister} className="space-y-4">
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Full Name</label>
-                        <input type="text" name="name" required value={formData.name} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="Your full name" />
+                
+                {/* Header with Back button and Progress indicator */}
+                <div className="flex items-center justify-between mb-6">
+                    {currentStep > 1 ? (
+                        <button 
+                            type="button" 
+                            onClick={handlePrevStep}
+                            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition"
+                        >
+                            ←
+                        </button>
+                    ) : (
+                        <div className="w-8 h-8"></div>
+                    )}
+                    
+                    {/* Progress Dots */}
+                    <div className="flex gap-1.5">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                            <span 
+                                key={s} 
+                                className={`h-1.5 rounded-full transition-all duration-300 ${s === currentStep ? (isBoy ? 'w-5 bg-blue-500' : 'w-5 bg-pink-500') : 'w-1.5 bg-white/10'}`}
+                            ></span>
+                        ))}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 ml-1">Gender</label>
-                            <CustomDropdown
-                                value={formData.role}
-                                onChange={(val) => setFormData(prev => ({ ...prev, role: val }))}
-                                placeholder="Gender"
-                                isBoy={isBoy}
-                                options={[
-                                    { value: "boy", label: "Male" },
-                                    { value: "girl", label: "Female" }
-                                ]}
-                            />
-                        </div>
-                        {/* Hidden input to store combined date of birth */}
-                        <input type="hidden" name="dob" value={formData.dob} required />
-                    </div>
+                    <div className="w-8 h-8"></div>
+                </div>
 
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Date of Birth</label>
-                        <div className="grid grid-cols-3 gap-2">
-                            {/* Day */}
-                            <CustomDropdown
-                                value={dobParts.day}
-                                onChange={(val) => setDobParts(prev => ({ ...prev, day: val }))}
-                                placeholder="Day"
-                                isBoy={isBoy}
-                                options={Array.from({ length: 31 }, (_, i) => {
-                                    const d = String(i + 1).padStart(2, '0');
-                                    return { value: d, label: d };
-                                })}
-                            />
+                <h2 className="text-2xl font-extrabold text-center text-white mb-1">Create Account</h2>
+                <p className="text-gray-400 text-center text-xs mb-8">Step {currentStep} of 5</p>
 
-                            {/* Month */}
-                            <CustomDropdown
-                                value={dobParts.month}
-                                onChange={(val) => setDobParts(prev => ({ ...prev, month: val }))}
-                                placeholder="Month"
-                                isBoy={isBoy}
-                                options={[
-                                    { value: "01", label: "Jan" }, { value: "02", label: "Feb" }, { value: "03", label: "Mar" },
-                                    { value: "04", label: "Apr" }, { value: "05", label: "May" }, { value: "06", label: "Jun" },
-                                    { value: "07", label: "Jul" }, { value: "08", label: "Aug" }, { value: "09", label: "Sep" },
-                                    { value: "10", label: "Oct" }, { value: "11", label: "Nov" }, { value: "12", label: "Dec" }
-                                ]}
-                            />
-
-                            {/* Year */}
-                            <CustomDropdown
-                                value={dobParts.year}
-                                onChange={(val) => setDobParts(prev => ({ ...prev, year: val }))}
-                                placeholder="Year"
-                                isBoy={isBoy}
-                                options={Array.from({ length: 70 }, (_, i) => {
-                                    const y = String(2008 - i);
-                                    return { value: y, label: y };
-                                })}
-                            />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 ml-1">Email</label>
-                            <input type="email" name="email" required value={formData.email} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="example@mail.com" />
-                        </div>
-                        <div>
-                            <label className="block text-xs text-gray-400 mb-1.5 ml-1">Phone Number</label>
-                            <input type="tel" name="phone" required value={formData.phone} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} placeholder="Enter your number" pattern="[0-9]{10}" />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs text-gray-400 mb-1.5 ml-1">Password</label>
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                name="password"
-                                required
-                                value={formData.password}
-                                onChange={handleChange}
-                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 pr-12 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
-                                placeholder="Enter your password"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
+                    {/* ── STEP 1: NAME ── */}
+                    {currentStep === 1 && (
+                        <div className="space-y-4 animate-fade-in">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 ml-1">What's your full name?</label>
+                                <input 
+                                    type="text" 
+                                    name="name" 
+                                    required 
+                                    value={formData.name} 
+                                    onChange={handleChange} 
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} 
+                                    placeholder="Enter your first & last name" 
+                                    autoFocus
+                                />
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={handleNextStep}
+                                className={`w-full py-3.5 mt-4 rounded-xl text-white font-bold text-sm shadow-lg transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}
                             >
-                                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                Next
                             </button>
                         </div>
-                    </div>
+                    )}
 
-                    <button type="submit" disabled={loading} className={`w-full py-3.5 mt-2 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}>
-                        {loading ? "Sending OTP..." : "Register & Get OTP"}
-                    </button>
+                    {/* ── STEP 2: GENDER ── */}
+                    {currentStep === 2 && (
+                        <div className="space-y-4 animate-fade-in">
+                            <label className="block text-xs text-gray-400 mb-2 text-center">Select your gender</label>
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Male Card */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData(prev => ({ ...prev, role: "boy" }));
+                                        // Auto go to next step
+                                        setTimeout(() => setCurrentStep(3), 300);
+                                    }}
+                                    className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "boy" ? 'bg-blue-500/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white' : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20'}`}
+                                >
+                                    <span className="text-3xl">👦</span>
+                                    <span className="text-sm font-bold block">Male</span>
+                                </button>
+
+                                {/* Female Card */}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData(prev => ({ ...prev, role: "girl" }));
+                                        // Auto go to next step
+                                        setTimeout(() => setCurrentStep(3), 300);
+                                    }}
+                                    className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "girl" ? 'bg-pink-500/10 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.2)] text-white' : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20'}`}
+                                >
+                                    <span className="text-3xl">👧</span>
+                                    <span className="text-sm font-bold block">Female</span>
+                                </button>
+                            </div>
+                            
+                            <button 
+                                type="button" 
+                                onClick={handleNextStep}
+                                className={`w-full py-3.5 mt-4 rounded-xl text-white font-bold text-sm shadow-lg transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+
+                    {/* ── STEP 3: DATE OF BIRTH ── */}
+                    {currentStep === 3 && (
+                        <div className="space-y-4 animate-fade-in">
+                            <label className="block text-xs text-gray-400 mb-2 ml-1">When is your birthday?</label>
+                            
+                            <div className="grid grid-cols-3 gap-2">
+                                {/* Day */}
+                                <CustomDropdown
+                                    value={dobParts.day}
+                                    onChange={(val) => setDobParts(prev => ({ ...prev, day: val }))}
+                                    placeholder="Day"
+                                    isBoy={isBoy}
+                                    options={Array.from({ length: 31 }, (_, i) => {
+                                        const d = String(i + 1).padStart(2, '0');
+                                        return { value: d, label: d };
+                                    })}
+                                />
+
+                                {/* Month */}
+                                <CustomDropdown
+                                    value={dobParts.month}
+                                    onChange={(val) => setDobParts(prev => ({ ...prev, month: val }))}
+                                    placeholder="Month"
+                                    isBoy={isBoy}
+                                    options={[
+                                        { value: "01", label: "Jan" }, { value: "02", label: "Feb" }, { value: "03", label: "Mar" },
+                                        { value: "04", label: "Apr" }, { value: "05", label: "May" }, { value: "06", label: "Jun" },
+                                        { value: "07", label: "Jul" }, { value: "08", label: "Aug" }, { value: "09", label: "Sep" },
+                                        { value: "10", label: "Oct" }, { value: "11", label: "Nov" }, { value: "12", label: "Dec" }
+                                    ]}
+                                />
+
+                                {/* Year */}
+                                <CustomDropdown
+                                    value={dobParts.year}
+                                    onChange={(val) => setDobParts(prev => ({ ...prev, year: val }))}
+                                    placeholder="Year"
+                                    isBoy={isBoy}
+                                    options={Array.from({ length: 70 }, (_, i) => {
+                                        const y = String(2008 - i);
+                                        return { value: y, label: y };
+                                    })}
+                                />
+                            </div>
+                            
+                            <p className="text-[10px] text-gray-500 mt-1 ml-1">Note: Only users aged 18 or above can join.</p>
+                            
+                            <button 
+                                type="button" 
+                                onClick={handleNextStep}
+                                className={`w-full py-3.5 mt-4 rounded-xl text-white font-bold text-sm shadow-lg transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+
+                    {/* ── STEP 4: CONTACT INFO ── */}
+                    {currentStep === 4 && (
+                        <div className="space-y-4 animate-fade-in">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Email Address</label>
+                                <input 
+                                    type="email" 
+                                    name="email" 
+                                    required 
+                                    value={formData.email} 
+                                    onChange={handleChange} 
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} 
+                                    placeholder="example@mail.com" 
+                                    autoFocus
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-1.5 ml-1">Phone Number</label>
+                                <input 
+                                    type="tel" 
+                                    name="phone" 
+                                    required 
+                                    value={formData.phone} 
+                                    onChange={handleChange} 
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} 
+                                    placeholder="Enter your 10-digit number" 
+                                    pattern="[0-9]{10}"
+                                />
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={handleNextStep}
+                                className={`w-full py-3.5 mt-4 rounded-xl text-white font-bold text-sm shadow-lg transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+
+                    {/* ── STEP 5: PASSWORD ── */}
+                    {currentStep === 5 && (
+                        <div className="space-y-4 animate-fade-in">
+                            <div>
+                                <label className="block text-xs text-gray-400 mb-2 ml-1">Choose a password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        name="password"
+                                        required
+                                        value={formData.password}
+                                        onChange={handleChange}
+                                        className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 pr-12 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                                        placeholder="Min. 6 characters"
+                                        autoFocus
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                                    >
+                                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button 
+                                type="button" 
+                                onClick={handleRegister} 
+                                disabled={loading || !formData.password} 
+                                className={`w-full py-3.5 mt-4 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition ${isBoy ? 'bg-gradient-to-r from-blue-500 to-purple-500' : 'bg-gradient-to-r from-pink-500 to-purple-500'}`}
+                            >
+                                {loading ? "Creating Account..." : "Register & Get OTP"}
+                            </button>
+                        </div>
+                    )}
                 </form>
 
-                <div className="mt-6 text-center">
-                    <p className="text-gray-400 text-sm">
+                <div className="mt-8 text-center">
+                    <p className="text-gray-400 text-xs">
                         Already have an account?{' '}
-                        <button onClick={() => setPage(isBoy ? PAGES.BOY_LOGIN : PAGES.GIRL_LOGIN)} className={`font-bold hover:underline ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
+                        <button onClick={() => setPage(isBoy ? PAGES.BOY_LOGIN : PAGES.GIRL_LOGIN)} className={`font-black hover:underline ${isBoy ? 'text-blue-400' : 'text-pink-400'}`}>
                             Login here
                         </button>
                     </p>
