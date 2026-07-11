@@ -8,7 +8,7 @@ const socket = io("https://rentgf-and-bf.onrender.com", {
     transports: ['websocket']
 });
 
-function DetailsPage({ girl: profile, currentUser, setPage }) {
+function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [hours, setHours] = useState(2);
     const [posts, setPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
@@ -22,6 +22,41 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0, isFollowing: false });
     const [followLoading, setFollowLoading] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
+
+    // Followers / Following Modal States
+    const [showFollowModal, setShowFollowModal] = useState(null); // 'followers' | 'following' | null
+    const [followList, setFollowList] = useState([]);
+    const [followListLoading, setFollowListLoading] = useState(false);
+
+    const canViewList = !profile.is_private || followStats.isFollowing || profile.id === currentUser?.id;
+
+    const handleOpenFollowModal = async (type) => {
+        if (!canViewList) {
+            alert("🔒 This account is private. Follow them to see their followers and following list.");
+            return;
+        }
+        setShowFollowModal(type);
+        setFollowListLoading(true);
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/${type === 'followers' ? 'followers-list' : 'following-list'}/${profile.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setFollowList(data);
+            }
+        } catch (err) {
+            console.error("Error fetching follow list:", err);
+        } finally {
+            setFollowListLoading(false);
+        }
+    };
+
+    const handleUserClick = (targetUser) => {
+        setShowFollowModal(null);
+        setFollowList([]);
+        if (setSelectedGirl) {
+            setSelectedGirl(targetUser);
+        }
+    };
 
     // 3-dot menu state
     const [showMenu, setShowMenu] = useState(false);
@@ -475,15 +510,21 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                         <span className="text-[11px] text-gray-400">Posts</span>
                     </div>
                     <div className="w-px h-8 bg-white/5" />
-                    <div className="flex flex-col items-center">
+                    <button 
+                        onClick={() => handleOpenFollowModal('followers')}
+                        className={`flex flex-col items-center outline-none ${canViewList ? 'cursor-pointer hover:opacity-80 transition-all' : 'opacity-60 cursor-not-allowed'}`}
+                    >
                         <span className="text-lg font-bold text-white">{followStats.followers}</span>
                         <span className="text-[11px] text-gray-400">Followers</span>
-                    </div>
+                    </button>
                     <div className="w-px h-8 bg-white/5" />
-                    <div className="flex flex-col items-center">
+                    <button 
+                        onClick={() => handleOpenFollowModal('following')}
+                        className={`flex flex-col items-center outline-none ${canViewList ? 'cursor-pointer hover:opacity-80 transition-all' : 'opacity-60 cursor-not-allowed'}`}
+                    >
                         <span className="text-lg font-bold text-white">{followStats.following}</span>
                         <span className="text-[11px] text-gray-400">Following</span>
-                    </div>
+                    </button>
                     <div className="w-px h-8 bg-white/5" />
                     <div className="flex flex-col items-center">
                         <span className="text-lg font-bold text-yellow-400 flex items-center gap-1">
@@ -825,6 +866,75 @@ function DetailsPage({ girl: profile, currentUser, setPage }) {
                                 </form>
                             </>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── FOLLOWERS / FOLLOWING LIST MODAL ── */}
+            {showFollowModal && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+                    onClick={() => { setShowFollowModal(null); setFollowList([]); }}
+                >
+                    <div 
+                        className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-[#181832] to-[#121224] px-5 py-4 border-b border-white/5 flex justify-between items-center">
+                            <h3 className="font-extrabold text-white text-sm capitalize">
+                                {showFollowModal === 'followers' ? 'Followers' : 'Following'}
+                            </h3>
+                            <button 
+                                onClick={() => { setShowFollowModal(null); setFollowList([]); }}
+                                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition"
+                            >
+                                <FiX size={15} />
+                            </button>
+                        </div>
+
+                        {/* List Area */}
+                        <div className="p-4 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-3">
+                            {followListLoading ? (
+                                <div className="text-center py-8 text-pink-400 animate-pulse text-xs font-bold">
+                                    Loading list...
+                                </div>
+                            ) : followList.length === 0 ? (
+                                <div className="text-center py-8 text-gray-500 text-xs">
+                                    {showFollowModal === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
+                                </div>
+                            ) : (
+                                followList.map(u => {
+                                    const isTargetGirl = u.role === 'girl';
+                                    return (
+                                        <div 
+                                            key={u.id}
+                                            onClick={() => handleUserClick(u)}
+                                            className="flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition cursor-pointer border border-transparent hover:border-white/5"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                {u.profile_pic ? (
+                                                    <img src={u.profile_pic} alt="" className="w-9 h-9 rounded-full object-cover border border-white/10" />
+                                                ) : (
+                                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shadow-inner shrink-0">
+                                                        {u.name?.[0]?.toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <div className="min-w-0">
+                                                    <span className="font-bold text-white text-xs block truncate">{u.name}</span>
+                                                    <span className={`inline-block text-[8px] font-black uppercase tracking-wider px-1 py-0.2 rounded mt-0.5 ${isTargetGirl ? 'bg-pink-500/10 text-pink-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                                                        {u.role}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-pink-400 font-extrabold hover:underline">
+                                                View Profile →
+                                            </span>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
