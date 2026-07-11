@@ -2,6 +2,47 @@ import React, { useState } from "react";
 import { PAGES } from "../App";
 import { FiEye, FiEyeOff, FiMail, FiX, FiRefreshCw, FiCheckCircle } from "react-icons/fi";
 
+function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-3 text-sm text-white text-left outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500 flex justify-between items-center`}
+            >
+                <span className="truncate">{options.find(o => o.value === value)?.label || placeholder}</span>
+                <span className="text-gray-500 text-[10px] ml-1">▼</span>
+            </button>
+
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setIsOpen(false)}></div>
+                    
+                    {/* Dropdown Options Box */}
+                    <div className="absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto bg-[#121224] border border-white/10 rounded-xl z-50 py-1 shadow-2xl custom-scrollbar scroll-smooth">
+                        {options.map(opt => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => {
+                                    onChange(opt.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-2.5 text-xs text-white transition-colors hover:bg-white/5 flex items-center justify-between ${value === opt.value ? (isBoy ? 'bg-blue-600/20 text-blue-400 font-bold' : 'bg-pink-600/20 text-pink-400 font-bold') : ''}`}
+                            >
+                                <span>{opt.label}</span>
+                                {value === opt.value && <span className={isBoy ? 'text-blue-400' : 'text-pink-400'}>✓</span>}
+                            </button>
+                        ))}
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 function UnifiedRegister({ setPage }) {
     const [formData, setFormData] = useState({
         name: "", email: "", phone: "", dob: "", password: "", role: "boy"
@@ -178,10 +219,16 @@ function UnifiedRegister({ setPage }) {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs text-gray-400 mb-1.5 ml-1">Gender</label>
-                            <select name="role" required value={formData.role} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}>
-                                <option value="boy">Male</option>
-                                <option value="girl">Female</option>
-                            </select>
+                            <CustomDropdown
+                                value={formData.role}
+                                onChange={(val) => setFormData(prev => ({ ...prev, role: val }))}
+                                placeholder="Gender"
+                                isBoy={isBoy}
+                                options={[
+                                    { value: "boy", label: "Male" },
+                                    { value: "girl", label: "Female" }
+                                ]}
+                            />
                         </div>
                         {/* Hidden input to store combined date of birth */}
                         <input type="hidden" name="dob" value={formData.dob} required />
@@ -191,50 +238,42 @@ function UnifiedRegister({ setPage }) {
                         <label className="block text-xs text-gray-400 mb-1.5 ml-1">Date of Birth</label>
                         <div className="grid grid-cols-3 gap-2">
                             {/* Day */}
-                            <select 
-                                required
-                                value={dobParts.day} 
-                                onChange={(e) => setDobParts(prev => ({ ...prev, day: e.target.value }))}
-                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-2 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
-                            >
-                                <option value="">Day</option>
-                                {Array.from({ length: 31 }, (_, i) => {
+                            <CustomDropdown
+                                value={dobParts.day}
+                                onChange={(val) => setDobParts(prev => ({ ...prev, day: val }))}
+                                placeholder="Day"
+                                isBoy={isBoy}
+                                options={Array.from({ length: 31 }, (_, i) => {
                                     const d = String(i + 1).padStart(2, '0');
-                                    return <option key={d} value={d}>{d}</option>;
+                                    return { value: d, label: d };
                                 })}
-                            </select>
+                            />
 
                             {/* Month */}
-                            <select 
-                                required
-                                value={dobParts.month} 
-                                onChange={(e) => setDobParts(prev => ({ ...prev, month: e.target.value }))}
-                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-2 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
-                            >
-                                <option value="">Month</option>
-                                {[
-                                    { v: "01", n: "Jan" }, { v: "02", n: "Feb" }, { v: "03", n: "Mar" },
-                                    { v: "04", n: "Apr" }, { v: "05", n: "May" }, { v: "06", n: "Jun" },
-                                    { v: "07", n: "Jul" }, { v: "08", n: "Aug" }, { v: "09", n: "Sep" },
-                                    { v: "10", n: "Oct" }, { v: "11", n: "Nov" }, { v: "12", n: "Dec" }
-                                ].map(m => (
-                                    <option key={m.v} value={m.v}>{m.n}</option>
-                                ))}
-                            </select>
+                            <CustomDropdown
+                                value={dobParts.month}
+                                onChange={(val) => setDobParts(prev => ({ ...prev, month: val }))}
+                                placeholder="Month"
+                                isBoy={isBoy}
+                                options={[
+                                    { value: "01", label: "Jan" }, { value: "02", label: "Feb" }, { value: "03", label: "Mar" },
+                                    { value: "04", label: "Apr" }, { value: "05", label: "May" }, { value: "06", label: "Jun" },
+                                    { value: "07", label: "Jul" }, { value: "08", label: "Aug" }, { value: "09", label: "Sep" },
+                                    { value: "10", label: "Oct" }, { value: "11", label: "Nov" }, { value: "12", label: "Dec" }
+                                ]}
+                            />
 
                             {/* Year */}
-                            <select 
-                                required
-                                value={dobParts.year} 
-                                onChange={(e) => setDobParts(prev => ({ ...prev, year: e.target.value }))}
-                                className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-2 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
-                            >
-                                <option value="">Year</option>
-                                {Array.from({ length: 70 }, (_, i) => {
+                            <CustomDropdown
+                                value={dobParts.year}
+                                onChange={(val) => setDobParts(prev => ({ ...prev, year: val }))}
+                                placeholder="Year"
+                                isBoy={isBoy}
+                                options={Array.from({ length: 70 }, (_, i) => {
                                     const y = String(2008 - i);
-                                    return <option key={y} value={y}>{y}</option>;
+                                    return { value: y, label: y };
                                 })}
-                            </select>
+                            />
                         </div>
                     </div>
 
