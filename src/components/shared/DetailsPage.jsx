@@ -369,87 +369,76 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const accentGrad = profile.role === 'boy' ? 'from-blue-500 to-purple-600' : 'from-pink-500 to-purple-600';
 
     return (
-        <div className="min-h-[100dvh] relative bg-[#0D0D1A] pb-20">
+        <div className="min-h-[100dvh] relative bg-[#0D0D1A] pb-20 text-white">
 
-            {/* ── COVER BANNER ── */}
-            <div className="relative h-52 sm:h-64 overflow-hidden">
-                {profile.profile_pic ? (
-                    <img src={profile.profile_pic} alt="cover" className="w-full h-full object-cover scale-110" style={{ filter: 'blur(18px) brightness(0.45)' }} />
-                ) : (
-                    <div className={`w-full h-full bg-gradient-to-br ${accentGrad} opacity-30`} />
-                )}
-                {/* gradient fade bottom */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0D0D1A]" />
+            {/* ── TOP NAV BAR ── */}
+            <div className="sticky top-0 bg-[#0D0D1A]/85 backdrop-blur-md z-30 border-b border-white/5">
+                <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+                    <button
+                        onClick={() => setPage(PAGES.FIND)}
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition"
+                    >
+                        <FiArrowLeft size={18} />
+                    </button>
+                    <span className="font-bold text-sm tracking-wide text-gray-200">
+                        {profile.name?.split(' ')[0]}'s Profile
+                    </span>
+                    
+                    {/* 3-DOT MENU BUTTON */}
+                    {currentUser && currentUser.id !== profile.id ? (
+                        <div ref={menuRef} className="relative">
+                            <button
+                                onClick={() => setShowMenu(prev => !prev)}
+                                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition"
+                            >
+                                <FiMoreVertical size={18} />
+                            </button>
 
-                {/* Back button */}
-                <button
-                    onClick={() => setPage(PAGES.FIND)}
-                    className="absolute top-4 left-4 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition z-10"
-                >
-                    <FiArrowLeft size={18} />
-                </button>
-
-                {/* 3-DOT MENU BUTTON */}
-                {currentUser && currentUser.id !== profile.id && (
-                    <div ref={menuRef} className="absolute top-4 right-4 z-20">
-                        <button
-                            onClick={() => setShowMenu(prev => !prev)}
-                            className="w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition"
-                        >
-                            <FiMoreVertical size={18} />
-                        </button>
-
-                        {/* Dropdown */}
-                        {showMenu && (
-                            <div className="absolute right-0 top-11 w-52 bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
-                                {/* Block / Unblock */}
-                                <button
-                                    onClick={handleBlockToggle}
-                                    disabled={blockLoading}
-                                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition group"
-                                >
-                                    <FiSlash size={16} className={isBlocked ? 'text-green-400' : 'text-red-400'} />
-                                    <span className={isBlocked ? 'text-green-300' : 'text-red-300'}>
-                                        {blockLoading ? 'Please wait...' : isBlocked ? `Unblock ${profile.name?.split(' ')[0]}` : `Block ${profile.name?.split(' ')[0]}`}
-                                    </span>
-                                </button>
-
-                                <div className="h-px bg-white/5 mx-3" />
-
-                                {/* Report */}
-                                <button
-                                    onClick={() => { setShowReportModal(true); setShowMenu(false); }}
-                                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition"
-                                >
-                                    <FiFlag size={16} className="text-orange-400" />
-                                    <span className="text-orange-300">Report {profile.name?.split(' ')[0]}</span>
-                                </button>
-
-                                <div className="h-px bg-white/5 mx-3" />
-
-                                {/* Share */}
-                                <button
-                                    onClick={handleShare}
-                                    className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition"
-                                >
-                                    <FiShare2 size={16} className="text-blue-400" />
-                                    <span className="text-blue-300">Share Profile</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            {/* Dropdown */}
+                            {showMenu && (
+                                <div className="absolute right-0 top-11 w-52 bg-[#16162A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                                    <button
+                                        onClick={handleBlockToggle}
+                                        disabled={blockLoading}
+                                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition group"
+                                    >
+                                        <FiSlash size={16} className={isBlocked ? 'text-green-400' : 'text-red-400'} />
+                                        <span className={isBlocked ? 'text-green-300' : 'text-red-300'}>
+                                            {blockLoading ? 'Please wait...' : isBlocked ? `Unblock ${profile.name?.split(' ')[0]}` : `Block ${profile.name?.split(' ')[0]}`}
+                                        </span>
+                                    </button>
+                                    <div className="h-px bg-white/5 mx-3" />
+                                    <button
+                                        onClick={() => { setShowReportModal(true); setShowMenu(false); }}
+                                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition"
+                                    >
+                                        <FiFlag size={16} className="text-orange-400" />
+                                        <span className="text-orange-300">Report {profile.name?.split(' ')[0]}</span>
+                                    </button>
+                                    <div className="h-px bg-white/5 mx-3" />
+                                    <button
+                                        onClick={handleShare}
+                                        className="w-full flex items-center gap-3 px-4 py-3.5 text-sm text-left hover:bg-white/5 transition"
+                                    >
+                                        <FiShare2 size={16} className="text-blue-400" />
+                                        <span className="text-blue-300">Share Profile</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="w-9 h-9"></div>
+                    )}
+                </div>
             </div>
 
-            {/* ── PROFILE PIC + NAME (Always visible) ── */}
-            <div className="relative z-10 max-w-2xl mx-auto px-4">
-
-                {/* Row: pic left + info right on SM+, stacked on mobile */}
-                <div className="flex flex-col sm:flex-row gap-4 -mt-12 sm:-mt-14 mb-4">
-
-                    {/* Profile pic with gradient ring */}
-                    <div
-                        className={`relative w-24 h-24 sm:w-32 sm:h-32 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 mx-auto sm:mx-0 bg-gradient-to-br ${accentGrad}`}
+            {/* ── INSTAGRAM LAYOUT HEADER ── */}
+            <div className="max-w-4xl mx-auto px-4 pt-6 md:pt-10">
+                <div className="flex flex-col md:flex-row gap-6 md:gap-20 items-center md:items-start pb-8 border-b border-white/5 mb-6">
+                    
+                    {/* Left: Avatar with gradient ring */}
+                    <div 
+                        className={`relative w-28 h-28 md:w-36 md:h-36 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 bg-gradient-to-br ${accentGrad}`}
                         onClick={() => profile.profile_pic && setExpandedPost({ image_url: profile.profile_pic, caption: `${firstName}'s Photo` })}
                     >
                         <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A]">
@@ -461,103 +450,108 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 </div>
                             )}
                         </div>
-                        {/* Real online dot */}
                         {isOnline && <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 border-2 border-[#0D0D1A] rounded-full" />}
                     </div>
 
-                    {/* Name + verified + info — always below pic or beside it */}
-                    <div className="flex-1 pt-2 text-center sm:text-left">
-                        <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                            <h1 className="text-2xl sm:text-3xl font-bold text-white">{profile.name}</h1>
-                            {profile.kyc_status === 'verified' && (
-                                <span className="flex items-center gap-1 text-[10px] bg-blue-500/20 text-blue-400 px-2.5 py-1 rounded-full font-bold border border-blue-500/30">
-                                    <FiShield size={10} /> Verified
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex items-center justify-center sm:justify-start gap-2 text-xs text-gray-400 mb-3 flex-wrap">
-                            <FiMapPin size={11} /> {profile.city || 'Unknown'}
-                            <span className="w-1 h-1 bg-gray-600 rounded-full" />
-                            {profile.age || 'N/A'} yrs
-                            <span className="w-1 h-1 bg-gray-600 rounded-full" />
-                            {isOnline ? (
-                                <span className="text-green-400 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" /> Online
-                                </span>
-                            ) : (
-                                <span className="text-gray-500 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full" /> Offline
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-center sm:justify-start gap-2">
-                            {currentUser && currentUser.id !== profile.id && (
+                    {/* Right: Profile Info Block */}
+                    <div className="flex-1 w-full flex flex-col items-center md:items-start text-center md:text-left">
+                        
+                        {/* Row 1: Username & Action Buttons */}
+                        <div className="flex flex-col sm:flex-row items-center gap-3.5 mb-4 w-full justify-center md:justify-start">
+                            <span className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                                {profile.name?.toLowerCase().replace(/\s+/g, '')}
+                                {profile.kyc_status === 'verified' && (
+                                    <span className="text-blue-400" title="Verified Companion">✔</span>
+                                )}
+                            </span>
+                            
+                            <div className="flex gap-2">
+                                {currentUser && currentUser.id !== profile.id && (
+                                    <button
+                                        onClick={handleFollowToggle}
+                                        disabled={followLoading}
+                                        className={`px-6 py-1.5 rounded-lg font-bold text-xs transition min-w-[90px] ${followStats.isFollowing
+                                            ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
+                                            : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-md`}`}
+                                    >
+                                        {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
+                                    </button>
+                                )}
                                 <button
-                                    onClick={handleFollowToggle}
-                                    disabled={followLoading}
-                                    className={`px-5 py-2 rounded-lg font-bold text-sm transition ${followStats.isFollowing
-                                        ? 'bg-white/10 text-white hover:bg-white/15 border border-white/20'
-                                        : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-lg`}`}
+                                    onClick={() => setPage(PAGES.CHAT)}
+                                    className="px-6 py-1.5 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center gap-1.5"
                                 >
-                                    {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
+                                    Message
                                 </button>
-                            )}
-                            <button
-                                onClick={() => setPage(PAGES.CHAT)}
-                                className="px-5 py-2 bg-white/10 border border-white/20 text-white rounded-lg font-bold text-sm hover:bg-white/15 transition flex items-center gap-1.5"
-                            >
-                                <FiMessageCircle size={14} /> Message
-                            </button>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* ── STATS ROW ── */}
-                <div className="flex items-center justify-around border-y border-white/5 py-4 mb-5">
-                    <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold text-white">{posts.length}</span>
-                        <span className="text-[11px] text-gray-400">Posts</span>
-                    </div>
-                    <div className="w-px h-8 bg-white/5" />
-                    <button 
-                        onClick={() => handleOpenFollowModal('followers')}
-                        className={`flex flex-col items-center outline-none ${canViewList ? 'cursor-pointer hover:opacity-80 transition-all' : 'opacity-60 cursor-not-allowed'}`}
-                    >
-                        <span className="text-lg font-bold text-white">{followStats.followers}</span>
-                        <span className="text-[11px] text-gray-400">Followers</span>
-                    </button>
-                    <div className="w-px h-8 bg-white/5" />
-                    <button 
-                        onClick={() => handleOpenFollowModal('following')}
-                        className={`flex flex-col items-center outline-none ${canViewList ? 'cursor-pointer hover:opacity-80 transition-all' : 'opacity-60 cursor-not-allowed'}`}
-                    >
-                        <span className="text-lg font-bold text-white">{followStats.following}</span>
-                        <span className="text-[11px] text-gray-400">Following</span>
-                    </button>
-                    <div className="w-px h-8 bg-white/5" />
-                    <div className="flex flex-col items-center">
-                        <span className="text-lg font-bold text-yellow-400 flex items-center gap-1">
-                            <FiStar size={14} className="fill-yellow-400" />
-                            {avgRating > 0 ? Number(avgRating).toFixed(1) : 'New'}
-                        </span>
-                        <span className="text-[11px] text-gray-400">{reviews.length} Reviews</span>
-                    </div>
-                </div>
+                        {/* Row 2: Inline Stats (like Instagram: 0 posts  30 followers  60 following) */}
+                        <div className="w-full flex justify-around md:justify-start gap-8 py-3.5 md:py-0 mb-4 border-y md:border-none border-white/5 text-xs text-gray-300">
+                            <div className="flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5">
+                                <span className="font-extrabold text-white text-sm">{posts.length}</span>
+                                <span className="text-gray-400">posts</span>
+                            </div>
+                            
+                            <button
+                                onClick={() => handleOpenFollowModal('followers')}
+                                className={`flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
+                            >
+                                <span className="font-extrabold text-white text-sm">{followStats.followers}</span>
+                                <span className="text-gray-400">followers</span>
+                            </button>
 
-                {/* Bio */}
-                {profile.bio && (
-                    <p className="text-sm text-gray-300 leading-relaxed mb-4">{profile.bio}</p>
-                )}
+                            <button
+                                onClick={() => handleOpenFollowModal('following')}
+                                className={`flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
+                            >
+                                <span className="font-extrabold text-white text-sm">{followStats.following}</span>
+                                <span className="text-gray-400">following</span>
+                            </button>
 
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-6">
-                    {safeTags.map((tag) => (
-                        <span key={tag} className="px-3 py-1.5 text-[11px] font-medium rounded-full" style={{ background: `${accentColor}18`, color: accentColor, border: `1px solid ${accentColor}30` }}>
-                            {tag.trim()}
-                        </span>
-                    ))}
+                            <div className="flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5">
+                                <span className="font-extrabold text-yellow-400 text-sm flex items-center gap-0.5">
+                                    ⭐ {avgRating > 0 ? Number(avgRating).toFixed(1) : 'New'}
+                                </span>
+                                <span className="text-gray-400">({reviews.length} reviews)</span>
+                            </div>
+                        </div>
+
+                        {/* Row 3 & 4: Full Name, Location, Age, Bio & Tags */}
+                        <div className="w-full space-y-1.5 text-xs md:text-sm text-gray-300">
+                            <div className="font-extrabold text-white text-sm">{profile.name}</div>
+                            
+                            <div className="flex items-center justify-center md:justify-start gap-1.5 text-gray-400 text-xs">
+                                <span>📍 {profile.city || 'Unknown'}</span>
+                                <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                                <span>{profile.age || 'N/A'} yrs</span>
+                                <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                                {isOnline ? (
+                                    <span className="text-green-400 font-bold">Online</span>
+                                ) : (
+                                    <span className="text-gray-500">Offline</span>
+                                )}
+                            </div>
+
+                            {profile.bio && (
+                                <p className="text-gray-300 leading-relaxed pt-1.5 text-xs">{profile.bio}</p>
+                            )}
+
+                            {/* Tags */}
+                            <div className="flex flex-wrap gap-1.5 pt-2 justify-center md:justify-start">
+                                {safeTags.map((tag) => (
+                                    <span 
+                                        key={tag} 
+                                        className="px-2.5 py-1 text-[10px] font-bold rounded-md" 
+                                        style={{ background: `${accentColor}12`, color: accentColor, border: `1px solid ${accentColor}25` }}
+                                    >
+                                        #{tag.trim()}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
 
                 {/* ── BOOKING SECTION ── */}
