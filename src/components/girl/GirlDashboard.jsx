@@ -403,7 +403,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
             {expandedPost && (
                 <InstagramPostModal 
-                    post={expandedPost}
+                    posts={myPosts}
+                    initialPostId={expandedPost.id}
                     postOwner={user}
                     currentUser={user}
                     onClose={() => setExpandedPost(null)}

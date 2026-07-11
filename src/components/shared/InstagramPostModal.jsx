@@ -1,63 +1,89 @@
-import React, { useState, useEffect } from "react";
-import { FiHeart, FiMessageCircle, FiX, FiTrash2, FiSend, FiShield } from "react-icons/fi";
+import React, { useState, useEffect, useRef } from "react";
+import { FiHeart, FiMessageCircle, FiX, FiTrash2, FiSend, FiMoreVertical, FiShare2, FiInfo, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 
-function InstagramPostModal({ post: initialPost, postOwner, currentUser, onClose, onDelete }) {
-    const [post, setPost] = useState(initialPost);
-    const [comments, setComments] = useState([]);
-    const [commentsLoading, setCommentsLoading] = useState(false);
-    const [newCommentText, setNewCommentText] = useState("");
-    const [likeLoading, setLikeLoading] = useState(false);
+function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser, onClose, onDelete }) {
+    // Current active post ID (used for Desktop navigation)
+    const [activePostId, setActivePostId] = useState(initialPostId);
+    
+    // Cache for comments & like details per post ID
+    const [postsDetails, setPostsDetails] = useState({});
+    const [commentsMap, setCommentsMap] = useState({});
+    const [newCommentTexts, setNewCommentTexts] = useState({});
+    
+    // Drawer/Sheet states
+    const [optionsPost, setOptionsPost] = useState(null); // Post for which 3-dots sheet is open
+    const [commentsPost, setCommentsPost] = useState(null); // Post for which mobile comments sheet is open
+    const [showAboutUser, setShowAboutUser] = useState(false); // "About this account" modal
 
     const token = localStorage.getItem("token");
+    const containerRef = useRef(null);
 
-    // Fetch comments and fresh post details (likes) on mount
+    // Get current active post index for desktop
+    const activeIndex = posts.findIndex(p => p.id === activePostId);
+    const activePost = posts[activeIndex] || posts[0] || {};
+
+    // 1. Fetch details (likes/status) & comments for a post
+    const loadPostDetails = async (postId) => {
+        if (!postId || postsDetails[postId]) return;
+        try {
+            const headers = {};
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/detail/${postId}`, { headers });
+            if (res.ok) {
+                const data = await res.json();
+                setPostsDetails(prev => ({ ...prev, [postId]: data }));
+            }
+        } catch (err) {
+            console.error("Error fetching post detail:", err);
+        }
+    };
+
+    const loadPostComments = async (postId) => {
+        if (!postId || commentsMap[postId]) return;
+        try {
+            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/comments/${postId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setCommentsMap(prev => ({ ...prev, [postId]: data }));
+            }
+        } catch (err) {
+            console.error("Error fetching comments:", err);
+        }
+    };
+
+    // Load active post details on desktop
     useEffect(() => {
-        if (!post?.id) return;
+        if (activePost?.id) {
+            loadPostDetails(activePost.id);
+            loadPostComments(activePost.id);
+        }
+    }, [activePostId, activePost?.id]);
 
-        const fetchPostDetails = async () => {
-            try {
-                const headers = {};
-                if (token) headers["Authorization"] = `Bearer ${token}`;
+    // On mobile: Load details for all visible posts and scroll to initial post
+    useEffect(() => {
+        if (posts.length > 0) {
+            posts.forEach(p => {
+                loadPostDetails(p.id);
+                loadPostComments(p.id);
+            });
 
-                // Fetch likes count and like status
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/detail/${post.id}`, { headers });
-                if (res.ok) {
-                    const data = await res.json();
-                    setPost(data);
+            // Scroll to the clicked post on mobile
+            setTimeout(() => {
+                const element = document.getElementById(`mobile-post-${initialPostId}`);
+                if (element) {
+                    element.scrollIntoView({ block: "start", behavior: "smooth" });
                 }
-            } catch (err) {
-                console.error("Error fetching post details:", err);
-            }
-        };
-
-        const fetchComments = async () => {
-            setCommentsLoading(true);
-            try {
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/comments/${post.id}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setComments(data);
-                }
-            } catch (err) {
-                console.error("Error fetching comments:", err);
-            } finally {
-                setCommentsLoading(false);
-            }
-        };
-
-        fetchPostDetails();
-        fetchComments();
-    }, [post.id, token]);
+            }, 300);
+        }
+    }, [posts, initialPostId]);
 
     // Handle Like Toggle
-    const handleLikeToggle = async () => {
+    const handleLikeToggle = async (postId) => {
         if (!currentUser) {
             alert("Please login to like this post!");
             return;
         }
-        if (likeLoading) return;
-        setLikeLoading(true);
 
         try {
             const res = await fetch("https://rentgf-and-bf.onrender.com/api/like", {
@@ -66,34 +92,40 @@ function InstagramPostModal({ post: initialPost, postOwner, currentUser, onClose
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ post_id: post.id })
+                body: JSON.stringify({ post_id: postId })
             });
 
             if (res.ok) {
                 const data = await res.json();
-                setPost(prev => ({
-                    ...prev,
-                    is_liked_by_me: data.isLiked,
-                    total_likes: data.isLiked 
-                        ? Number(prev.total_likes || 0) + 1 
-                        : Math.max(0, Number(prev.total_likes || 0) - 1)
-                }));
+                
+                // Update local postsDetails state
+                setPostsDetails(prev => {
+                    const currentDetail = prev[postId] || posts.find(p => p.id === postId) || {};
+                    const prevLikes = Number(currentDetail.total_likes || 0);
+                    return {
+                        ...prev,
+                        [postId]: {
+                            ...currentDetail,
+                            is_liked_by_me: data.isLiked,
+                            total_likes: data.isLiked ? prevLikes + 1 : Math.max(0, prevLikes - 1)
+                        }
+                    };
+                });
             }
         } catch (err) {
             console.error("Error liking post:", err);
-        } finally {
-            setLikeLoading(false);
         }
     };
 
-    // Handle Submit Comment
-    const handleAddComment = async (e) => {
+    // Submit Comment
+    const handleAddComment = async (e, postId) => {
         e.preventDefault();
         if (!currentUser) {
             alert("Please login to write a comment!");
             return;
         }
-        if (!newCommentText.trim()) return;
+        const commentText = newCommentTexts[postId] || "";
+        if (!commentText.trim()) return;
 
         try {
             const res = await fetch("https://rentgf-and-bf.onrender.com/api/comment", {
@@ -102,109 +134,148 @@ function InstagramPostModal({ post: initialPost, postOwner, currentUser, onClose
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ post_id: post.id, text: newCommentText })
+                body: JSON.stringify({ post_id: postId, text: commentText })
             });
 
             if (res.ok) {
                 const newComment = await res.json();
-                // Append user name/profile info mock to locally render comment instantly
                 const commentObj = {
                     ...newComment,
                     user_name: currentUser.name,
                     user_pic: currentUser.profile_pic
                 };
-                setComments(prev => [...prev, commentObj]);
-                setNewCommentText("");
+                
+                setCommentsMap(prev => ({
+                    ...prev,
+                    [postId]: [...(prev[postId] || []), commentObj]
+                }));
+                
+                setNewCommentTexts(prev => ({ ...prev, [postId]: "" }));
             } else {
                 const err = await res.json();
-                alert(err.error || "Inappropriate language found in comment. Please keep it clean.");
+                alert(err.error || "Inappropriate words found. Please keep comment clean.");
             }
         } catch (err) {
             console.error("Error posting comment:", err);
         }
     };
 
-    // Handle Delete Post
-    const handleDeleteClick = async () => {
-        if (onDelete) {
-            onDelete(post.id);
+    // Share link copy
+    const handleSharePost = (postId) => {
+        const shareUrl = `${window.location.origin}/post/${postId}`;
+        navigator.clipboard.writeText(shareUrl);
+        alert("🔗 Post link copied to clipboard!");
+        setOptionsPost(null);
+    };
+
+    // Delete post helper
+    const handleDeletePost = async (postId) => {
+        if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                if (onDelete) {
+                    onDelete(postId);
+                }
+                setOptionsPost(null);
+                // Close modal if no posts left, or select another post
+                const remaining = posts.filter(p => p.id !== postId);
+                if (remaining.length === 0) {
+                    onClose();
+                } else {
+                    setActivePostId(remaining[0].id);
+                }
+            }
+        } catch (err) {
+            console.error("Delete post error:", err);
         }
     };
 
-    const isOwner = currentUser?.id === postOwner?.id || currentUser?.id === post?.user_id;
+    const getPostDetails = (pId, fallbackPost) => {
+        return postsDetails[pId] || fallbackPost || {};
+    };
 
     return (
         <div 
-            className="fixed inset-0 z-[160] bg-black/90 backdrop-blur-md flex items-center justify-center p-0 md:p-6"
+            className="fixed inset-0 z-[160] bg-black/90 md:bg-black/80 backdrop-blur-md flex items-center justify-center p-0 md:p-6"
             onClick={onClose}
         >
-            {/* Modal Body Container */}
+            {/* ✕ CLOSE BUTTON FOR DESKTOP */}
+            <button 
+                onClick={onClose}
+                className="absolute top-4 right-4 z-50 hidden md:flex w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-white items-center justify-center transition"
+            >
+                <FiX size={20} />
+            </button>
+
+            {/* ── DESKTOP SPLIT NAVIGATION VIEW (Hidden on Mobile) ── */}
             <div 
-                className="bg-[#000000] md:bg-[#121224] border-0 md:border border-white/10 w-full h-full md:h-auto md:max-h-[90vh] max-w-5xl md:rounded-2xl overflow-hidden flex flex-col md:flex-row relative"
+                className="hidden md:flex bg-[#121224] border border-white/10 w-full max-w-4xl h-auto max-h-[85vh] rounded-2xl overflow-hidden relative shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* 1. IMAGE COLUMN (Left on desktop, middle on mobile) */}
-                <div className="flex-1 bg-black flex items-center justify-center relative min-h-[30vh] max-h-[50vh] md:max-h-none overflow-hidden aspect-square md:aspect-auto">
-                    {/* Back Button for mobile top-left */}
+                {/* Desktop Left/Right Navigation Arrows */}
+                {activeIndex > 0 && (
                     <button 
-                        onClick={onClose}
-                        className="absolute top-4 left-4 z-10 w-8 h-8 rounded-full bg-black/60 text-white flex md:hidden items-center justify-center transition"
+                        onClick={() => setActivePostId(posts[activeIndex - 1].id)}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition border border-white/5"
                     >
-                        ✕
+                        <FiChevronLeft size={22} />
                     </button>
-                    
+                )}
+                {activeIndex < posts.length - 1 && (
+                    <button 
+                        onClick={() => setActivePostId(posts[activeIndex + 1].id)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition border border-white/5"
+                    >
+                        <FiChevronRight size={22} />
+                    </button>
+                )}
+
+                {/* Left Column: Image */}
+                <div className="flex-1 bg-black flex items-center justify-center aspect-square overflow-hidden max-h-[75vh]">
                     <img 
-                        src={post.image_url} 
-                        alt="Instagram Post" 
+                        src={activePost.image_url} 
+                        alt="" 
                         className="w-full h-full object-contain"
-                        onDoubleClick={handleLikeToggle}
+                        onDoubleClick={() => handleLikeToggle(activePost.id)}
                     />
                 </div>
 
-                {/* 2. DASHBOARD COLUMN (Right on desktop, below image on mobile) */}
-                <div className="w-full md:w-[420px] shrink-0 flex flex-col bg-[#121224] border-t md:border-t-0 md:border-l border-white/5 flex-1 md:flex-initial">
-                    
+                {/* Right Column: Panel */}
+                <div className="w-[380px] shrink-0 flex flex-col bg-[#121224] border-l border-white/5">
                     {/* Header */}
                     <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 bg-[#16162A]">
                         <div className="flex items-center gap-3">
                             {postOwner?.profile_pic ? (
                                 <img src={postOwner.profile_pic} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
                             ) : (
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shadow-inner">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shrink-0">
                                     {postOwner?.name?.[0]?.toUpperCase()}
                                 </div>
                             )}
                             <div>
                                 <span className="font-bold text-white text-xs block truncate max-w-[150px]">
-                                    {postOwner?.name || post.user_name}
+                                    {postOwner?.name || activePost.user_name}
                                 </span>
-                                <span className="text-[9px] text-gray-500 block">📍 {postOwner?.city || post.user_city || "Companion App"}</span>
+                                <span className="text-[9px] text-gray-500 block">📍 {postOwner?.city || "Companion App"}</span>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            {/* Post delete capability */}
-                            {isOwner && (
-                                <button
-                                    onClick={handleDeleteClick}
-                                    className="w-8 h-8 rounded-full bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white flex items-center justify-center transition"
-                                    title="Delete Post"
-                                >
-                                    <FiTrash2 size={13} />
-                                </button>
-                            )}
-                            <button
-                                onClick={onClose}
-                                className="hidden md:flex w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white items-center justify-center transition"
-                            >
-                                <FiX size={15} />
-                            </button>
-                        </div>
+                        
+                        {/* 3-Dot options button */}
+                        <button 
+                            onClick={() => setOptionsPost(activePost)}
+                            className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition"
+                        >
+                            <FiMoreVertical size={16} />
+                        </button>
                     </div>
 
-                    {/* Scrollable Comments/Details list */}
-                    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 custom-scrollbar min-h-[150px] md:min-h-0">
-                        {/* Post Owner's Caption as the first comment */}
-                        {post.caption && (
+                    {/* Comments list */}
+                    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 custom-scrollbar">
+                        {activePost.caption && (
                             <div className="flex gap-3 items-start pb-3.5 border-b border-white/5">
                                 {postOwner?.profile_pic ? (
                                     <img src={postOwner.profile_pic} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
@@ -215,18 +286,15 @@ function InstagramPostModal({ post: initialPost, postOwner, currentUser, onClose
                                 )}
                                 <div className="text-xs text-gray-300 leading-relaxed">
                                     <span className="font-extrabold text-white mr-1.5">{postOwner?.name?.split(' ')[0]}</span>
-                                    {post.caption}
+                                    {activePost.caption}
                                 </div>
                             </div>
                         )}
 
-                        {/* Loading comments */}
-                        {commentsLoading ? (
-                            <div className="text-center py-6 text-xs text-gray-500 animate-pulse">Loading comments...</div>
-                        ) : comments.length === 0 ? (
-                            <div className="text-center py-8 text-xs text-gray-500">No comments yet. Be the first to reply!</div>
+                        {commentsMap[activePost.id]?.length === 0 ? (
+                            <div className="text-center py-8 text-xs text-gray-500">No comments yet.</div>
                         ) : (
-                            comments.map((comment) => (
+                            commentsMap[activePost.id]?.map((comment) => (
                                 <div key={comment.id} className="flex gap-3 items-start text-xs text-gray-300">
                                     {comment.user_pic ? (
                                         <img src={comment.user_pic} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/5" />
@@ -247,17 +315,16 @@ function InstagramPostModal({ post: initialPost, postOwner, currentUser, onClose
                         )}
                     </div>
 
-                    {/* Bottom panel (Likes actions, comments counter, comments input form) */}
+                    {/* Bottom panel */}
                     <div className="p-4 border-t border-white/5 bg-[#16162A]/60">
-                        {/* Action Buttons Row */}
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex gap-4">
                                 <button 
-                                    onClick={handleLikeToggle}
-                                    className={`focus:scale-125 transition ${post.is_liked_by_me ? 'text-red-500' : 'text-white hover:text-gray-400'}`}
+                                    onClick={() => handleLikeToggle(activePost.id)}
+                                    className={`focus:scale-125 transition ${getPostDetails(activePost.id, activePost).is_liked_by_me ? 'text-red-500' : 'text-white hover:text-gray-400'}`}
                                 >
-                                    {post.is_liked_by_me ? (
-                                        <FaHeart size={20} className="fill-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
+                                    {getPostDetails(activePost.id, activePost).is_liked_by_me ? (
+                                        <FaHeart size={20} className="fill-red-500" />
                                     ) : (
                                         <FiHeart size={20} />
                                     )}
@@ -268,32 +335,299 @@ function InstagramPostModal({ post: initialPost, postOwner, currentUser, onClose
                             </div>
                         </div>
 
-                        {/* Likes counter text */}
                         <div className="text-xs font-extrabold text-white mb-1.5">
-                            {post.total_likes || 0} {(post.total_likes === 1) ? 'like' : 'likes'}
+                            {getPostDetails(activePost.id, activePost).total_likes || 0} likes
                         </div>
 
-                        {/* Form to submit comments */}
-                        <form onSubmit={handleAddComment} className="flex gap-2 items-center mt-3">
+                        <form onSubmit={(e) => handleAddComment(e, activePost.id)} className="flex gap-2 items-center mt-3">
                             <input 
                                 type="text"
-                                value={newCommentText}
-                                onChange={(e) => setNewCommentText(e.target.value)}
+                                value={newCommentTexts[activePost.id] || ""}
+                                onChange={(e) => setNewCommentTexts(prev => ({ ...prev, [activePost.id]: e.target.value }))}
                                 placeholder="Add a comment..."
-                                className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition placeholder-gray-600"
+                                className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
                             />
                             <button 
                                 type="submit" 
-                                disabled={!newCommentText.trim()}
-                                className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+                                disabled={!(newCommentTexts[activePost.id] || "").trim()}
+                                className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 shrink-0"
                             >
                                 <FiSend size={12} />
                             </button>
                         </form>
                     </div>
-
                 </div>
             </div>
+
+            {/* ── MOBILE VERTICAL SCROLLABLE POST FEED (Visible on Mobile) ── */}
+            <div 
+                className="flex md:hidden flex-col bg-[#0D0D1A] w-full h-full overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+                ref={containerRef}
+            >
+                {/* Mobile Sticky Title bar */}
+                <div className="sticky top-0 bg-[#0D0D1A]/95 border-b border-white/5 h-12 flex items-center px-4 justify-between z-30">
+                    <button onClick={onClose} className="text-white text-lg font-bold">←</button>
+                    <span className="font-extrabold text-xs text-gray-200">Posts Feed</span>
+                    <div className="w-6"></div>
+                </div>
+
+                {/* Stacks of posts vertically */}
+                <div className="flex-1 space-y-8 pb-16 pt-2">
+                    {posts.map((p) => {
+                        const details = getPostDetails(p.id, p);
+                        return (
+                            <div 
+                                key={p.id} 
+                                id={`mobile-post-${p.id}`}
+                                className="border-b border-white/5 pb-6 bg-[#121224]/30"
+                            >
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-4 py-3 bg-[#121224]/40">
+                                    <div className="flex items-center gap-3">
+                                        {postOwner?.profile_pic ? (
+                                            <img src={postOwner.profile_pic} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shrink-0">
+                                                {postOwner?.name?.[0]?.toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <span className="font-extrabold text-white text-xs block">{postOwner?.name?.split(' ')[0]}</span>
+                                            <span className="text-[8px] text-gray-500 block">📍 {postOwner?.city || "Companion"}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* 3-dots button */}
+                                    <button 
+                                        onClick={() => setOptionsPost(p)}
+                                        className="w-8 h-8 rounded-full bg-white/5 text-gray-400 flex items-center justify-center transition"
+                                    >
+                                        <FiMoreVertical size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Post Image */}
+                                <div className="bg-black/50 aspect-square w-full flex items-center justify-center overflow-hidden">
+                                    <img 
+                                        src={p.image_url} 
+                                        alt="" 
+                                        className="w-full h-full object-cover"
+                                        onDoubleClick={() => handleLikeToggle(p.id)}
+                                    />
+                                </div>
+
+                                {/* Action Buttons Panel */}
+                                <div className="px-4 py-3">
+                                    <div className="flex gap-4 mb-2">
+                                        <button 
+                                            onClick={() => handleLikeToggle(p.id)}
+                                            className={`focus:scale-125 transition ${details.is_liked_by_me ? 'text-red-500' : 'text-white'}`}
+                                        >
+                                            {details.is_liked_by_me ? (
+                                                <FaHeart size={22} className="fill-red-500" />
+                                            ) : (
+                                                <FiHeart size={22} />
+                                            )}
+                                        </button>
+                                        <button 
+                                            onClick={() => setCommentsPost(p)}
+                                            className="text-white hover:text-gray-400"
+                                        >
+                                            <FiMessageCircle size={22} />
+                                        </button>
+                                    </div>
+
+                                    {/* Likes count */}
+                                    <div className="text-xs font-bold text-white mb-2">
+                                        {details.total_likes || 0} likes
+                                    </div>
+
+                                    {/* Caption block */}
+                                    {p.caption && (
+                                        <p className="text-xs text-gray-300 leading-relaxed mb-3">
+                                            <span className="font-extrabold text-white mr-1.5">{postOwner?.name?.split(' ')[0]}</span>
+                                            {p.caption}
+                                        </p>
+                                    )}
+
+                                    {/* Comments link triggers comments sheet */}
+                                    <button 
+                                        onClick={() => setCommentsPost(p)}
+                                        className="text-[10px] text-gray-500 font-semibold cursor-pointer hover:underline block"
+                                    >
+                                        View all {commentsMap[p.id]?.length || 0} comments...
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* ─── OPTIONS BOTTOM SHEET (3-DOT OPTIONS POPUP) ─── */}
+            {optionsPost && (
+                <div 
+                    className="fixed inset-0 bg-black/60 z-[220] flex items-end justify-center animate-fade-in"
+                    onClick={() => setOptionsPost(null)}
+                >
+                    <div 
+                        className="bg-[#121224] border-t border-white/10 w-full max-w-md rounded-t-3xl overflow-hidden animate-slide-up flex flex-col p-4 space-y-2 pb-6"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Decoration bar */}
+                        <div className="w-10 h-1 bg-white/15 rounded-full mx-auto mb-3" />
+
+                        {/* Options */}
+                        {(currentUser?.id === optionsPost.user_id || currentUser?.id === postOwner?.id) && (
+                            <button 
+                                onClick={() => handleDeletePost(optionsPost.id)}
+                                className="w-full py-4 text-center text-red-500 font-extrabold text-xs hover:bg-white/5 rounded-xl transition-all"
+                            >
+                                Delete Post 🗑️
+                            </button>
+                        )}
+                        
+                        <button 
+                            onClick={() => { setShowAboutUser(true); setOptionsPost(null); }}
+                            className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all"
+                        >
+                            About this profile ℹ️
+                        </button>
+                        
+                        <button 
+                            onClick={() => handleSharePost(optionsPost.id)}
+                            className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all"
+                        >
+                            Copy Link 🔗
+                        </button>
+                        
+                        <button 
+                            onClick={() => setOptionsPost(null)}
+                            className="w-full py-4 text-center text-gray-400 font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── ABOUT USER DETAILS MODAL ─── */}
+            {showAboutUser && (
+                <div 
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[230] flex items-center justify-center p-4"
+                    onClick={() => setShowAboutUser(false)}
+                >
+                    <div 
+                        className="bg-[#121224] border border-white/10 w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl p-6 text-center animate-scale-up"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl">
+                            ℹ️
+                        </div>
+                        <h4 className="font-extrabold text-white text-sm mb-1">About This Account</h4>
+                        <p className="text-[10px] text-gray-500 mb-5">Verify information for {postOwner?.name}</p>
+
+                        <div className="space-y-3 text-left text-xs mb-6 bg-white/5 p-4 rounded-xl border border-white/5">
+                            <div>
+                                <span className="text-gray-500 block text-[9px] uppercase font-bold">Full Name</span>
+                                <span className="font-bold text-white">{postOwner?.name}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500 block text-[9px] uppercase font-bold">Category Role</span>
+                                <span className="font-bold text-pink-400 capitalize">{postOwner?.role}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-500 block text-[9px] uppercase font-bold">KYC status</span>
+                                <span className={`font-bold capitalize ${postOwner?.kyc_status === 'verified' ? 'text-green-400' : 'text-yellow-400'}`}>
+                                    {postOwner?.kyc_status || 'Pending'}
+                                </span>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={() => setShowAboutUser(false)}
+                            className="w-full py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-extrabold text-white text-xs shadow-lg hover:opacity-90 transition"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── MOBILE COMMENTS BOTTOM DRAWER SHEET ─── */}
+            {commentsPost && (
+                <div 
+                    className="fixed inset-0 bg-black/75 z-[210] flex items-end justify-center animate-fade-in"
+                    onClick={() => setCommentsPost(null)}
+                >
+                    <div 
+                        className="bg-[#121224] border-t border-white/10 w-full h-[65vh] rounded-t-3xl overflow-hidden animate-slide-up flex flex-col"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Drag indicator decoration */}
+                        <div className="w-10 h-1 bg-white/15 rounded-full mx-auto my-3 shrink-0" />
+                        
+                        {/* Header */}
+                        <div className="px-4 pb-3 border-b border-white/5 flex justify-between items-center shrink-0">
+                            <span className="font-bold text-xs text-white">Comments</span>
+                            <button 
+                                onClick={() => setCommentsPost(null)}
+                                className="w-7 h-7 rounded-full bg-white/5 text-gray-400 flex items-center justify-center"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Comments scrollable list */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                            {commentsMap[commentsPost.id]?.length === 0 ? (
+                                <div className="text-center py-12 text-xs text-gray-500">No comments yet.</div>
+                            ) : (
+                                commentsMap[commentsPost.id]?.map((comment) => (
+                                    <div key={comment.id} className="flex gap-3 items-start text-xs text-gray-300">
+                                        {comment.user_pic ? (
+                                            <img src={comment.user_pic} alt="" className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/5" />
+                                        ) : (
+                                            <div className="w-7 h-7 rounded-full bg-[#16162A] border border-white/10 flex items-center justify-center text-white text-[9px] font-black shrink-0">
+                                                {comment.user_name?.[0]?.toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 leading-relaxed">
+                                            <span className="font-bold text-white mr-1.5">{comment.user_name?.split(' ')[0]}</span>
+                                            {comment.text}
+                                            <span className="block text-[8px] text-gray-500 mt-1">
+                                                {new Date(comment.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Text comment form */}
+                        <div className="p-4 border-t border-white/5 bg-[#16162A] shrink-0">
+                            <form onSubmit={(e) => { handleAddComment(e, commentsPost.id); }} className="flex gap-2 items-center">
+                                <input 
+                                    type="text"
+                                    value={newCommentTexts[commentsPost.id] || ""}
+                                    onChange={(e) => setNewCommentTexts(prev => ({ ...prev, [commentsPost.id]: e.target.value }))}
+                                    placeholder="Add a comment..."
+                                    className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={!(newCommentTexts[commentsPost.id] || "").trim()}
+                                    className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 shrink-0"
+                                >
+                                    <FiSend size={12} />
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 }

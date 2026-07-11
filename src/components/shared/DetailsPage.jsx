@@ -796,7 +796,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
             {/* ── EXPANDED POST ── */}
             {expandedPost && (
                 <InstagramPostModal 
-                    post={expandedPost}
+                    posts={posts}
+                    initialPostId={expandedPost.id}
                     postOwner={profile}
                     currentUser={currentUser}
                     onClose={() => setExpandedPost(null)}
