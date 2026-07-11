@@ -345,7 +345,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                                         setFormData({ ...formData, username: val });
                                     }} 
                                     required 
-                                    placeholder="e.g. alka_patel"
+                                    placeholder="e.g. your_username"
                                     className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} 
                                 />
                                 <span className="text-[10px] text-gray-500 block mt-1 ml-1">Must be unique. Lowercase, numbers, underscores ( _ ) and dots ( . ) only.</span>
