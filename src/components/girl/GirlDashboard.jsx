@@ -189,7 +189,11 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     const handleDeletePost = async (postId) => {
         if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { method: "DELETE" });
+            const token = localStorage.getItem("token");
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { 
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
             if (response.ok) {
                 setMyPosts(myPosts.filter(post => post.id !== postId));
                 setExpandedPost(null);
