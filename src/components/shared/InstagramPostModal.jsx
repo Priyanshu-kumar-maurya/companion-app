@@ -291,7 +291,9 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                             </div>
                         )}
 
-                        {commentsMap[activePost.id]?.length === 0 ? (
+                        {activePost.disable_comments ? (
+                            <div className="text-center py-12 text-xs text-gray-500 italic">Comments are turned off for this post.</div>
+                        ) : commentsMap[activePost.id]?.length === 0 ? (
                             <div className="text-center py-8 text-xs text-gray-500">No comments yet.</div>
                         ) : (
                             commentsMap[activePost.id]?.map((comment) => (
@@ -329,32 +331,40 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                                         <FiHeart size={20} />
                                     )}
                                 </button>
-                                <button className="text-white hover:text-gray-400">
-                                    <FiMessageCircle size={20} />
-                                </button>
+                                {!activePost.disable_comments && (
+                                    <button className="text-white hover:text-gray-400">
+                                        <FiMessageCircle size={20} />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
-                        <div className="text-xs font-extrabold text-white mb-1.5">
-                            {getPostDetails(activePost.id, activePost).total_likes || 0} likes
-                        </div>
+                        {!activePost.hide_likes && (
+                            <div className="text-xs font-extrabold text-white mb-1.5">
+                                {getPostDetails(activePost.id, activePost).total_likes || 0} likes
+                            </div>
+                        )}
 
-                        <form onSubmit={(e) => handleAddComment(e, activePost.id)} className="flex gap-2 items-center mt-3">
-                            <input 
-                                type="text"
-                                value={newCommentTexts[activePost.id] || ""}
-                                onChange={(e) => setNewCommentTexts(prev => ({ ...prev, [activePost.id]: e.target.value }))}
-                                placeholder="Add a comment..."
-                                className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
-                            />
-                            <button 
-                                type="submit" 
-                                disabled={!(newCommentTexts[activePost.id] || "").trim()}
-                                className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 shrink-0"
-                            >
-                                <FiSend size={12} />
-                            </button>
-                        </form>
+                        {!activePost.disable_comments ? (
+                            <form onSubmit={(e) => handleAddComment(e, activePost.id)} className="flex gap-2 items-center mt-3">
+                                <input 
+                                    type="text"
+                                    value={newCommentTexts[activePost.id] || ""}
+                                    onChange={(e) => setNewCommentTexts(prev => ({ ...prev, [activePost.id]: e.target.value }))}
+                                    placeholder="Add a comment..."
+                                    className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
+                                />
+                                <button 
+                                    type="submit" 
+                                    disabled={!(newCommentTexts[activePost.id] || "").trim()}
+                                    className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 shrink-0"
+                                >
+                                    <FiSend size={12} />
+                                </button>
+                            </form>
+                        ) : (
+                            <div className="text-center py-2 text-xs text-gray-500 italic border-t border-white/5 mt-3 pt-3">Comments are turned off.</div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -430,18 +440,22 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                                                 <FiHeart size={22} />
                                             )}
                                         </button>
-                                        <button 
-                                            onClick={() => setCommentsPost(p)}
-                                            className="text-white hover:text-gray-400"
-                                        >
-                                            <FiMessageCircle size={22} />
-                                        </button>
+                                        {!p.disable_comments && (
+                                            <button 
+                                                onClick={() => setCommentsPost(p)}
+                                                className="text-white hover:text-gray-400"
+                                            >
+                                                <FiMessageCircle size={22} />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {/* Likes count */}
-                                    <div className="text-xs font-bold text-white mb-2">
-                                        {details.total_likes || 0} likes
-                                    </div>
+                                    {!p.hide_likes && (
+                                        <div className="text-xs font-bold text-white mb-2">
+                                            {details.total_likes || 0} likes
+                                        </div>
+                                    )}
 
                                     {/* Caption block */}
                                     {p.caption && (
@@ -452,12 +466,16 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                                     )}
 
                                     {/* Comments link triggers comments sheet */}
-                                    <button 
-                                        onClick={() => setCommentsPost(p)}
-                                        className="text-[10px] text-gray-500 font-semibold cursor-pointer hover:underline block"
-                                    >
-                                        View all {commentsMap[p.id]?.length || 0} comments...
-                                    </button>
+                                    {!p.disable_comments ? (
+                                        <button 
+                                            onClick={() => setCommentsPost(p)}
+                                            className="text-[10px] text-gray-500 font-semibold cursor-pointer hover:underline block"
+                                        >
+                                            View all {commentsMap[p.id]?.length || 0} comments...
+                                        </button>
+                                    ) : (
+                                        <div className="text-[10px] text-gray-600 italic block">Comments are turned off.</div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -607,22 +625,26 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
 
                         {/* Text comment form */}
                         <div className="p-4 border-t border-white/5 bg-[#16162A] shrink-0">
-                            <form onSubmit={(e) => { handleAddComment(e, commentsPost.id); }} className="flex gap-2 items-center">
-                                <input 
-                                    type="text"
-                                    value={newCommentTexts[commentsPost.id] || ""}
-                                    onChange={(e) => setNewCommentTexts(prev => ({ ...prev, [commentsPost.id]: e.target.value }))}
-                                    placeholder="Add a comment..."
-                                    className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
-                                />
-                                <button 
-                                    type="submit" 
-                                    disabled={!(newCommentTexts[commentsPost.id] || "").trim()}
-                                    className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 shrink-0"
-                                >
-                                    <FiSend size={12} />
-                                </button>
-                            </form>
+                            {!commentsPost.disable_comments ? (
+                                <form onSubmit={(e) => { handleAddComment(e, commentsPost.id); }} className="flex gap-2 items-center">
+                                    <input 
+                                        type="text"
+                                        value={newCommentTexts[commentsPost.id] || ""}
+                                        onChange={(e) => setNewCommentTexts(prev => ({ ...prev, [commentsPost.id]: e.target.value }))}
+                                        placeholder="Add a comment..."
+                                        className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
+                                    />
+                                    <button 
+                                        type="submit" 
+                                        disabled={!(newCommentTexts[commentsPost.id] || "").trim()}
+                                        className="w-8 h-8 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white flex items-center justify-center transition disabled:opacity-30 shrink-0"
+                                    >
+                                        <FiSend size={12} />
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="text-center py-2 text-xs text-gray-500 italic">Comments are turned off for this post.</div>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -63,7 +63,7 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
 
         if (!req.file) return res.status(400).json({ error: "Photo select karna zaroori hai!" });
 
-        const { caption } = req.body;
+        const { caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes } = req.body;
 
         // Sanitize caption — strip HTML
         let safeCaption = (caption || "").replace(/<[^>]*>/g, '').slice(0, 500);
@@ -81,11 +81,24 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
 
         const mediaUrl = req.file.path;
         const newPost = await pool.query(
-            "INSERT INTO posts (user_id, image_url, caption) VALUES ($1, $2, $3) RETURNING *",
-            [userId, mediaUrl, safeCaption]
+            `INSERT INTO posts 
+             (user_id, image_url, caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+             RETURNING *`,
+            [
+                userId, 
+                mediaUrl, 
+                safeCaption, 
+                show_on_feed !== 'false', 
+                show_on_profile !== 'false', 
+                followers_only === 'true', 
+                disable_comments === 'true', 
+                hide_likes === 'true'
+            ]
         );
         res.status(201).json({ message: "Post live ho gayi!", post: newPost.rows[0] });
     } catch (err) {
+        console.error("Create post error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -100,13 +113,39 @@ router.post('/chat-image', authenticateToken, upload.single('image'), (req, res)
     }
 });
 
-// ─── GET POSTS BY USER — Public ───────────────────────────────
+// ─── GET POSTS BY USER — Public / Owned ───────────────────────────────
 router.get('/posts/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const posts = await pool.query("SELECT * FROM posts WHERE user_id = $1 ORDER BY created_at DESC", [userId]);
+
+        let currentUserId = null;
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                currentUserId = decoded.id;
+            } catch (e) {}
+        }
+
+        let query = `
+            SELECT * FROM posts 
+            WHERE user_id = $1 
+        `;
+        const params = [userId];
+
+        if (parseInt(currentUserId) !== parseInt(userId)) {
+            query += ` AND show_on_profile = true `;
+            // Also filter followers_only posts if not following
+            query += ` AND (followers_only = false OR EXISTS(SELECT 1 FROM follows WHERE follower_id = $2 AND following_id = $1)) `;
+            params.push(currentUserId);
+        }
+
+        query += ` ORDER BY created_at DESC `;
+        const posts = await pool.query(query, params);
         res.status(200).json(posts.rows);
     } catch (err) {
+        console.error("Get user posts error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -174,7 +213,7 @@ router.get('/feed', async (req, res) => {
         const { currentUserId } = req.query;
         const feedQuery = `
             SELECT 
-                p.id, p.image_url, p.caption, p.created_at,
+                p.id, p.image_url, p.caption, p.created_at, p.disable_comments, p.hide_likes,
                 u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
@@ -183,6 +222,12 @@ router.get('/feed', async (req, res) => {
                 EXISTS(SELECT 1 FROM saved_posts WHERE post_id = p.id AND user_id = $1) as is_saved_by_me
             FROM posts p
             JOIN users u ON p.user_id = u.id
+            WHERE p.show_on_feed = true 
+              AND (
+                p.followers_only = false 
+                OR p.user_id = $1 
+                OR EXISTS(SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = p.user_id)
+              )
             ORDER BY p.created_at DESC
             LIMIT 50;
         `;

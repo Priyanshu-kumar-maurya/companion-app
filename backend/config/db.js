@@ -29,6 +29,11 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_blocked BOOLEAN DEFAULT false;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(20);");
+        await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS show_on_feed BOOLEAN DEFAULT true;");
+        await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS show_on_profile BOOLEAN DEFAULT true;");
+        await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS followers_only BOOLEAN DEFAULT false;");
+        await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS disable_comments BOOLEAN DEFAULT false;");
+        await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS hide_likes BOOLEAN DEFAULT false;");
         
         // --- Username Column Migration & Unique Constraint ---
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");

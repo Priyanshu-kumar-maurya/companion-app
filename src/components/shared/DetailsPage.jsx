@@ -209,7 +209,10 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
             const canViewPrivate = !profile.is_private || fetchedFollowStats.isFollowing || profile.id === currentUser?.id;
             if (canViewPrivate) {
                 try {
-                    const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`);
+                    const token = localStorage.getItem("token");
+                    const headers = {};
+                    if (token) headers["Authorization"] = `Bearer ${token}`;
+                    const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`, { headers });
                     if (postRes.ok) fetchedPosts = await postRes.json();
                 } catch (err) {
                     console.error(err);

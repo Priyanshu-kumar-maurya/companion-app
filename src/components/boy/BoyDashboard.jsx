@@ -45,7 +45,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 let fetchedFollowStats = { followers: 0, following: 0 };
                 let fetchedReviews = [];
 
-                const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`);
+                const token = localStorage.getItem("token");
+                const postsHeaders = {};
+                if (token) postsHeaders["Authorization"] = `Bearer ${token}`;
+                const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, { headers: postsHeaders });
                 if (postsRes.ok) fetchedPosts = await postsRes.json();
 
                 const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {

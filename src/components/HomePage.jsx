@@ -367,9 +367,11 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                                     : <AiOutlineHeart className="text-white text-2xl" />
                                                 }
                                             </button>
-                                            <button onClick={() => openComments(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
-                                                <FaRegComment className="text-white text-2xl" />
-                                            </button>
+                                            {!post.disable_comments && (
+                                                <button onClick={() => openComments(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
+                                                    <FaRegComment className="text-white text-2xl" />
+                                                </button>
+                                            )}
                                             <button onClick={() => handleShare(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
                                                 <RiShareForwardLine className="text-white text-2xl" />
                                             </button>
@@ -382,9 +384,11 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         </button>
                                     </div>
 
-                                    <div className="font-bold text-sm text-white mb-1">
-                                        {post.total_likes} likes
-                                    </div>
+                                    {!post.hide_likes && (
+                                        <div className="font-bold text-sm text-white mb-1">
+                                            {post.total_likes} likes
+                                        </div>
+                                    )}
 
                                     <div className="text-sm text-gray-200">
                                         <span className="font-bold mr-2 cursor-pointer hover:text-pink-400" onClick={() => handleProfileClick(post)}>
@@ -393,7 +397,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         {post.caption}
                                     </div>
 
-                                    {parseInt(post.total_comments) > 0 && (
+                                    {!post.disable_comments && parseInt(post.total_comments) > 0 && (
                                         <div
                                             onClick={() => openComments(post.id)}
                                             className="text-gray-500 text-sm mt-2 cursor-pointer hover:text-gray-400"

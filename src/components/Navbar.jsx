@@ -11,6 +11,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     const [isPosting, setIsPosting] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
 
+    // Instagram style post destinations & settings
+    const [showOnFeed, setShowOnFeed] = useState(true);
+    const [showOnProfile, setShowOnProfile] = useState(true);
+    const [followersOnly, setFollowersOnly] = useState(false);
+    const [disableComments, setDisableComments] = useState(false);
+    const [hideLikes, setHideLikes] = useState(false);
+
     const currentUser = boyUser || girlUser || adminUser;
     const isBoy = boyUser !== null;
     const isAdmin = adminUser !== null;
@@ -89,6 +96,11 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         setPostFile(null);
         setPostPreview(null);
         setPostCaption("");
+        setShowOnFeed(true);
+        setShowOnProfile(true);
+        setFollowersOnly(false);
+        setDisableComments(false);
+        setHideLikes(false);
     };
 
     const handlePostSubmit = async () => {
@@ -97,6 +109,11 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         const formData = new FormData();
         formData.append("post_image", postFile);
         formData.append("caption", postCaption);
+        formData.append("show_on_feed", showOnFeed);
+        formData.append("show_on_profile", showOnProfile);
+        formData.append("followers_only", followersOnly);
+        formData.append("disable_comments", disableComments);
+        formData.append("hide_likes", hideLikes);
 
         try {
             const token = localStorage.getItem('token');
@@ -329,8 +346,93 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                             placeholder="Write a caption..."
                                             value={postCaption}
                                             onChange={(e) => setPostCaption(e.target.value)}
-                                            className="flex-1 bg-transparent border-b border-white/10 p-2 text-sm text-white resize-none h-20 outline-none transition focus:border-pink-500"
+                                            className={`flex-1 bg-transparent border-b border-white/10 p-2 text-sm text-white resize-none h-20 outline-none transition ${currentUser?.role === 'girl' ? 'focus:border-pink-500' : 'focus:border-blue-500'}`}
                                         />
+                                    </div>
+
+                                    {/* Instagram style options block */}
+                                    <div className="mt-4 border-t border-white/10 pt-4 flex flex-col gap-3.5 pb-2">
+                                        <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Post Settings & Options</h4>
+                                        
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-white">Show on Explore Feed</div>
+                                                <div className="text-[11px] text-gray-500">Make visible in the global Explore / Find feed.</div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={showOnFeed} 
+                                                    onChange={(e) => setShowOnFeed(e.target.checked)} 
+                                                    className="sr-only peer" 
+                                                />
+                                                <div className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === 'girl' ? 'peer-checked:bg-pink-500' : 'peer-checked:bg-blue-500'}`}></div>
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-white">Show on Profile Grid</div>
+                                                <div className="text-[11px] text-gray-500">Show this photo in your profile gallery grid.</div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={showOnProfile} 
+                                                    onChange={(e) => setShowOnProfile(e.target.checked)} 
+                                                    className="sr-only peer" 
+                                                />
+                                                <div className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === 'girl' ? 'peer-checked:bg-pink-500' : 'peer-checked:bg-blue-500'}`}></div>
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-white">Followers Only</div>
+                                                <div className="text-[11px] text-gray-500">Only people who follow you can view this post.</div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={followersOnly} 
+                                                    onChange={(e) => setFollowersOnly(e.target.checked)} 
+                                                    className="sr-only peer" 
+                                                />
+                                                <div className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === 'girl' ? 'peer-checked:bg-pink-500' : 'peer-checked:bg-blue-500'}`}></div>
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-white">Turn off Commenting</div>
+                                                <div className="text-[11px] text-gray-500">Disable leaving comments on this specific post.</div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={disableComments} 
+                                                    onChange={(e) => setDisableComments(e.target.checked)} 
+                                                    className="sr-only peer" 
+                                                />
+                                                <div className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === 'girl' ? 'peer-checked:bg-pink-500' : 'peer-checked:bg-blue-500'}`}></div>
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div>
+                                                <div className="text-sm font-semibold text-white">Hide Likes count</div>
+                                                <div className="text-[11px] text-gray-500">Only you can view the likes count of this post.</div>
+                                            </div>
+                                            <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={hideLikes} 
+                                                    onChange={(e) => setHideLikes(e.target.checked)} 
+                                                    className="sr-only peer" 
+                                                />
+                                                <div className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === 'girl' ? 'peer-checked:bg-pink-500' : 'peer-checked:bg-blue-500'}`}></div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             )}
