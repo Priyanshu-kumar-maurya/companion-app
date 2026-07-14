@@ -13,6 +13,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [input, setInput] = useState("");
     const [uploadingImage, setUploadingImage] = useState(false);
     const bottomRef = useRef(null);
+    const incomingCallOfferRef = useRef(null);
+    const iceCandidatesQueue = useRef([]);
 
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [editingMsgId, setEditingMsgId] = useState(null);
@@ -332,6 +334,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         isCallerRef.current = false;
         callStartTimeRef.current = null;
         callTypeRef.current = null;
+        incomingCallOfferRef.current = null;
+        iceCandidatesQueue.current = [];
 
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
@@ -390,6 +394,20 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 socket.emit("webrtc_offer", { room: roomId, offer });
+            } else if (incomingCallOfferRef.current) {
+                // If offer was already received, process it now
+                await pc.setRemoteDescription(new RTCSessionDescription(incomingCallOfferRef.current));
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                socket.emit("webrtc_answer", { room: roomId, answer });
+                
+                // Flush queued candidates
+                while (iceCandidatesQueue.current.length > 0) {
+                    const candidate = iceCandidatesQueue.current.shift();
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                    } catch (e) { console.error("Error flushing candidate:", e); }
+                }
             }
 
         } catch (err) {
@@ -470,13 +488,25 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             callTypeRef.current = data.type;
             isCallerRef.current = false;
             callStartTimeRef.current = null;
+            incomingCallOfferRef.current = null; // Clear old cached offer
             updateCallStatus("receiving");
         };
 
         const handleCallAccepted = async () => {
             updateCallStatus("active");
             callStartTimeRef.current = Date.now();
-            await setupWebRTC(callTypeRef.current, true); 
+            
+            // Generate offer now that they have accepted (camera is already running!)
+            const pc = peerConnectionRef.current;
+            if (pc) {
+                try {
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    socket.emit("webrtc_offer", { room: roomId, offer });
+                } catch (err) {
+                    console.error("Error creating WebRTC offer:", err);
+                }
+            }
         };
 
         const handleCallRejected = () => {
@@ -489,33 +519,50 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         const handleWebrtcOffer = async (offer) => {
             try {
-                if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== "stable") return; 
-                
-                updateCallStatus("active");
-                callStartTimeRef.current = Date.now();
-                await setupWebRTC(callTypeRef.current, false);
-                
-                if (peerConnectionRef.current) {
-                    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-                    const answer = await peerConnectionRef.current.createAnswer();
-                    await peerConnectionRef.current.setLocalDescription(answer);
+                incomingCallOfferRef.current = offer;
+                const pc = peerConnectionRef.current;
+                // If PC is already initialized, process and answer immediately!
+                if (pc && pc.signalingState === "stable") {
+                    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
                     socket.emit("webrtc_answer", { room: roomId, answer });
+                    
+                    // Flush queued candidates
+                    while (iceCandidatesQueue.current.length > 0) {
+                        const candidate = iceCandidatesQueue.current.shift();
+                        try {
+                            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                        } catch (e) { console.error("Error flushing candidate:", e); }
+                    }
                 }
             } catch (err) { console.error("WebRTC Offer Error:", err); }
         };
 
         const handleWebrtcAnswer = async (answer) => {
             try {
-                if (peerConnectionRef.current && peerConnectionRef.current.signalingState === "have-local-offer") {
-                    await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+                const pc = peerConnectionRef.current;
+                if (pc && pc.signalingState === "have-local-offer") {
+                    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                    
+                    // Flush queued candidates
+                    while (iceCandidatesQueue.current.length > 0) {
+                        const candidate = iceCandidatesQueue.current.shift();
+                        try {
+                            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                        } catch (e) { console.error("Error flushing candidate:", e); }
+                    }
                 }
             } catch (err) { console.error("WebRTC Answer Error:", err); }
         };
 
         const handleWebrtcIceCandidate = async (candidate) => {
             try {
-                if (peerConnectionRef.current && candidate) {
-                    await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                const pc = peerConnectionRef.current;
+                if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+                    await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                } else {
+                    iceCandidatesQueue.current.push(candidate);
                 }
             } catch (err) { console.error("Ice Candidate Error:", err); }
         };
@@ -569,10 +616,16 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         isCallerRef.current = true;
         callStartTimeRef.current = null;
         updateCallStatus("calling");
+        // Start camera/mic preview immediately!
+        setupWebRTC(type, false);
         socket.emit("initiate_call", { room: roomId, receiver_id: girl.id, type: type });
     };
 
     const acceptCall = () => {
+        updateCallStatus("active");
+        callStartTimeRef.current = Date.now();
+        // Start camera/mic immediately so it's ready to handle the offer
+        setupWebRTC(callTypeRef.current, false);
         socket.emit("accept_call", { room: roomId, to: girl.id });
     };
 
