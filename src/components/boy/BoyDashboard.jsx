@@ -169,10 +169,14 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         setFollowListLoading(true);
         setActiveStatModal(type);
         try {
+            const token = localStorage.getItem('token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
             const endpoint = type === 'followers'
                 ? `/api/followers-list/${user.id}`
                 : `/api/following-list/${user.id}`;
-            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`);
+            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, { headers });
             if (res.ok) setFollowList(await res.json());
         } catch (e) { console.error(e); }
         setFollowListLoading(false);

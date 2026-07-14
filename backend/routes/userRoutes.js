@@ -251,10 +251,41 @@ router.get('/girl/stats/:userId', authenticateToken, async (req, res) => {
     }
 });
 
-// 9. Get Followers List — Public
+// 9. Get Followers List — Secured for Private Profiles
 router.get('/followers-list/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // Fetch is_private status of target user
+        const targetUser = await pool.query("SELECT is_private FROM users WHERE id = $1", [userId]);
+        if (targetUser.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
+
+        if (targetUser.rows[0].is_private) {
+            // Validate token
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(' ')[1];
+            if (!token) return res.status(403).json({ error: "🔒 This account is private. Access denied." });
+
+            let decodedId = null;
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                decodedId = decoded.id;
+            } catch (jwtErr) {
+                return res.status(403).json({ error: "🔒 This account is private. Access denied." });
+            }
+
+            const isOwner = parseInt(decodedId) === parseInt(userId);
+            const checkFollow = await pool.query("SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = $2", [decodedId, userId]);
+            
+            // Check if requester is admin
+            const requester = await pool.query("SELECT role FROM users WHERE id = $1", [decodedId]);
+            const isAdmin = requester.rows[0]?.role === 'admin';
+
+            if (!isOwner && !isAdmin && checkFollow.rows.length === 0) {
+                return res.status(403).json({ error: "🔒 This account is private. Access denied." });
+            }
+        }
+
         const result = await pool.query(`
             SELECT u.id, u.name, u.profile_pic, u.role
             FROM follows f
@@ -269,10 +300,41 @@ router.get('/followers-list/:userId', async (req, res) => {
     }
 });
 
-// 10. Get Following List — Public
+// 10. Get Following List — Secured for Private Profiles
 router.get('/following-list/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // Fetch is_private status of target user
+        const targetUser = await pool.query("SELECT is_private FROM users WHERE id = $1", [userId]);
+        if (targetUser.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
+
+        if (targetUser.rows[0].is_private) {
+            // Validate token
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(' ')[1];
+            if (!token) return res.status(403).json({ error: "🔒 This account is private. Access denied." });
+
+            let decodedId = null;
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                decodedId = decoded.id;
+            } catch (jwtErr) {
+                return res.status(403).json({ error: "🔒 This account is private. Access denied." });
+            }
+
+            const isOwner = parseInt(decodedId) === parseInt(userId);
+            const checkFollow = await pool.query("SELECT 1 FROM follows WHERE follower_id = $1 AND following_id = $2", [decodedId, userId]);
+            
+            // Check if requester is admin
+            const requester = await pool.query("SELECT role FROM users WHERE id = $1", [decodedId]);
+            const isAdmin = requester.rows[0]?.role === 'admin';
+
+            if (!isOwner && !isAdmin && checkFollow.rows.length === 0) {
+                return res.status(403).json({ error: "🔒 This account is private. Access denied." });
+            }
+        }
+
         const result = await pool.query(`
             SELECT u.id, u.name, u.profile_pic, u.role
             FROM follows f

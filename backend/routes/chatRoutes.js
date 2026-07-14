@@ -4,9 +4,15 @@ const authenticateToken = require('../middleware/auth');
 
 const router = express.Router();
 
-router.get('/chats/:userId', async (req, res) => {
+router.get('/chats/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+        
+        // Ensure user is accessing their own chats list, or is an admin
+        if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Access Denied." });
+        }
+
         const query = `
             SELECT DISTINCT u.id, u.name, u.role, u.profile_pic
             FROM messages m
@@ -26,9 +32,16 @@ router.get('/chats/:userId', async (req, res) => {
     }
 });
 
-router.get('/messages/:user1/:user2', async (req, res) => {
+router.get('/messages/:user1/:user2', authenticateToken, async (req, res) => {
     try {
         const { user1, user2 } = req.params;
+
+        // Ensure user is either user1 or user2, or is an admin
+        const isMe = parseInt(req.user.id) === parseInt(user1) || parseInt(req.user.id) === parseInt(user2);
+        if (req.user.role !== 'admin' && !isMe) {
+            return res.status(403).json({ error: "Forbidden: Access Denied." });
+        }
+
         const query = `
             SELECT id, sender_id, receiver_id, text AS message, image_url, created_at, is_read 
             FROM messages 

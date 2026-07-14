@@ -412,7 +412,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         const fetchOldMessages = async () => {
             try {
-                const response = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${girl.id}`);
+                const token = localStorage.getItem('token');
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                
+                const response = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${girl.id}`, { headers });
                 if (response.ok) {
                     const dbMessages = await response.json();
                     const formattedMessages = dbMessages.map(msg => {

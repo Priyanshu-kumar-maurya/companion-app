@@ -39,7 +39,11 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
         setShowFollowModal(type);
         setFollowListLoading(true);
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/${type === 'followers' ? 'followers-list' : 'following-list'}/${profile.id}`);
+            const token = localStorage.getItem('token');
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/${type === 'followers' ? 'followers-list' : 'following-list'}/${profile.id}`, { headers });
             if (response.ok) {
                 const data = await response.json();
                 setFollowList(data);

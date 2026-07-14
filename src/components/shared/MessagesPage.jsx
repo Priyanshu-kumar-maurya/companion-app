@@ -21,13 +21,17 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
 
         const fetchChatsAndDetails = async () => {
             try {
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`);
+                const token = localStorage.getItem('token');
+                const headers = {};
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+                
+                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`, { headers });
                 if (res.ok) {
                     const users = await res.json();
 
                     const chatsWithDetails = await Promise.all(users.map(async (person) => {
                         try {
-                            const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`);
+                            const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`, { headers });
                             if (msgRes.ok) {
                                 const msgs = await msgRes.json();
                                 const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
