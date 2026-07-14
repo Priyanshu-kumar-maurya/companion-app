@@ -14,10 +14,10 @@ router.post('/kyc/:userId', authenticateToken, upload.single('id_document'), asy
 
         // Only the user themselves can upload their own KYC
         if (parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({ error: "Forbidden: Sirf apna KYC upload kar sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only upload your own KYC document." });
         }
 
-        if (!req.file) return res.status(400).json({ error: "Koi document upload nahi hua!" });
+        if (!req.file) return res.status(400).json({ error: "No document uploaded!" });
 
         const documentUrl = req.file.path;
         const updatedUser = await pool.query(
@@ -39,14 +39,14 @@ router.post('/upload/:userId', authenticateToken, upload.single('profile_pic'), 
         const { userId } = req.params;
 
         if (parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({ error: "Forbidden: Sirf apni profile pic update kar sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only update your own profile picture." });
         }
 
-        if (!req.file) return res.status(400).json({ error: "Koi file upload nahi hui!" });
+        if (!req.file) return res.status(400).json({ error: "No file uploaded!" });
 
         const mediaUrl = req.file.path;
         await pool.query("UPDATE users SET profile_pic = $1 WHERE id = $2", [mediaUrl, userId]);
-        res.status(200).json({ message: "Photo update ho gayi!", imageUrl: mediaUrl });
+        res.status(200).json({ message: "Profile picture updated successfully!", imageUrl: mediaUrl });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
     }
@@ -58,10 +58,10 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
         const { userId } = req.params;
 
         if (parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({ error: "Forbidden: Tum sirf apni post bana sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only create your own posts." });
         }
 
-        if (!req.file) return res.status(400).json({ error: "Photo select karna zaroori hai!" });
+        if (!req.file) return res.status(400).json({ error: "Selecting a photo is required!" });
 
         const { caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes } = req.body;
 
@@ -72,7 +72,7 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
         try {
             const profCheck = checkProfanity(safeCaption);
             if (profCheck.severity === 'high') {
-                return res.status(400).json({ error: "⚠️ Caption mein inappropriate language hai. Please clean caption likhein." });
+                return res.status(400).json({ error: "⚠️ Caption contains inappropriate language. Please write a clean caption." });
             }
             if (!profCheck.isClean) safeCaption = cleanText(safeCaption);
         } catch (modErr) {
@@ -96,7 +96,7 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
                 hide_likes === 'true'
             ]
         );
-        res.status(201).json({ message: "Post live ho gayi!", post: newPost.rows[0] });
+        res.status(201).json({ message: "Post published successfully!", post: newPost.rows[0] });
     } catch (err) {
         console.error("Create post error:", err);
         res.status(500).json({ error: "Server error" });
@@ -106,7 +106,7 @@ router.post('/posts/:userId', authenticateToken, upload.single('post_image'), as
 // ─── CHAT IMAGE UPLOAD — AUTH REQUIRED ───────────────────────
 router.post('/chat-image', authenticateToken, upload.single('image'), (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: "Koi photo select nahi ki!" });
+        if (!req.file) return res.status(400).json({ error: "No photo selected!" });
         res.status(200).json({ imageUrl: req.file.path });
     } catch (err) {
         res.status(500).json({ error: "Server error" });
@@ -190,11 +190,11 @@ router.delete('/posts/:postId', authenticateToken, async (req, res) => {
 
         // Verify the post belongs to the requesting user (or admin can delete any)
         const postResult = await pool.query("SELECT user_id FROM posts WHERE id = $1", [postId]);
-        if (postResult.rows.length === 0) return res.status(404).json({ error: "Post nahi mili." });
+        if (postResult.rows.length === 0) return res.status(404).json({ error: "Post not found." });
 
         const postOwnerId = postResult.rows[0].user_id;
         if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(postOwnerId)) {
-            return res.status(403).json({ error: "Forbidden: Tum sirf apni post delete kar sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only delete your own posts." });
         }
 
         await pool.query("DELETE FROM likes WHERE post_id = $1", [postId]);
@@ -244,7 +244,7 @@ router.post('/like', authenticateToken, async (req, res) => {
         const { post_id } = req.body;
         const user_id = req.user.id; // Always use authenticated user's ID
 
-        if (!post_id) return res.status(400).json({ error: "post_id required hai." });
+        if (!post_id) return res.status(400).json({ error: "post_id is required." });
 
         const checkLike = await pool.query("SELECT * FROM likes WHERE user_id = $1 AND post_id = $2", [user_id, post_id]);
 
@@ -278,7 +278,7 @@ router.post('/comment', authenticateToken, moderateContent, async (req, res) => 
         const user_id = req.user.id; // Always use authenticated user's ID
 
         if (!text || text.trim() === '') return res.status(400).json({ error: "Comment cannot be empty" });
-        if (!post_id) return res.status(400).json({ error: "post_id required hai." });
+        if (!post_id) return res.status(400).json({ error: "post_id is required." });
 
         // Sanitize comment text
         const safeText = text.replace(/<[^>]*>/g, '').trim().slice(0, 1000);
@@ -329,7 +329,7 @@ router.get('/notifications/:userId', authenticateToken, async (req, res) => {
 
         // Users can only see their own notifications
         if (parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({ error: "Forbidden: Sirf apni notifications dekh sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only view your own notifications." });
         }
 
         const notifQuery = `

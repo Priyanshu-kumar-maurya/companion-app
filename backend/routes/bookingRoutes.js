@@ -13,24 +13,24 @@ router.post('/bookings', authenticateToken, async (req, res) => {
 
         // Validate required fields
         if (!boy_id || !girl_id || !hours || !amount) {
-            return res.status(400).json({ error: "boy_id, girl_id, hours, aur amount required hain." });
+            return res.status(400).json({ error: "boy_id, girl_id, hours, and amount are required." });
         }
 
         // Validate hours and amount are positive numbers
         if (parseInt(hours) <= 0 || parseInt(amount) <= 0) {
-            return res.status(400).json({ error: "Hours aur amount positive hone chahiye." });
+            return res.status(400).json({ error: "Hours and amount must be positive numbers." });
         }
 
         // Prevent booking yourself
         if (parseInt(req.user.id) === parseInt(girl_id) && parseInt(req.user.id) === parseInt(boy_id)) {
-            return res.status(400).json({ error: "Tum khud ko book nahi kar sakte." });
+            return res.status(400).json({ error: "You cannot book yourself." });
         }
 
         // Validate sender is a participant
         const senderIsBoy  = parseInt(req.user.id) === parseInt(boy_id);
         const senderIsGirl = parseInt(req.user.id) === parseInt(girl_id);
         if (!senderIsBoy && !senderIsGirl) {
-            return res.status(403).json({ error: "Unauthorized: Sirf participants hi booking kar sakte hain." });
+            return res.status(403).json({ error: "Unauthorized: Only participants can make bookings." });
         }
 
         const newBooking = await pool.query(
@@ -52,7 +52,7 @@ router.get('/bookings/:userId', authenticateToken, async (req, res) => {
 
         // Users can only see their own bookings; admins can see all
         if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({ error: "Forbidden: Sirf apni bookings dekh sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only view your own bookings." });
         }
 
         const bookings = await pool.query(`
@@ -85,14 +85,14 @@ router.put('/bookings/:bookingId', authenticateToken, async (req, res) => {
 
         // Verify the booking belongs to the user
         const bookingResult = await pool.query("SELECT * FROM bookings WHERE id = $1", [bookingId]);
-        if (bookingResult.rows.length === 0) return res.status(404).json({ error: "Booking nahi mili." });
+        if (bookingResult.rows.length === 0) return res.status(404).json({ error: "Booking not found." });
 
         const booking = bookingResult.rows[0];
         const isParticipant = parseInt(req.user.id) === parseInt(booking.boy_id) ||
                               parseInt(req.user.id) === parseInt(booking.girl_id);
 
         if (req.user.role !== 'admin' && !isParticipant) {
-            return res.status(403).json({ error: "Forbidden: Sirf booking participants status update kar sakte hain." });
+            return res.status(403).json({ error: "Forbidden: Only booking participants can update booking status." });
         }
 
         const updatedBooking = await pool.query(
@@ -112,12 +112,12 @@ router.post('/reviews', authenticateToken, moderateContent, async (req, res) => 
         const reviewer_id = req.user.id; // Always use authenticated user's ID
 
         if (!companion_id || !rating) {
-            return res.status(400).json({ error: "companion_id aur rating required hain." });
+            return res.status(400).json({ error: "companion_id and rating are required." });
         }
 
         const safeRating = parseInt(rating);
         if (safeRating < 1 || safeRating > 5) {
-            return res.status(400).json({ error: "Rating 1 se 5 ke beech honi chahiye." });
+            return res.status(400).json({ error: "Rating must be between 1 and 5." });
         }
 
         // Sanitize comment

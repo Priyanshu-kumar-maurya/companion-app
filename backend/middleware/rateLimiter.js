@@ -27,7 +27,7 @@ const rateLimiter = (maxRequests = 10, windowMs = 60 * 1000) => {
 
         if (entry.count > maxRequests) {
             return res.status(429).json({
-                error: "Bahut zyada requests! Thodi der baad try karo. (Too many requests, please wait.)"
+                error: "Too many login attempts. Please try again later."
             });
         }
 

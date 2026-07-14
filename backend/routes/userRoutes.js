@@ -106,11 +106,11 @@ router.put('/users/:userId', authenticateToken, moderateContent, async (req, res
         if (username) {
             cleanUsername = username.toLowerCase().trim().replace(/\s+/g, '');
             if (!/^[a-z0-9_.]+$/.test(cleanUsername)) {
-                return res.status(400).json({ error: "Username mein sirf letters, numbers, underscores ( _ ) aur dots ( . ) use kar sakte hain." });
+                return res.status(400).json({ error: "Username can only contain lowercase letters, numbers, underscores ( _ ), and dots ( . )." });
             }
             const checkDup = await pool.query("SELECT id FROM users WHERE username = $1 AND id != $2", [cleanUsername, parseInt(userId)]);
             if (checkDup.rows.length > 0) {
-                return res.status(400).json({ error: "Yeh username pehle se kisi aur ka hai. Koi doosra username select karein!" });
+                return res.status(400).json({ error: "This username is already taken. Please choose another one!" });
             }
         }
 
@@ -158,7 +158,7 @@ router.post('/follow', authenticateToken, async (req, res) => {
 
         // Ensure the requester can only follow as themselves
         if (parseInt(req.user.id) !== parseInt(follower_id)) {
-            return res.status(403).json({ error: "Tum doosre ki taraf se follow nahi kar sakte." });
+            return res.status(403).json({ error: "Forbidden: You cannot follow on behalf of another user." });
         }
         if (follower_id === following_id) return res.status(400).json({ error: "You cannot follow yourself." });
 
@@ -177,7 +177,7 @@ router.post('/unfollow', authenticateToken, async (req, res) => {
         const { follower_id, following_id } = req.body;
 
         if (parseInt(req.user.id) !== parseInt(follower_id)) {
-            return res.status(403).json({ error: "Tum doosre ki taraf se unfollow nahi kar sakte." });
+            return res.status(403).json({ error: "Forbidden: You cannot unfollow on behalf of another user." });
         }
 
         await pool.query("DELETE FROM follows WHERE follower_id = $1 AND following_id = $2", [follower_id, following_id]);
@@ -218,7 +218,7 @@ router.get('/girl/stats/:userId', authenticateToken, async (req, res) => {
 
         // Only the user themselves or admin can see stats
         if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(userId)) {
-            return res.status(403).json({ error: "Forbidden: Sirf apni stats dekh sakte ho." });
+            return res.status(403).json({ error: "Forbidden: You can only view your own statistics." });
         }
 
         const statsQuery = `
