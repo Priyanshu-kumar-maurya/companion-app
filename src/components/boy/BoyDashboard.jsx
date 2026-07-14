@@ -8,6 +8,7 @@ import imageCompression from 'browser-image-compression';
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [myPosts, setMyPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
+    const [showDpModal, setShowDpModal] = useState(false);
     const [kycUploading, setKycUploading] = useState(false);
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
@@ -236,7 +237,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         {/* Profile Pic */}
                         <div
                             className="relative w-20 h-20 sm:w-28 sm:h-28 shrink-0 cursor-pointer"
-                            onClick={() => user?.profile_pic && setExpandedPost({ image_url: user.profile_pic, caption: "Profile Picture" })}
+                            onClick={() => user?.profile_pic && setShowDpModal(true)}
                         >
                             <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] shadow-xl shadow-blue-500/20">
                                 <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A] flex items-center justify-center">
@@ -429,6 +430,49 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     onClose={() => setExpandedPost(null)}
                     onDelete={handleDeletePost}
                 />
+            )}
+
+            {/* ── PROFILE PICTURE MODAL ── */}
+            {showDpModal && user?.profile_pic && (
+                <div 
+                    className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300"
+                    onClick={() => setShowDpModal(false)}
+                >
+                    <style>{`
+                        @keyframes scaleIn {
+                            from { transform: scale(0.9); opacity: 0; }
+                            to { transform: scale(1); opacity: 1; }
+                        }
+                    `}</style>
+                    <div 
+                        className="relative max-w-3xl w-full flex flex-col items-center" 
+                        style={{ animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Close button */}
+                        <button 
+                            onClick={() => setShowDpModal(false)}
+                            className="absolute -top-12 right-0 md:top-4 md:-right-12 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shadow-lg cursor-pointer"
+                        >
+                            <FiX size={20} />
+                        </button>
+                        
+                        {/* Image Frame */}
+                        <div className="bg-[#16162A] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
+                            <img 
+                                src={user.profile_pic} 
+                                alt={user.name} 
+                                className="max-w-full max-h-[70vh] rounded-2xl object-contain"
+                            />
+                        </div>
+                        
+                        {/* Label */}
+                        <div className="mt-4 text-center">
+                            <span className="text-white font-bold text-sm">{user.name}</span>
+                            <span className="text-gray-400 text-xs block mt-0.5">Profile Picture</span>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {showSettings && (

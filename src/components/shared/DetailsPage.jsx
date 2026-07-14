@@ -13,6 +13,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [hours, setHours] = useState(2);
     const [posts, setPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
+    const [showDpModal, setShowDpModal] = useState(false);
 
     const [bookingStatus, setBookingStatus] = useState(null);
     const [reviews, setReviews] = useState([]);
@@ -451,7 +452,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                     {/* Left: Avatar with gradient ring */}
                     <div 
                         className={`relative w-28 h-28 md:w-36 md:h-36 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 bg-gradient-to-br ${accentGrad}`}
-                        onClick={() => profile.profile_pic && setExpandedPost({ image_url: profile.profile_pic, caption: `${firstName}'s Photo` })}
+                        onClick={() => profile.profile_pic && setShowDpModal(true)}
                     >
                         <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A]">
                             {profile.profile_pic ? (
@@ -821,6 +822,49 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                     onClose={() => setExpandedPost(null)}
                     onDelete={handleDeletePost}
                 />
+            )}
+
+            {/* ── PROFILE PICTURE MODAL ── */}
+            {showDpModal && profile.profile_pic && (
+                <div 
+                    className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300"
+                    onClick={() => setShowDpModal(false)}
+                >
+                    <style>{`
+                        @keyframes scaleIn {
+                            from { transform: scale(0.9); opacity: 0; }
+                            to { transform: scale(1); opacity: 1; }
+                        }
+                    `}</style>
+                    <div 
+                        className="relative max-w-3xl w-full flex flex-col items-center" 
+                        style={{ animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards' }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Close button */}
+                        <button 
+                            onClick={() => setShowDpModal(false)}
+                            className="absolute -top-12 right-0 md:top-4 md:-right-12 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shadow-lg cursor-pointer"
+                        >
+                            <FiX size={20} />
+                        </button>
+                        
+                        {/* Image Frame */}
+                        <div className="bg-[#16162A] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
+                            <img 
+                                src={profile.profile_pic} 
+                                alt={profile.name} 
+                                className="max-w-full max-h-[70vh] rounded-2xl object-contain"
+                            />
+                        </div>
+                        
+                        {/* Label */}
+                        <div className="mt-4 text-center">
+                            <span className="text-white font-bold text-sm">{profile.name}</span>
+                            <span className="text-gray-400 text-xs block mt-0.5">Profile Picture</span>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* ─── REPORT MODAL ─── */}
