@@ -545,6 +545,17 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 <p className="text-gray-300 leading-relaxed pt-1.5 text-xs">{profile.bio}</p>
                             )}
 
+                            {profile.social_link && (
+                                <a 
+                                    href={profile.social_link.startsWith('http') ? profile.social_link : `https://${profile.social_link}`}
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-pink-400 font-extrabold hover:underline block pt-1 text-xs"
+                                >
+                                    🔗 {profile.social_link.replace(/^https?:\/\/(www\.)?/, '')}
+                                </a>
+                            )}
+
                             {/* Tags */}
                             <div className="flex flex-wrap gap-1.5 pt-2 justify-center md:justify-start">
                                 {safeTags.map((tag) => (

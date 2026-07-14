@@ -15,7 +15,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         bio: user.bio || "",
         price: user.price || "",
         tags: typeof user.tags === 'string' ? user.tags : (user.tags?.join(', ') || ""),
-        link: user.link || "",
+        link: user.social_link || user.link || "",
         is_private: user.is_private || false,
         show_online: user.show_online !== false
     });
@@ -50,7 +50,9 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             });
             const data = await response.json();
             if (response.ok) {
-                setUser({ ...user, ...data.user });
+                const updatedUser = { ...user, ...data.user, link: data.user.social_link };
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
                 if (socket) {
                     socket.emit("active_status_changed");
                 }

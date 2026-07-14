@@ -99,7 +99,7 @@ router.put('/users/:userId', authenticateToken, moderateContent, async (req, res
         const { userId } = req.params;
         if (!isOwner(req, res, userId)) return;
 
-        const { age, city, bio, price, tags, is_private, show_online, name, username } = req.body;
+        const { age, city, bio, price, tags, is_private, show_online, name, username, link } = req.body;
 
         // Validate username uniqueness and characters
         let cleanUsername = null;
@@ -108,7 +108,7 @@ router.put('/users/:userId', authenticateToken, moderateContent, async (req, res
             if (!/^[a-z0-9_.]+$/.test(cleanUsername)) {
                 return res.status(400).json({ error: "Username mein sirf letters, numbers, underscores ( _ ) aur dots ( . ) use kar sakte hain." });
             }
-            const checkDup = await pool.query("SELECT id FROM users WHERE username = $1 AND id != $2", [cleanUsername, userId]);
+            const checkDup = await pool.query("SELECT id FROM users WHERE username = $1 AND id != $2", [cleanUsername, parseInt(userId)]);
             if (checkDup.rows.length > 0) {
                 return res.status(400).json({ error: "Yeh username pehle se kisi aur ka hai. Koi doosra username select karein!" });
             }
@@ -119,10 +119,10 @@ router.put('/users/:userId', authenticateToken, moderateContent, async (req, res
 
         const updatedUser = await pool.query(
             `UPDATE users 
-             SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6, show_online = $7, name = $8, username = $9 
-             WHERE id = $10 
-             RETURNING id, name, username, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status`,
-            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, show_online !== false, name || '', cleanUsername, userId]
+             SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6, show_online = $7, name = $8, username = $9, social_link = $10 
+             WHERE id = $11 
+             RETURNING id, name, username, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status, social_link`,
+            [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, show_online !== false, name || '', cleanUsername, link || '', parseInt(userId)]
         );
         res.status(200).json({ message: "Profile Updated", user: updatedUser.rows[0] });
     } catch (err) {
