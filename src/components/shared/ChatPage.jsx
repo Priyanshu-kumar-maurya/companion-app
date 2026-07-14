@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder } from "react-icons/fi";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -1340,8 +1340,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                 </div>
                                 <button
                                     onClick={switchCamera}
-                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition bg-black/50 text-white text-base"
-                                >🔄</button>
+                                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition bg-black/50 text-white hover:scale-105 active:scale-95"
+                                >
+                                    <FiRefreshCw size={18} />
+                                </button>
                             </div>
 
                             {/* Local video PIP */}

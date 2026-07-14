@@ -500,29 +500,29 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                         {(currentUser?.id === optionsPost.user_id || currentUser?.id === postOwner?.id) && (
                             <button 
                                 onClick={() => handleDeletePost(optionsPost.id)}
-                                className="w-full py-4 text-center text-red-500 font-extrabold text-xs hover:bg-white/5 rounded-xl transition-all"
+                                className="w-full py-4 text-center text-red-500 font-extrabold text-xs hover:bg-white/5 rounded-xl transition-all flex items-center justify-center gap-1.5"
                             >
-                                Delete Post 🗑️
+                                <FiTrash2 size={14} /> Delete Post
                             </button>
                         )}
                         
                         <button 
                             onClick={() => { setShowAboutUser(true); setOptionsPost(null); }}
-                            className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all"
+                            className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center gap-1.5"
                         >
-                            About this profile ℹ️
+                            <FiInfo size={14} /> About this profile
                         </button>
                         
                         <button 
                             onClick={() => handleSharePost(optionsPost.id)}
-                            className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all"
+                            className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center gap-1.5"
                         >
-                            Copy Link 🔗
+                            <FiShare2 size={14} /> Copy Link
                         </button>
                         
                         <button 
                             onClick={() => setOptionsPost(null)}
-                            className="w-full py-4 text-center text-gray-400 font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all"
+                            className="w-full py-4 text-center text-gray-400 font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center"
                         >
                             Cancel
                         </button>
@@ -540,8 +540,8 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                         className="bg-[#121224] border border-white/10 w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl p-6 text-center animate-scale-up"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white text-xl">
-                            ℹ️
+                        <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
+                            <FiInfo size={24} />
                         </div>
                         <h4 className="font-extrabold text-white text-sm mb-1">About This Account</h4>
                         <p className="text-[10px] text-gray-500 mb-5">Verify information for {postOwner?.name}</p>
