@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiShield, FiUser, FiAlertTriangle, FiCheckCircle, FiLock, FiUnlock, FiSlash, FiTrash2, FiBarChart2, FiPrinter, FiCalendar, FiMail, FiX } from "react-icons/fi";
+import { FiShield, FiUser, FiAlertTriangle, FiCheckCircle, FiLock, FiUnlock, FiSlash, FiTrash2, FiBarChart2, FiPrinter, FiCalendar, FiMail, FiX, FiRefreshCw, FiArrowLeft } from "react-icons/fi";
 
 const API = "https://rentgf-and-bf.onrender.com/api";
 
@@ -211,11 +211,11 @@ function AdminDashboard({ user, setPage }) {
                     <p className="text-gray-400 mt-1 text-sm">Full control over users, accounts, and reports.</p>
                 </div>
                 <div className="flex gap-2">
-                    <button onClick={() => { setLoading(true); fetchAll(); }} className="px-4 py-2 bg-pink-500/20 text-pink-400 rounded-lg hover:bg-pink-500/30 transition text-sm font-bold">
-                        🔄 Refresh
+                    <button onClick={() => { setLoading(true); fetchAll(); }} className="px-4 py-2 bg-pink-500/20 text-pink-400 rounded-lg hover:bg-pink-500/30 transition text-sm font-bold flex items-center gap-1.5">
+                        <FiRefreshCw size={13} className={loading ? "animate-spin" : ""} /> Refresh
                     </button>
-                    <button onClick={() => setPage(PAGES.HOME)} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm">
-                        ← Home
+                    <button onClick={() => setPage(PAGES.HOME)} className="px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition text-sm flex items-center gap-1.5">
+                        <FiArrowLeft size={14} /> Home
                     </button>
                 </div>
             </div>

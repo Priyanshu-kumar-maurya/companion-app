@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
+import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar } from "react-icons/fi";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
@@ -86,24 +87,27 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                 </h1>
                 <p className="text-sm text-gray-400 mb-6">{filtered.length} profiles available</p>
 
-                <input
-                    className="w-full bg-[#16162A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-pink-500 transition mb-4"
-                    placeholder="🔍 Search by name or city..."
-                    value={searchQ}
-                    onChange={(e) => setSearchQ(e.target.value)}
-                />
+                <div className="relative mb-4">
+                    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-base" />
+                    <input
+                        className="w-full bg-[#16162A] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+                        placeholder="Search by name or city..."
+                        value={searchQ}
+                        onChange={(e) => setSearchQ(e.target.value)}
+                    />
+                </div>
 
                 <div className="flex gap-2 flex-wrap items-center mb-5 pb-3 border-b border-white/5">
                     <span className="text-xs text-gray-500">View:</span>
                     {[
-                        { v: "girl", l: "Girls Only 👧" },
-                        { v: "boy", l: "Boys Only 👦" },
-                        { v: "all", l: "Show All 👥" }
+                        { v: "girl", l: "Girls Only", icon: <FiUser size={13} /> },
+                        { v: "boy", l: "Boys Only", icon: <FiUser size={13} /> },
+                        { v: "all", l: "Show All", icon: <FiUsers size={13} /> }
                     ].map((g) => (
                         <button
                             key={g.v}
                             onClick={() => setGenderFilter(g.v)}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 ${genderFilter === g.v
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 flex items-center gap-1.5 ${genderFilter === g.v
                                 ? g.v === "girl"
                                     ? "bg-pink-500/10 border-pink-500 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.2)]"
                                     : g.v === "boy"
@@ -112,6 +116,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                 : "border-white/5 bg-[#121224]/30 text-gray-400 hover:border-white/20 hover:text-white"
                             }`}
                         >
+                            {g.icon}
                             {g.l}
                         </button>
                     ))}
@@ -171,7 +176,9 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                                     className="w-full h-full object-cover transition duration-500 hover:scale-110"
                                                 />
                                             ) : (
-                                                <div className="text-5xl text-white/50">{isTargetGirl ? '👧' : '👦'}</div>
+                                                <div className="text-5xl text-white/30 flex items-center justify-center">
+                                                    <FiUser />
+                                                </div>
                                             )}
 
                                             {u.kyc_status === 'verified' && (
@@ -187,11 +194,17 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                                 <span className="text-base font-bold text-white leading-tight">{u.name}</span>
                                                 <span className="text-[10px] text-gray-400 font-semibold tracking-wide">@{u.username || u.name.toLowerCase().replace(/\s+/g, '')}</span>
                                             </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">📍 {u.city || "Unknown"} · {u.age || "N/A"} years</div>
-                                            <div className="text-xs text-yellow-400 mt-1">
-                                                ⭐ {u.avg_rating > 0 ? `${u.avg_rating} ` : "New "}
-                                                <span className="text-gray-500">
-                                                    {u.avg_rating > 0 ? `(${u.review_count} reviews)` : ""}
+                                            <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-0.5">
+                                                <FiMapPin size={12} className="text-gray-500 shrink-0" />
+                                                <span>{u.city || "Unknown"} · {u.age || "N/A"} years</span>
+                                            </div>
+                                            <div className="text-xs text-yellow-400 mt-1 flex items-center gap-0.5">
+                                                <FiStar size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />
+                                                <span>
+                                                    {u.avg_rating > 0 ? `${u.avg_rating} ` : "New "}
+                                                    <span className="text-gray-500">
+                                                        {u.avg_rating > 0 ? `(${u.review_count} reviews)` : ""}
+                                                    </span>
                                                 </span>
                                             </div>
 

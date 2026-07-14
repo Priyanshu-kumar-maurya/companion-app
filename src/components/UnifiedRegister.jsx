@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
-import { FiEye, FiEyeOff, FiMail, FiX, FiRefreshCw, FiCheckCircle } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiMail, FiX, FiRefreshCw, FiCheckCircle, FiUser } from "react-icons/fi";
 
 function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -328,7 +328,7 @@ function UnifiedRegister({ setPage }) {
                                     }}
                                     className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "boy" ? 'bg-blue-500/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white' : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20'}`}
                                 >
-                                    <span className="text-3xl">👦</span>
+                                    <FiUser size={30} className={formData.role === "boy" ? "text-blue-400" : "text-gray-500"} />
                                     <span className="text-sm font-bold block">Male</span>
                                 </button>
 
@@ -342,7 +342,7 @@ function UnifiedRegister({ setPage }) {
                                     }}
                                     className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "girl" ? 'bg-pink-500/10 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.2)] text-white' : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20'}`}
                                 >
-                                    <span className="text-3xl">👧</span>
+                                    <FiUser size={30} className={formData.role === "girl" ? "text-pink-400" : "text-gray-500"} />
                                     <span className="text-sm font-bold block">Female</span>
                                 </button>
                             </div>

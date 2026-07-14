@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
+import { FiRefreshCw, FiInbox, FiArrowLeft } from "react-icons/fi";
 
 function NotificationsPage({ currentUser, setPage, setSelectedGirl }) {
     const [notifications, setNotifications] = useState([]);
@@ -68,19 +69,21 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl }) {
     return (
         <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-4 sm:px-6 max-w-2xl mx-auto flex flex-col">
             <div className="flex items-center gap-3 mb-6">
-                <button onClick={() => setPage(PAGES.HOME)} className="text-white text-2xl hover:text-pink-400 transition">←</button>
+                <button onClick={() => setPage(PAGES.HOME)} className="text-white hover:text-pink-400 transition flex items-center justify-center p-1 rounded-full hover:bg-white/5">
+                    <FiArrowLeft size={22} />
+                </button>
                 <h1 className="text-3xl font-extrabold text-white">Activity</h1>
             </div>
 
             <div className="bg-[#16162A] border border-white/5 rounded-3xl shadow-xl overflow-hidden min-h-[300px] flex-1">
                 {loading ? (
-                    <div className="text-gray-500 text-center py-16 flex flex-col items-center animate-pulse">
-                        <span className="text-4xl mb-4">🌀</span>
+                    <div className="text-gray-500 text-center py-16 flex flex-col items-center">
+                        <FiRefreshCw className="text-pink-500 text-4xl mb-4 animate-spin" />
                         <p>Loading your activity...</p>
                     </div>
                 ) : notifications.length === 0 ? (
                     <div className="text-gray-500 text-center py-20 flex flex-col items-center">
-                        <span className="text-5xl mb-4">📭</span>
+                        <FiInbox className="text-pink-500 text-5xl mb-4" />
                         <p>No new notifications.</p>
                         <p className="text-sm mt-2">When someone likes or comments on your post, it will show up here.</p>
                     </div>

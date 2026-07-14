@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
+import { FiMessageCircle, FiRefreshCw, FiInbox } from "react-icons/fi";
 
 function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [chatHistory, setChatHistory] = useState([]);
@@ -116,18 +117,18 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     return (
         <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-6 max-w-3xl mx-auto">
             <h1 className="text-3xl font-extrabold mb-6 text-white flex items-center gap-3">
-                💬 Inbox
+                <FiMessageCircle className="text-pink-500" /> Inbox
             </h1>
 
             <div className="bg-[#16162A] border border-white/5 rounded-3xl shadow-xl overflow-hidden min-h-[300px]">
                 {loading ? (
-                    <div className="text-gray-500 text-center py-16 flex flex-col items-center animate-pulse">
-                        <span className="text-4xl mb-4">🔄</span>
+                    <div className="text-gray-500 text-center py-16 flex flex-col items-center">
+                        <FiRefreshCw className="text-pink-500 text-4xl mb-4 animate-spin" />
                         <p>Loading your messages...</p>
                     </div>
                 ) : chatHistory.length === 0 ? (
                     <div className="text-gray-500 text-center py-16 flex flex-col items-center">
-                        <span className="text-5xl mb-4">📭</span>
+                        <FiInbox className="text-pink-500 text-5xl mb-4" />
                         <p>No messages yet. Start a conversation!</p>
                         <button onClick={() => setPage(PAGES.FIND)} className="mt-4 px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-bold hover:opacity-90 transition">
                             Find Companions

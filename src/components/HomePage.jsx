@@ -5,6 +5,7 @@ import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
 import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
 import { BsBookmarkFill, BsBookmark } from "react-icons/bs";
+import { FiWifi, FiBattery, FiMic, FiMicOff, FiPhoneOff, FiVideoOff, FiUser } from "react-icons/fi";
 
 function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [feed, setFeed] = useState([]);
@@ -580,34 +581,36 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         <div className="flex justify-between items-center text-[9px] text-gray-400 z-10 pt-2 w-full">
                                             <span>09:43</span>
                                             <span className="font-bold text-white uppercase tracking-wider text-[7px] bg-pink-500/25 px-1.5 py-0.5 rounded-full border border-pink-500/30">HD Video</span>
-                                            <div className="flex gap-1 items-center">
-                                                <span>📶</span>
-                                                <span>🔋</span>
+                                            <div className="flex gap-1 items-center text-[10px] text-gray-400">
+                                                <FiWifi />
+                                                <FiBattery />
                                             </div>
                                         </div>
                                         
                                         <div className="flex-1 flex flex-col items-center justify-center gap-1.5 z-10">
-                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(236,72,153,0.35)] border-2 border-white/30 animate-pulse relative">
-                                                👩‍🦰
-                                                <span className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border border-[#111122] flex items-center justify-center text-[8px]">🎙️</span>
+                                            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center shadow-[0_0_20px_rgba(236,72,153,0.35)] border-2 border-white/30 animate-pulse relative">
+                                                <FiUser className="text-white text-2xl" />
+                                                <span className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border border-[#111122] flex items-center justify-center">
+                                                    <FiMic className="text-white text-[8px]" size={8} />
+                                                </span>
                                             </div>
                                             <h4 className="font-bold text-[11px] text-white">Ananya Sharma</h4>
                                             <span className="text-[8px] text-gray-400">Connected • 02:45</span>
                                         </div>
                                         
                                         <div className="absolute top-10 right-4 w-10 h-14 bg-[#16162A] rounded-lg border border-white/20 z-20 overflow-hidden shadow-lg flex items-center justify-center text-[12px]">
-                                            👦
+                                            <FiUser className="text-white text-base" />
                                         </div>
                                         
                                         <div className="flex justify-center gap-3 items-center z-10 mb-1">
-                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-[9px] text-white">
-                                                🎙️
+                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white">
+                                                <FiMicOff size={9} />
                                             </div>
-                                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-[11px] text-white shadow-lg animate-bounce">
-                                                📞
+                                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg animate-bounce">
+                                                <FiPhoneOff size={11} />
                                             </div>
-                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-[9px] text-white">
-                                                📷
+                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white">
+                                                <FiVideoOff size={9} />
                                             </div>
                                         </div>
                                     </div>
