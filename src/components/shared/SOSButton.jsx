@@ -83,7 +83,7 @@ function SOSButton({ user, socket }) {
     // Actual SOS trigger
     const triggerSOS = async () => {
         setLoading(true);
-        setLocationStatus("📍 Getting your location...");
+        setLocationStatus("Getting your location...");
 
         try {
             // Get location
@@ -96,9 +96,9 @@ function SOSButton({ user, socket }) {
                 });
                 latitude = pos.coords.latitude;
                 longitude = pos.coords.longitude;
-                setLocationStatus("✅ Location captured!");
+                setLocationStatus("Location captured!");
             } catch (e) {
-                setLocationStatus("⚠️ Location not available — alert sent without location");
+                setLocationStatus("Location not available — alert sent without location");
             }
 
             // Send SOS to backend
@@ -214,8 +214,9 @@ function SOSButton({ user, socket }) {
                                         </button>
 
                                         {countdown !== null && (
-                                            <p className="text-orange-400 text-xs font-bold animate-pulse">
-                                                ⚠️ SOS {countdown} second mein send hoga — cancel karne ke liye dobara tap karo
+                                            <p className="text-orange-400 text-xs font-bold animate-pulse flex items-center justify-center gap-1">
+                                                <FiAlertTriangle className="shrink-0" />
+                                                <span>SOS {countdown} second mein send hoga — cancel karne ke liye dobara tap karo</span>
                                             </p>
                                         )}
                                     </>
@@ -323,7 +324,9 @@ function SOSButton({ user, socket }) {
 
                             {/* ── Safety Tips ── */}
                             <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-3">
-                                <h4 className="text-blue-400 text-xs font-bold mb-2">🛡️ Safety Tips</h4>
+                                <h4 className="text-blue-400 text-xs font-bold mb-2 flex items-center gap-1.5">
+                                    <FiShield className="shrink-0" /> Safety Tips
+                                </h4>
                                 <ul className="text-gray-400 text-[10px] space-y-1 list-disc list-inside">
                                     <li>Hamesha public place pe milein</li>
                                     <li>Family/friends ko batayein kahan ja rahe hain</li>

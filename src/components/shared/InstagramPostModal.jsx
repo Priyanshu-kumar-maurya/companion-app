@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiHeart, FiMessageCircle, FiX, FiTrash2, FiSend, FiMoreVertical, FiShare2, FiInfo, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiHeart, FiMessageCircle, FiX, FiTrash2, FiSend, FiMoreVertical, FiShare2, FiInfo, FiChevronLeft, FiChevronRight, FiMapPin } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 
 function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser, onClose, onDelete }) {
@@ -164,7 +164,7 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
     const handleSharePost = (postId) => {
         const shareUrl = `${window.location.origin}/post/${postId}`;
         navigator.clipboard.writeText(shareUrl);
-        alert("🔗 Post link copied to clipboard!");
+        alert("Post link copied to clipboard!");
         setOptionsPost(null);
     };
 
@@ -260,7 +260,10 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                                 <span className="font-bold text-white text-xs block truncate max-w-[150px]">
                                     {postOwner?.name || activePost.user_name}
                                 </span>
-                                <span className="text-[9px] text-gray-500 block">📍 {postOwner?.city || "Companion App"}</span>
+                                <span className="text-[9px] text-gray-500 flex items-center gap-0.5">
+                                    <FiMapPin size={10} className="text-gray-500 shrink-0" />
+                                    <span>{postOwner?.city || "Companion App"}</span>
+                                </span>
                             </div>
                         </div>
                         
@@ -404,7 +407,10 @@ function InstagramPostModal({ posts = [], initialPostId, postOwner, currentUser,
                                         )}
                                         <div>
                                             <span className="font-extrabold text-white text-xs block">{postOwner?.name?.split(' ')[0]}</span>
-                                            <span className="text-[8px] text-gray-500 block">📍 {postOwner?.city || "Companion"}</span>
+                                            <span className="text-[8px] text-gray-500 flex items-center gap-0.5">
+                                                <FiMapPin size={9} className="text-gray-500 shrink-0" />
+                                                <span>{postOwner?.city || "Companion"}</span>
+                                            </span>
                                         </div>
                                     </div>
                                     

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiArrowLeft, FiShield, FiFileText, FiAlertTriangle } from "react-icons/fi";
+import { FiArrowLeft, FiShield, FiFileText, FiAlertTriangle, FiAlertOctagon, FiMapPin, FiLock } from "react-icons/fi";
 
 function LegalPages({ setPage, initialTab = "terms" }) {
     const [activeTab, setActiveTab] = useState(initialTab);
@@ -206,7 +206,9 @@ function SafetyContent() {
             </div>
 
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
-                <h3 className="text-red-400 font-bold text-sm mb-2">🚨 Emergency Numbers</h3>
+                <h3 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-1.5">
+                    <FiAlertOctagon size={16} /> Emergency Numbers
+                </h3>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                     <div><b className="text-white">Police:</b> <a href="tel:112" className="text-red-400">112</a></div>
                     <div><b className="text-white">Women Helpline:</b> <a href="tel:1091" className="text-red-400">1091</a></div>
@@ -215,7 +217,7 @@ function SafetyContent() {
                 </div>
             </div>
 
-            <Section title="📍 Before Meeting">
+            <Section title={<span className="flex items-center gap-1.5"><FiMapPin className="text-pink-500" /> Before Meeting</span>}>
                 <ul className="list-disc list-inside space-y-1 mt-2">
                     <li>Always meet in a <b className="text-white">public place</b> (café, mall, restaurant)</li>
                     <li>Share your <b className="text-white">location</b> with a trusted friend or family</li>
@@ -226,7 +228,7 @@ function SafetyContent() {
                 </ul>
             </Section>
 
-            <Section title="🛡️ During Meeting">
+            <Section title={<span className="flex items-center gap-1.5"><FiShield className="text-pink-500" /> During Meeting</span>}>
                 <ul className="list-disc list-inside space-y-1 mt-2">
                     <li>Stay in public areas at all times</li>
                     <li>Keep your phone charged and accessible</li>
@@ -236,7 +238,7 @@ function SafetyContent() {
                 </ul>
             </Section>
 
-            <Section title="⚠️ What to Report">
+            <Section title={<span className="flex items-center gap-1.5"><FiAlertTriangle className="text-pink-500" /> What to Report</span>}>
                 <ul className="list-disc list-inside space-y-1 mt-2">
                     <li>Harassment or threatening behavior</li>
                     <li>Requests for illegal activities</li>
@@ -247,7 +249,7 @@ function SafetyContent() {
                 <p className="mt-2 text-pink-400 text-xs font-bold">Use the Report button on any profile or the SOS feature for emergencies.</p>
             </Section>
 
-            <Section title="🔒 Account Security">
+            <Section title={<span className="flex items-center gap-1.5"><FiLock className="text-pink-500" /> Account Security</span>}>
                 <ul className="list-disc list-inside space-y-1 mt-2">
                     <li>Use a strong, unique password</li>
                     <li>Never share your OTP with anyone</li>
