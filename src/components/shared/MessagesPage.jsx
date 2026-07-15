@@ -44,7 +44,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                                     if (lastMsg.message && (lastMsg.message.includes('✅') || lastMsg.message.includes('❌'))) {
                                         preview = lastMsg.message;
                                     } else {
-                                        preview = lastMsg.message || (lastMsg.image_url ? '📷 Photo' : 'Attachment');
+                                        preview = lastMsg.message || (lastMsg.image_url ? 'Photo' : 'Attachment');
                                     }
                                 }
 
@@ -87,7 +87,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                             const isUnread = String(p.id) === String(data.sender_id);
                             return {
                                 ...p,
-                                lastMessagePreview: data.message || data.text || (data.image_url ? '📷 Photo' : 'Attachment'),
+                                lastMessagePreview: data.message || data.text || (data.image_url ? 'Photo' : 'Attachment'),
                                 lastMessageTime: Date.now(), // Turant time update karo taaki upar chala jaye
                                 unreadCount: isUnread ? (p.unreadCount || 0) + 1 : (p.unreadCount || 0)
                             };

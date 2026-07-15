@@ -3,7 +3,7 @@ import SettingsModal from '../shared/SettingsModal';
 import SOSButton from '../shared/SOSButton';
 import InstagramPostModal from '../shared/InstagramPostModal';
 import imageCompression from 'browser-image-compression';
-import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2 } from "react-icons/fi";
+import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin } from "react-icons/fi";
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "No Rating" });
@@ -143,7 +143,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             if (response.ok) {
                 await response.json();
                 setGirlUser({ ...user, kyc_status: 'pending' });
-                alert("ID Submitted! Please wait 24 hours for verification. ⏳");
+                alert("ID Submitted! Please wait 24 hours for verification.");
             }
         } catch (err) {
             console.error(err);
@@ -341,7 +341,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     )}
                     {user.kyc_status === 'pending' && (
                         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-center gap-3">
-                            <span className="text-2xl animate-spin">⏳</span>
+                            <span className="text-2xl animate-spin text-yellow-500 flex items-center justify-center"><FiClock /></span>
                             <div>
                                 <h3 className="text-yellow-400 font-bold text-sm">KYC Under Review</h3>
                                 <p className="text-xs text-gray-400 mt-1">Your ID is being verified by our team. This usually takes 12-24 hours.</p>
@@ -367,16 +367,16 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => setActiveStatModal('earnings')}>
-                        <div className="text-[11px] text-gray-400 mb-1">💳 Earnings</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('earnings')}>
+                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiCreditCard size={12} /> Earnings</div>
                         <div className="text-xl font-bold text-pink-400">₹{stats.earnings}</div>
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => setActiveStatModal('rating')}>
-                        <div className="text-[11px] text-gray-400 mb-1">⭐ Rating</div>
-                        <div className="text-xl font-bold text-yellow-400">{stats.rating} ⭐</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('rating')}>
+                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiStar size={12} className="text-yellow-400 fill-yellow-400" /> Rating</div>
+                        <div className="text-xl font-bold text-yellow-400 flex items-center gap-1">{stats.rating} {stats.rating !== "No Rating" && <FiStar size={14} className="fill-yellow-400 text-yellow-400" />}</div>
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative" onClick={() => setActiveStatModal('my_bookings')}>
-                        <div className="text-[11px] text-gray-400 mb-1">📅 Bookings</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative flex flex-col justify-between" onClick={() => setActiveStatModal('my_bookings')}>
+                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiCalendar size={12} /> Bookings</div>
                         <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
                         {pendingBookings.length > 0 && (
                             <span className="absolute top-2 right-2 flex h-3 w-3">
@@ -385,8 +385,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             </span>
                         )}
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition" onClick={() => setActiveStatModal('notifications')}>
-                        <div className="text-[11px] text-gray-400 mb-1">🔔 Notifications</div>
+                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('notifications')}>
+                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiBell size={12} /> Notifications</div>
                         <div className="text-xl font-bold text-purple-400">{notificationsList.length}</div>
                     </div>
                 </div>
@@ -525,8 +525,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                                         <div className="text-[10px] text-gray-500">{new Date(booking.created_at).toLocaleDateString()}</div>
                                                     </div>
                                                     <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
-                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2">📅 <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
-                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2">📍 <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
+                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2"><FiCalendar size={12} className="text-pink-400" /> <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
+                                                        <div className="text-[11px] text-gray-400 flex items-center gap-2"><FiMapPin size={12} className="text-pink-400" /> <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
                                                         {booking.meeting_details && <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">"{booking.meeting_details}"</div>}
                                                     </div>
 
@@ -534,8 +534,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                                         {booking.status === 'pending' && (
                                                             (booking.sender_id === user.id || (!booking.sender_id && user.role === 'girl')) ? (
                                                                 <>
-                                                                    <span className="text-yellow-400 text-xs font-bold border border-yellow-400/20 px-3 py-2 rounded-lg bg-yellow-400/10">
-                                                                        ⏳ Pending
+                                                                    <span className="text-yellow-400 text-xs font-bold border border-yellow-400/20 px-3 py-2 rounded-lg bg-yellow-400/10 flex items-center gap-1">
+                                                                        <FiClock size={12} /> Pending
                                                                     </span>
                                                                     <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
                                                                         Cancel

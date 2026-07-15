@@ -34,7 +34,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
     const handleOpenFollowModal = async (type) => {
         if (!canViewList) {
-            alert("🔒 This account is private. Follow them to see their followers and following list.");
+            alert("This account is private. Follow them to see their followers and following list.");
             return;
         }
         setShowFollowModal(type);
@@ -363,10 +363,10 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                 const data = await reviewRes.json();
                 setReviews(data.reviews);
                 setAvgRating(data.avgRating);
-                alert("Review submitted! ⭐");
+                alert("Review submitted successfully!");
             } else {
                 const err = await response.json().catch(() => ({}));
-                alert(err.error || "Review submit nahi hua, try again.");
+                alert(err.error || "Failed to submit review, try again.");
             }
         } catch (error) {
             console.error(error);
@@ -469,16 +469,21 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                     {/* Right: Profile Info Block */}
                     <div className="flex-1 w-full flex flex-col items-center md:items-start text-center md:text-left">
                         
-                        {/* Row 1: Username & Action Buttons */}
-                        <div className="flex flex-col sm:flex-row items-center gap-3.5 mb-4 w-full justify-center md:justify-start">
-                            <span className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
-                                {profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
-                                {profile.kyc_status === 'verified' && (
-                                    <span className="text-blue-400" title="Verified Companion">✔</span>
-                                )}
-                            </span>
+                        {/* Row 1: Name, Username & Action Buttons */}
+                        <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 w-full justify-center md:justify-start">
+                            <div className="text-center md:text-left">
+                                <h1 className="text-xl md:text-2xl font-bold text-white flex items-center justify-center md:justify-start gap-2">
+                                    {profile.name}
+                                    {profile.kyc_status === 'verified' && (
+                                        <span className="text-blue-400" title="Verified Companion">✔</span>
+                                    )}
+                                </h1>
+                                <span className="text-[11px] text-gray-500 block mt-0.5 font-semibold">
+                                    @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
+                                </span>
+                            </div>
                             
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
                                 {currentUser && currentUser.id !== profile.id && (
                                     <button
                                         onClick={handleFollowToggle}
@@ -523,19 +528,18 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                             </button>
 
                             <div className="flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5">
-                                <span className="font-extrabold text-yellow-400 text-sm flex items-center gap-0.5">
-                                    ⭐ {avgRating > 0 ? Number(avgRating).toFixed(1) : 'New'}
+                                <span className="font-extrabold text-yellow-400 text-sm flex items-center gap-1">
+                                    <FiStar size={13} className="text-yellow-400 fill-yellow-400" /> {avgRating > 0 ? Number(avgRating).toFixed(1) : 'New'}
                                 </span>
                                 <span className="text-gray-400">({reviews.length} reviews)</span>
                             </div>
                         </div>
 
-                        {/* Row 3 & 4: Full Name, Location, Age, Bio & Tags */}
+                        {/* Row 3 & 4: Location, Age, Bio & Tags */}
                         <div className="w-full space-y-1.5 text-xs md:text-sm text-gray-300">
-                            <div className="font-extrabold text-white text-sm">{profile.name}</div>
                             
                             <div className="flex items-center justify-center md:justify-start gap-1.5 text-gray-400 text-xs">
-                                <span>📍 {profile.city || 'Unknown'}</span>
+                                <span className="flex items-center gap-0.5"><FiMapPin size={12} /> {profile.city || 'Unknown'}</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
                                 <span>{profile.age || 'N/A'} yrs</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
@@ -730,7 +734,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 disabled={!newReviewText.trim()}
                                 className={`px-5 py-2 rounded-lg text-sm font-bold transition ${newReviewText.trim() ? `bg-gradient-to-r ${accentGrad} text-white shadow-lg` : 'bg-white/5 text-gray-600 cursor-not-allowed'}`}
                             >
-                                Submit Review ⭐
+                                Submit Review
                             </button>
                         </div>
                     )}

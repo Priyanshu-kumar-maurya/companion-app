@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../../App";
-import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader } from "react-icons/fi";
+import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader, FiMessageCircle } from "react-icons/fi";
 
 const CITIES = ["Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur", "Kolkata", "Noida"];
 
@@ -545,7 +545,11 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                         </div>
                         <div className="p-4 bg-[#16162A]">
                             <div className="flex justify-between items-center mb-3">
-                                <span className="text-xs text-gray-400">❤️ {expandedPost.total_likes} Likes • 💬 {expandedPost.total_comments} Comments</span>
+                                <span className="text-xs text-gray-400 flex items-center gap-2">
+                                    <span className="flex items-center gap-1"><FiHeart size={12} className="text-red-500 fill-red-500" /> {expandedPost.total_likes} Likes</span>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1"><FiMessageCircle size={12} className="text-gray-400" /> {expandedPost.total_comments} Comments</span>
+                                </span>
                                 {expandedPost.type === 'saved' ? (
                                     <button onClick={() => handleUnsave(expandedPost.id)} className="px-3 py-1 bg-pink-500/20 border border-pink-500/40 text-pink-400 hover:bg-pink-500 hover:text-white rounded-lg text-xs font-bold transition">
                                         Unsave Post

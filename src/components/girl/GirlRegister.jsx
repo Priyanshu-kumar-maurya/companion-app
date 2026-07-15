@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { PAGES } from "../../App";
+import { FiCamera } from "react-icons/fi";
 
 const TAG_OPTIONS = ["Coffee Date", "Movie", "Shopping", "Study Partner", "Walk", "Events", "Dinner", "Travel", "Gaming"];
 
@@ -50,7 +51,7 @@ function GirlRegister({ setPage, setGirlUser }) {
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert("🎉 Registration Successful! Please login to continue.");
+                    alert("Registration Successful! Please login to continue.");
                     setPage(PAGES.GIRL_LOGIN); 
                 } else {
                     setError(data.error);
@@ -69,7 +70,7 @@ function GirlRegister({ setPage, setGirlUser }) {
     return (
         <div className="pt-16 min-h-[100dvh] flex items-center justify-center px-4 py-10">
             <div className="bg-[#16162A] border border-white/5 rounded-3xl p-10 w-full max-w-md shadow-2xl">
-                <h2 className="text-2xl font-bold mb-1">💁‍♀️ Join as a Companion</h2>
+                <h2 className="text-2xl font-bold mb-1">Join as a Companion</h2>
                 <p className="text-sm text-gray-400 mb-2">
                     Step {step} of 3 — {stepLabels[step - 1]}
                 </p>
@@ -91,7 +92,7 @@ function GirlRegister({ setPage, setGirlUser }) {
                     {step === 1 && (
                         <>
                             <div className="w-24 h-24 rounded-full bg-pink-500/10 border-2 border-dashed border-pink-500/30 flex items-center justify-center text-3xl cursor-pointer mx-auto mb-4">
-                                📷
+                                <FiCamera className="text-pink-500/50" />
                             </div>
                             <div>
                                 <label className="block text-xs text-gray-400 mb-1.5">Full Name</label>

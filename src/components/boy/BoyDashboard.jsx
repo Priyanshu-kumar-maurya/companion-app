@@ -135,7 +135,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             if (response.ok) {
                 await response.json();
                 setBoyUser({ ...user, kyc_status: 'pending' });
-                alert("ID Submitted! Please wait 24 hours for verification. ⏳");
+                alert("ID Submitted! Please wait 24 hours for verification.");
             }
         } catch (err) {
             console.error(err);
