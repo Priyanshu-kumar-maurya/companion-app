@@ -76,7 +76,45 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const menuRef = useRef(null);
 
     const [showBookingModal, setShowBookingModal] = useState(false);
-    const [meetingInfo, setMeetingInfo] = useState({ date: "", time: "", location: "" });
+    const [meetingInfo, setMeetingInfo] = useState(() => {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return { date: `${yyyy}-${mm}-${dd}`, time: "18:00", location: "" };
+    });
+    const [timeHour, setTimeHour] = useState("06");
+    const [timeMin, setTimeMin] = useState("00");
+    const [timeAmpm, setTimeAmpm] = useState("PM");
+
+    const updateTimeValue = (h, m, ap) => {
+        let hoursNum = parseInt(h);
+        if (ap === "PM" && hoursNum < 12) {
+            hoursNum += 12;
+        } else if (ap === "AM" && hoursNum === 12) {
+            hoursNum = 0;
+        }
+        const formattedHour = String(hoursNum).padStart(2, '0');
+        setMeetingInfo(prev => ({
+            ...prev,
+            time: `${formattedHour}:${m}`
+        }));
+    };
+
+    const handleHourChange = (val) => {
+        setTimeHour(val);
+        updateTimeValue(val, timeMin, timeAmpm);
+    };
+
+    const handleMinChange = (val) => {
+        setTimeMin(val);
+        updateTimeValue(timeHour, val, timeAmpm);
+    };
+
+    const handleAmpmChange = (val) => {
+        setTimeAmpm(val);
+        updateTimeValue(timeHour, timeMin, val);
+    };
 
     const handleDeletePost = async (postId) => {
         if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
@@ -787,14 +825,90 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                             </button>
                         </div>
                         <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Date</label>
-                                    <input type="date" value={meetingInfo.date} onChange={(e) => setMeetingInfo({ ...meetingInfo, date: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-pink-500 transition" style={{ background: '#0D0D1A' }} />
+                            <div>
+                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1.5">Select Date</label>
+                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                    {(() => {
+                                        const days = [];
+                                        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                                        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                                        for (let i = 0; i < 10; i++) {
+                                            const d = new Date();
+                                            d.setDate(d.getDate() + i);
+                                            const yyyy = d.getFullYear();
+                                            const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                            const dd = String(d.getDate()).padStart(2, '0');
+                                            const dateStr = `${yyyy}-${mm}-${dd}`;
+                                            days.push({
+                                                dateStr,
+                                                dayName: i === 0 ? "Today" : i === 1 ? "Tomorrow" : dayNames[d.getDay()],
+                                                dayNum: d.getDate(),
+                                                month: monthNames[d.getMonth()]
+                                            });
+                                        }
+                                        return days.map((item) => {
+                                            const isSelected = meetingInfo.date === item.dateStr;
+                                            return (
+                                                <button
+                                                    key={item.dateStr}
+                                                    type="button"
+                                                    onClick={() => setMeetingInfo({ ...meetingInfo, date: item.dateStr })}
+                                                    className={`flex flex-col items-center justify-center min-w-[68px] h-[78px] rounded-xl border transition-all ${
+                                                        isSelected 
+                                                            ? `bg-gradient-to-br ${accentGrad} border-transparent text-white shadow-lg scale-105` 
+                                                            : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-pink-500/50'
+                                                    }`}
+                                                >
+                                                    <span className="text-[9px] font-bold uppercase opacity-85">{item.dayName}</span>
+                                                    <span className="text-lg font-black my-0.5">{item.dayNum}</span>
+                                                    <span className="text-[8px] font-bold uppercase tracking-wider opacity-85">{item.month}</span>
+                                                </button>
+                                            );
+                                        });
+                                    })()}
                                 </div>
-                                <div>
-                                    <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Time</label>
-                                    <input type="time" value={meetingInfo.time} onChange={(e) => setMeetingInfo({ ...meetingInfo, time: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-pink-500 transition" style={{ background: '#0D0D1A' }} />
+                            </div>
+                            
+                            <div>
+                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1.5">Select Time</label>
+                                <div className="flex gap-2.5 items-center">
+                                    {/* Hour Select */}
+                                    <div className="flex-1 relative">
+                                        <select 
+                                            value={timeHour} 
+                                            onChange={(e) => handleHourChange(e.target.value)} 
+                                            className="w-full bg-[#0D0D1A] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500 transition appearance-none cursor-pointer text-center font-bold"
+                                        >
+                                            {["01","02","03","04","05","06","07","08","09","10","11","12"].map(h => (
+                                                <option key={h} value={h} className="bg-[#16162A]">{h}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <span className="text-gray-600 font-bold text-sm">:</span>
+                                    {/* Minute Select */}
+                                    <div className="flex-1 relative">
+                                        <select 
+                                            value={timeMin} 
+                                            onChange={(e) => handleMinChange(e.target.value)} 
+                                            className="w-full bg-[#0D0D1A] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500 transition appearance-none cursor-pointer text-center font-bold"
+                                        >
+                                            {["00","15","30","45"].map(m => (
+                                                <option key={m} value={m} className="bg-[#16162A]">{m}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    {/* AM/PM Select */}
+                                    <div className="flex-1 relative">
+                                        <select 
+                                            value={timeAmpm} 
+                                            onChange={(e) => handleAmpmChange(e.target.value)} 
+                                            className="w-full bg-[#0D0D1A] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500 transition appearance-none cursor-pointer text-center font-bold"
+                                        >
+                                            {["AM","PM"].map(ap => (
+                                                <option key={ap} value={ap} className="bg-[#16162A]">{ap}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div>
