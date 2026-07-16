@@ -5,13 +5,13 @@ let connectionString = process.env.DATABASE_URL;
 if (connectionString) {
     try {
         const parsedUrl = new URL(connectionString);
-        parsedUrl.searchParams.set('sslmode', 'require');
+        parsedUrl.searchParams.set('sslmode', 'verify-full');
         parsedUrl.searchParams.set('usestdlibpqcompat', 'true');
         connectionString = parsedUrl.toString();
     } catch (e) {
         if (!connectionString.includes('usestdlibpqcompat=true')) {
             const separator = connectionString.includes('?') ? '&' : '?';
-            connectionString = `${connectionString}${separator}sslmode=require&usestdlibpqcompat=true`;
+            connectionString = `${connectionString}${separator}sslmode=verify-full&usestdlibpqcompat=true`;
         }
     }
 }
