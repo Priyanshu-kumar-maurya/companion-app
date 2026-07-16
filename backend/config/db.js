@@ -1,8 +1,13 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+let connectionString = process.env.DATABASE_URL;
+if (connectionString && connectionString.includes('sslmode=require') && !connectionString.includes('usestdlibpqcompat=true')) {
+    connectionString = connectionString.replace('sslmode=require', 'sslmode=require&usestdlibpqcompat=true');
+}
+
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
     ssl: { rejectUnauthorized: false }
 });
 
