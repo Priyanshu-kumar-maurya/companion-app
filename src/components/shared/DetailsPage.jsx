@@ -484,12 +484,12 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
             </div>
 
             {/* ── INSTAGRAM LAYOUT HEADER ── */}
-            <div className="max-w-4xl mx-auto px-4 pt-6 md:pt-10">
-                <div className="flex flex-col md:flex-row gap-6 md:gap-20 items-center md:items-start pb-8 border-b border-white/5 mb-6">
-                    
-                    {/* Left: Avatar with gradient ring */}
+            <div className="max-w-4xl mx-auto px-4 pt-6 md:pt-10 pb-6 border-b border-white/5 mb-6">
+                {/* Mobile: Avatar & Stats side-by-side. Desktop: Left avatar, right content */}
+                <div className="flex items-center md:items-start gap-6 md:gap-20 mb-4 md:mb-6">
+                    {/* Avatar */}
                     <div 
-                        className={`relative w-28 h-28 md:w-36 md:h-36 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 bg-gradient-to-br ${accentGrad}`}
+                        className={`relative w-20 h-20 md:w-36 md:h-36 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 bg-gradient-to-br ${accentGrad}`}
                         onClick={() => profile.profile_pic && setShowDpModal(true)}
                     >
                         <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A]">
@@ -497,75 +497,71 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 <img src={profile.profile_pic} alt={profile.name} className="w-full h-full object-cover" />
                             ) : (
                                 <div className={`w-full h-full bg-gradient-to-br ${accentGrad} flex items-center justify-center`}>
-                                    <span className="text-white font-bold text-4xl">{profile.name?.[0]?.toUpperCase()}</span>
+                                    <span className="text-white font-bold text-2xl md:text-4xl">{profile.name?.[0]?.toUpperCase()}</span>
                                 </div>
                             )}
                         </div>
-                        {isOnline && <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 border-2 border-[#0D0D1A] rounded-full" />}
+                        {isOnline && <span className="absolute bottom-1 right-1 w-3 h-3 md:w-4 md:h-4 bg-green-400 border-2 border-[#0D0D1A] rounded-full" />}
                     </div>
 
-                    {/* Right: Profile Info Block */}
-                    <div className="flex-1 w-full flex flex-col items-center md:items-start text-center md:text-left">
-                        
-                        {/* Row 1: Name, Username & Action Buttons */}
-                        <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 w-full justify-center md:justify-start">
-                            <div className="text-center md:text-left">
-                                <h1 className="text-xl md:text-2xl font-bold text-white flex items-center justify-center md:justify-start gap-2">
-                                    {profile.name}
-                                    {profile.kyc_status === 'verified' && (
-                                        <span className="text-blue-400" title="Verified Companion">✔</span>
-                                    )}
-                                </h1>
-                                <span className="text-[11px] text-gray-500 block mt-0.5 font-semibold">
-                                    @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
-                                </span>
-                            </div>
-                            
-                            <div className="flex gap-2 items-center">
-                                {currentUser && currentUser.id !== profile.id && (
-                                    <button
-                                        onClick={handleFollowToggle}
-                                        disabled={followLoading}
-                                        className={`px-6 py-1.5 rounded-lg font-bold text-xs transition min-w-[90px] ${followStats.isFollowing
-                                            ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
-                                            : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-md`}`}
-                                    >
-                                        {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
-                                    </button>
+                    {/* Stats for Mobile (hidden on desktop) */}
+                    <div className="flex-1 flex justify-around md:hidden text-xs text-gray-300">
+                        <div className="flex flex-col items-center">
+                            <span className="font-extrabold text-white text-sm">{posts.length}</span>
+                            <span className="text-gray-400">posts</span>
+                        </div>
+                        <button
+                            onClick={() => handleOpenFollowModal('followers')}
+                            className={`flex flex-col items-center outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
+                        >
+                            <span className="font-extrabold text-white text-sm">{followStats.followers}</span>
+                            <span className="text-gray-400">followers</span>
+                        </button>
+                        <button
+                            onClick={() => handleOpenFollowModal('following')}
+                            className={`flex flex-col items-center outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
+                        >
+                            <span className="font-extrabold text-white text-sm">{followStats.following}</span>
+                            <span className="text-gray-400">following</span>
+                        </button>
+                    </div>
+
+                    {/* Desktop Content (hidden on mobile, right side of avatar) */}
+                    <div className="hidden md:flex flex-col flex-1 space-y-4">
+                        {/* Name & Handle */}
+                        <div>
+                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+                                {profile.name}
+                                {profile.kyc_status === 'verified' && (
+                                    <span className="text-blue-400" title="Verified Companion">✔</span>
                                 )}
-                                <button
-                                    onClick={() => setPage(PAGES.CHAT)}
-                                    className="px-6 py-1.5 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center gap-1.5"
-                                >
-                                    Message
-                                </button>
-                            </div>
+                            </h1>
+                            <span className="text-xs text-gray-500 mt-0.5 font-semibold block">
+                                @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
+                            </span>
                         </div>
 
-                        {/* Row 2: Inline Stats (like Instagram: 0 posts  30 followers  60 following) */}
-                        <div className="w-full flex justify-around md:justify-start gap-8 py-3.5 md:py-0 mb-4 border-y md:border-none border-white/5 text-xs text-gray-300">
-                            <div className="flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5">
+                        {/* Stats */}
+                        <div className="flex gap-8 text-xs text-gray-300">
+                            <div className="flex items-center gap-1">
                                 <span className="font-extrabold text-white text-sm">{posts.length}</span>
                                 <span className="text-gray-400">posts</span>
                             </div>
-                            
                             <button
                                 onClick={() => handleOpenFollowModal('followers')}
-                                className={`flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
+                                className={`flex items-center gap-1 outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
                             >
                                 <span className="font-extrabold text-white text-sm">{followStats.followers}</span>
                                 <span className="text-gray-400">followers</span>
                             </button>
-
                             <button
                                 onClick={() => handleOpenFollowModal('following')}
-                                className={`flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5 outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
+                                className={`flex items-center gap-1 outline-none ${canViewList ? 'cursor-pointer hover:text-white transition' : 'opacity-60 cursor-not-allowed'}`}
                             >
                                 <span className="font-extrabold text-white text-sm">{followStats.following}</span>
                                 <span className="text-gray-400">following</span>
                             </button>
-
-                            <div className="flex flex-col md:flex-row items-center gap-0.5 md:gap-1.5">
+                            <div className="flex items-center gap-1">
                                 <span className="font-extrabold text-yellow-400 text-sm flex items-center gap-1">
                                     <FiStar size={13} className="text-yellow-400 fill-yellow-400" /> {avgRating > 0 ? Number(avgRating).toFixed(1) : 'New'}
                                 </span>
@@ -573,10 +569,9 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                             </div>
                         </div>
 
-                        {/* Row 3 & 4: Location, Age, Bio & Tags */}
-                        <div className="w-full space-y-1.5 text-xs md:text-sm text-gray-300">
-                            
-                            <div className="flex items-center justify-center md:justify-start gap-1.5 text-gray-400 text-xs">
+                        {/* Bio, tags etc */}
+                        <div className="space-y-2 text-sm text-gray-300">
+                            <div className="flex items-center gap-1.5 text-gray-400 text-xs">
                                 <span className="flex items-center gap-0.5"><FiMapPin size={12} /> {profile.city || 'Unknown'}</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
                                 <span>{profile.age || 'N/A'} yrs</span>
@@ -588,23 +583,21 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 )}
                             </div>
 
-                            {profile.bio && (
-                                <p className="text-gray-300 leading-relaxed pt-1.5 text-xs">{profile.bio}</p>
-                            )}
+                            {profile.bio && <p className="text-gray-300 leading-relaxed text-xs">{profile.bio}</p>}
 
                             {profile.social_link && (
                                 <a 
                                     href={profile.social_link.startsWith('http') ? profile.social_link : `https://${profile.social_link}`}
                                     target="_blank" 
                                     rel="noopener noreferrer"
-                                    className="text-pink-400 font-extrabold hover:underline block pt-1 text-xs"
+                                    className="text-pink-400 font-extrabold hover:underline block text-xs"
                                 >
                                     🔗 {profile.social_link.replace(/^https?:\/\/(www\.)?/, '')}
                                 </a>
                             )}
 
                             {/* Tags */}
-                            <div className="flex flex-wrap gap-1.5 pt-2 justify-center md:justify-start">
+                            <div className="flex flex-wrap gap-1.5 pt-1">
                                 {safeTags.map((tag) => (
                                     <span 
                                         key={tag} 
@@ -617,6 +610,109 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                             </div>
                         </div>
 
+                        {/* Buttons below the bio on Desktop */}
+                        <div className="flex gap-2 pt-2">
+                            {currentUser && currentUser.id !== profile.id && (
+                                <button
+                                    onClick={handleFollowToggle}
+                                    disabled={followLoading}
+                                    className={`px-6 py-2 rounded-lg font-bold text-xs transition min-w-[120px] ${followStats.isFollowing
+                                        ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
+                                        : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-md`}`}
+                                >
+                                    {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setPage(PAGES.CHAT)}
+                                className="px-6 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5 min-w-[120px]"
+                            >
+                                Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Mobile Content Block (below avatar row, hidden on desktop) */}
+                <div className="md:hidden space-y-4">
+                    {/* Name & Handle */}
+                    <div>
+                        <h1 className="text-lg font-bold text-white flex items-center gap-2">
+                            {profile.name}
+                            {profile.kyc_status === 'verified' && (
+                                <span className="text-blue-400" title="Verified Companion">✔</span>
+                            )}
+                        </h1>
+                        <span className="text-[11px] text-gray-500 font-semibold block">
+                            @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
+                        </span>
+                    </div>
+
+                    {/* Bio, location, tags */}
+                    <div className="space-y-2 text-xs text-gray-300">
+                        <div className="flex items-center gap-1.5 text-gray-400">
+                            <span className="flex items-center gap-0.5"><FiMapPin size={12} /> {profile.city || 'Unknown'}</span>
+                            <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                            <span>{profile.age || 'N/A'} yrs</span>
+                            <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                            {isOnline ? (
+                                <span className="text-green-400 font-bold">Online</span>
+                            ) : (
+                                <span className="text-gray-500">Offline</span>
+                            )}
+                            <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                            <span className="text-yellow-400 flex items-center gap-0.5">
+                                <FiStar size={12} className="text-yellow-400 fill-yellow-400" /> {avgRating > 0 ? Number(avgRating).toFixed(1) : 'New'}
+                            </span>
+                            <span className="text-gray-500">({reviews.length})</span>
+                        </div>
+
+                        {profile.bio && <p className="text-gray-300 leading-relaxed text-xs">{profile.bio}</p>}
+
+                        {profile.social_link && (
+                            <a 
+                                href={profile.social_link.startsWith('http') ? profile.social_link : `https://${profile.social_link}`}
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-pink-400 font-extrabold hover:underline block text-xs"
+                            >
+                                🔗 {profile.social_link.replace(/^https?:\/\/(www\.)?/, '')}
+                            </a>
+                        )}
+
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                            {safeTags.map((tag) => (
+                                <span 
+                                    key={tag} 
+                                    className="px-2.5 py-1 text-[10px] font-bold rounded-md" 
+                                    style={{ background: `${accentColor}12`, color: accentColor, border: `1px solid ${accentColor}25` }}
+                                >
+                                    #{tag.trim()}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Action buttons at the bottom on Mobile */}
+                    <div className="flex gap-2 pt-2">
+                        {currentUser && currentUser.id !== profile.id && (
+                            <button
+                                onClick={handleFollowToggle}
+                                disabled={followLoading}
+                                className={`flex-1 py-2 rounded-lg font-bold text-xs transition ${followStats.isFollowing
+                                    ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
+                                    : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-md`}`}
+                            >
+                                {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
+                            </button>
+                        )}
+                        <button
+                            onClick={() => setPage(PAGES.CHAT)}
+                            className="flex-1 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5"
+                        >
+                            Message
+                        </button>
                     </div>
                 </div>
 
