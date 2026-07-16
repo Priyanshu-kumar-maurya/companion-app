@@ -2,8 +2,18 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 let connectionString = process.env.DATABASE_URL;
-if (connectionString && connectionString.includes('sslmode=require') && !connectionString.includes('usestdlibpqcompat=true')) {
-    connectionString = connectionString.replace('sslmode=require', 'sslmode=require&usestdlibpqcompat=true');
+if (connectionString) {
+    try {
+        const parsedUrl = new URL(connectionString);
+        parsedUrl.searchParams.set('sslmode', 'require');
+        parsedUrl.searchParams.set('usestdlibpqcompat', 'true');
+        connectionString = parsedUrl.toString();
+    } catch (e) {
+        if (!connectionString.includes('usestdlibpqcompat=true')) {
+            const separator = connectionString.includes('?') ? '&' : '?';
+            connectionString = `${connectionString}${separator}sslmode=require&usestdlibpqcompat=true`;
+        }
+    }
 }
 
 const pool = new Pool({

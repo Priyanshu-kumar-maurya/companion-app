@@ -21,13 +21,16 @@
 | 🔐 **OTP Email Verification** | Gmail SMTP powered OTP — register karo, email verify karo, tab login |
 | 👤 **Role-Based Dashboards** | Alag alag interface for Boys, Girls aur Admin |
 | 💬 **Real-Time Chat** | Socket.io powered instant messaging with read receipts & delete |
+| 📞 **WebRTC Calling** | Video & Audio calls with live ringing, instant silent connect, front/back camera toggling |
+| 🚨 **SOS Emergency System** | Add up to 3 emergency contacts (validated), trigger live GPS location alerts |
 | 📅 **Booking System** | Booking request bhejo, accept/reject karo, complete karo |
 | 🪪 **KYC Verification** | ID proof upload — platform safety ke liye |
-| 🖼️ **Gallery & Posts** | Profile pics, posts upload, like, comment system |
+| 🖼️ **Gallery & Posts** | Profile pics, posts upload, like, comment, liked & saved posts views |
 | 🔔 **Notifications** | Real-time activity notifications |
-| 🛡️ **Super Admin Panel** | Full user control — freeze, block, delete, KYC approve |
+| 🛡️ **Super Admin Panel** | Full user control — freeze, block, delete, KYC approve, live SOS dashboard |
 | 🔍 **Smart Search & Filter** | Girls/Boys/KYC/Frozen filter + search by name, email, phone |
 | 📊 **Admin Analytics** | User stats, gender distribution, KYC rate charts |
+| 🎨 **UI Cleanup** | Emojis replaced with clean, professional React Icons (`FiStar`, `FiMapPin`, etc.) |
 | 📱 **Responsive Design** | Mobile, tablet, desktop — sab pe perfectly kaam karta hai |
 
 ---
@@ -139,7 +142,8 @@ companion-app/
 │   │   ├── bookingRoutes.js    # Booking system
 │   │   ├── postRoutes.js       # Posts, likes, comments
 │   │   ├── chatRoutes.js       # Chat messages
-│   │   └── adminRoutes.js      # Admin controls
+│   │   ├── adminRoutes.js      # Admin controls
+│   │   └── sosRoutes.js        # SOS Emergency Alerts & Contacts
 │   ├── middleware/
 │   │   ├── rateLimiter.js      # API rate limiting
 │   │   └── sanitize.js         # XSS protection
