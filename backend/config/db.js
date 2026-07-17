@@ -21,6 +21,10 @@ const pool = new Pool({
     ssl: { rejectUnauthorized: false }
 });
 
+pool.on('error', (err) => {
+    console.error('⚠️ Unexpected error on idle PostgreSQL client:', err.message || err);
+});
+
 const connectDB = async () => {
     try {
         await pool.connect();
