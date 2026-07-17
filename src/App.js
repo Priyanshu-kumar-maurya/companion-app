@@ -158,22 +158,23 @@ function App() {
 
   if (isCheckingAuth) {
     return (
-      <div className="min-h-[100dvh] bg-[#0D0D1A] flex flex-col items-center justify-center gap-6 text-white">
+      <div className="min-h-[100dvh] bg-black flex flex-col items-center justify-center gap-6 text-white">
         <div className="relative">
-          <svg className="w-16 h-16 animate-spin drop-shadow-[0_0_12px_rgba(236,72,153,0.6)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animationDuration: '2.5s' }}>
+          <svg className="w-16 h-16 animate-spin drop-shadow-[0_0_12px_rgba(225,48,108,0.6)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ animationDuration: '2.5s' }}>
             <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#loader-ai-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#loader-ai-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
             <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#loader-ai-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
             <defs>
               <linearGradient id="loader-ai-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#ec4899" />
-                <stop offset="1" stopColor="#a855f7" />
+                <stop stopColor="#f9ce3f" />
+                <stop offset="0.5" stopColor="#e1306c" />
+                <stop offset="1" stopColor="#833ab4" />
               </linearGradient>
             </defs>
           </svg>
         </div>
-        <div className="text-base font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent animate-pulse tracking-wide">
-          Loading your dating experience...
+        <div className="text-base font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent animate-pulse tracking-wide">
+          Loading your companion experience...
         </div>
       </div>
     );
@@ -220,7 +221,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#0D0D1A] text-white overflow-x-hidden w-full relative">
+    <div className="min-h-[100dvh] bg-black text-white overflow-x-hidden w-full relative">
       <Navbar
         page={page}
         setPage={setPage}
@@ -236,16 +237,16 @@ function App() {
       {/* Global Alert & Confirm Dialog (Instagram Style) */}
       {globalAlert && (
         <div className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-fade-in">
-          <div className="bg-[#16162A] w-full max-w-[280px] rounded-2xl border border-white/10 overflow-hidden shadow-2xl flex flex-col items-center">
+          <div className="bg-[#121212] w-full max-w-[280px] rounded-2xl border border-[#262626] overflow-hidden shadow-2xl flex flex-col items-center">
             <div className="px-6 py-6 flex flex-col items-center text-center">
               <p className="text-sm text-gray-200 font-medium leading-relaxed break-words w-full">{globalAlert.message}</p>
             </div>
-            <div className="w-full flex flex-col divide-y divide-white/5 border-t border-white/5">
+            <div className="w-full flex flex-col divide-y divide-[#262626] border-t border-[#262626]">
               {globalAlert.type === 'confirm' ? (
                 <>
                   <button
                     onClick={globalAlert.onConfirm}
-                    className="w-full py-3.5 text-center text-sm font-bold text-pink-500 hover:bg-white/5 active:bg-white/10 transition outline-none"
+                    className="w-full py-3.5 text-center text-sm font-bold text-[#e1306c] hover:bg-white/5 active:bg-white/10 transition outline-none"
                   >
                     OK
                   </button>
@@ -259,7 +260,7 @@ function App() {
               ) : (
                 <button
                   onClick={globalAlert.onConfirm}
-                  className="w-full py-3.5 text-center text-sm font-bold text-pink-500 hover:bg-white/5 active:bg-white/10 transition outline-none"
+                  className="w-full py-3.5 text-center text-sm font-bold text-[#e1306c] hover:bg-white/5 active:bg-white/10 transition outline-none"
                 >
                   OK
                 </button>

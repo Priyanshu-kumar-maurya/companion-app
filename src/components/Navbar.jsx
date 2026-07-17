@@ -136,48 +136,48 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         }
     };
 
-    const activeColor = "text-pink-400 drop-shadow-[0_0_8px_rgba(244,114,182,0.8)]";
+    const activeColor = "text-[#e1306c] drop-shadow-[0_0_8px_rgba(225,48,108,0.5)]";
     const inactiveColor = "text-gray-500 hover:text-gray-300";
     const isHiddenScreen = page === PAGES.CHAT || page === PAGES.DETAILS;
 
     return (
         <>
             {!isHiddenScreen && (
-                <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/95 backdrop-blur-xl border-b border-white/8 hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.4)]">
+                <nav className="fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
                     <div className="max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
 
                         {/* ─── LEFT: Logo ─── */}
                         <button onClick={() => handleNavClick(PAGES.HOME)} className="flex items-center gap-2.5 shrink-0">
-                            <svg className="w-8 h-8 shrink-0 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <svg className="w-8 h-8 shrink-0 drop-shadow-[0_0_8px_rgba(225,48,108,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <defs><linearGradient id="ai-grad2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop stopColor="#ec4899" /><stop offset="1" stopColor="#a855f7" /></linearGradient></defs>
+                                <defs><linearGradient id="ai-grad2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop stopColor="#f9ce3f" /><stop offset="0.5" stopColor="#e1306c" /><stop offset="1" stopColor="#833ab4" /></linearGradient></defs>
                             </svg>
-                            <span className="text-lg font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
+                            <span className="text-lg font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide">RentGF</span>
                         </button>
 
                         {/* ─── CENTER: Nav Icons ─── */}
                         <div className="flex items-center gap-1 flex-1 justify-center">
                             {!currentUser ? (
                                 <>
-                                    <button onClick={() => handleNavClick(PAGES.HOME)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HOME ? 'text-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Home</button>
-                                    <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.ABOUT ? 'text-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>About</button>
-                                    <button onClick={() => handleNavClick(PAGES.HELP)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HELP ? 'text-pink-400 bg-pink-500/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Help</button>
+                                    <button onClick={() => handleNavClick(PAGES.HOME)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HOME ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Home</button>
+                                    <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.ABOUT ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>About</button>
+                                    <button onClick={() => handleNavClick(PAGES.HELP)} className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HELP ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>Help</button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => handleNavClick(PAGES.HOME)} title="Home" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.HOME ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                    <button onClick={() => handleNavClick(PAGES.HOME)} title="Home" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.HOME ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                         <FiHome size={20} /><span className="text-[9px] mt-0.5 font-semibold">Home</span>
                                     </button>
-                                    <button onClick={() => handleNavClick(PAGES.FIND)} title="Find" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.FIND ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                    <button onClick={() => handleNavClick(PAGES.FIND)} title="Find" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.FIND ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                         <FiSearch size={20} /><span className="text-[9px] mt-0.5 font-semibold">Find</span>
                                     </button>
-                                    <button onClick={() => handleNavClick(PAGES.MESSAGES)} title="Messages" className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.MESSAGES ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                    <button onClick={() => handleNavClick(PAGES.MESSAGES)} title="Messages" className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.MESSAGES ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                         <span className="relative"><FiMessageCircle size={20} />{unreadCount > 0 && <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[15px] text-center leading-[15px]">{unreadCount}</span>}</span>
                                         <span className="text-[9px] mt-0.5 font-semibold">Inbox</span>
                                     </button>
-                                    <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} title="Activity" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? 'text-pink-400 bg-pink-500/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                    <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} title="Activity" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                         <FiBell size={20} /><span className="text-[9px] mt-0.5 font-semibold">Activity</span>
                                     </button>
                                 </>
@@ -193,12 +193,12 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                             <FiShield size={13} /> Admin
                                         </button>
                                     )}
-                                    <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/15 hover:bg-white/20 rounded-full text-white transition shrink-0">
+                                    <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/5 border border-[#262626] hover:bg-white/10 rounded-full text-white transition shrink-0">
                                         <FiPlusCircle size={14} /> Post
                                     </button>
                                     <button
                                         onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
-                                        className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-sm font-bold transition-all border shrink-0 ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? 'bg-pink-500 border-pink-400 text-white shadow-[0_0_14px_rgba(236,72,153,0.4)]' : 'bg-gradient-to-r from-pink-500/80 to-purple-500/80 border-pink-500/30 text-white hover:from-pink-500 hover:to-purple-500'}`}
+                                        className={`flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-sm font-bold transition-all border shrink-0 ${page === PAGES.GIRL_DASHBOARD || page === PAGES.BOY_DASHBOARD ? 'bg-[#e1306c] border-[#e1306c]/50 text-white shadow-[0_0_14px_rgba(225,48,108,0.4)]' : 'bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] border-[#e1306c]/30 text-white shadow-[0_0_14px_rgba(225,48,108,0.2)] hover:opacity-95'}`}
                                     >
                                         {currentUser.profile_pic ? (
                                             <img src={currentUser.profile_pic} alt="" className="w-7 h-7 rounded-full object-cover border-2 border-white/30 shrink-0" />
@@ -210,8 +210,8 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-pink-500/60 text-pink-400 rounded-full hover:bg-pink-500 hover:text-white transition font-medium">Join as Girl</button>
-                                    <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-1.5 text-sm bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full hover:opacity-90 transition font-bold shadow-md">Find Companion</button>
+                                    <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-[#e1306c]/60 text-[#e1306c] rounded-full hover:bg-[#e1306c] hover:text-white transition font-medium">Join as Girl</button>
+                                    <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-1.5 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-full hover:opacity-90 transition font-bold shadow-md">Find Companion</button>
                                 </>
                             )}
                         </div>
@@ -221,15 +221,15 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
 
             {!isHiddenScreen && (
-                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur border-b border-white/10 h-14 flex items-center justify-between px-4">
-                    <h3 className="text-xl font-black bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent tracking-wider">
+                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur border-b border-[#262626] h-14 flex items-center justify-between px-4">
+                    <h3 className="text-xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider">
                         RentGF
                     </h3>
 
                     {currentUser ? (
                         <button
                             onClick={() => setShowPostModal(true)}
-                            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-white/20 hover:bg-white/20 rounded-full text-white transition"
+                            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-[#262626] hover:bg-white/20 rounded-full text-white transition"
                         >
                             <FiPlusCircle size={14} /> Post
                         </button>
@@ -242,20 +242,20 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             )}
 
             {isMenuOpen && !isHiddenScreen && !currentUser && (
-                <div className="md:hidden fixed top-14 left-0 w-full bg-[#16162A] border-b border-pink-500/20 py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
+                <div className="md:hidden fixed top-14 left-0 w-full bg-[#121212] border-b border-[#262626] py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}>Home</button>
                     <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`text-left ${getLinkStyle(PAGES.ABOUT)} w-fit`}>About</button>
                     <button onClick={() => handleNavClick(PAGES.HELP)} className={`text-left ${getLinkStyle(PAGES.HELP)} w-fit`}>Help</button>
                     <div className="h-px bg-white/10 w-full my-2"></div>
                     <div className="flex flex-col gap-3">
-                        <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-2 text-sm border border-pink-500 text-pink-400 rounded-xl text-center">Join as Girl</button>
-                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-2 text-sm bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl text-center">Find Companion</button>
+                        <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-2 text-sm border border-[#e1306c] text-[#e1306c] rounded-xl text-center">Join as Girl</button>
+                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-2 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-xl text-center">Find Companion</button>
                     </div>
                 </div>
             )}
 
             {!isHiddenScreen && (
-                <div className="fixed bottom-0 left-0 w-full bg-[#16162A]/95 backdrop-blur-xl border-t border-white/5 z-40 md:hidden pb-2 pt-2">
+                <div className="fixed bottom-0 left-0 w-full bg-[#121212]/95 backdrop-blur-xl border-t border-[#262626] z-40 md:hidden pb-2 pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
                         <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                             <FiHome size={21} /><span className="text-[9px] font-bold">Home</span>
@@ -311,8 +311,8 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
             {showPostModal && (
                 <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-0">
-                    <div className="bg-[#16162A] sm:border border-white/10 sm:rounded-2xl w-full max-w-md h-full sm:h-auto overflow-hidden flex flex-col animate-slide-up sm:animate-none">
-                        <div className="flex justify-between items-center px-4 py-3 border-b border-white/10 bg-[#0D0D1A]">
+                    <div className="bg-[#121212] sm:border border-[#262626] sm:rounded-2xl w-full max-w-md h-full sm:h-auto overflow-hidden flex flex-col animate-slide-up sm:animate-none">
+                        <div className="flex justify-between items-center px-4 py-3 border-b border-[#262626] bg-black">
                             <button onClick={closePostModal} className="text-white text-2xl hover:text-red-400 transition">✕</button>
                             <h3 className="font-bold text-white text-lg">New Post</h3>
                             <button

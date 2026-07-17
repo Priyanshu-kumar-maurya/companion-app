@@ -305,22 +305,22 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
     if (isLoggedIn) {
         return (
-            <div className="min-h-[100dvh] bg-[#0D0D1A] pt-20 pb-20 flex justify-center">
+            <div className="min-h-[100dvh] bg-black pt-20 pb-20 flex justify-center">
                 <div className="w-full max-w-lg flex flex-col gap-6 px-4">
                     {loading ? (
                         <div className="flex justify-center items-center h-64">
-                            <RiLoader4Line className="text-pink-500 text-5xl animate-spin" />
+                            <RiLoader4Line className="text-[#e1306c] text-5xl animate-spin" />
                         </div>
                     ) : feed.length === 0 ? (
-                        <div className="text-center py-20 bg-[#16162A] rounded-2xl border border-white/5">
+                        <div className="text-center py-20 bg-[#121212] rounded-2xl border border-[#262626]/80">
                             <FaInbox className="text-5xl text-gray-500 mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-white mb-2">No Posts Yet</h3>
                             <p className="text-gray-400">Be the first to share a moment!</p>
                         </div>
                     ) : (
                         feed.map(post => (
-                            <div key={post.id} className="bg-[#16162A] border border-white/10 rounded-2xl overflow-hidden shadow-lg">
-                                <div className="flex items-center justify-between p-3 border-b border-white/5">
+                            <div key={post.id} className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden shadow-lg">
+                                <div className="flex items-center justify-between p-3 border-b border-[#262626]/60">
                                     <div
                                         className="flex items-center gap-3 cursor-pointer group"
                                         onClick={() => handleProfileClick(post)}
@@ -328,34 +328,34 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         <img
                                             src={post.user_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
                                             alt={post.user_name}
-                                            className="w-10 h-10 rounded-full object-cover border border-white/20 group-hover:border-pink-500 transition"
+                                            className="w-10 h-10 rounded-full object-cover border border-[#262626] group-hover:border-[#e1306c] transition"
                                         />
                                         <div>
                                             <div className="flex items-center gap-1">
-                                                <span className="font-bold text-sm text-white group-hover:text-pink-400 transition">{post.user_name}</span>
+                                                <span className="font-bold text-sm text-white group-hover:text-[#e1306c] transition">{post.user_name}</span>
                                                 <span className="text-gray-500 text-xs">• {formatTime(post.created_at)}</span>
                                             </div>
                                             <span className="text-[10px] text-gray-400 uppercase tracking-widest">{post.user_role}</span>
                                         </div>
                                     </div>
-
+ 
                                     {post.user_id !== currentUser?.id && (
                                         <button
                                             onClick={() => handleFollowToggle(post.user_id)}
-                                            className={`px-4 py-1.5 text-xs font-bold rounded-full transition ${followingState[post.user_id] ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-pink-500 text-white hover:bg-pink-600'}`}
+                                            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${followingState[post.user_id] ? 'bg-[#363636] text-white hover:bg-[#262626]' : 'bg-[#0095f6] text-white hover:bg-[#1877f2]'}`}
                                         >
                                             {followingState[post.user_id] ? "Following" : "Follow"}
                                         </button>
                                     )}
                                 </div>
-
+ 
                                 <div
                                     className="relative w-full bg-black aspect-square cursor-pointer flex items-center justify-center"
                                     onDoubleClick={(e) => handleDoubleTap(e, post.id, post.is_liked_by_me)}
                                 >
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-contain" />
                                 </div>
-
+ 
                                 <div className="p-4">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-4">
@@ -364,7 +364,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                                 className="text-2xl hover:scale-110 transition active:scale-90"
                                             >
                                                 {post.is_liked_by_me
-                                                    ? <AiFillHeart className="text-pink-500 text-2xl" />
+                                                    ? <AiFillHeart className="text-[#ed4956] text-2xl" />
                                                     : <AiOutlineHeart className="text-white text-2xl" />
                                                 }
                                             </button>
@@ -379,25 +379,25 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         </div>
                                         <button onClick={() => toggleSave(post.id)} className="hover:scale-110 transition active:scale-90 opacity-90">
                                             {savedPosts.includes(post.id)
-                                                ? <BsBookmarkFill className="text-pink-400 text-xl" />
+                                                ? <BsBookmarkFill className="text-white text-xl" />
                                                 : <BsBookmark className="text-white text-xl" />
                                             }
                                         </button>
                                     </div>
-
+ 
                                     {!post.hide_likes && (
                                         <div className="font-bold text-sm text-white mb-1">
                                             {post.total_likes} likes
                                         </div>
                                     )}
-
+ 
                                     <div className="text-sm text-gray-200">
-                                        <span className="font-bold mr-2 cursor-pointer hover:text-pink-400" onClick={() => handleProfileClick(post)}>
+                                        <span className="font-bold mr-2 cursor-pointer hover:text-[#e1306c]" onClick={() => handleProfileClick(post)}>
                                             {post.user_name}
                                         </span>
                                         {post.caption}
                                     </div>
-
+ 
                                     {!post.disable_comments && parseInt(post.total_comments) > 0 && (
                                         <div
                                             onClick={() => openComments(post.id)}
@@ -411,19 +411,19 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         ))
                     )}
                 </div>
-
+ 
                 {commentModal.isOpen && (
                     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
-                        <div className="bg-[#16162A] w-full max-w-lg h-[70vh] sm:h-[80vh] sm:rounded-2xl rounded-t-3xl border border-white/10 flex flex-col animate-slide-up sm:animate-none">
-                            <div className="flex justify-between items-center p-4 border-b border-white/10">
+                        <div className="bg-[#121212] w-full max-w-lg h-[70vh] sm:h-[80vh] sm:rounded-2xl rounded-t-3xl border border-[#262626] flex flex-col animate-slide-up sm:animate-none">
+                            <div className="flex justify-between items-center p-4 border-b border-[#262626]">
                                 <h3 className="font-bold text-white text-lg w-full text-center">Comments</h3>
                                 <button onClick={() => setCommentModal({ isOpen: false, postId: null, comments: [] })} className="text-gray-400 hover:text-white absolute right-4 text-2xl">✕</button>
                             </div>
-
+ 
                             <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                                 {loadingComments ? (
                                     <div className="flex justify-center items-center my-10">
-                                        <RiLoader4Line className="text-pink-500 text-3xl animate-spin" />
+                                        <RiLoader4Line className="text-[#e1306c] text-3xl animate-spin" />
                                     </div>
                                 ) : commentModal.comments.length === 0 ? (
                                     <div className="text-center text-gray-500 my-10">No comments yet. Be the first!</div>
@@ -440,9 +440,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                     ))
                                 )}
                             </div>
-
-                            <div className="p-4 border-t border-white/10 bg-[#0D0D1A] flex gap-3 pb-8 sm:pb-4">
-                                <img src={currentUser.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} className="w-10 h-10 rounded-full object-cover" alt="" />
+ 
+                            <div className="p-4 border-t border-[#262626] bg-black flex gap-3 pb-8 sm:pb-4">
+                                <img src={currentUser.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} className="w-10 h-10 rounded-full object-cover animate-pulse" alt="" />
                                 <div className="flex-1 relative">
                                     <input
                                         type="text"
@@ -450,12 +450,12 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         value={newComment}
                                         onChange={(e) => setNewComment(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && submitComment()}
-                                        className="w-full bg-transparent border border-white/20 rounded-full pl-4 pr-12 py-2.5 text-sm text-white outline-none focus:border-pink-500"
+                                        className="w-full bg-transparent border border-[#262626] rounded-full pl-4 pr-12 py-2.5 text-sm text-white outline-none focus:border-[#e1306c]"
                                     />
                                     <button
                                         onClick={submitComment}
                                         disabled={!newComment.trim()}
-                                        className={`absolute right-3 top-1/2 -translate-y-1/2 font-bold text-sm ${newComment.trim() ? 'text-pink-500' : 'text-gray-600'}`}
+                                        className={`absolute right-3 top-1/2 -translate-y-1/2 font-bold text-sm ${newComment.trim() ? 'text-[#e1306c]' : 'text-gray-600'}`}
                                     >
                                         Post
                                     </button>
@@ -516,19 +516,19 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     ];
 
     return (
-        <div className="min-h-[100dvh] bg-[#0D0D1A] pt-24 pb-10">
+        <div className="min-h-[100dvh] bg-black pt-24 pb-10">
             {/* Main Hero Container */}
             <div className="max-w-5xl mx-auto px-6 mt-6 md:mt-12 mb-16 relative">
                 {/* Ambient lights */}
-                <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-pink-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-[#e1306c]/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-[#833ab4]/10 rounded-full blur-[100px] pointer-events-none"></div>
  
                 {/* Two Column Layout: Left (Phone Mockup) | Right (Login/Signup Box) */}
                 <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 w-full">
                     
                     {/* LEFT COLUMN: Phone Mockup */}
                     <div className="shrink-0 scale-90 sm:scale-100 flex justify-center order-2 lg:order-1">
-                        <div className="relative w-[280px] h-[550px] bg-black rounded-[45px] p-[10px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-[6px] border-[#22223b] overflow-hidden">
+                        <div className="relative w-[280px] h-[550px] bg-black rounded-[45px] p-[10px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-[6px] border-[#262626] overflow-hidden">
                             {/* Notch */}
                             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-black rounded-full z-30 flex items-center justify-center">
                                 <div className="w-10 h-1 bg-gray-800 rounded-full"></div>
@@ -541,10 +541,10 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             <div className="absolute right-0 top-32 w-[3px] h-16 bg-gray-800 rounded-l-md"></div>
  
                             {/* Inner Screen */}
-                            <div className="relative w-full h-full rounded-[38px] overflow-hidden bg-[#0D0D1A]">
+                            <div className="relative w-full h-full rounded-[38px] overflow-hidden bg-black">
                                 {/* Slide 0: Discover Profiles */}
                                 <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 0 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
-                                    <div className="h-full w-full bg-[#111122] flex flex-col p-4 justify-between relative overflow-hidden">
+                                    <div className="h-full w-full bg-black flex flex-col p-4 justify-between relative overflow-hidden">
                                         <div className="flex justify-between items-center text-[9px] text-gray-400 z-10 pt-2">
                                             <span>09:41</span>
                                             <div className="flex gap-1.5 items-center">
@@ -554,8 +554,8 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         </div>
                                         
                                         <div className="flex-1 flex flex-col justify-center my-3 z-10">
-                                            <div className="bg-[#1C1C36] rounded-2xl overflow-hidden border border-pink-500/20 shadow-xl relative h-full flex flex-col justify-between">
-                                                <div className="absolute inset-0 bg-gradient-to-tr from-pink-500/25 to-purple-500/25 z-0"></div>
+                                            <div className="bg-[#121212] rounded-2xl overflow-hidden border border-[#262626] shadow-xl relative h-full flex flex-col justify-between">
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-[#f9ce3f]/15 via-[#e1306c]/15 to-[#833ab4]/15 z-0"></div>
                                                 
                                                 <div className="flex-1 relative z-10 flex items-center justify-center p-3">
                                                     <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-white/20">
@@ -563,17 +563,17 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                                     </div>
                                                 </div>
                                                 
-                                                <div className="bg-black/60 backdrop-blur-md p-3 relative z-10 border-t border-white/5">
+                                                <div className="bg-[#121212]/90 backdrop-blur-md p-3 relative z-10 border-t border-[#262626]">
                                                     <div className="flex items-center gap-1.5 mb-0.5">
                                                         <span className="font-extrabold text-[12px] text-white">Ananya, 21</span>
-                                                        <span className="bg-pink-500 text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">VERIFIED</span>
+                                                        <span className="bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">VERIFIED</span>
                                                     </div>
                                                     <p className="text-[9px] text-gray-300 flex items-center gap-1">
                                                         Mumbai • <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-pulse"></span> Online
                                                     </p>
                                                     <div className="flex gap-1 mt-1.5 flex-wrap">
-                                                        <span className="bg-pink-500/30 text-pink-300 text-[7px] px-1.5 py-0.5 rounded-full font-bold">Coffee</span>
-                                                        <span className="bg-purple-500/30 text-purple-300 text-[7px] px-1.5 py-0.5 rounded-full font-bold">Movies</span>
+                                                        <span className="bg-[#e1306c]/20 text-[#e1306c] text-[7px] px-1.5 py-0.5 rounded-full font-bold">Coffee</span>
+                                                        <span className="bg-[#833ab4]/20 text-[#833ab4] text-[7px] px-1.5 py-0.5 rounded-full font-bold">Movies</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -584,7 +584,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
  
                                 {/* Slide 1: Premium Chat */}
                                 <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 1 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
-                                    <div className="h-full w-full bg-[#0E0E1F] flex flex-col p-4 justify-between">
+                                    <div className="h-full w-full bg-black flex flex-col p-4 justify-between">
                                         <div className="flex justify-between items-center text-[9px] text-gray-400 pt-2">
                                             <span>09:42</span>
                                             <div className="flex gap-1.5 items-center">
@@ -593,7 +593,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                             </div>
                                         </div>
                                         
-                                        <div className="flex items-center gap-2 border-b border-white/10 pb-2 mt-2">
+                                        <div className="flex items-center gap-2 border-b border-[#262626] pb-2 mt-2">
                                             <div className="w-6 h-6 rounded-full overflow-hidden shadow">
                                                 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80" className="w-full h-full object-cover" alt="" />
                                             </div>
@@ -604,32 +604,32 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         </div>
                                         
                                         <div className="flex-1 flex flex-col gap-2 justify-end my-3 text-[9px]">
-                                            <div className="bg-[#1C1C36] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-white/5">
+                                            <div className="bg-[#121212] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-[#262626]">
                                                 Hey! Ready for our coffee date?
                                             </div>
-                                            <div className="bg-pink-500 text-white p-2 rounded-2xl rounded-tr-none max-w-[85%] self-end shadow-md font-medium">
+                                            <div className="bg-[#e1306c] text-white p-2 rounded-2xl rounded-tr-none max-w-[85%] self-end shadow-md font-medium">
                                                 Absolutely! See you at 5.
                                             </div>
-                                            <div className="bg-[#1C1C36] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-white/5 animate-pulse">
+                                            <div className="bg-[#121212] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-[#262626] animate-pulse">
                                                 Great! I'm on my way.
                                             </div>
                                         </div>
                                         
-                                        <div className="bg-white/5 rounded-full px-3 py-1 flex justify-between items-center border border-white/10 mb-1">
+                                        <div className="bg-white/5 rounded-full px-3 py-1 flex justify-between items-center border border-[#262626] mb-1">
                                             <span className="text-[8px] text-gray-500">Message...</span>
-                                            <span className="text-pink-500 text-[8px] font-bold">Send</span>
+                                            <span className="text-[#e1306c] text-[8px] font-bold">Send</span>
                                         </div>
                                     </div>
                                 </div>
  
                                 {/* Slide 2: Video Calling */}
                                 <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 2 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
-                                    <div className="h-full w-full bg-[#111122] flex flex-col p-4 justify-between relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-[#0D0D1A] to-pink-900/20 z-0"></div>
+                                    <div className="h-full w-full bg-black flex flex-col p-4 justify-between relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-b from-[#833ab4]/10 via-black to-[#e1306c]/10 z-0"></div>
                                         
                                         <div className="flex justify-between items-center text-[9px] text-gray-400 z-10 pt-2 w-full">
                                             <span>09:43</span>
-                                            <span className="font-bold text-white uppercase tracking-wider text-[7px] bg-pink-500/25 px-1.5 py-0.5 rounded-full border border-pink-500/30">HD Video</span>
+                                            <span className="font-bold text-white uppercase tracking-wider text-[7px] bg-[#e1306c]/20 px-1.5 py-0.5 rounded-full border border-[#e1306c]/30">HD Video</span>
                                             <div className="flex gap-1.5 items-center text-gray-400">
                                                 <FiWifi size={10} />
                                                 <FiBattery size={10} />
@@ -637,7 +637,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         </div>
                                         
                                         <div className="flex-1 flex flex-col items-center justify-center gap-1.5 z-10">
-                                            <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_0_20px_rgba(236,72,153,0.35)] border-2 border-white/30 animate-pulse relative">
+                                            <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_0_20px_rgba(225,48,108,0.35)] border-2 border-white/30 animate-pulse relative">
                                                 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" className="w-full h-full object-cover" alt="" />
                                                 <span className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border border-[#111122] flex items-center justify-center">
                                                     <FiMic className="text-white text-[8px]" size={8} />
@@ -647,18 +647,18 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                             <span className="text-[8px] text-gray-400">Connected • 02:45</span>
                                         </div>
                                         
-                                        <div className="absolute top-10 right-4 w-10 h-14 bg-[#16162A] rounded-lg border border-white/20 z-20 overflow-hidden shadow-lg">
+                                        <div className="absolute top-10 right-4 w-10 h-14 bg-[#121212] rounded-lg border border-[#262626] z-20 overflow-hidden shadow-lg">
                                             <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100" className="w-full h-full object-cover" alt="" />
                                         </div>
                                         
                                         <div className="flex justify-center gap-3 items-center z-10 mb-1">
-                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white">
+                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-[#262626] flex items-center justify-center text-white">
                                                 <FiMicOff size={9} />
                                             </div>
-                                            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg animate-bounce">
+                                            <div className="w-8 h-8 rounded-full bg-[#ed4956] flex items-center justify-center text-white shadow-lg animate-bounce">
                                                 <FiPhoneOff size={11} />
                                             </div>
-                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white">
+                                            <div className="w-6 h-6 rounded-full bg-white/10 border border-[#262626] flex items-center justify-center text-white">
                                                 <FiVideoOff size={9} />
                                             </div>
                                         </div>
@@ -670,26 +670,27 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
  
                     {/* RIGHT COLUMN: Premium Card */}
                     <div className="w-full max-w-[360px] flex flex-col gap-4 animate-fade-in order-1 lg:order-2">
-                        <div className="bg-[#16162A]/95 border border-white/10 rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(236,72,153,0.15)] backdrop-blur-md relative overflow-hidden flex flex-col items-center">
+                        <div className="bg-[#121212]/95 border border-[#262626] rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(225,48,108,0.1)] backdrop-blur-md relative overflow-hidden flex flex-col items-center">
                             
                             {/* Ambient card glows */}
-                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-pink-500/10 rounded-full blur-xl pointer-events-none"></div>
-                            <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#e1306c]/10 rounded-full blur-xl pointer-events-none"></div>
+                            <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-[#833ab4]/10 rounded-full blur-xl pointer-events-none"></div>
                             
                             {/* Platform Branding */}
                             <div className="flex items-center gap-2.5 mb-6">
-                                <svg className="w-9 h-9 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <svg className="w-9 h-9 drop-shadow-[0_0_8px_rgba(225,48,108,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                     <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                     <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                     <defs>
                                         <linearGradient id="hero-logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                                            <stop stopColor="#ec4899" />
-                                            <stop offset="1" stopColor="#a855f7" />
+                                            <stop stopColor="#f9ce3f" />
+                                            <stop offset="0.5" stopColor="#e1306c" />
+                                            <stop offset="1" stopColor="#833ab4" />
                                         </linearGradient>
                                     </defs>
                                 </svg>
-                                <span className="text-3xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
+                                <span className="text-3xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide">RentGF</span>
                             </div>
  
                             {/* Short Intro */}
@@ -701,14 +702,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             <div className="w-full flex flex-col gap-4">
                                 <button
                                     onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-95 text-sm text-white shadow-lg shadow-pink-500/20 transition transform hover:-translate-y-0.5 active:scale-95"
+                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] hover:opacity-95 text-sm text-white shadow-lg shadow-[#e1306c]/20 transition transform hover:-translate-y-0.5 active:scale-95"
                                 >
                                     Log In
                                 </button>
                                 
                                 <button
                                     onClick={() => setPage(PAGES.BOY_REGISTER)}
-                                    className="w-full py-3.5 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
+                                    className="w-full py-3.5 bg-transparent hover:bg-white/5 text-white border border-[#262626] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
                                 >
                                     Create New Account
                                 </button>
@@ -729,22 +730,22 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
             {/* Premium Trust & Safety Row */}
             <div className="max-w-5xl mx-auto px-6 mb-20">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-[#16162A]/60 border border-white/5 rounded-2xl p-6 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-400 mb-4 border border-pink-500/25">
+                    <div className="bg-[#121212]/60 border border-[#262626]/80 rounded-2xl p-6 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 rounded-xl bg-[#e1306c]/10 flex items-center justify-center text-[#e1306c] mb-4 border border-[#e1306c]/20">
                             <FiShield size={24} />
                         </div>
                         <h4 className="font-bold text-white text-base mb-1.5">100% Safe &amp; Private</h4>
                         <p className="text-xs text-gray-400 leading-relaxed">Your data and personal identity are encrypted. Complete privacy guaranteed.</p>
                     </div>
-                    <div className="bg-[#16162A]/60 border border-white/5 rounded-2xl p-6 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4 border border-purple-500/25">
+                    <div className="bg-[#121212]/60 border border-[#262626]/80 rounded-2xl p-6 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 rounded-xl bg-[#833ab4]/10 flex items-center justify-center text-[#833ab4] mb-4 border border-[#833ab4]/20">
                             <FiCheckCircle size={24} />
                         </div>
                         <h4 className="font-bold text-white text-base mb-1.5">KYC Verified Profiles</h4>
                         <p className="text-xs text-gray-400 leading-relaxed">Companions undergo government ID verification check for absolute authenticity.</p>
                     </div>
-                    <div className="bg-[#16162A]/60 border border-white/5 rounded-2xl p-6 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4 border border-blue-500/25">
+                    <div className="bg-[#121212]/60 border border-[#262626]/80 rounded-2xl p-6 flex flex-col items-center text-center">
+                        <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4 border border-blue-500/20">
                             <FiClock size={24} />
                         </div>
                         <h4 className="font-bold text-white text-base mb-1.5">Instant Connectivity</h4>
@@ -756,7 +757,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
             {/* CURATED FEATURED COMPANIONS GRID */}
             <div className="max-w-5xl mx-auto px-6 mb-20">
                 <div className="text-center mb-10">
-                    <span className="text-xs font-bold tracking-widest text-pink-500 uppercase">Discover</span>
+                    <span className="text-xs font-bold tracking-widest text-[#e1306c] uppercase">Discover</span>
                     <h2 className="text-3xl font-bold mb-3 mt-1">Featured Companions</h2>
                     <p className="text-gray-400 text-sm">Have a look at some of our popular companion profiles.</p>
                 </div>
@@ -765,7 +766,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     {featuredCompanions.map((comp) => (
                         <div 
                             key={comp.id}
-                            className="bg-[#16162A]/90 border border-white/10 rounded-2xl overflow-hidden shadow-xl hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group"
+                            className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden shadow-xl hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group"
                         >
                             {/* Profile Image Column */}
                             <div className="relative aspect-[4/5] overflow-hidden bg-black shrink-0">
@@ -773,7 +774,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-yellow-400 font-bold border border-white/10 flex items-center gap-1 shadow-md">
                                     <FiStar size={11} className="fill-yellow-400" /> {comp.rating}
                                 </div>
-                                <span className="absolute bottom-3 left-3 bg-pink-500 text-white text-[8px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-white/10">
+                                <span className="absolute bottom-3 left-3 bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white text-[8px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-white/10">
                                     <FiCheckCircle size={9} /> Verified
                                 </span>
                             </div>
@@ -788,7 +789,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         {comp.tags.slice(0, 2).map((tag) => (
                                             <span 
                                                 key={tag} 
-                                                className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-pink-500/10 text-pink-400 border border-pink-500/10"
+                                                className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-[#e1306c]/10 text-[#e1306c] border border-[#e1306c]/10"
                                             >
                                                 #{tag}
                                             </span>
@@ -798,7 +799,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
                                 <button
                                     onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                    className="w-full mt-4 py-2 rounded-lg text-center font-bold text-[10px] bg-white/5 hover:bg-pink-500/20 text-white border border-white/10 hover:border-pink-500/30 transition shadow-sm"
+                                    className="w-full mt-4 py-2 rounded-lg text-center font-bold text-[10px] bg-transparent border border-[#262626] text-white hover:bg-[#e1306c]/20 hover:border-[#e1306c]/30 transition shadow-sm"
                                 >
                                     Connect Now
                                 </button>
@@ -816,25 +817,25 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
  
                 {loading ? (
                     <div className="flex justify-center items-center py-10">
-                        <RiLoader4Line className="text-pink-500 text-4xl animate-spin" />
+                        <RiLoader4Line className="text-[#e1306c] text-4xl animate-spin" />
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-[#16162A]/80 border border-white/5 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300">
+                        <div className="bg-[#121212] border border-[#262626] rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300">
                             <div className="text-4xl font-extrabold text-white mb-2">{stats.total}</div>
                             <div className="text-xs text-gray-400 uppercase tracking-widest">Total Users</div>
                         </div>
-                        <div className="bg-[#16162A]/80 border border-pink-500/10 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(236,72,153,0.05)]">
-                            <div className="text-4xl font-extrabold text-pink-400 mb-2">{stats.girls}</div>
-                            <div className="text-xs text-pink-400/80 uppercase tracking-widest">Female Companions</div>
+                        <div className="bg-[#121212] border border-[#e1306c]/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(225,48,108,0.05)]">
+                            <div className="text-4xl font-extrabold text-[#e1306c] mb-2">{stats.girls}</div>
+                            <div className="text-xs text-[#e1306c]/80 uppercase tracking-widest">Female Companions</div>
                         </div>
-                        <div className="bg-[#16162A]/80 border border-blue-500/10 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(59,130,246,0.05)]">
+                        <div className="bg-[#121212] border border-blue-500/20 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(59,130,246,0.05)]">
                             <div className="text-4xl font-extrabold text-blue-400 mb-2">{stats.boys}</div>
                             <div className="text-xs text-blue-400/80 uppercase tracking-widest">Male Companions</div>
                         </div>
-                        <div className="bg-[#16162A]/80 border border-purple-500/10 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(168,85,247,0.05)]">
-                            <div className="text-4xl font-extrabold text-purple-400 mb-2">{stats.connections}+</div>
-                            <div className="text-xs text-purple-400/80 uppercase tracking-widest">Happy Connections</div>
+                        <div className="bg-[#121212] border border-[#833ab4]/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(131,58,180,0.05)]">
+                            <div className="text-4xl font-extrabold text-[#833ab4] mb-2">{stats.connections}+</div>
+                            <div className="text-xs text-[#833ab4]/80 uppercase tracking-widest">Happy Connections</div>
                         </div>
                     </div>
                 )}
