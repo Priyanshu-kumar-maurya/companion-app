@@ -79,41 +79,52 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         setSavedPosts(savedData.map(p => p.id));
                     }
                 } else {
-                    const girlRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=girl");
-                    const boyRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=boy");
+                    const res = await fetch("https://rentgf-and-bf.onrender.com/api/users");
+                    if (res.ok) {
+                        const allUsers = await res.json();
+                        const girls = allUsers.filter(u => u.role === 'girl');
+                        const boys = allUsers.filter(u => u.role === 'boy' || u.role === 'admin');
 
-                    let girlList = [];
-                    let boyList = [];
+                        const newStats = {
+                            girls: girls.length,
+                            boys: boys.length,
+                            total: allUsers.length,
+                            connections: allUsers.length * 15 + 120
+                        };
 
-                    if (girlRes.ok) girlList = await girlRes.json();
-                    if (boyRes.ok) boyList = await boyRes.json();
+                        setStats(newStats);
+                        sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
 
-                    const girlCount = girlList.length;
-                    const boyCount = boyList.length;
+                        const mapped = allUsers.map(u => {
+                            let tagsArray = [];
+                            if (typeof u.tags === 'string' && u.tags.trim() !== '') {
+                                tagsArray = u.tags.split(',').map(t => t.trim());
+                            } else if (Array.isArray(u.tags)) {
+                                tagsArray = u.tags;
+                            } else if (u.bio && u.bio.trim() !== '') {
+                                tagsArray = [u.bio.trim()];
+                            } else {
+                                tagsArray = ['Verified Partner'];
+                            }
 
-                    const newStats = {
-                        girls: girlCount,
-                        boys: boyCount,
-                        total: girlCount + boyCount,
-                        connections: (girlCount + boyCount) * 15 + 120
-                    };
+                            const avgRat = parseFloat(u.avg_rating);
 
-                    setStats(newStats);
-                    sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
+                            return {
+                                id: u.id,
+                                name: u.name || u.username || 'User',
+                                age: u.age || 21,
+                                city: u.city || 'India',
+                                rating: avgRat > 0 ? avgRat : 4.9,
+                                profile_pic: u.profile_pic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                                tags: tagsArray,
+                                role: u.role,
+                                kyc_status: u.kyc_status,
+                                userObj: u
+                            };
+                        });
 
-                    const allUsers = [...girlList, ...boyList];
-                    const realCompanions = allUsers.map(u => ({
-                        id: u.id,
-                        name: u.name,
-                        age: u.age || 21,
-                        city: u.city || 'India',
-                        rating: u.rating || 4.9,
-                        profile_pic: u.profile_pic || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=250',
-                        tags: Array.isArray(u.hobbies) ? u.hobbies : (u.bio ? [u.bio.slice(0, 15)] : ['Verified Companion']),
-                        role: u.role,
-                        userObj: u
-                    }));
-                    setFeaturedCompanions(realCompanions);
+                        setFeaturedCompanions(mapped);
+                    }
                 }
             } catch (err) {
                 console.error(err);
