@@ -16,6 +16,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [newComment, setNewComment] = useState("");
     const [loadingComments, setLoadingComments] = useState(false);
     const [savedPosts, setSavedPosts] = useState([]);
+    const [featuredCompanions, setFeaturedCompanions] = useState([]);
 
     const isLoggedIn = !!localStorage.getItem("token") || !!currentUser;
     const [activeSlide, setActiveSlide] = useState(0);
@@ -81,11 +82,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     const girlRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=girl");
                     const boyRes = await fetch("https://rentgf-and-bf.onrender.com/api/users?role=boy");
 
-                    let girlCount = 0;
-                    let boyCount = 0;
+                    let girlList = [];
+                    let boyList = [];
 
-                    if (girlRes.ok) girlCount = (await girlRes.json()).length;
-                    if (boyRes.ok) boyCount = (await boyRes.json()).length;
+                    if (girlRes.ok) girlList = await girlRes.json();
+                    if (boyRes.ok) boyList = await boyRes.json();
+
+                    const girlCount = girlList.length;
+                    const boyCount = boyList.length;
 
                     const newStats = {
                         girls: girlCount,
@@ -96,6 +100,20 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
                     setStats(newStats);
                     sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
+
+                    const allUsers = [...girlList, ...boyList];
+                    const realCompanions = allUsers.map(u => ({
+                        id: u.id,
+                        name: u.name,
+                        age: u.age || 21,
+                        city: u.city || 'India',
+                        rating: u.rating || 4.9,
+                        profile_pic: u.profile_pic || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=250',
+                        tags: Array.isArray(u.hobbies) ? u.hobbies : (u.bio ? [u.bio.slice(0, 15)] : ['Verified Companion']),
+                        role: u.role,
+                        userObj: u
+                    }));
+                    setFeaturedCompanions(realCompanions);
                 }
             } catch (err) {
                 console.error(err);
@@ -468,60 +486,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         );
     }
 
-    const featuredCompanions = [
-        {
-            id: 101,
-            name: "Ananya Sharma",
-            age: 21,
-            city: "Mumbai",
-            rating: 4.9,
-            reviewsCount: 42,
-            profile_pic: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=250&auto=format&fit=crop&q=80",
-            tags: ["Coffee Date", "Movies", "Concerts"],
-            role: "girl"
-        },
-        {
-            id: 102,
-            name: "Rohan Malhotra",
-            age: 23,
-            city: "Delhi",
-            rating: 4.8,
-            reviewsCount: 31,
-            profile_pic: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=250&auto=format&fit=crop&q=80",
-            tags: ["Cafe Hangout", "Concerts", "Events"],
-            role: "boy"
-        },
-        {
-            id: 103,
-            name: "Priya Patel",
-            age: 22,
-            city: "Bangalore",
-            rating: 4.9,
-            reviewsCount: 56,
-            profile_pic: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=250&auto=format&fit=crop&q=80",
-            tags: ["Fine Dining", "Sightseeing", "Comedy Show"],
-            role: "girl"
-        },
-        {
-            id: 104,
-            name: "Sneha Reddy",
-            age: 24,
-            city: "Hyderabad",
-            rating: 4.7,
-            reviewsCount: 28,
-            profile_pic: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=250&auto=format&fit=crop&q=80",
-            tags: ["Long Drives", "Street Food", "Live Music"],
-            role: "girl"
-        }
-    ];
-
     return (
         <div className="min-h-[100dvh] bg-black pt-24 pb-10">
             {/* Main Hero Container */}
             <div className="max-w-5xl mx-auto px-6 mt-6 md:mt-12 mb-16 relative">
                 {/* Ambient lights */}
-                <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-[#e1306c]/10 rounded-full blur-[100px] pointer-events-none"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-[#833ab4]/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute top-[-10%] left-[-10%] w-[350px] h-[350px] bg-[#0095f6]/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[350px] h-[350px] bg-purple-900/10 rounded-full blur-[100px] pointer-events-none"></div>
  
                 {/* Two Column Layout: Left (Phone Mockup) | Right (Login/Signup Box) */}
                 <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 w-full">
@@ -555,10 +526,10 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         
                                         <div className="flex-1 flex flex-col justify-center my-3 z-10">
                                             <div className="bg-[#121212] rounded-2xl overflow-hidden border border-[#262626] shadow-xl relative h-full flex flex-col justify-between">
-                                                <div className="absolute inset-0 bg-gradient-to-tr from-[#f9ce3f]/15 via-[#e1306c]/15 to-[#833ab4]/15 z-0"></div>
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-[#0095f6]/10 to-transparent z-0"></div>
                                                 
                                                 <div className="flex-1 relative z-10 flex items-center justify-center p-3">
-                                                    <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-white/20">
+                                                    <div className="w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-[#0095f6]/40">
                                                         <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" className="w-full h-full object-cover" alt="" />
                                                     </div>
                                                 </div>
@@ -566,14 +537,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                                 <div className="bg-[#121212]/90 backdrop-blur-md p-3 relative z-10 border-t border-[#262626]">
                                                     <div className="flex items-center gap-1.5 mb-0.5">
                                                         <span className="font-extrabold text-[12px] text-white">Ananya, 21</span>
-                                                        <span className="bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">VERIFIED</span>
+                                                        <span className="bg-[#0095f6] text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">VERIFIED</span>
                                                     </div>
                                                     <p className="text-[9px] text-gray-300 flex items-center gap-1">
                                                         Mumbai • <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-pulse"></span> Online
                                                     </p>
                                                     <div className="flex gap-1 mt-1.5 flex-wrap">
-                                                        <span className="bg-[#e1306c]/20 text-[#e1306c] text-[7px] px-1.5 py-0.5 rounded-full font-bold">Coffee</span>
-                                                        <span className="bg-[#833ab4]/20 text-[#833ab4] text-[7px] px-1.5 py-0.5 rounded-full font-bold">Movies</span>
+                                                        <span className="bg-[#262626] text-gray-300 text-[7px] px-2 py-0.5 rounded-full border border-[#363636]">Coffee</span>
+                                                        <span className="bg-[#262626] text-gray-300 text-[7px] px-2 py-0.5 rounded-full border border-[#363636]">Movies</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -607,7 +578,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                             <div className="bg-[#121212] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-[#262626]">
                                                 Hey! Ready for our coffee date?
                                             </div>
-                                            <div className="bg-[#e1306c] text-white p-2 rounded-2xl rounded-tr-none max-w-[85%] self-end shadow-md font-medium">
+                                            <div className="bg-[#0095f6] text-white p-2 rounded-2xl rounded-tr-none max-w-[85%] self-end shadow-md font-medium">
                                                 Absolutely! See you at 5.
                                             </div>
                                             <div className="bg-[#121212] text-white p-2 rounded-2xl rounded-tl-none max-w-[85%] self-start border border-[#262626] animate-pulse">
@@ -617,7 +588,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         
                                         <div className="bg-white/5 rounded-full px-3 py-1 flex justify-between items-center border border-[#262626] mb-1">
                                             <span className="text-[8px] text-gray-500">Message...</span>
-                                            <span className="text-[#e1306c] text-[8px] font-bold">Send</span>
+                                            <span className="text-[#0095f6] text-[8px] font-bold">Send</span>
                                         </div>
                                     </div>
                                 </div>
@@ -625,11 +596,11 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 {/* Slide 2: Video Calling */}
                                 <div className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${activeSlide === 2 ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
                                     <div className="h-full w-full bg-black flex flex-col p-4 justify-between relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-b from-[#833ab4]/10 via-black to-[#e1306c]/10 z-0"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-b from-[#0095f6]/10 via-black to-transparent z-0"></div>
                                         
                                         <div className="flex justify-between items-center text-[9px] text-gray-400 z-10 pt-2 w-full">
                                             <span>09:43</span>
-                                            <span className="font-bold text-white uppercase tracking-wider text-[7px] bg-[#e1306c]/20 px-1.5 py-0.5 rounded-full border border-[#e1306c]/30">HD Video</span>
+                                            <span className="font-bold text-white uppercase tracking-wider text-[7px] bg-[#0095f6]/20 px-1.5 py-0.5 rounded-full border border-[#0095f6]/30">HD Video</span>
                                             <div className="flex gap-1.5 items-center text-gray-400">
                                                 <FiWifi size={10} />
                                                 <FiBattery size={10} />
@@ -637,7 +608,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         </div>
                                         
                                         <div className="flex-1 flex flex-col items-center justify-center gap-1.5 z-10">
-                                            <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_0_20px_rgba(225,48,108,0.35)] border-2 border-white/30 animate-pulse relative">
+                                            <div className="w-16 h-16 rounded-full overflow-hidden shadow-[0_0_20px_rgba(0,149,246,0.35)] border-2 border-white/30 animate-pulse relative">
                                                 <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150" className="w-full h-full object-cover" alt="" />
                                                 <span className="absolute bottom-0 right-0 bg-green-500 w-4 h-4 rounded-full border border-[#111122] flex items-center justify-center">
                                                     <FiMic className="text-white text-[8px]" size={8} />
@@ -670,27 +641,19 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
  
                     {/* RIGHT COLUMN: Premium Card */}
                     <div className="w-full max-w-[360px] flex flex-col gap-4 animate-fade-in order-1 lg:order-2">
-                        <div className="bg-[#121212]/95 border border-[#262626] rounded-3xl p-6 md:p-8 shadow-[0_0_50px_rgba(225,48,108,0.1)] backdrop-blur-md relative overflow-hidden flex flex-col items-center">
+                        <div className="bg-[#121212]/95 border border-[#262626] rounded-3xl p-6 md:p-8 backdrop-blur-md relative overflow-hidden flex flex-col items-center shadow-xl">
                             
                             {/* Ambient card glows */}
-                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#e1306c]/10 rounded-full blur-xl pointer-events-none"></div>
-                            <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-[#833ab4]/10 rounded-full blur-xl pointer-events-none"></div>
+                            <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#0095f6]/10 rounded-full blur-xl pointer-events-none"></div>
                             
                             {/* Platform Branding */}
                             <div className="flex items-center gap-2.5 mb-6">
-                                <svg className="w-9 h-9 drop-shadow-[0_0_8px_rgba(225,48,108,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#hero-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                    <defs>
-                                        <linearGradient id="hero-logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                                            <stop stopColor="#f9ce3f" />
-                                            <stop offset="0.5" stopColor="#e1306c" />
-                                            <stop offset="1" stopColor="#833ab4" />
-                                        </linearGradient>
-                                    </defs>
+                                <svg className="w-9 h-9 text-[#0095f6]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                <span className="text-3xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide">RentGF</span>
+                                <span className="text-3xl font-black text-white tracking-wide">RentGF</span>
                             </div>
  
                             {/* Short Intro */}
@@ -702,14 +665,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             <div className="w-full flex flex-col gap-4">
                                 <button
                                     onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] hover:opacity-95 text-sm text-white shadow-lg shadow-[#e1306c]/20 transition transform hover:-translate-y-0.5 active:scale-95"
+                                    className="w-full py-3.5 rounded-xl font-bold bg-[#0095f6] hover:bg-[#1877f2] text-sm text-white shadow-lg shadow-[#0095f6]/20 transition transform hover:-translate-y-0.5 active:scale-95"
                                 >
                                     Log In
                                 </button>
                                 
                                 <button
                                     onClick={() => setPage(PAGES.BOY_REGISTER)}
-                                    className="w-full py-3.5 bg-transparent hover:bg-white/5 text-white border border-[#262626] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
+                                    className="w-full py-3.5 bg-[#262626] hover:bg-[#363636] text-white border border-[#363636] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
                                 >
                                     Create New Account
                                 </button>
@@ -731,14 +694,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
             <div className="max-w-5xl mx-auto px-6 mb-20">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-[#121212]/60 border border-[#262626]/80 rounded-2xl p-6 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-xl bg-[#e1306c]/10 flex items-center justify-center text-[#e1306c] mb-4 border border-[#e1306c]/20">
+                        <div className="w-12 h-12 rounded-xl bg-[#0095f6]/10 flex items-center justify-center text-[#0095f6] mb-4 border border-[#0095f6]/20">
                             <FiShield size={24} />
                         </div>
                         <h4 className="font-bold text-white text-base mb-1.5">100% Safe &amp; Private</h4>
                         <p className="text-xs text-gray-400 leading-relaxed">Your data and personal identity are encrypted. Complete privacy guaranteed.</p>
                     </div>
                     <div className="bg-[#121212]/60 border border-[#262626]/80 rounded-2xl p-6 flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-xl bg-[#833ab4]/10 flex items-center justify-center text-[#833ab4] mb-4 border border-[#833ab4]/20">
+                        <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4 border border-purple-500/20">
                             <FiCheckCircle size={24} />
                         </div>
                         <h4 className="font-bold text-white text-base mb-1.5">KYC Verified Profiles</h4>
@@ -754,70 +717,83 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 </div>
             </div>
 
-            {/* CURATED FEATURED COMPANIONS GRID */}
+            {/* REAL FEATURED COMPANIONS FROM DATABASE */}
             <div className="max-w-5xl mx-auto px-6 mb-20">
                 <div className="text-center mb-10">
-                    <span className="text-xs font-bold tracking-widest text-[#e1306c] uppercase">Discover</span>
-                    <h2 className="text-3xl font-bold mb-3 mt-1">Featured Companions</h2>
-                    <p className="text-gray-400 text-sm">Have a look at some of our popular companion profiles.</p>
+                    <span className="text-xs font-bold tracking-widest text-[#0095f6] uppercase">Discover</span>
+                    <h2 className="text-3xl font-bold mb-3 mt-1 text-white">Featured Companions</h2>
+                    <p className="text-gray-400 text-sm">Browse registered companions directly from our platform.</p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {featuredCompanions.map((comp) => (
-                        <div 
-                            key={comp.id}
-                            className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden shadow-xl hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group"
-                        >
-                            {/* Profile Image Column */}
-                            <div className="relative aspect-[4/5] overflow-hidden bg-black shrink-0">
-                                <img src={comp.profile_pic} alt={comp.name} className="w-full h-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-95" />
-                                <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-yellow-400 font-bold border border-white/10 flex items-center gap-1 shadow-md">
-                                    <FiStar size={11} className="fill-yellow-400" /> {comp.rating}
-                                </div>
-                                <span className="absolute bottom-3 left-3 bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white text-[8px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-white/10">
-                                    <FiCheckCircle size={9} /> Verified
-                                </span>
-                            </div>
-
-                            {/* Profile Meta Column */}
-                            <div className="p-4 flex-1 flex flex-col justify-between">
-                                <div className="space-y-1.5">
-                                    <h4 className="font-extrabold text-white text-sm tracking-wide">{comp.name}, {comp.age}</h4>
-                                    <p className="text-[10px] text-gray-400">{comp.city} • Companion</p>
-                                    
-                                    <div className="flex flex-wrap gap-1 pt-1.5">
-                                        {comp.tags.slice(0, 2).map((tag) => (
-                                            <span 
-                                                key={tag} 
-                                                className="px-2 py-0.5 text-[8px] font-bold rounded-md bg-[#e1306c]/10 text-[#e1306c] border border-[#e1306c]/10"
-                                            >
-                                                #{tag}
-                                            </span>
-                                        ))}
+                {featuredCompanions.length === 0 ? (
+                    <div className="text-center py-12 bg-[#121212] border border-[#262626] rounded-2xl text-gray-400 text-sm">
+                        No companion profiles available right now.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {featuredCompanions.map((comp) => (
+                            <div 
+                                key={comp.id}
+                                className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden shadow-xl hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group"
+                            >
+                                {/* Profile Image Column */}
+                                <div className="relative aspect-[4/5] overflow-hidden bg-black shrink-0">
+                                    <img src={comp.profile_pic} alt={comp.name} className="w-full h-full object-cover transition duration-500 group-hover:scale-105 group-hover:brightness-95" />
+                                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-yellow-400 font-bold border border-[#262626] flex items-center gap-1 shadow-md">
+                                        <FiStar size={11} className="fill-yellow-400" /> {comp.rating}
                                     </div>
+                                    <span className="absolute bottom-3 left-3 bg-[#0095f6] text-white text-[9px] px-2.5 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-[#0095f6]/20">
+                                        <FiCheckCircle size={10} /> Verified
+                                    </span>
                                 </div>
 
-                                <button
-                                    onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                    className="w-full mt-4 py-2 rounded-lg text-center font-bold text-[10px] bg-transparent border border-[#262626] text-white hover:bg-[#e1306c]/20 hover:border-[#e1306c]/30 transition shadow-sm"
-                                >
-                                    Connect Now
-                                </button>
+                                {/* Profile Meta Column */}
+                                <div className="p-4 flex-1 flex flex-col justify-between">
+                                    <div className="space-y-1.5">
+                                        <h4 className="font-extrabold text-white text-sm tracking-wide">{comp.name}, {comp.age}</h4>
+                                        <p className="text-[10px] text-gray-400">{comp.city} • Companion</p>
+                                        
+                                        <div className="flex flex-wrap gap-1.5 pt-1.5">
+                                            {comp.tags.slice(0, 2).map((tag, idx) => (
+                                                <span 
+                                                    key={idx} 
+                                                    className="px-2.5 py-0.5 text-[9px] font-medium rounded-full bg-[#262626] text-gray-200 border border-[#363636]"
+                                                >
+                                                    #{tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            if (setSelectedGirl && comp.userObj) {
+                                                setSelectedGirl(comp.userObj);
+                                                setPage(PAGES.DETAILS);
+                                            } else {
+                                                setPage(PAGES.BOY_LOGIN);
+                                            }
+                                        }}
+                                        className="w-full mt-4 py-2.5 rounded-lg text-center font-bold text-xs bg-[#0095f6] hover:bg-[#1877f2] text-white transition shadow-sm active:scale-95"
+                                    >
+                                        Connect Now
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
  
             <div className="max-w-5xl mx-auto px-6">
                 <div className="text-center mb-10">
-                    <h2 className="text-3xl font-bold mb-3">Our Growing Community</h2>
+                    <h2 className="text-3xl font-bold mb-3 text-white">Our Growing Community</h2>
                     <p className="text-gray-400 text-sm">Join thousands of verified users already making meaningful connections.</p>
                 </div>
  
                 {loading ? (
                     <div className="flex justify-center items-center py-10">
-                        <RiLoader4Line className="text-[#e1306c] text-4xl animate-spin" />
+                        <RiLoader4Line className="text-[#0095f6] text-4xl animate-spin" />
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -825,17 +801,17 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             <div className="text-4xl font-extrabold text-white mb-2">{stats.total}</div>
                             <div className="text-xs text-gray-400 uppercase tracking-widest">Total Users</div>
                         </div>
-                        <div className="bg-[#121212] border border-[#e1306c]/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(225,48,108,0.05)]">
-                            <div className="text-4xl font-extrabold text-[#e1306c] mb-2">{stats.girls}</div>
-                            <div className="text-xs text-[#e1306c]/80 uppercase tracking-widest">Female Companions</div>
+                        <div className="bg-[#121212] border border-[#0095f6]/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-sm">
+                            <div className="text-4xl font-extrabold text-[#0095f6] mb-2">{stats.girls}</div>
+                            <div className="text-xs text-[#0095f6]/80 uppercase tracking-widest">Female Companions</div>
                         </div>
-                        <div className="bg-[#121212] border border-blue-500/20 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(59,130,246,0.05)]">
+                        <div className="bg-[#121212] border border-blue-500/20 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-sm">
                             <div className="text-4xl font-extrabold text-blue-400 mb-2">{stats.boys}</div>
                             <div className="text-xs text-blue-400/80 uppercase tracking-widest">Male Companions</div>
                         </div>
-                        <div className="bg-[#121212] border border-[#833ab4]/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-[0_0_15px_rgba(131,58,180,0.05)]">
-                            <div className="text-4xl font-extrabold text-[#833ab4] mb-2">{stats.connections}+</div>
-                            <div className="text-xs text-[#833ab4]/80 uppercase tracking-widest">Happy Connections</div>
+                        <div className="bg-[#121212] border border-purple-500/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-sm">
+                            <div className="text-4xl font-extrabold text-purple-400 mb-2">{stats.connections}+</div>
+                            <div className="text-xs text-purple-400/80 uppercase tracking-widest">Happy Connections</div>
                         </div>
                     </div>
                 )}

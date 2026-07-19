@@ -243,14 +243,14 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                 maxLength="6"
                                 value={verifyOtp}
                                 onChange={(e) => setVerifyOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-pink-500 transition font-mono"
+                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#0095f6] transition font-mono"
                                 placeholder="······"
                                 autoFocus
                             />
                             <button
                                 type="submit"
                                 disabled={loading || verifyOtp.length !== 6}
-                                className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold shadow-lg transition disabled:opacity-50 hover:opacity-90"
+                                className="w-full py-3.5 bg-[#0095f6] hover:bg-[#1877f2] text-white rounded-xl font-bold shadow-lg transition disabled:opacity-50"
                             >
                                 {loading ? "Verifying..." : "Verify & Login"}
                             </button>
@@ -266,18 +266,12 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     <>
                         {/* Platform Branding */}
                         <div className="flex items-center justify-center gap-2.5 mb-6 cursor-pointer" onClick={() => setPage(PAGES.HOME)}>
-                            <svg className="w-8 h-8 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="url(#login-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="url(#login-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#login-logo-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                <defs>
-                                    <linearGradient id="login-logo-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-                                        <stop stopColor="#ec4899" />
-                                        <stop offset="1" stopColor="#a855f7" />
-                                    </linearGradient>
-                                </defs>
+                            <svg className="w-8 h-8 text-[#0095f6]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            <span className="text-2xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide">RentGF</span>
+                            <span className="text-2xl font-black text-white tracking-wide">RentGF</span>
                         </div>
 
                         <h2 className="text-2xl font-extrabold text-center text-white mb-1">Welcome Back</h2>
@@ -294,7 +288,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     required
                                     value={formData.emailOrPhone}
                                     onChange={handleChange}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
                                     placeholder="example@mail.com or 9876543210"
                                 />
                             </div>
@@ -307,7 +301,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -370,7 +364,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     placeholder="example@mail.com"
                                 />
                             </div>
-                            <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-pink-500 to-purple-500 disabled:opacity-60">
+                            <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-[#0095f6] hover:bg-[#1877f2] disabled:opacity-60">
                                 {loading ? (loadingMsg || "Sending OTP...") : "Send OTP"}
                             </button>
                         </form>
@@ -404,7 +398,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={forgotEmail}
                                         onChange={(e) => setForgotEmail(e.target.value)}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="example@mail.com"
                                     />
                                 </div>
@@ -417,7 +411,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     maxLength={6}
                                     value={resetData.otp}
                                     onChange={(e) => setResetData({ ...resetData, otp: e.target.value })}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500 tracking-[0.5rem] text-center font-bold text-lg"
+                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-[#0095f6] tracking-[0.5rem] text-center font-bold text-lg"
                                     placeholder="000000"
                                 />
                             </div>
@@ -429,7 +423,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={resetData.newPassword}
                                         onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="Create a strong password"
                                     />
                                     <button
@@ -449,7 +443,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={resetData.confirmPassword}
                                         onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-pink-500"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="Repeat your password"
                                     />
                                     <button

@@ -514,13 +514,13 @@ function UnifiedRegister({ setPage }) {
                             <FiX size={16} />
                         </button>
 
-                        <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-pink-500/20">
-                            <FiMail size={28} className="text-white" />
+                        <div className="w-16 h-16 bg-[#0095f6]/10 border border-[#0095f6]/30 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#0095f6]/10">
+                            <FiMail size={28} className="text-[#0095f6]" />
                         </div>
 
                         <h3 className="text-2xl font-bold text-white mb-1">Verify Email</h3>
                         <p className="text-gray-400 text-sm mb-1">We've sent a 6-digit OTP to</p>
-                        <p className="text-pink-400 font-semibold text-sm mb-6 break-all">{formData.email}</p>
+                        <p className="text-[#0095f6] font-semibold text-sm mb-6 break-all">{formData.email}</p>
 
                         <form onSubmit={handleVerifyOtp} className="space-y-4">
                             <input
@@ -529,14 +529,14 @@ function UnifiedRegister({ setPage }) {
                                 maxLength="6"
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-pink-500 transition font-mono"
+                                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#0095f6] transition font-mono"
                                 placeholder="······"
                                 autoFocus
                             />
                             <button
                                 type="submit"
                                 disabled={verifying || otp.length !== 6}
-                                className="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-bold shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 flex items-center justify-center gap-2"
+                                className="w-full py-3.5 bg-[#0095f6] hover:bg-[#1877f2] text-white rounded-xl font-bold shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 <FiCheckCircle size={18} />
                                 {verifying ? "Verifying..." : "Verify Account"}
@@ -546,11 +546,11 @@ function UnifiedRegister({ setPage }) {
                         {/* Resend OTP */}
                         <div className="mt-4">
                             {resendCooldown > 0 ? (
-                                <p className="text-gray-500 text-xs">Resend OTP in <span className="text-pink-400 font-bold">{resendCooldown}s</span></p>
+                                <p className="text-gray-500 text-xs">Resend OTP in <span className="text-[#0095f6] font-bold">{resendCooldown}s</span></p>
                             ) : (
                                 <button
                                     onClick={handleResendOtp}
-                                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-pink-400 transition mx-auto"
+                                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#0095f6] transition mx-auto"
                                 >
                                     <FiRefreshCw size={12} /> Resend OTP
                                 </button>
@@ -568,13 +568,13 @@ function UnifiedRegister({ setPage }) {
             {/* Custom Alert Popup */}
             {customAlert.show && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-                    <div className="w-full max-w-xs overflow-hidden shadow-2xl border border-white/10 bg-[#16162A]" style={{ borderRadius: 16 }}>
-                        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-pink-500 to-purple-600"></div>
+                    <div className="w-full max-w-xs overflow-hidden shadow-2xl border border-[#262626] bg-[#121212]" style={{ borderRadius: 16 }}>
+                        <div className="absolute top-0 left-0 right-0 h-[3px] bg-[#0095f6]"></div>
                         <div className="px-6 py-5">
                             <p className="text-sm text-gray-200 font-medium mb-5 text-center leading-relaxed">{customAlert.message}</p>
                             <button
                                 onClick={() => setCustomAlert({ show: false, message: "" })}
-                                className="w-full py-2.5 rounded-lg font-bold text-xs transition bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90 shadow-lg shadow-pink-500/20"
+                                className="w-full py-2.5 rounded-lg font-bold text-xs transition bg-[#0095f6] hover:bg-[#1877f2] text-white shadow-lg shadow-[#0095f6]/20"
                             >
                                 OK
                             </button>
