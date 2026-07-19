@@ -788,10 +788,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     </div>
 
                     <div className="flex gap-1 relative shrink-0" ref={menuRef}>
-                        <button onClick={() => startCall('video')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
+                        <button onClick={() => window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: girl, type: 'video', room: roomId } }))} className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-[#0095f6] transition rounded-full hover:bg-white/10">
                             <FiVideo size={20} />
                         </button>
-                        <button onClick={() => startCall('audio')} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-pink-400 transition rounded-full hover:bg-white/10">
+                        <button onClick={() => window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: girl, type: 'audio', room: roomId } }))} className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-[#0095f6] transition rounded-full hover:bg-white/10">
                             <FiPhone size={20} />
                         </button>
                         <button 

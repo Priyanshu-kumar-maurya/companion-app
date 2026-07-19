@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
 import InstagramPostModal from "./InstagramPostModal";
-import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2 } from "react-icons/fi";
+import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -625,10 +625,34 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                             )}
                             <button
                                 onClick={() => setPage(PAGES.CHAT)}
-                                className="px-6 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5 min-w-[120px]"
+                                className="px-5 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5"
                             >
                                 Message
                             </button>
+                            {currentUser && currentUser.id !== profile.id && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
+                                            window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'video', room: roomId } }));
+                                        }}
+                                        className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center"
+                                        title="Video Call"
+                                    >
+                                        <FiVideo size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
+                                            window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'audio', room: roomId } }));
+                                        }}
+                                        className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center"
+                                        title="Voice Call"
+                                    >
+                                        <FiPhone size={16} />
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -713,6 +737,30 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                         >
                             Message
                         </button>
+                        {currentUser && currentUser.id !== profile.id && (
+                            <>
+                                <button
+                                    onClick={() => {
+                                        const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
+                                        window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'video', room: roomId } }));
+                                    }}
+                                    className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center shrink-0"
+                                    title="Video Call"
+                                >
+                                    <FiVideo size={16} />
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
+                                        window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'audio', room: roomId } }));
+                                    }}
+                                    className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center shrink-0"
+                                    title="Voice Call"
+                                >
+                                    <FiPhone size={16} />
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
 

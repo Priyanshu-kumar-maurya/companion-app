@@ -15,6 +15,7 @@ import UnifiedLogin from "./components/UnifiedLogin";
 import NotificationsPage from "./components/NotificationsPage";
 import LegalPages from "./components/shared/LegalPages";
 import PWAInstallBanner from "./components/shared/PWAInstallBanner";
+import CallOverlay from "./components/shared/CallOverlay";
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -156,6 +157,15 @@ function App() {
     verifySession();
   }, []);
 
+  const currentUser = boyUser || girlUser || adminUser;
+
+  useEffect(() => {
+    if (currentUser && socket) {
+      socket.emit("user_connected", currentUser.id);
+      socket.emit("join_own_room", currentUser.id);
+    }
+  }, [currentUser]);
+
   if (isCheckingAuth) {
     return (
       <div className="min-h-[100dvh] bg-black flex flex-col items-center justify-center gap-6 text-white">
@@ -179,8 +189,6 @@ function App() {
       </div>
     );
   }
-
-  const currentUser = boyUser || girlUser || adminUser;
 
   const renderPage = () => {
     switch (page) {
@@ -221,7 +229,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-black text-white overflow-x-hidden w-full relative">
+    <div className="min-h-[100dvh] bg-black text-[#f5f5f5] overflow-x-hidden w-full relative">
       <Navbar
         page={page}
         setPage={setPage}
@@ -234,6 +242,8 @@ function App() {
       />
       {renderPage()}
       <PWAInstallBanner />
+      <CallOverlay socket={socket} currentUser={currentUser} />
+
       {/* Global Alert & Confirm Dialog (Instagram Style) */}
       {globalAlert && (
         <div className="fixed inset-0 z-[200] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-fade-in">
@@ -246,7 +256,7 @@ function App() {
                 <>
                   <button
                     onClick={globalAlert.onConfirm}
-                    className="w-full py-3.5 text-center text-sm font-bold text-[#e1306c] hover:bg-white/5 active:bg-white/10 transition outline-none"
+                    className="w-full py-3.5 text-center text-sm font-bold text-[#0095f6] hover:bg-white/5 active:bg-white/10 transition outline-none"
                   >
                     OK
                   </button>
@@ -260,7 +270,7 @@ function App() {
               ) : (
                 <button
                   onClick={globalAlert.onConfirm}
-                  className="w-full py-3.5 text-center text-sm font-bold text-[#e1306c] hover:bg-white/5 active:bg-white/10 transition outline-none"
+                  className="w-full py-3.5 text-center text-sm font-bold text-[#0095f6] hover:bg-white/5 active:bg-white/10 transition outline-none"
                 >
                   OK
                 </button>

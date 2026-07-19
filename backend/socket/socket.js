@@ -85,7 +85,18 @@ module.exports = (io) => {
         });
 
         socket.on("initiate_call", (data) => {
-            socket.to(data.room).emit("incoming_call", { type: data.type, caller_id: socket.id });
+            const payload = {
+                type: data.type,
+                caller_id: socket.id,
+                caller_name: data.caller_name || 'Partner',
+                caller_pic: data.caller_pic || '',
+                room: data.room,
+                caller_user_id: data.caller_user_id
+            };
+            socket.to(data.room).emit("incoming_call", payload);
+            if (data.receiver_id) {
+                socket.to(`user_${data.receiver_id}`).emit("incoming_call", payload);
+            }
         });
 
         socket.on("accept_call", (data) => {
