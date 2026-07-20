@@ -97,6 +97,12 @@ module.exports = (io) => {
             if (data.receiver_id) {
                 socket.to(`user_${data.receiver_id}`).emit("incoming_call", payload);
             }
+
+            const isReceiverOnline = data.receiver_id && onlineUsers.has(data.receiver_id.toString());
+            socket.emit("call_status_update", {
+                isOnline: isReceiverOnline,
+                statusText: isReceiverOnline ? "Ringing..." : "Calling..."
+            });
         });
 
         socket.on("accept_call", (data) => {

@@ -17,6 +17,8 @@ function CallOverlay({ socket, currentUser }) {
     const [isVideoOff, setIsVideoOff] = useState(false);
     const [facingMode, setFacingMode] = useState("user");
     const [callDuration, setCallDuration] = useState(0);
+    const [statusText, setStatusText] = useState("Calling...");
+    const [showBanner, setShowBanner] = useState(true);
 
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
@@ -28,6 +30,7 @@ function CallOverlay({ socket, currentUser }) {
     const audioContextRef = useRef(null);
     const ringtoneTimerRef = useRef(null);
     const timerIntervalRef = useRef(null);
+    const callingTimeoutRef = useRef(null);
 
     // --- Web Audio Ringtone Synthesizer ---
     const startRingtone = () => {
@@ -88,6 +91,10 @@ function CallOverlay({ socket, currentUser }) {
     // --- Call Cleanup ---
     const cleanupCall = () => {
         stopRingtone();
+        if (callingTimeoutRef.current) {
+            clearTimeout(callingTimeoutRef.current);
+            callingTimeoutRef.current = null;
+        }
         if (timerIntervalRef.current) {
             clearInterval(timerIntervalRef.current);
             timerIntervalRef.current = null;
@@ -106,6 +113,8 @@ function CallOverlay({ socket, currentUser }) {
         setCallDuration(0);
         setIsMuted(false);
         setIsVideoOff(false);
+        setStatusText("Calling...");
+        setShowBanner(true);
     };
 
     // --- WebRTC Peer Setup ---
@@ -177,6 +186,7 @@ function CallOverlay({ socket, currentUser }) {
                 room: room
             });
             setCallState("calling");
+            setStatusText("Calling...");
             socket.emit("initiate_call", {
                 room: room,
                 receiver_id: targetUser.id,
@@ -185,6 +195,13 @@ function CallOverlay({ socket, currentUser }) {
                 caller_pic: currentUser?.profile_pic || '',
                 caller_user_id: currentUser?.id
             });
+
+            // Timeout after 25 sec if unanswered
+            if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
+            callingTimeoutRef.current = setTimeout(() => {
+                setStatusText("User Unavailable");
+                setTimeout(() => cleanupCall(), 2000);
+            }, 25000);
         };
 
         window.addEventListener("rentgf_start_call", handleStartCall);
@@ -205,11 +222,19 @@ function CallOverlay({ socket, currentUser }) {
                 room: data.room
             });
             setCallState("receiving");
+            setShowBanner(true);
             startRingtone();
+        };
+
+        const handleCallStatusUpdate = (data) => {
+            if (data && data.statusText) {
+                setStatusText(data.statusText);
+            }
         };
 
         const handleCallAccepted = async () => {
             stopRingtone();
+            if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
             setCallState("active");
             setCallDuration(0);
             timerIntervalRef.current = setInterval(() => {
@@ -267,6 +292,7 @@ function CallOverlay({ socket, currentUser }) {
         };
 
         socket.on("incoming_call", handleIncomingCall);
+        socket.on("call_status_update", handleCallStatusUpdate);
         socket.on("call_accepted", handleCallAccepted);
         socket.on("call_rejected", handleCallRejected);
         socket.on("call_ended", handleCallEnded);
@@ -276,6 +302,7 @@ function CallOverlay({ socket, currentUser }) {
 
         return () => {
             socket.off("incoming_call", handleIncomingCall);
+            socket.off("call_status_update", handleCallStatusUpdate);
             socket.off("call_accepted", handleCallAccepted);
             socket.off("call_rejected", handleCallRejected);
             socket.off("call_ended", handleCallEnded);
@@ -288,6 +315,7 @@ function CallOverlay({ socket, currentUser }) {
     // --- User Actions ---
     const acceptCall = async () => {
         stopRingtone();
+        if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
         setCallState("active");
         setCallDuration(0);
         timerIntervalRef.current = setInterval(() => {
@@ -368,125 +396,166 @@ function CallOverlay({ socket, currentUser }) {
     if (callState === "idle") return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col justify-between overflow-hidden animate-fade-in">
-            {/* Hidden Audio Element for Voice Calls */}
-            <audio ref={remoteAudioRef} autoPlay />
-
-            {/* Top Bar / Caller Header */}
-            <div className="pt-10 px-6 flex flex-col items-center z-20 text-center">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#0095f6] bg-[#0095f6]/10 px-3 py-1 rounded-full border border-[#0095f6]/20 mb-3">
-                    {callType === 'video' ? 'HD Video Call' : 'Voice Call'}
-                </span>
-
-                {callState === 'active' && (
-                    <div className="text-xl font-mono font-bold text-white tracking-widest bg-white/10 px-4 py-1 rounded-full backdrop-blur-md border border-white/10">
-                        {formatTimer(callDuration)}
-                    </div>
-                )}
-            </div>
-
-            {/* Center View: Avatars or Remote Video */}
-            <div className="flex-1 relative flex items-center justify-center p-4">
-                {/* Active Video Stream */}
-                {callState === 'active' && callType === 'video' ? (
-                    <div className="relative w-full h-full max-w-4xl rounded-3xl overflow-hidden border border-[#262626] bg-[#121212] shadow-2xl flex items-center justify-center">
-                        <video
-                            ref={remoteVideoRef}
-                            autoPlay
-                            playsInline
-                            className="w-full h-full object-cover"
-                        />
-
-                        {/* Local Video Picture-in-Picture */}
-                        <div className="absolute top-4 right-4 w-32 h-44 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-black z-30">
-                            <video
-                                ref={localVideoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="w-full h-full object-cover"
-                            />
-                        </div>
-                    </div>
-                ) : (
-                    /* Avatar Profile View (Calling, Receiving, or Active Audio) */
-                    <div className="flex flex-col items-center justify-center text-center z-10">
-                        <div className="relative mb-6">
-                            {(callState === 'calling' || callState === 'receiving') && (
-                                <div className="absolute inset-0 rounded-full bg-[#0095f6]/30 animate-ping scale-150" />
-                            )}
+        <>
+            {/* ── INSTAGRAM STYLE TOP FLOATING NOTIFICATION BANNER (When Receiving Call) ── */}
+            {callState === 'receiving' && showBanner && (
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[92%] max-w-md bg-[#121212]/95 border border-[#262626] rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-xl p-3.5 flex items-center justify-between animate-bounce">
+                    <div className="flex items-center gap-3 min-w-0 cursor-pointer" onClick={() => setShowBanner(false)}>
+                        <div className="relative shrink-0">
                             <img
                                 src={partner?.pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
                                 alt={partner?.name}
-                                className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#262626] shadow-[0_0_50px_rgba(0,149,246,0.3)] relative z-10"
+                                className="w-12 h-12 rounded-full object-cover border-2 border-[#0095f6]"
                             />
+                            <div className="absolute inset-0 rounded-full bg-[#0095f6]/30 animate-ping" />
                         </div>
-
-                        <h2 className="text-2xl font-extrabold text-white mb-1">{partner?.name}</h2>
-                        <p className="text-sm text-gray-400 font-medium">
-                            {callState === 'calling' && 'Ringing...'}
-                            {callState === 'receiving' && `Incoming ${callType} call`}
-                            {callState === 'active' && 'Connected'}
-                        </p>
+                        <div className="min-w-0">
+                            <h4 className="text-sm font-bold text-white truncate">{partner?.name}</h4>
+                            <p className="text-xs text-[#0095f6] font-medium truncate flex items-center gap-1">
+                                {callType === 'video' ? <FiVideo size={12} /> : <FiPhone size={12} />}
+                                Incoming {callType === 'video' ? 'Video' : 'Voice'} Call...
+                            </p>
+                        </div>
                     </div>
-                )}
-            </div>
 
-            {/* Bottom Controls Bar */}
-            <div className="pb-12 pt-6 px-6 flex items-center justify-center gap-6 z-30 bg-gradient-to-t from-black via-black/80 to-transparent">
-                {callState === 'receiving' ? (
-                    <div className="flex items-center gap-10">
+                    <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={rejectCall}
-                            className="w-16 h-16 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95"
+                            className="w-10 h-10 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition active:scale-90"
                         >
-                            <FiPhoneOff size={26} />
+                            <FiPhoneOff size={18} />
                         </button>
-
                         <button
                             onClick={acceptCall}
-                            className="w-16 h-16 rounded-full bg-[#30d158] hover:bg-green-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95 animate-bounce"
+                            className="w-10 h-10 rounded-full bg-[#30d158] hover:bg-green-600 text-white flex items-center justify-center shadow-lg transition active:scale-90 animate-pulse"
                         >
-                            {callType === 'video' ? <FiVideo size={26} /> : <FiPhone size={26} />}
+                            {callType === 'video' ? <FiVideo size={18} /> : <FiPhone size={18} />}
                         </button>
                     </div>
-                ) : (
-                    <div className="flex items-center gap-4 bg-[#121212] border border-[#262626] p-4 rounded-full shadow-2xl backdrop-blur-md">
-                        <button
-                            onClick={toggleMic}
-                            className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-90 ${isMuted ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-[#262626] text-white hover:bg-[#363636]'}`}
-                        >
-                            {isMuted ? <FiMicOff size={20} /> : <FiMic size={20} />}
-                        </button>
+                </div>
+            )}
 
-                        {callType === 'video' && (
-                            <>
-                                <button
-                                    onClick={toggleVideo}
-                                    className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-90 ${isVideoOff ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-[#262626] text-white hover:bg-[#363636]'}`}
-                                >
-                                    {isVideoOff ? <FiVideoOff size={20} /> : <FiVideo size={20} />}
-                                </button>
+            {/* ── FULL SCREEN CALL MODAL ── */}
+            <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col justify-between overflow-hidden animate-fade-in">
+                {/* Hidden Audio Element for Voice Calls */}
+                <audio ref={remoteAudioRef} autoPlay />
 
-                                <button
-                                    onClick={switchCamera}
-                                    className="w-12 h-12 rounded-full bg-[#262626] hover:bg-[#363636] text-white flex items-center justify-center transition active:scale-90"
-                                >
-                                    <FiRefreshCw size={20} />
-                                </button>
-                            </>
-                        )}
+                {/* Top Bar / Caller Header */}
+                <div className="pt-10 px-6 flex flex-col items-center z-20 text-center">
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-[#0095f6] bg-[#0095f6]/10 px-3 py-1 rounded-full border border-[#0095f6]/20 mb-3">
+                        {callType === 'video' ? 'HD Video Call' : 'Voice Call'}
+                    </span>
 
-                        <button
-                            onClick={endCall}
-                            className="w-14 h-14 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95 ml-2"
-                        >
-                            <FiPhoneOff size={22} />
-                        </button>
-                    </div>
-                )}
+                    {callState === 'active' && (
+                        <div className="text-xl font-mono font-bold text-white tracking-widest bg-white/10 px-4 py-1 rounded-full backdrop-blur-md border border-white/10">
+                            {formatTimer(callDuration)}
+                        </div>
+                    )}
+                </div>
+
+                {/* Center View: Avatars or Remote Video */}
+                <div className="flex-1 relative flex items-center justify-center p-4">
+                    {/* Active Video Stream */}
+                    {callState === 'active' && callType === 'video' ? (
+                        <div className="relative w-full h-full max-w-4xl rounded-3xl overflow-hidden border border-[#262626] bg-[#121212] shadow-2xl flex items-center justify-center">
+                            <video
+                                ref={remoteVideoRef}
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-cover"
+                            />
+
+                            {/* Local Video Picture-in-Picture */}
+                            <div className="absolute top-4 right-4 w-32 h-44 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-black z-30">
+                                <video
+                                    ref={localVideoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        /* Avatar Profile View (Calling, Receiving, or Active Audio) */
+                        <div className="flex flex-col items-center justify-center text-center z-10">
+                            <div className="relative mb-6">
+                                {(callState === 'calling' || callState === 'receiving') && (
+                                    <div className="absolute inset-0 rounded-full bg-[#0095f6]/30 animate-ping scale-150" />
+                                )}
+                                <img
+                                    src={partner?.pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
+                                    alt={partner?.name}
+                                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full object-cover border-4 border-[#262626] shadow-[0_0_50px_rgba(0,149,246,0.3)] relative z-10"
+                                />
+                            </div>
+
+                            <h2 className="text-2xl font-extrabold text-white mb-1">{partner?.name}</h2>
+                            <p className="text-sm text-gray-400 font-medium">
+                                {callState === 'calling' && statusText}
+                                {callState === 'receiving' && `Incoming ${callType} call`}
+                                {callState === 'active' && 'Connected'}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom Controls Bar */}
+                <div className="pb-12 pt-6 px-6 flex items-center justify-center gap-6 z-30 bg-gradient-to-t from-black via-black/80 to-transparent">
+                    {callState === 'receiving' ? (
+                        <div className="flex items-center gap-10">
+                            <button
+                                onClick={rejectCall}
+                                className="w-16 h-16 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95"
+                            >
+                                <FiPhoneOff size={26} />
+                            </button>
+
+                            <button
+                                onClick={acceptCall}
+                                className="w-16 h-16 rounded-full bg-[#30d158] hover:bg-green-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95 animate-bounce"
+                            >
+                                {callType === 'video' ? <FiVideo size={26} /> : <FiPhone size={26} />}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-4 bg-[#121212] border border-[#262626] p-4 rounded-full shadow-2xl backdrop-blur-md">
+                            <button
+                                onClick={toggleMic}
+                                className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-90 ${isMuted ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-[#262626] text-white hover:bg-[#363636]'}`}
+                            >
+                                {isMuted ? <FiMicOff size={20} /> : <FiMic size={20} />}
+                            </button>
+
+                            {callType === 'video' && (
+                                <>
+                                    <button
+                                        onClick={toggleVideo}
+                                        className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-90 ${isVideoOff ? 'bg-red-500/20 text-red-500 border border-red-500/30' : 'bg-[#262626] text-white hover:bg-[#363636]'}`}
+                                    >
+                                        {isVideoOff ? <FiVideoOff size={20} /> : <FiVideo size={20} />}
+                                    </button>
+
+                                    <button
+                                        onClick={switchCamera}
+                                        className="w-12 h-12 rounded-full bg-[#262626] hover:bg-[#363636] text-white flex items-center justify-center transition active:scale-90"
+                                    >
+                                        <FiRefreshCw size={20} />
+                                    </button>
+                                </>
+                            )}
+
+                            <button
+                                onClick={endCall}
+                                className="w-14 h-14 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95 ml-2"
+                            >
+                                <FiPhoneOff size={22} />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
+        </>
     );
 }
 
