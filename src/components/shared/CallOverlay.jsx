@@ -213,6 +213,9 @@ function CallOverlay({ socket, currentUser }) {
         if (!socket) return;
 
         const handleIncomingCall = (data) => {
+            // Ignore if I am the caller!
+            if (currentUser && data.caller_user_id && String(data.caller_user_id) === String(currentUser.id)) return;
+            if (data.caller_id === socket.id) return;
             if (callState !== "idle") return; // Busy
             setCallType(data.type || "video");
             setPartner({

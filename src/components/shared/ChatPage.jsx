@@ -482,104 +482,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             }
         };
 
-        const handleIncomingCall = (data) => {
-            if (isMuted) return; // Suppress ringing visual if muted
-            setCallType(data.type);
-            callTypeRef.current = data.type;
-            isCallerRef.current = false;
-            callStartTimeRef.current = null;
-            incomingCallOfferRef.current = null; // Clear old cached offer
-            updateCallStatus("receiving");
-        };
-
-        const handleCallAccepted = async () => {
-            updateCallStatus("active");
-            callStartTimeRef.current = Date.now();
-            
-            // Generate offer now that they have accepted (camera is already running!)
-            const pc = peerConnectionRef.current;
-            if (pc) {
-                try {
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    socket.emit("webrtc_offer", { room: roomId, offer });
-                } catch (err) {
-                    console.error("Error creating WebRTC offer:", err);
-                }
-            }
-        };
-
-        const handleCallRejected = () => {
-            cleanupCall();
-        };
-
-        const handleCallEnded = () => {
-            cleanupCall();
-        };
-
-        const handleWebrtcOffer = async (offer) => {
-            try {
-                incomingCallOfferRef.current = offer;
-                const pc = peerConnectionRef.current;
-                // If PC is already initialized, process and answer immediately!
-                if (pc && pc.signalingState === "stable") {
-                    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    socket.emit("webrtc_answer", { room: roomId, answer });
-                    
-                    // Flush queued candidates
-                    while (iceCandidatesQueue.current.length > 0) {
-                        const candidate = iceCandidatesQueue.current.shift();
-                        try {
-                            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                        } catch (e) { console.error("Error flushing candidate:", e); }
-                    }
-                }
-            } catch (err) { console.error("WebRTC Offer Error:", err); }
-        };
-
-        const handleWebrtcAnswer = async (answer) => {
-            try {
-                const pc = peerConnectionRef.current;
-                if (pc && pc.signalingState === "have-local-offer") {
-                    await pc.setRemoteDescription(new RTCSessionDescription(answer));
-                    
-                    // Flush queued candidates
-                    while (iceCandidatesQueue.current.length > 0) {
-                        const candidate = iceCandidatesQueue.current.shift();
-                        try {
-                            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                        } catch (e) { console.error("Error flushing candidate:", e); }
-                    }
-                }
-            } catch (err) { console.error("WebRTC Answer Error:", err); }
-        };
-
-        const handleWebrtcIceCandidate = async (candidate) => {
-            try {
-                const pc = peerConnectionRef.current;
-                if (pc && pc.remoteDescription && pc.remoteDescription.type) {
-                    await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                } else {
-                    iceCandidatesQueue.current.push(candidate);
-                }
-            } catch (err) { console.error("Ice Candidate Error:", err); }
-        };
-
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", (usersArray) => setOnlineUsers(usersArray));
         socket.on("message_edited", (data) => setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, text: data.newText } : msg)));
         socket.on("message_deleted", (deletedId) => setMessages(prev => prev.filter(msg => String(msg.id) !== String(deletedId))));
         socket.on("messages_read_update", handleMessagesReadUpdate);
-
-        socket.on("incoming_call", handleIncomingCall);
-        socket.on("call_accepted", handleCallAccepted);
-        socket.on("call_rejected", handleCallRejected);
-        socket.on("call_ended", handleCallEnded);
-        socket.on("webrtc_offer", handleWebrtcOffer);
-        socket.on("webrtc_answer", handleWebrtcAnswer);
-        socket.on("webrtc_ice_candidate", handleWebrtcIceCandidate);
 
         // Content moderation: blocked message warning
         socket.on("message_blocked", (data) => {
@@ -587,19 +494,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         });
 
         return () => {
-            cleanupCall();
             socket.off("receive_message", handleReceiveMessage);
             socket.off("update_online_users");
             socket.off("message_edited");
             socket.off("message_deleted");
             socket.off("messages_read_update");
-            socket.off("incoming_call");
-            socket.off("call_accepted");
-            socket.off("call_rejected");
-            socket.off("call_ended");
-            socket.off("webrtc_offer");
-            socket.off("webrtc_answer");
-            socket.off("webrtc_ice_candidate");
             socket.off("message_blocked");
             socket.disconnect();
         };
