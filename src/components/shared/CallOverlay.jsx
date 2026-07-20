@@ -32,6 +32,35 @@ function CallOverlay({ socket, currentUser }) {
     const timerIntervalRef = useRef(null);
     const callingTimeoutRef = useRef(null);
 
+    const hasLoggedCallRef = useRef(false);
+    const callDurationRef = useRef(0);
+
+    const logCallHistory = (overrideText) => {
+        if (hasLoggedCallRef.current) return;
+        hasLoggedCallRef.current = true;
+
+        if (!socket || !partner || !currentUser) return;
+
+        let logText = overrideText;
+        if (!logText) {
+            if (callState === 'active' && callDurationRef.current > 0) {
+                const m = Math.floor(callDurationRef.current / 60);
+                const s = callDurationRef.current % 60;
+                const durStr = `${m}m ${s}s`;
+                logText = `📞 ${callType === 'video' ? 'Video' : 'Voice'} Call - ${durStr}`;
+            } else {
+                logText = `📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`;
+            }
+        }
+
+        socket.emit("send_message", {
+            sender_id: currentUser.id,
+            receiver_id: partner.id,
+            room: partner.room,
+            text: logText
+        });
+    };
+
     // --- Web Audio Ringtone Synthesizer ---
     const startRingtone = () => {
         try {
@@ -178,6 +207,8 @@ function CallOverlay({ socket, currentUser }) {
     useEffect(() => {
         const handleStartCall = (e) => {
             const { targetUser, type, room } = e.detail;
+            hasLoggedCallRef.current = false;
+            callDurationRef.current = 0;
             setCallType(type);
             setPartner({
                 id: targetUser.id,
@@ -200,6 +231,7 @@ function CallOverlay({ socket, currentUser }) {
             if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
             callingTimeoutRef.current = setTimeout(() => {
                 setStatusText("User Unavailable");
+                logCallHistory(`📞 Missed ${type === 'video' ? 'Video' : 'Voice'} Call`);
                 setTimeout(() => cleanupCall(), 2000);
             }, 25000);
         };
@@ -217,6 +249,8 @@ function CallOverlay({ socket, currentUser }) {
             if (currentUser && data.caller_user_id && String(data.caller_user_id) === String(currentUser.id)) return;
             if (data.caller_id === socket.id) return;
             if (callState !== "idle") return; // Busy
+            hasLoggedCallRef.current = false;
+            callDurationRef.current = 0;
             setCallType(data.type || "video");
             setPartner({
                 id: data.caller_user_id || data.caller_id,
@@ -238,10 +272,15 @@ function CallOverlay({ socket, currentUser }) {
         const handleCallAccepted = async () => {
             stopRingtone();
             if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
+            hasLoggedCallRef.current = false;
+            callDurationRef.current = 0;
             setCallState("active");
             setCallDuration(0);
             timerIntervalRef.current = setInterval(() => {
-                setCallDuration(prev => prev + 1);
+                setCallDuration(prev => {
+                    callDurationRef.current = prev + 1;
+                    return prev + 1;
+                });
             }, 1000);
             if (partner) {
                 await setupWebRTC(callType, true);
@@ -249,10 +288,12 @@ function CallOverlay({ socket, currentUser }) {
         };
 
         const handleCallRejected = () => {
+            logCallHistory(`📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`);
             cleanupCall();
         };
 
         const handleCallEnded = () => {
+            logCallHistory();
             cleanupCall();
         };
 
@@ -319,16 +360,22 @@ function CallOverlay({ socket, currentUser }) {
     const acceptCall = async () => {
         stopRingtone();
         if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
+        hasLoggedCallRef.current = false;
+        callDurationRef.current = 0;
         setCallState("active");
         setCallDuration(0);
         timerIntervalRef.current = setInterval(() => {
-            setCallDuration(prev => prev + 1);
+            setCallDuration(prev => {
+                callDurationRef.current = prev + 1;
+                return prev + 1;
+            });
         }, 1000);
         await setupWebRTC(callType, false);
         socket.emit("accept_call", { room: partner.room, to: partner.id });
     };
 
     const rejectCall = () => {
+        logCallHistory(`📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`);
         if (partner && socket) {
             socket.emit("reject_call", { room: partner.room, to: partner.id });
         }
@@ -336,6 +383,7 @@ function CallOverlay({ socket, currentUser }) {
     };
 
     const endCall = () => {
+        logCallHistory();
         if (partner && socket) {
             socket.emit("end_call", { room: partner.room, to: partner.id });
         }
