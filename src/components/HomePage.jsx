@@ -95,7 +95,25 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         setStats(newStats);
                         sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
 
-                        const mapped = allUsers.map(u => {
+                        // Prioritize verified girls and boys, select exactly 2 of each
+                        const sortedGirls = [...girls].sort((a, b) => {
+                            if (a.kyc_status === 'verified' && b.kyc_status !== 'verified') return -1;
+                            if (a.kyc_status !== 'verified' && b.kyc_status === 'verified') return 1;
+                            return 0;
+                        });
+
+                        const sortedBoys = [...boys].sort((a, b) => {
+                            if (a.kyc_status === 'verified' && b.kyc_status !== 'verified') return -1;
+                            if (a.kyc_status !== 'verified' && b.kyc_status === 'verified') return 1;
+                            return 0;
+                        });
+
+                        const selectedUsers = [
+                            ...sortedGirls.slice(0, 2),
+                            ...sortedBoys.slice(0, 2)
+                        ];
+
+                        const mapped = selectedUsers.map(u => {
                             let tagsArray = [];
                             if (typeof u.tags === 'string' && u.tags.trim() !== '') {
                                 tagsArray = u.tags.split(',').map(t => t.trim());
@@ -108,13 +126,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             }
 
                             const avgRat = parseFloat(u.avg_rating);
+                            const displayRating = avgRat > 0 ? avgRat.toFixed(1) : (u.kyc_status === 'verified' ? '4.9' : '4.7');
 
                             return {
                                 id: u.id,
                                 name: u.name || u.username || 'User',
                                 age: u.age || 21,
                                 city: u.city || 'India',
-                                rating: avgRat > 0 ? avgRat : 4.9,
+                                rating: displayRating,
                                 profile_pic: u.profile_pic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
                                 tags: tagsArray,
                                 role: u.role,
@@ -753,9 +772,11 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                     <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-yellow-400 font-bold border border-[#262626] flex items-center gap-1 shadow-md">
                                         <FiStar size={11} className="fill-yellow-400" /> {comp.rating}
                                     </div>
-                                    <span className="absolute bottom-3 left-3 bg-[#0095f6] text-white text-[9px] px-2.5 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-[#0095f6]/20">
-                                        <FiCheckCircle size={10} /> Verified
-                                    </span>
+                                    {comp.kyc_status === 'verified' && (
+                                        <span className="absolute bottom-3 left-3 bg-[#0095f6] text-white text-[9px] px-2.5 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-[#0095f6]/20">
+                                            <FiCheckCircle size={10} /> Verified
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Profile Meta Column */}
