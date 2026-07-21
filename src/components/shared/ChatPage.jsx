@@ -17,6 +17,9 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const iceCandidatesQueue = useRef([]);
 
     const [onlineUsers, setOnlineUsers] = useState([]);
+    const [isPartnerTyping, setIsPartnerTyping] = useState(false);
+    const typingTimeoutRef = useRef(null);
+    const lastEmitTypingRef = useRef(false);
     const [editingMsgId, setEditingMsgId] = useState(null);
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
     const [messageToDelete, setMessageToDelete] = useState(null);
@@ -482,11 +485,18 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             }
         };
 
+        const handlePartnerTyping = (data) => {
+            if (String(data.sender_id) === String(girl.id)) {
+                setIsPartnerTyping(data.isTyping);
+            }
+        };
+
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", (usersArray) => setOnlineUsers(usersArray));
         socket.on("message_edited", (data) => setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, text: data.newText } : msg)));
         socket.on("message_deleted", (deletedId) => setMessages(prev => prev.filter(msg => String(msg.id) !== String(deletedId))));
         socket.on("messages_read_update", handleMessagesReadUpdate);
+        socket.on("partner_typing", handlePartnerTyping);
 
         // Content moderation: blocked message warning
         socket.on("message_blocked", (data) => {
@@ -499,6 +509,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             socket.off("message_edited");
             socket.off("message_deleted");
             socket.off("messages_read_update");
+            socket.off("partner_typing", handlePartnerTyping);
             socket.off("message_blocked");
             socket.disconnect();
         };
@@ -585,10 +596,45 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
+    const handleInputChange = (val) => {
+        setInput(val);
+
+        if (!socket || !roomId) return;
+
+        // Emit typing status if user started typing
+        if (!lastEmitTypingRef.current && val.trim().length > 0) {
+            lastEmitTypingRef.current = true;
+            socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: true });
+        }
+
+        // Clear existing timeout
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+
+        // Set timeout to emit isTyping: false after 2.5s of inactivity
+        typingTimeoutRef.current = setTimeout(() => {
+            if (lastEmitTypingRef.current) {
+                lastEmitTypingRef.current = false;
+                socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: false });
+            }
+        }, 2500);
+
+        // If the user cleared the text, emit typing: false immediately
+        if (val.trim().length === 0 && lastEmitTypingRef.current) {
+            lastEmitTypingRef.current = false;
+            socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: false });
+        }
+    };
+
     // --- MESSAGING FUNCTIONS ---
     const sendMessage = (imageLink = null) => {
         if (!input.trim() && !imageLink) return;
         if (!currentUser) return;
+
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        if (lastEmitTypingRef.current) {
+            lastEmitTypingRef.current = false;
+            socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: false });
+        }
 
         if (editingMsgId) {
             socket.emit("edit_message", { messageId: editingMsgId, newText: input, room: roomId, sender_id: currentUser.id });
@@ -920,6 +966,38 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             </div>
                         </div>
                     )}
+                    {isPartnerTyping && (
+                        <div className="flex justify-start mb-2.5 items-end gap-2">
+                            {girl.profile_pic ? (
+                                <img src={girl.profile_pic} alt="" className="w-7 h-7 rounded-full object-cover border border-white/10 shrink-0" />
+                            ) : (
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-black shrink-0">
+                                    {girl.name?.[0]?.toUpperCase()}
+                                </div>
+                            )}
+                            <div className="px-4 py-3 rounded-2xl bg-[#16162A] border border-white/5 flex items-center gap-1.5" style={{ borderRadius: '18px 18px 18px 4px' }}>
+                                <style>{`
+                                    @keyframes typingBounce {
+                                        0%, 100% { transform: translateY(0); opacity: 0.4; }
+                                        50% { transform: translateY(-4px); opacity: 1; }
+                                    }
+                                    .typing-dot {
+                                        width: 5px;
+                                        height: 5px;
+                                        background-color: #9ca3af;
+                                        border-radius: 50%;
+                                        display: inline-block;
+                                        animation: typingBounce 1.4s infinite ease-in-out;
+                                    }
+                                    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+                                    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+                                `}</style>
+                                <span className="typing-dot"></span>
+                                <span className="typing-dot"></span>
+                                <span className="typing-dot"></span>
+                            </div>
+                        </div>
+                    )}
                     <div ref={bottomRef} />
                 </div>
 
@@ -952,7 +1030,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                             style={{ maxHeight: 120, color: '#f1f5f9' }}
                             placeholder="Message..."
                             value={input}
-                            onChange={(e) => setInput(e.target.value)}
+                            onChange={(e) => handleInputChange(e.target.value)}
                             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                             onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth' }), 100)}
                             rows={1}

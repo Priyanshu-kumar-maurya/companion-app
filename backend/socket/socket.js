@@ -175,6 +175,10 @@ module.exports = (io) => {
             }
         });
 
+        socket.on("typing", (data) => {
+            socket.to(data.room).emit("partner_typing", data);
+        });
+
         socket.on("disconnect", async () => {
             let disconnectedUserId = null;
             for (let [userId, socketId] of onlineUsers.entries()) {
