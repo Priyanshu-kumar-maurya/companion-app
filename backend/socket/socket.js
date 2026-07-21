@@ -70,6 +70,17 @@ module.exports = (io) => {
                 data.message = messageText;
                 data.created_at = savedMessage.created_at;
                 data.is_read = savedMessage.is_read;
+
+                // Lookup sender profile details
+                const senderDetails = await pool.query(
+                    "SELECT name, profile_pic FROM users WHERE id = $1",
+                    [data.sender_id]
+                );
+                if (senderDetails.rows.length > 0) {
+                    data.sender_name = senderDetails.rows[0].name;
+                    data.sender_pic = senderDetails.rows[0].profile_pic;
+                }
+
                 io.to(data.room).emit("receive_message", data);
                 if (data.receiver_id) {
                     socket.to(data.receiver_id.toString()).emit("receive_message", data);

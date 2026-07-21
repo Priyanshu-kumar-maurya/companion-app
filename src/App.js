@@ -49,6 +49,7 @@ function App() {
   const [adminUser, setAdminUser] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [globalAlert, setGlobalAlert] = useState(null);
+  const [activeMessageAlert, setActiveMessageAlert] = useState(null);
 
   useEffect(() => {
     window.alert = (msg) => {
@@ -166,6 +167,72 @@ function App() {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    if (!currentUser || !socket) return;
+
+    let alertTimeout = null;
+
+    const playMessageChime = () => {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch (e) { }
+    };
+
+    const handleGlobalMessage = (data) => {
+      // Ignore if we are the sender
+      if (String(data.sender_id) === String(currentUser.id)) return;
+
+      // Ignore if we are already viewing the chat page with this specific sender
+      if (page === PAGES.CHAT && selectedGirl && String(selectedGirl.id) === String(data.sender_id)) {
+        return;
+      }
+
+      // Play soft notification sound
+      playMessageChime();
+
+      // Show alert banner
+      setActiveMessageAlert({
+        sender_id: data.sender_id,
+        sender_name: data.sender_name || 'Companion',
+        sender_pic: data.sender_pic || '',
+        text: data.text || 'Sent a message',
+        userObj: {
+          id: data.sender_id,
+          name: data.sender_name || 'Companion',
+          profile_pic: data.sender_pic || '',
+          role: currentUser.role === 'girl' ? 'boy' : 'girl'
+        }
+      });
+
+      // Clear previous timeout and set auto-dismiss after 4.5 seconds
+      if (alertTimeout) clearTimeout(alertTimeout);
+      alertTimeout = setTimeout(() => {
+        setActiveMessageAlert(null);
+      }, 4500);
+    };
+
+    socket.on("receive_message", handleGlobalMessage);
+    return () => {
+      socket.off("receive_message", handleGlobalMessage);
+      if (alertTimeout) clearTimeout(alertTimeout);
+    };
+  }, [currentUser, page, selectedGirl]);
+
   if (isCheckingAuth) {
     return (
       <div className="min-h-[100dvh] bg-black flex flex-col items-center justify-center gap-6 text-white">
@@ -242,6 +309,72 @@ function App() {
       />
       {renderPage()}
       <PWAInstallBanner />
+      {/* Instagram-Style Top Floating Message Alert Banner */}
+      {activeMessageAlert && (
+        <div 
+          onClick={() => {
+            setSelectedGirl(activeMessageAlert.userObj);
+            setPage(PAGES.CHAT);
+            setActiveMessageAlert(null);
+          }}
+          className="fixed top-4 left-1/2 -translate-x-1/2 w-[92%] max-w-[360px] bg-[#121212]/90 backdrop-blur-md border border-[#262626] rounded-2xl p-3.5 flex items-center gap-3 shadow-2xl z-[10000] cursor-pointer hover:bg-[#1a1a1a]/95 active:scale-98 transition-all duration-300"
+          style={{
+            animation: "slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+          }}
+        >
+          <style>{`
+            @keyframes slideDown {
+              from { transform: translate(-50%, -80px); opacity: 0; }
+              to { transform: translate(-50%, 0); opacity: 1; }
+            }
+          `}</style>
+          
+          {/* Sender Avatar */}
+          {activeMessageAlert.sender_pic ? (
+            <img src={activeMessageAlert.sender_pic} alt="" className="w-10 h-10 rounded-full object-cover border border-white/10 shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shrink-0">
+              {activeMessageAlert.sender_name?.[0]?.toUpperCase()}
+            </div>
+          )}
+
+          {/* Sender Details & Snippet */}
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-white text-xs truncate">{activeMessageAlert.sender_name}</span>
+              <span className="text-[8px] bg-[#0095f6] text-white px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider scale-90">Message</span>
+            </div>
+            <p className="text-[11px] text-gray-300 truncate mt-0.5 pr-2 font-medium">
+              {activeMessageAlert.text.startsWith('📞') ? '📞 Call log updated' : activeMessageAlert.text}
+            </p>
+          </div>
+
+          {/* Quick Action Button: Reply */}
+          <button 
+            className="px-3.5 py-1.5 bg-[#0095f6] hover:bg-[#1877f2] text-white text-[10px] font-extrabold rounded-lg shadow-md shrink-0 transition"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedGirl(activeMessageAlert.userObj);
+              setPage(PAGES.CHAT);
+              setActiveMessageAlert(null);
+            }}
+          >
+            Reply
+          </button>
+
+          {/* Dismiss Icon */}
+          <button 
+            className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition shrink-0 ml-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveMessageAlert(null);
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <CallOverlay socket={socket} currentUser={currentUser} />
 
       {/* Global Alert & Confirm Dialog (Instagram Style) */}
