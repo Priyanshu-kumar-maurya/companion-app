@@ -87,6 +87,70 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [timeMin, setTimeMin] = useState("00");
     const [timeAmpm, setTimeAmpm] = useState("PM");
 
+    const [locationSuggestions, setLocationSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
+    const [userCoords, setUserCoords] = useState(null);
+
+    useEffect(() => {
+        if (showBookingModal && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setUserCoords({
+                        lat: pos.coords.latitude,
+                        lon: pos.coords.longitude
+                    });
+                },
+                (err) => console.log("Geolocation error:", err),
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
+    }, [showBookingModal]);
+
+    const handleLocationChange = async (val) => {
+        setMeetingInfo(prev => ({ ...prev, location: val }));
+        
+        if (val.trim().length < 3) {
+            setLocationSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        setSearchLoading(true);
+        try {
+            let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5&addressdetails=1`;
+            if (userCoords) {
+                url += `&lat=${userCoords.lat}&lon=${userCoords.lon}`;
+            } else if (profile.city) {
+                // If profile city is available, append it to search string
+                url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val + ", " + profile.city)}&format=json&limit=5&addressdetails=1`;
+            }
+
+            const res = await fetch(url, {
+                headers: { 'Accept-Language': 'en' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const formatted = data.map(item => {
+                    const name = item.display_name;
+                    const address = item.address || {};
+                    const mainName = address.amenity || address.shop || address.cafe || address.restaurant || address.road || item.name || name.split(',')[0];
+                    const details = name.replace(mainName + ',', '').trim();
+                    return {
+                        label: mainName,
+                        description: details || name
+                    };
+                });
+                setLocationSuggestions(formatted);
+                setShowSuggestions(true);
+            }
+        } catch (err) {
+            console.error("Nominatim API error:", err);
+        } finally {
+            setSearchLoading(false);
+        }
+    };
+
     const updateTimeValue = (h, m, ap) => {
         let hoursNum = parseInt(h);
         if (ap === "PM" && hoursNum < 12) {
@@ -1055,9 +1119,48 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                     </div>
                                 </div>
                             </div>
-                            <div>
+                            <div className="relative">
                                 <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Location (optional)</label>
-                                <input type="text" placeholder="e.g., Starbucks, Café, etc." value={meetingInfo.location} onChange={(e) => setMeetingInfo({ ...meetingInfo, location: e.target.value })} className="w-full rounded-xl px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-pink-500 transition" style={{ background: '#0D0D1A' }} />
+                                <div className="relative">
+                                    <input 
+                                        type="text" 
+                                        placeholder="e.g., Starbucks, Café, etc." 
+                                        value={meetingInfo.location} 
+                                        onChange={(e) => handleLocationChange(e.target.value)} 
+                                        onFocus={() => { if (locationSuggestions.length > 0) setShowSuggestions(true); }}
+                                        className="w-full rounded-xl px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-pink-500 transition" 
+                                        style={{ background: '#0D0D1A' }} 
+                                    />
+                                    {searchLoading && (
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                                            <div className="w-4 h-4 border-2 border-pink-500/20 border-t-pink-500 rounded-full animate-spin" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {showSuggestions && locationSuggestions.length > 0 && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-30" 
+                                            onClick={() => setShowSuggestions(false)} 
+                                        />
+                                        <div className="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-white/10 shadow-2xl z-40 bg-[#0D0D1A] divide-y divide-white/5 scrollbar-thin">
+                                            {locationSuggestions.map((sug, i) => (
+                                                <div 
+                                                    key={i}
+                                                    onClick={() => {
+                                                        setMeetingInfo({ ...meetingInfo, location: sug.label + ", " + sug.description });
+                                                        setShowSuggestions(false);
+                                                    }}
+                                                    className="px-4 py-2 hover:bg-white/5 cursor-pointer text-left transition"
+                                                >
+                                                    <div className="text-xs font-bold text-white truncate">{sug.label}</div>
+                                                    <div className="text-[10px] text-gray-500 truncate mt-0.5">{sug.description}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                             <div className="flex gap-3 pt-2">
                                 <button onClick={() => setShowBookingModal(false)} className="flex-1 py-3 text-sm font-bold text-gray-400 hover:text-white bg-white/5 rounded-xl transition">Cancel</button>

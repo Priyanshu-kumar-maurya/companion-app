@@ -406,13 +406,6 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             {myPosts.map(post => (
                                 <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group aspect-square cursor-pointer overflow-hidden">
                                     <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:brightness-75" />
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleDeletePost(post.id); }}
-                                        className="absolute top-2 right-2 bg-red-500/90 text-white w-7 h-7 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-lg"
-                                        title="Delete Post"
-                                    >
-                                        <FiTrash2 size={13} />
-                                    </button>
                                 </div>
                             ))}
                         </div>
