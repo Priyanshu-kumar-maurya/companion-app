@@ -53,6 +53,12 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS followers_only BOOLEAN DEFAULT false;");
         await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS disable_comments BOOLEAN DEFAULT false;");
         await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS hide_likes BOOLEAN DEFAULT false;");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS canceled_by VARCHAR(10);");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS proposed_date DATE;");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS proposed_time TIME;");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reschedule_by VARCHAR(10);");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reschedule_status VARCHAR(20) DEFAULT 'none';");
         
         // --- Username Column Migration & Unique Constraint ---
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");

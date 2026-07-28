@@ -153,4 +153,95 @@ router.get('/reviews/:userId', async (req, res) => {
     }
 });
 
+// ─── CANCEL BOOKING WITH REASON ───
+router.post('/bookings/:bookingId/cancel', authenticateToken, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { reason } = req.body;
+        const bookingResult = await pool.query("SELECT * FROM bookings WHERE id = $1", [bookingId]);
+        if (bookingResult.rows.length === 0) return res.status(404).json({ error: "Booking not found." });
+        
+        const booking = bookingResult.rows[0];
+        const isParticipant = parseInt(req.user.id) === parseInt(booking.boy_id) ||
+                              parseInt(req.user.id) === parseInt(booking.girl_id);
+        if (!isParticipant) return res.status(403).json({ error: "Forbidden: Not a participant." });
+        
+        const canceled_by = parseInt(req.user.id) === parseInt(booking.boy_id) ? 'boy' : 'girl';
+        const updated = await pool.query(
+            "UPDATE bookings SET status = 'rejected', cancellation_reason = $1, canceled_by = $2 WHERE id = $3 RETURNING *",
+            [reason || "No reason specified", canceled_by, bookingId]
+        );
+        res.status(200).json(updated.rows[0]);
+    } catch (err) {
+        console.error("Cancel booking error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── REQUEST TO RESCHEDULE BOOKING ───
+router.post('/bookings/:bookingId/reschedule', authenticateToken, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { proposed_date, proposed_time } = req.body;
+        if (!proposed_date || !proposed_time) return res.status(400).json({ error: "Proposed date and time are required." });
+        
+        const bookingResult = await pool.query("SELECT * FROM bookings WHERE id = $1", [bookingId]);
+        if (bookingResult.rows.length === 0) return res.status(404).json({ error: "Booking not found." });
+        
+        const booking = bookingResult.rows[0];
+        const isParticipant = parseInt(req.user.id) === parseInt(booking.boy_id) ||
+                              parseInt(req.user.id) === parseInt(booking.girl_id);
+        if (!isParticipant) return res.status(403).json({ error: "Forbidden: Not a participant." });
+        
+        const reschedule_by = parseInt(req.user.id) === parseInt(booking.boy_id) ? 'boy' : 'girl';
+        const updated = await pool.query(
+            "UPDATE bookings SET proposed_date = $1, proposed_time = $2, reschedule_by = $3, reschedule_status = 'pending' WHERE id = $4 RETURNING *",
+            [proposed_date, proposed_time, reschedule_by, bookingId]
+        );
+        res.status(200).json(updated.rows[0]);
+    } catch (err) {
+        console.error("Reschedule booking error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── RESPOND TO RESCHEDULE REQUEST ───
+router.post('/bookings/:bookingId/reschedule/respond', authenticateToken, async (req, res) => {
+    try {
+        const { bookingId } = req.params;
+        const { action } = req.body; // 'accept' or 'decline'
+        if (action !== 'accept' && action !== 'decline') return res.status(400).json({ error: "Invalid action." });
+        
+        const bookingResult = await pool.query("SELECT * FROM bookings WHERE id = $1", [bookingId]);
+        if (bookingResult.rows.length === 0) return res.status(404).json({ error: "Booking not found." });
+        
+        const booking = bookingResult.rows[0];
+        const isParticipant = parseInt(req.user.id) === parseInt(booking.boy_id) ||
+                              parseInt(req.user.id) === parseInt(booking.girl_id);
+        if (!isParticipant) return res.status(403).json({ error: "Forbidden: Not a participant." });
+        
+        const userRoleInBooking = parseInt(req.user.id) === parseInt(booking.boy_id) ? 'boy' : 'girl';
+        if (booking.reschedule_by === userRoleInBooking) {
+            return res.status(400).json({ error: "You cannot respond to your own reschedule request." });
+        }
+        
+        if (action === 'accept') {
+            const updated = await pool.query(
+                "UPDATE bookings SET meeting_date = proposed_date, meeting_time = proposed_time, proposed_date = NULL, proposed_time = NULL, reschedule_by = NULL, reschedule_status = 'accepted' WHERE id = $1 RETURNING *",
+                [bookingId]
+            );
+            res.status(200).json(updated.rows[0]);
+        } else {
+            const updated = await pool.query(
+                "UPDATE bookings SET proposed_date = NULL, proposed_time = NULL, reschedule_by = NULL, reschedule_status = 'declined' WHERE id = $1 RETURNING *",
+                [bookingId]
+            );
+            res.status(200).json(updated.rows[0]);
+        }
+    } catch (err) {
+        console.error("Respond reschedule error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;

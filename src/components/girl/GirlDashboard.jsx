@@ -177,6 +177,102 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         }
     };
 
+    const handleCancelBooking = async (bookingId) => {
+        const reason = prompt("Please enter the reason for cancellation:");
+        if (reason === null) return;
+        
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}/cancel`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ reason: reason || "Change of plans" })
+            });
+
+            if (response.ok) {
+                const updated = await response.json();
+                setMyBookings(myBookings.map(b => b.id === bookingId ? { 
+                    ...b, 
+                    status: 'rejected', 
+                    cancellation_reason: updated.cancellation_reason, 
+                    canceled_by: updated.canceled_by 
+                } : b));
+                alert("Booking canceled successfully.");
+            } else {
+                alert("Failed to cancel booking.");
+            }
+        } catch (error) {
+            console.error("Error canceling booking:", error);
+        }
+    };
+
+    const handleRescheduleBooking = async (bookingId) => {
+        const date = prompt("Enter new meeting date (YYYY-MM-DD):");
+        if (!date) return;
+        const time = prompt("Enter new meeting time (HH:MM):");
+        if (!time) return;
+
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}/reschedule`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ proposed_date: date, proposed_time: time })
+            });
+
+            if (response.ok) {
+                const updated = await response.json();
+                setMyBookings(myBookings.map(b => b.id === bookingId ? { 
+                    ...b, 
+                    proposed_date: updated.proposed_date, 
+                    proposed_time: updated.proposed_time,
+                    reschedule_by: updated.reschedule_by,
+                    reschedule_status: updated.reschedule_status
+                } : b));
+                alert("Reschedule request submitted successfully.");
+            } else {
+                alert("Failed to request reschedule.");
+            }
+        } catch (error) {
+            console.error("Error rescheduling booking:", error);
+        }
+    };
+
+    const handleRespondReschedule = async (bookingId, action) => {
+        try {
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}/reschedule/respond`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ action })
+            });
+
+            if (response.ok) {
+                const updated = await response.json();
+                setMyBookings(myBookings.map(b => b.id === bookingId ? { 
+                    ...b, 
+                    meeting_date: updated.meeting_date,
+                    meeting_time: updated.meeting_time,
+                    proposed_date: null, 
+                    proposed_time: null,
+                    reschedule_by: null,
+                    reschedule_status: updated.reschedule_status
+                } : b));
+                alert(`Reschedule request ${action === 'accept' ? 'accepted' : 'declined'} successfully.`);
+            } else {
+                alert("Failed to respond to reschedule request.");
+            }
+        } catch (error) {
+            console.error("Error responding to reschedule:", error);
+        }
+    };
+
     const openFollowList = async (type) => {
         setFollowList([]);
         setFollowListLoading(true);
@@ -527,6 +623,24 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                                         <div className="text-[11px] text-gray-400 flex items-center gap-2"><FiCalendar size={12} className="text-pink-400" /> <b>Date & Time:</b> {booking.meeting_date ? new Date(booking.meeting_date).toLocaleDateString() : 'N/A'} at {booking.meeting_time || 'N/A'}</div>
                                                         <div className="text-[11px] text-gray-400 flex items-center gap-2"><FiMapPin size={12} className="text-pink-400" /> <b>Location:</b> {booking.meeting_location || 'Not specified'}</div>
                                                         {booking.meeting_details && <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">"{booking.meeting_details}"</div>}
+                                                        {booking.cancellation_reason && (
+                                                            <div className="text-[11px] text-red-400 border-l-2 border-red-500 pl-2 mt-1.5">
+                                                                🚫 <b>Canceled by {booking.canceled_by}:</b> "{booking.cancellation_reason}"
+                                                            </div>
+                                                        )}
+                                                        {booking.reschedule_status === 'pending' && (
+                                                            <div className="text-[11px] text-yellow-400 border-l-2 border-yellow-500 pl-2 mt-1.5 bg-yellow-500/5 p-1 rounded">
+                                                                ⏳ <b>Proposed Reschedule:</b> {booking.proposed_date ? new Date(booking.proposed_date).toLocaleDateString() : ''} at {booking.proposed_time || ''}
+                                                                {booking.reschedule_by === 'girl' ? (
+                                                                    <div className="text-[10px] text-gray-400 mt-0.5">(Pending partner's response)</div>
+                                                                ) : (
+                                                                    <div className="flex gap-2 mt-1.5">
+                                                                        <button onClick={() => handleRespondReschedule(booking.id, 'accept')} className="px-2.5 py-1 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white rounded text-[10px] font-bold transition">Accept</button>
+                                                                        <button onClick={() => handleRespondReschedule(booking.id, 'decline')} className="px-2.5 py-1 bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white rounded text-[10px] font-bold transition">Decline</button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
@@ -536,7 +650,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                                                     <span className="text-yellow-400 text-xs font-bold border border-yellow-400/20 px-3 py-2 rounded-lg bg-yellow-400/10 flex items-center gap-1">
                                                                         <FiClock size={12} /> Pending
                                                                     </span>
-                                                                    <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                                                                    <button onClick={() => handleCancelBooking(booking.id)} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
                                                                         Cancel
                                                                     </button>
                                                                 </>
@@ -545,16 +659,26 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                                                     <button onClick={() => handleBookingStatus(booking.id, 'accepted')} className="px-4 py-2 bg-green-500/20 text-green-400 border border-green-500/30 rounded-lg text-xs font-bold hover:bg-green-500 hover:text-white transition">
                                                                         Accept
                                                                     </button>
-                                                                    <button onClick={() => handleBookingStatus(booking.id, 'rejected')} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                                                                    <button onClick={() => handleCancelBooking(booking.id)} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
                                                                         Reject
                                                                     </button>
                                                                 </>
                                                             )
                                                         )}
                                                         {booking.status === 'accepted' && (
-                                                            <button onClick={() => handleBookingStatus(booking.id, 'completed')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg text-xs font-bold shadow-lg">
-                                                                Mark Done
-                                                            </button>
+                                                            <>
+                                                                {booking.reschedule_status !== 'pending' && (
+                                                                    <button onClick={() => handleRescheduleBooking(booking.id)} className="px-4 py-2 bg-white/5 text-gray-300 border border-white/10 rounded-lg text-xs font-bold hover:bg-white/10 transition">
+                                                                        Reschedule
+                                                                    </button>
+                                                                )}
+                                                                <button onClick={() => handleCancelBooking(booking.id)} className="px-4 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-xs font-bold hover:bg-red-500 hover:text-white transition">
+                                                                    Cancel Booking
+                                                                </button>
+                                                                <button onClick={() => handleBookingStatus(booking.id, 'completed')} className="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg text-xs font-bold shadow-lg">
+                                                                    Mark Done
+                                                                </button>
+                                                            </>
                                                         )}
                                                         {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10">✅ Completed</span>}
                                                         {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10">❌ Canceled / Rejected</span>}
