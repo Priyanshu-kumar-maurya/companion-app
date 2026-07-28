@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { PAGES } from "../../App";
-import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader, FiMessageCircle } from "react-icons/fi";
+import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader, FiMessageCircle, FiPlus, FiTrash2 } from "react-icons/fi";
 
-const CITIES = ["Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur", "Kolkata", "Noida"];
 
 function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const [activeView, setActiveView] = useState('menu');
@@ -29,6 +28,20 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const [blockedUsers, setBlockedUsers] = useState([]);
     const [listLoading, setListLoading] = useState(false);
     const [expandedPost, setExpandedPost] = useState(null);
+
+    // Location Autocomplete states/refs
+    const [citySuggestions, setCitySuggestions] = useState([]);
+    const [citySearchLoading, setCitySearchLoading] = useState(false);
+    const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+    const citySearchTimeoutRef = useRef(null);
+
+    // Gallery Photo management states
+    const [galleryPhotos, setGalleryPhotos] = useState([]);
+    const [galleryLoading, setGalleryLoading] = useState(false);
+    const [newPhotoFile, setNewPhotoFile] = useState(null);
+    const [newPhotoPreview, setNewPhotoPreview] = useState(null);
+    const [newPhotoCaption, setNewPhotoCaption] = useState("");
+    const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
     const handleChange = (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -235,6 +248,133 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         }
     };
 
+    // Nominatim Location Autocomplete handler
+    const handleCityChange = (val) => {
+        setFormData(prev => ({ ...prev, city: val }));
+        
+        if (citySearchTimeoutRef.current) clearTimeout(citySearchTimeoutRef.current);
+        
+        if (!val.trim()) {
+            setCitySuggestions([]);
+            return;
+        }
+
+        setCitySearchLoading(true);
+        citySearchTimeoutRef.current = setTimeout(() => {
+            const query = encodeURIComponent(val + ", India"); // Bias to India
+            fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&addressdetails=1&limit=5`, {
+                headers: {
+                    'User-Agent': 'RentGFCompanionApp/1.0'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const mapped = data.map(item => ({
+                    label: item.display_name.split(',')[0],
+                    description: item.display_name.split(',').slice(1).join(',').trim(),
+                    lat: parseFloat(item.lat),
+                    lon: parseFloat(item.lon)
+                }));
+                
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    const sorted = mapped.map(item => {
+                        const dist = Math.sqrt(Math.pow(item.lat - latitude, 2) + Math.pow(item.lon - longitude, 2));
+                        return { ...item, dist };
+                    }).sort((a, b) => a.dist - b.dist);
+                    setCitySuggestions(sorted);
+                    setCitySearchLoading(false);
+                    setShowCitySuggestions(true);
+                }, () => {
+                    setCitySuggestions(mapped);
+                    setCitySearchLoading(false);
+                    setShowCitySuggestions(true);
+                });
+            })
+            .catch(() => {
+                setCitySearchLoading(false);
+            });
+        }, 800);
+    };
+
+    // Gallery Photo management handlers
+    const fetchGalleryPhotos = async () => {
+        setGalleryLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setGalleryPhotos(await res.json());
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setGalleryLoading(false);
+        }
+    };
+
+    const handlePhotoSelect = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setNewPhotoFile(file);
+            setNewPhotoPreview(URL.createObjectURL(file));
+        }
+    };
+
+    const handleUploadPhoto = async (e) => {
+        e.preventDefault();
+        if (!newPhotoFile) return;
+        setIsUploadingPhoto(true);
+
+        const uploadData = new FormData();
+        uploadData.append("post_image", newPhotoFile);
+        uploadData.append("caption", newPhotoCaption);
+        uploadData.append("show_on_feed", true);
+        uploadData.append("show_on_profile", true);
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, {
+                method: "POST",
+                body: uploadData,
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                alert("Photo uploaded to gallery successfully!");
+                setNewPhotoFile(null);
+                setNewPhotoPreview(null);
+                setNewPhotoCaption("");
+                fetchGalleryPhotos();
+            } else {
+                const errData = await response.json();
+                alert(errData.error || "Upload failed.");
+            }
+        } catch (err) {
+            alert("Upload failed. Try again.");
+        } finally {
+            setIsUploadingPhoto(false);
+        }
+    };
+
+    const handleDeletePhoto = async (postId) => {
+        if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            if (response.ok) {
+                setGalleryPhotos(galleryPhotos.filter(p => p.id !== postId));
+                alert("Photo deleted.");
+            }
+        } catch (err) {
+            console.error("Delete photo error:", err);
+        }
+    };
+
     const isGirl = user.role === 'girl';
 
     return (
@@ -252,6 +392,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             {activeView === 'menu' && <span className="flex items-center gap-2"><FiSettings size={18} className="text-pink-500" /> Settings</span>}
                             {activeView === 'edit_profile' && "Edit Profile"}
                             {activeView === 'privacy' && "Privacy & Visibility"}
+                            {activeView === 'manage_gallery' && <span className="flex items-center gap-2"><FiCamera size={18} className="text-pink-500" /> Manage My Gallery</span>}
                             {activeView === 'saved_posts' && <span className="flex items-center gap-2"><FiBookmark size={18} className="text-pink-500" /> Saved Posts</span>}
                             {activeView === 'liked_posts' && <span className="flex items-center gap-2"><FiHeart size={18} className="text-pink-500" /> Liked Posts</span>}
                             {activeView === 'blocked_accounts' && <span className="flex items-center gap-2"><FiSlash size={18} className="text-pink-500" /> Blocked Accounts</span>}
@@ -278,6 +419,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
                             <div className="pt-2 pb-2 bg-[#121222]/50 border-t border-b border-white/5">
                                 <h3 className="text-[10px] font-bold text-gray-500 px-5 mb-1.5 tracking-wider uppercase">My Activity</h3>
+                                <button onClick={() => { setActiveView('manage_gallery'); fetchGalleryPhotos(); }} className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
+                                    <span className="flex items-center gap-3"><FiCamera size={18} className="text-gray-400" /> Manage My Gallery</span>
+                                    <span className="text-gray-500 text-lg">›</span>
+                                </button>
                                 <button onClick={() => { setActiveView('saved_posts'); fetchSavedPosts(); }} className="w-full text-left px-5 py-3.5 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
                                     <span className="flex items-center gap-3"><FiBookmark size={18} className="text-gray-400" /> Saved Posts</span>
                                     <span className="text-gray-500 text-lg">›</span>
@@ -371,11 +516,47 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                                     <label className="block text-xs text-gray-400 mb-1 ml-1">Age</label>
                                     <input type="number" name="age" value={formData.age} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} />
                                 </div>
-                                <div>
-                                    <label className="block text-xs text-gray-400 mb-1 ml-1">City</label>
-                                    <select name="city" value={formData.city} onChange={handleChange} className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`}>
-                                        {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
+                                <div className="relative">
+                                    <label className="block text-xs text-gray-400 mb-1 ml-1">City / Location</label>
+                                    <div className="relative">
+                                        <input 
+                                            type="text" 
+                                            name="city" 
+                                            value={formData.city} 
+                                            onChange={(e) => handleCityChange(e.target.value)} 
+                                            onFocus={() => { if (citySuggestions.length > 0) setShowCitySuggestions(true); }}
+                                            className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`} 
+                                        />
+                                        {citySearchLoading && (
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+                                                <div className="w-4 h-4 border-2 border-pink-500/20 border-t-pink-500 rounded-full animate-spin" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {showCitySuggestions && citySuggestions.length > 0 && (
+                                        <>
+                                            <div 
+                                                className="fixed inset-0 z-30" 
+                                                onClick={() => setShowCitySuggestions(false)} 
+                                            />
+                                            <div className="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-white/10 shadow-2xl z-40 bg-[#0D0D1A] divide-y divide-white/5 scrollbar-thin">
+                                                {citySuggestions.map((sug, i) => (
+                                                    <div 
+                                                        key={i}
+                                                        onClick={() => {
+                                                            setFormData(prev => ({ ...prev, city: sug.label + ", " + sug.description }));
+                                                            setShowCitySuggestions(false);
+                                                        }}
+                                                        className="px-4 py-2 hover:bg-white/5 cursor-pointer text-left transition"
+                                                    >
+                                                        <div className="text-xs font-bold text-white truncate">{sug.label}</div>
+                                                        <div className="text-[10px] text-gray-500 truncate mt-0.5">{sug.description}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             </div>
 
@@ -435,6 +616,87 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                                 {loading ? "Saving..." : "Save Privacy Settings"}
                             </button>
                         </form>
+                    )}
+
+                    {activeView === 'manage_gallery' && (
+                        <div className="p-4 space-y-4">
+                            {/* Upload New Photo Form */}
+                            <form onSubmit={handleUploadPhoto} className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3 text-left">
+                                <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                                    <FiPlus size={14} className={isGirl ? 'text-pink-400' : 'text-blue-400'} /> Add New Photo
+                                </h3>
+
+                                <div className="flex gap-3 items-center">
+                                    {newPhotoPreview ? (
+                                        <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-white/10">
+                                            <img src={newPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                                            <button 
+                                                type="button" 
+                                                onClick={() => { setNewPhotoFile(null); setNewPhotoPreview(null); }}
+                                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-[10px] text-white"
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className={`w-16 h-16 rounded-lg border border-dashed border-white/20 flex flex-col items-center justify-center cursor-pointer hover:bg-white/5 transition shrink-0 ${isGirl ? 'hover:border-pink-500' : 'hover:border-blue-500'}`}>
+                                            <FiCamera size={18} className="text-gray-400" />
+                                            <span className="text-[9px] text-gray-500 mt-1">Select</span>
+                                            <input type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
+                                        </label>
+                                    )}
+
+                                    <div className="flex-1">
+                                        <textarea
+                                            placeholder="Write a caption..."
+                                            value={newPhotoCaption}
+                                            onChange={(e) => setNewPhotoCaption(e.target.value)}
+                                            rows="2"
+                                            className={`w-full bg-[#0D0D1A] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none resize-none transition ${isGirl ? 'focus:border-pink-500' : 'focus:border-blue-500'}`}
+                                        />
+                                    </div>
+                                </div>
+
+                                {newPhotoFile && (
+                                    <button 
+                                        type="submit" 
+                                        disabled={isUploadingPhoto}
+                                        className={`w-full py-2 text-white rounded-lg text-xs font-bold transition shadow-md ${
+                                            isGirl ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                                        }`}
+                                    >
+                                        {isUploadingPhoto ? "Uploading..." : "Share Photo"}
+                                    </button>
+                                )}
+                            </form>
+
+                            {/* Gallery Photos Grid */}
+                            <div className="border-t border-white/5 pt-4">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-left">
+                                    Current Gallery ({galleryPhotos.length})
+                                </h3>
+
+                                {galleryLoading ? (
+                                    <div className="text-center py-8 text-xs text-gray-500 animate-pulse">Loading gallery...</div>
+                                ) : galleryPhotos.length === 0 ? (
+                                    <div className="text-center py-8 text-xs text-gray-500">No photos in gallery. Upload one above!</div>
+                                ) : (
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {galleryPhotos.map(photo => (
+                                            <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden border border-white/5 group">
+                                                <img src={photo.image_url} alt="" className="w-full h-full object-cover" />
+                                                <button
+                                                    onClick={() => handleDeletePhoto(photo.id)}
+                                                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition duration-200"
+                                                >
+                                                    <FiTrash2 size={16} className="text-red-400 hover:scale-125 transition" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     )}
 
                     {activeView === 'saved_posts' && (
