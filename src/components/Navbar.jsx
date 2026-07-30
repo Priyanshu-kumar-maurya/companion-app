@@ -154,7 +154,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                 <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="url(#ai-grad2)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                 <defs><linearGradient id="ai-grad2" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop stopColor="#f9ce3f" /><stop offset="0.5" stopColor="#e1306c" /><stop offset="1" stopColor="#833ab4" /></linearGradient></defs>
                             </svg>
-                            <span className="text-lg font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide">RentGF</span>
+                            <span className="text-lg font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide">Coffeely</span>
                         </button>
 
                         {/* ─── CENTER: Nav Icons ─── */}

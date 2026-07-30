@@ -42,7 +42,7 @@ function Footer({ setPage }) {
                                     </linearGradient>
                                 </defs>
                             </svg>
-                            RentGF
+                            Coffeely
                         </h2>
                         <p className="text-sm text-gray-400 max-w-sm leading-relaxed">
                             Find your perfect companion for coffee dates, movies, events, and meaningful conversations. A secure, private, and premium platform for genuine connections.
@@ -71,7 +71,7 @@ function Footer({ setPage }) {
                 </div>
                 <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-gray-500">
-                        © {new Date().getFullYear()} RentGF. All rights reserved.
+                        © {new Date().getFullYear()} Coffeely. All rights reserved.
                     </p>
                     <div className="flex gap-4 text-sm text-gray-400">
                         <a href="https://www.instagram.com/rentgf.in?igsh=b29iNDkxejFnaDJt" target="_blank" rel="noreferrer">

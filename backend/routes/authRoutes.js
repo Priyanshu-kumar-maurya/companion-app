@@ -9,8 +9,8 @@ const router = express.Router();
 // ─── Email Service (Brevo HTTP API — works on Render, no SMTP ports needed) ──
 const sendEmail = async ({ to, subject, html }) => {
     const apiKey = process.env.BREVO_API_KEY;
-    const senderEmail = process.env.EMAIL_USER || 'noreply@rentgf.com';
-    const senderName = process.env.EMAIL_FROM_NAME || 'RentGF';
+    const senderEmail = process.env.EMAIL_USER || 'noreply@coffeely.com';
+    const senderName = process.env.EMAIL_FROM_NAME || 'Coffeely';
 
     if (!apiKey) {
         throw new Error('BREVO_API_KEY is not set in environment variables');
@@ -108,7 +108,7 @@ router.post('/register', authRateLimit, async (req, res) => {
         try {
             await sendEmail({
                 to: email.toLowerCase().trim(),
-                subject: 'Your RentGF Verification Code',
+                subject: 'Your Coffeely Verification Code',
                 html: `
                     <!DOCTYPE html>
                     <html>
@@ -121,7 +121,7 @@ router.post('/register', authRateLimit, async (req, res) => {
                             <tr><td align="center">
                                 <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
                                     <tr><td style="background:linear-gradient(135deg,#e91e8c,#ff6b6b);padding:36px 40px;text-align:center;">
-                                        <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:1px;">RentGF</h1>
+                                        <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:700;letter-spacing:1px;">Coffeely</h1>
                                         <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Email Verification</p>
                                     </td></tr>
                                     <tr><td style="padding:40px 40px 32px;">
@@ -135,7 +135,7 @@ router.post('/register', authRateLimit, async (req, res) => {
                                         <p style="margin:0;color:#aaaaaa;font-size:12px;text-align:center;">If you didn't request this, please ignore this email.</p>
                                     </td></tr>
                                     <tr><td style="background:#fafafa;padding:20px 40px;border-top:1px solid #eeeeee;text-align:center;">
-                                        <p style="margin:0;color:#bbbbbb;font-size:12px;">&copy; 2024 RentGF &middot; All rights reserved</p>
+                                        <p style="margin:0;color:#bbbbbb;font-size:12px;">&copy; 2026 Coffeely &middot; All rights reserved</p>
                                     </td></tr>
                                 </table>
                             </td></tr>
@@ -199,40 +199,25 @@ router.post('/login', authRateLimit, async (req, res) => {
             return res.status(401).json({ error: "Incorrect email/phone or password." });
         }
 
-        // Check if account is frozen or suspended
-        if (user.is_frozen) {
-            return res.status(403).json({ error: "Your account has been frozen by admin. Please contact support." });
-        }
-        if (user.is_platform_blocked && user.role !== 'admin') {
-            return res.status(403).json({ error: "Your account has been suspended. Please contact support." });
+        if (user.is_verified === false) {
+            return res.status(403).json({ error: "UNVERIFIED_ACCOUNT", email: user.email });
         }
 
-        // Generate JWT
+        // Generate JWT token
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
-        res.status(200).json({
-            message: "Login successful!",
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                username: user.username,
-                email: user.email,
-                role: user.role,
-                profile_pic: user.profile_pic,
-                kyc_status: user.kyc_status,
-                is_verified: user.is_verified
-            }
-        });
+        delete user.password;
+        res.status(200).json({ message: "Login successful!", token, user });
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ error: "Server error. Please try again." });
     }
 });
+
 
 // ─── FORGOT PASSWORD (Send OTP) ───────────────────────────────
 router.post('/forgot-password', authRateLimit, async (req, res) => {
@@ -262,7 +247,7 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
 
         await sendEmail({
             to: email,
-            subject: 'RentGF — Password Reset Code',
+            subject: 'Coffeely — Password Reset Code',
             html: `
                 <!DOCTYPE html>
                 <html>
@@ -271,7 +256,7 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
                         <tr><td align="center">
                             <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
                                 <tr><td style="background:linear-gradient(135deg,#e91e8c,#ff6b6b);padding:36px 40px;text-align:center;">
-                                    <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">RentGF</h1>
+                                    <h1 style="margin:0;color:#fff;font-size:26px;font-weight:700;">Coffeely</h1>
                                     <p style="margin:8px 0 0;color:rgba(255,255,255,0.85);font-size:14px;">Password Reset</p>
                                 </td></tr>
                                 <tr><td style="padding:40px;">
@@ -284,7 +269,7 @@ router.post('/forgot-password', authRateLimit, async (req, res) => {
                                     <p style="margin:0;color:#aaa;font-size:12px;text-align:center;">If you did not request this, please ignore this email.</p>
                                 </td></tr>
                                 <tr><td style="background:#fafafa;padding:20px 40px;border-top:1px solid #eee;text-align:center;">
-                                    <p style="margin:0;color:#bbb;font-size:12px;">&copy; 2024 RentGF &middot; All rights reserved</p>
+                                    <p style="margin:0;color:#bbb;font-size:12px;">&copy; 2026 Coffeely &middot; All rights reserved</p>
                                 </td></tr>
                             </table>
                         </td></tr>

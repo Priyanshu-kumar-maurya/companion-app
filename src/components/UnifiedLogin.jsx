@@ -271,7 +271,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                 <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                 <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            <span className="text-2xl font-black text-white tracking-wide">RentGF</span>
+                            <span className="text-2xl font-black text-white tracking-wide">Coffeely</span>
                         </div>
 
                         <h2 className="text-2xl font-extrabold text-center text-white mb-1">Welcome Back</h2>

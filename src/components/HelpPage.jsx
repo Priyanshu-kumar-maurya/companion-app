@@ -86,8 +86,8 @@ function HelpPage() {
             </div>
 
             <footer className="border-t border-white/5 py-10 text-center text-gray-500 text-sm">
-                <p>💞 RentGF — Safe, Verified & Respectful Companionship</p>
-                <p className="mt-2 text-xs">© 2026 RentGF. All rights reserved.</p>
+                <p>💞 Coffeely — Safe, Verified & Respectful Companionship</p>
+                <p className="mt-2 text-xs">© 2026 Coffeely. All rights reserved.</p>
             </footer>
         </div>
     );

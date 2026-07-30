@@ -50,7 +50,7 @@ function LegalPages({ setPage, initialTab = "terms" }) {
                 </div>
 
                 <div className="text-center mt-6 text-gray-600 text-xs">
-                    Last updated: July 2026 · RentGF Platform
+                    Last updated: July 2026 · Coffeely Platform
                 </div>
             </div>
         </div>
@@ -66,7 +66,7 @@ function TermsContent() {
             </div>
 
             <Section title="1. Acceptance of Terms">
-                By accessing or using RentGF ("Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform. RentGF is a companion connection platform — it is NOT an escort service or dating service. We facilitate platonic companionship for social events, conversations, and activities.
+                By accessing or using Coffeely ("Platform"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform. Coffeely is a companion connection platform — it is NOT an escort service or dating service. We facilitate platonic companionship for social events, conversations, and activities.
             </Section>
 
             <Section title="2. Eligibility">
@@ -79,14 +79,14 @@ function TermsContent() {
             </Section>
 
             <Section title="3. User Accounts">
-                You are responsible for maintaining the confidentiality of your login credentials. You agree to immediately notify us of any unauthorized use of your account. RentGF is not liable for any loss arising from unauthorized use of your account.
+                You are responsible for maintaining the confidentiality of your login credentials. You agree to immediately notify us of any unauthorized use of your account. Coffeely is not liable for any loss arising from unauthorized use of your account.
             </Section>
 
             <Section title="4. Companion Services">
                 <ul className="list-disc list-inside space-y-1 mt-2">
                     <li>All meetings must occur in <b className="text-white">public places</b></li>
-                    <li>Companions are independent individuals, NOT employees of RentGF</li>
-                    <li>RentGF does not guarantee the quality, safety, or outcome of any meeting</li>
+                    <li>Companions are independent individuals, NOT employees of Coffeely</li>
+                    <li>Coffeely does not guarantee the quality, safety, or outcome of any meeting</li>
                     <li>Any form of illegal activity is strictly prohibited</li>
                     <li>Both parties must consent to the meeting terms</li>
                 </ul>
@@ -95,7 +95,7 @@ function TermsContent() {
             <Section title="5. Payments & Refunds">
                 <ul className="list-disc list-inside space-y-1 mt-2">
                     <li>All payments are processed through our secure payment gateway</li>
-                    <li>RentGF charges a platform fee on each transaction</li>
+                    <li>Coffeely charges a platform fee on each transaction</li>
                     <li>Refunds are processed for cancelled bookings as per our refund policy</li>
                     <li>Companions receive payment after successful completion of meetings</li>
                 </ul>
@@ -114,15 +114,15 @@ function TermsContent() {
             </Section>
 
             <Section title="7. Account Termination">
-                RentGF reserves the right to suspend or terminate accounts that violate these terms, without prior notice. Users may also delete their own accounts at any time through the Settings page.
+                Coffeely reserves the right to suspend or terminate accounts that violate these terms, without prior notice. Users may also delete their own accounts at any time through the Settings page.
             </Section>
 
             <Section title="8. Limitation of Liability">
-                RentGF is provided "as is" without warranties. We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Platform.
+                Coffeely is provided "as is" without warranties. We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of the Platform.
             </Section>
 
             <Section title="9. Contact Us">
-                For questions about these Terms, contact us at: <a href="mailto:support@rentgf.com" className="text-pink-400 underline">support@rentgf.com</a>
+                For questions about these Terms, contact us at: <a href="mailto:support@coffeely.com" className="text-pink-400 underline">support@coffeely.com</a>
             </Section>
         </div>
     );
@@ -191,7 +191,7 @@ function PrivacyContent() {
             </Section>
 
             <Section title="7. Contact">
-                Privacy concerns? Contact our Data Protection Officer at: <a href="mailto:privacy@rentgf.com" className="text-pink-400 underline">privacy@rentgf.com</a>
+                Privacy concerns? Contact our Data Protection Officer at: <a href="mailto:privacy@coffeely.com" className="text-pink-400 underline">privacy@coffeely.com</a>
             </Section>
         </div>
     );
@@ -260,7 +260,7 @@ function SafetyContent() {
             </Section>
 
             <div className="bg-pink-500/10 border border-pink-500/30 rounded-xl p-4 text-center">
-                <p className="text-pink-300 text-xs font-bold">Remember: RentGF is for platonic companionship only.</p>
+                <p className="text-pink-300 text-xs font-bold">Remember: Coffeely is for platonic companionship only.</p>
                 <p className="text-gray-500 text-[10px] mt-1">Any misuse will result in permanent account ban.</p>
             </div>
         </div>

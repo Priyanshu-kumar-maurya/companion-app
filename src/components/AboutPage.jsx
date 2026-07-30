@@ -7,11 +7,11 @@ function AboutPage() {
                 <h1 className="text-4xl font-bold mb-4">
                     About{" "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                        RentGF
+                        Coffeely
                     </span>
                 </h1>
                 <p className="text-gray-400 text-base leading-relaxed">
-                    RentGF is India's safest and most respectful companionship platform,
+                    Coffeely is India's safest and most respectful companionship platform,
                     designed for people who want genuine, meaningful company — whether for
                     a coffee date, movie night, shopping trip, or just a good conversation.
                 </p>
@@ -57,8 +57,8 @@ function AboutPage() {
             </div>
 
             <footer className="border-t border-white/5 py-10 text-center text-gray-500 text-sm">
-                <p>💞 RentGF — Safe, Verified & Respectful Companionship</p>
-                <p className="mt-2 text-xs">© 2026 RentGF. All rights reserved.</p>
+                <p>💞 Coffeely — Safe, Verified & Respectful Companionship</p>
+                <p className="mt-2 text-xs">© 2026 Coffeely. All rights reserved.</p>
             </footer>
         </div>
     );

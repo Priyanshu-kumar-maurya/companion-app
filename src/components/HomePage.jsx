@@ -683,7 +683,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                     <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                     <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                <span className="text-3xl font-black text-white tracking-wide">RentGF</span>
+                                <span className="text-3xl font-black text-white tracking-wide">Coffeely</span>
                             </div>
  
                             {/* Short Intro */}

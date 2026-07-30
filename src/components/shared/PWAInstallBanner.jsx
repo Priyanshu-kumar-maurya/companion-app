@@ -45,7 +45,7 @@ function PWAInstallBanner() {
                     💝
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-white text-sm font-bold">Install RentGF App</div>
+                    <div className="text-white text-sm font-bold">Install Coffeely App</div>
                     <div className="text-gray-400 text-[10px] mt-0.5">Faster access, offline support, notifications!</div>
                 </div>
                 <div className="flex gap-1.5 shrink-0">
