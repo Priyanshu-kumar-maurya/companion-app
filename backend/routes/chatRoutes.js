@@ -43,7 +43,7 @@ router.get('/messages/:user1/:user2', authenticateToken, async (req, res) => {
         }
 
         const query = `
-            SELECT id, sender_id, receiver_id, text AS message, image_url, created_at, is_read 
+            SELECT id, sender_id, receiver_id, text AS message, image_url, audio_url, created_at, is_read 
             FROM messages 
             WHERE ((sender_id = $1 AND receiver_id = $2) 
                OR (sender_id = $2 AND receiver_id = $1))

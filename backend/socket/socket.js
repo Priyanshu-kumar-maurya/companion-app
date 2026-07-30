@@ -61,8 +61,8 @@ module.exports = (io) => {
                 } catch (modErr) { console.error('Chat moderation error:', modErr.message); }
 
                 const result = await pool.query(
-                    "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING id, created_at, is_read",
-                    [data.sender_id, data.receiver_id, messageText, data.image_url || null]
+                    "INSERT INTO messages (sender_id, receiver_id, text, image_url, audio_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, is_read",
+                    [data.sender_id, data.receiver_id, messageText, data.image_url || null, data.audio_url || null]
                 );
                 const savedMessage = result.rows[0];
                 data.id = savedMessage.id;

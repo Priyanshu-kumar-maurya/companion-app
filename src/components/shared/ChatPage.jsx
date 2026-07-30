@@ -48,6 +48,97 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     });
     const [disappearingDuration, setDisappearingDuration] = useState("off"); // 'off' / '24h' / '7d' / '90d'
 
+    // Audio recording states & refs
+    const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+    const [recordingTime, setRecordingTime] = useState(0);
+    const mediaRecorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+    const recordingTimerRef = useRef(null);
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunksRef.current = [];
+            const recorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = recorder;
+
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    audioChunksRef.current.push(e.data);
+                }
+            };
+
+            recorder.onstop = () => {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+
+                const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                if (audioBlob.size > 0) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                        sendAudioMessage(reader.result);
+                    };
+                }
+            };
+
+            recorder.start();
+            setIsRecordingAudio(true);
+            setRecordingTime(0);
+
+            recordingTimerRef.current = setInterval(() => {
+                setRecordingTime(prev => prev + 1);
+            }, 1000);
+        } catch (err) {
+            console.error("Microphone access error:", err);
+            alert("Could not access microphone. Please allow microphone permissions.");
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecordingAudio) {
+            mediaRecorderRef.current.stop();
+            setIsRecordingAudio(false);
+            clearInterval(recordingTimerRef.current);
+        }
+    };
+
+    const cancelRecording = () => {
+        if (mediaRecorderRef.current && isRecordingAudio) {
+            mediaRecorderRef.current.onstop = null;
+            mediaRecorderRef.current.stop();
+            if (mediaRecorderRef.current.stream) {
+                mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+            }
+            setIsRecordingAudio(false);
+            clearInterval(recordingTimerRef.current);
+        }
+    };
+
+    const sendAudioMessage = (base64Audio) => {
+        if (!currentUser || !girl) return;
+        const ids = [currentUser.id, girl.id].sort((a, b) => a - b);
+        const room = `chat_${ids[0]}_${ids[1]}`;
+
+        const msgData = {
+            sender_id: currentUser.id,
+            receiver_id: girl.id,
+            room: room,
+            text: "🎤 Voice Note",
+            audio_url: base64Audio
+        };
+
+        socket.emit("send_message", msgData);
+        setMessages(prev => [...prev, {
+            ...msgData,
+            id: Date.now(),
+            sent: true,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            timestamp: Date.now(),
+            is_read: false
+        }]);
+    };
+
     // Fetch block status
     useEffect(() => {
         if (!currentUser || !girl || currentUser.id === girl.id) return;
@@ -443,7 +534,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     const formattedMessages = dbMessages.map(msg => {
                         const date = new Date(msg.created_at);
                         return {
-                            id: msg.id, text: msg.message, imageUrl: msg.image_url,
+                            id: msg.id, text: msg.message, imageUrl: msg.image_url, audio_url: msg.audio_url,
                             sent: String(msg.sender_id) === String(currentUser.id),
                             time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             timestamp: date.getTime(), is_read: msg.is_read
@@ -468,7 +559,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 if (prev.find(m => String(m.id) === String(data.id))) return prev;
                 const date = data.created_at ? new Date(data.created_at) : new Date();
                 return [...prev, {
-                    id: data.id, text: data.text || data.message, imageUrl: data.image_url,
+                    id: data.id, text: data.text || data.message, imageUrl: data.image_url, audio_url: data.audio_url,
                     sent: String(data.sender_id) === String(currentUser.id),
                     time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                     timestamp: date.getTime(), is_read: data.is_read || false
@@ -936,7 +1027,17 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
                                                 {!msg.imageUrl && (
                                                     <>
-                                                        {msg.text && <span className="break-words">{msg.text}</span>}
+                                                        {msg.audio_url || (msg.text && (msg.text.startsWith('data:audio') || msg.text.startsWith('blob:'))) ? (
+                                                            <div className="flex flex-col gap-1 py-1">
+                                                                <div className="flex items-center gap-1.5 mb-1">
+                                                                    <FiMic size={13} className="text-pink-400" />
+                                                                    <span className="text-xs font-bold text-pink-300">Voice Note</span>
+                                                                </div>
+                                                                <audio controls src={msg.audio_url || msg.text} className="max-w-[220px] sm:max-w-[260px] h-9 rounded-lg border border-white/10" />
+                                                            </div>
+                                                        ) : (
+                                                            msg.text && <span className="break-words">{msg.text}</span>
+                                                        )}
                                                         <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
                                                             {starredMessages.includes(msg.id) && (
                                                                 <span className="text-yellow-400 text-[10px] mr-1">★</span>
@@ -1014,36 +1115,70 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     </div>
                 )}
 
-                {/* ─── INPUT BAR ─── */}
-                <div className="flex items-end gap-2 px-3 py-2 shrink-0 border-t" style={{ background: '#16162A', borderColor: 'rgba(255,255,255,0.08)' }}>
-                    <label
-                        className="w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition flex-shrink-0 text-gray-500 hover:text-pink-400 hover:bg-white/10"
-                        title="Attach Image"
-                    >
-                        <FiPaperclip size={20} />
-                        <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || !!editingMsgId} />
-                    </label>
-
-                    <div className="flex-1 flex items-end rounded-2xl px-4 py-2.5 border border-white/10" style={{ background: '#0D0D1A', minHeight: 44 }}>
-                        <textarea
-                            className="flex-1 bg-transparent text-sm outline-none resize-none placeholder-gray-600 border-none"
-                            style={{ maxHeight: 120, color: '#f1f5f9' }}
-                            placeholder="Message..."
-                            value={input}
-                            onChange={(e) => handleInputChange(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                            onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth' }), 100)}
-                            rows={1}
-                        />
+                {/* ─── LIVE AUDIO RECORDING OR INPUT BAR ─── */}
+                {isRecordingAudio ? (
+                    <div className="flex items-center justify-between px-4 py-3 bg-[#16162A] border-t border-pink-500/30 text-white shrink-0">
+                        <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
+                            <span className="text-xs font-bold text-red-400">
+                                Recording... {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={cancelRecording}
+                                className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-full transition"
+                                title="Cancel Recording"
+                            >
+                                <FiX size={18} />
+                            </button>
+                            <button
+                                onClick={stopRecording}
+                                className="p-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full transition shadow-lg hover:scale-105 active:scale-95"
+                                title="Send Voice Note"
+                            >
+                                <FiSend size={16} />
+                            </button>
+                        </div>
                     </div>
+                ) : (
+                    <div className="flex items-end gap-2 px-3 py-2 shrink-0 border-t" style={{ background: '#16162A', borderColor: 'rgba(255,255,255,0.08)' }}>
+                        <label
+                            className="w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition flex-shrink-0 text-gray-500 hover:text-pink-400 hover:bg-white/10"
+                            title="Attach Image"
+                        >
+                            <FiPaperclip size={20} />
+                            <input type="file" accept="image/*" className="hidden" onChange={handleImageAttachment} disabled={uploadingImage || !!editingMsgId} />
+                        </label>
 
-                    <button
-                        onClick={() => sendMessage(null)}
-                        className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:scale-110 active:scale-95 bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20"
-                    >
-                        {input.trim() ? <FiSend size={17} className="text-white" /> : <FiMic size={17} className="text-white" />}
-                    </button>
-                </div>
+                        <div className="flex-1 flex items-end rounded-2xl px-4 py-2.5 border border-white/10" style={{ background: '#0D0D1A', minHeight: 44 }}>
+                            <textarea
+                                className="flex-1 bg-transparent text-sm outline-none resize-none placeholder-gray-600 border-none"
+                                style={{ maxHeight: 120, color: '#f1f5f9' }}
+                                placeholder="Message..."
+                                value={input}
+                                onChange={(e) => handleInputChange(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+                                onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth' }), 100)}
+                                rows={1}
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                if (input.trim()) {
+                                    sendMessage(null);
+                                } else {
+                                    startRecording();
+                                }
+                            }}
+                            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition hover:scale-110 active:scale-95 bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-pink-500/20"
+                            title={input.trim() ? "Send Message" : "Record Voice Note"}
+                        >
+                            {input.trim() ? <FiSend size={17} className="text-white" /> : <FiMic size={17} className="text-white" />}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* ─── WHATSAPP STYLE CONTACT INFO SIDEBAR ─── */}
