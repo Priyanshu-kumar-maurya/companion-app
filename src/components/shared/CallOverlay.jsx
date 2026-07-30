@@ -42,14 +42,17 @@ function CallOverlay({ socket, currentUser }) {
         if (!socket || !partner || !currentUser) return;
 
         let logText = overrideText;
+        let callStatus = 'completed';
         if (!logText) {
             if (callState === 'active' && callDurationRef.current > 0) {
                 const m = Math.floor(callDurationRef.current / 60);
                 const s = callDurationRef.current % 60;
                 const durStr = `${m}m ${s}s`;
                 logText = `📞 ${callType === 'video' ? 'Video' : 'Voice'} Call - ${durStr}`;
+                callStatus = 'completed';
             } else {
                 logText = `📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`;
+                callStatus = 'missed';
             }
         }
 
@@ -59,6 +62,25 @@ function CallOverlay({ socket, currentUser }) {
             room: partner.room,
             text: logText
         });
+
+        try {
+            const token = localStorage.getItem("token");
+            fetch("https://rentgf-and-bf.onrender.com/api/call-history", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    receiver_id: partner.id,
+                    call_type: callType,
+                    duration_seconds: callDurationRef.current || 0,
+                    status: callStatus
+                })
+            }).catch(e => console.error(e));
+        } catch (e) {
+            console.error("Failed to log call history:", e);
+        }
     };
 
     // --- Web Audio Ringtone Synthesizer ---

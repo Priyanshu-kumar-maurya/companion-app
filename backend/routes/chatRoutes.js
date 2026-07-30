@@ -80,4 +80,51 @@ router.post('/messages/clear', authenticateToken, async (req, res) => {
     }
 });
 
+// ─── GET CALL HISTORY — AUTH REQUIRED ─────────────────────────
+router.get('/call-history/:userId', authenticateToken, async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (req.user.role !== 'admin' && parseInt(req.user.id) !== parseInt(userId)) {
+            return res.status(403).json({ error: "Forbidden: Access Denied." });
+        }
+
+        const query = `
+            SELECT c.*, 
+                   caller.name AS caller_name, caller.profile_pic AS caller_pic, caller.role AS caller_role,
+                   receiver.name AS receiver_name, receiver.profile_pic AS receiver_pic, receiver.role AS receiver_role
+            FROM call_history c
+            JOIN users caller ON c.caller_id = caller.id
+            JOIN users receiver ON c.receiver_id = receiver.id
+            WHERE c.caller_id = $1 OR c.receiver_id = $1
+            ORDER BY c.created_at DESC
+            LIMIT 50
+        `;
+        const result = await pool.query(query, [userId]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Get call history error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── RECORD CALL HISTORY ENTRY — AUTH REQUIRED ─────────────────
+router.post('/call-history', authenticateToken, async (req, res) => {
+    try {
+        const { receiver_id, call_type, duration_seconds, status } = req.body;
+        const caller_id = req.user.id;
+
+        if (!receiver_id) return res.status(400).json({ error: "receiver_id is required." });
+
+        const result = await pool.query(
+            `INSERT INTO call_history (caller_id, receiver_id, call_type, duration_seconds, status)
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [caller_id, receiver_id, call_type || 'voice', duration_seconds || 0, status || 'completed']
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error("Record call history error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;

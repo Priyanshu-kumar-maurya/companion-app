@@ -189,7 +189,19 @@ const connectDB = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`);
 
+        await pool.query(`CREATE TABLE IF NOT EXISTS call_history (
+            id SERIAL PRIMARY KEY,
+            caller_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            call_type VARCHAR(10) DEFAULT 'voice',
+            duration_seconds INTEGER DEFAULT 0,
+            status VARCHAR(20) DEFAULT 'completed',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );`);
+
         // ─── Performance Indexes ───────────────────────────────────
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_caller ON call_history(caller_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_receiver ON call_history(receiver_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_users_kyc ON users(kyc_status);");
