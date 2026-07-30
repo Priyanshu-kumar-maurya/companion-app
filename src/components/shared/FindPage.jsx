@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
-import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar } from "react-icons/fi";
+import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw } from "react-icons/fi";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
+const AGE_RANGES = ["All", "18-22", "23-27", "28+"];
 
 function FindPage({ setPage, setSelectedGirl, currentUser }) {
     const [searchQ, setSearchQ] = useState("");
     const [filterCity, setFilterCity] = useState("All");
     const [filterTag, setFilterTag] = useState("All");
+    const [maxPrice, setMaxPrice] = useState(5000);
+    const [ageRange, setAgeRange] = useState("All");
+    const [onlineOnly, setOnlineOnly] = useState(false);
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -58,13 +63,45 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
         fetchProfiles();
     }, [genderFilter]);
 
-    const filtered = users.filter(
-        (u) =>
-            (filterCity === "All" || u.city === filterCity) &&
-            (filterTag === "All" || u.tags.some(tag => tag.trim() === filterTag)) &&
-            (u.name.toLowerCase().includes(searchQ.toLowerCase()) ||
-                (u.city && u.city.toLowerCase().includes(searchQ.toLowerCase())))
-    );
+    const handleResetFilters = () => {
+        setSearchQ("");
+        setFilterCity("All");
+        setFilterTag("All");
+        setMaxPrice(5000);
+        setAgeRange("All");
+        setOnlineOnly(false);
+    };
+
+    const activeFilterCount = (filterCity !== "All" ? 1 : 0) + 
+                              (filterTag !== "All" ? 1 : 0) + 
+                              (maxPrice < 5000 ? 1 : 0) + 
+                              (ageRange !== "All" ? 1 : 0) + 
+                              (onlineOnly ? 1 : 0);
+
+    const filtered = users.filter((u) => {
+        if (filterCity !== "All" && u.city !== filterCity) return false;
+        if (filterTag !== "All" && !u.tags.some(tag => tag.trim() === filterTag)) return false;
+        if (searchQ) {
+            const q = searchQ.toLowerCase();
+            const nameMatch = u.name && u.name.toLowerCase().includes(q);
+            const cityMatch = u.city && u.city.toLowerCase().includes(q);
+            if (!nameMatch && !cityMatch) return false;
+        }
+
+        const price = parseInt(u.price || 1000);
+        if (price > maxPrice) return false;
+
+        if (ageRange !== "All" && u.age) {
+            const age = parseInt(u.age);
+            if (ageRange === "18-22" && (age < 18 || age > 22)) return false;
+            if (ageRange === "23-27" && (age < 23 || age > 27)) return false;
+            if (ageRange === "28+" && age < 28) return false;
+        }
+
+        if (onlineOnly && u.show_online === false) return false;
+
+        return true;
+    });
 
     const handleProfileClick = (profile) => {
         if (!currentUser) {
@@ -121,6 +158,96 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                         </button>
                     ))}
                 </div>
+
+                {/* Advanced Filters Toggle Bar */}
+                <div className="flex items-center justify-between mb-4">
+                    <button
+                        onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 transition ${
+                            showAdvancedFilters || activeFilterCount > 0
+                                ? "bg-pink-500/10 border-pink-500 text-pink-400 shadow-md"
+                                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/20"
+                        }`}
+                    >
+                        <FiFilter size={14} />
+                        <span>Filters</span>
+                        {activeFilterCount > 0 && (
+                            <span className="w-5 h-5 bg-pink-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center">
+                                {activeFilterCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {activeFilterCount > 0 && (
+                        <button
+                            onClick={handleResetFilters}
+                            className="text-xs text-gray-400 hover:text-red-400 flex items-center gap-1.5 transition"
+                        >
+                            <FiRotateCcw size={12} /> Reset All
+                        </button>
+                    )}
+                </div>
+
+                {/* Collapsible Filters Card */}
+                {showAdvancedFilters && (
+                    <div className="bg-[#16162A] border border-white/10 rounded-2xl p-5 mb-6 space-y-4 animate-fadeIn">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Max Hourly Rate Filter */}
+                            <div>
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <label className="text-xs font-semibold text-gray-300">Max Price Per Hour</label>
+                                    <span className="text-xs font-bold text-pink-400">₹{maxPrice}</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="300"
+                                    max="5000"
+                                    step="100"
+                                    value={maxPrice}
+                                    onChange={(e) => setMaxPrice(parseInt(e.target.value))}
+                                    className="w-full accent-pink-500 bg-white/10 h-1.5 rounded-lg appearance-none cursor-pointer"
+                                />
+                            </div>
+
+                            {/* Age Bracket Filter */}
+                            <div>
+                                <label className="text-xs font-semibold text-gray-300 block mb-1.5">Age Range</label>
+                                <div className="flex gap-1.5">
+                                    {AGE_RANGES.map((range) => (
+                                        <button
+                                            key={range}
+                                            onClick={() => setAgeRange(range)}
+                                            className={`px-3 py-1 rounded-lg text-xs font-bold border transition ${
+                                                ageRange === range
+                                                    ? "bg-pink-500/20 border-pink-500 text-pink-300"
+                                                    : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10"
+                                            }`}
+                                        >
+                                            {range}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Instant Online Availability Toggle */}
+                            <div className="flex items-center justify-between sm:justify-start gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                <div>
+                                    <div className="text-xs font-semibold text-white">Online Now Only</div>
+                                    <div className="text-[10px] text-gray-400">Show active companions</div>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer select-none ml-auto">
+                                    <input
+                                        type="checkbox"
+                                        checked={onlineOnly}
+                                        onChange={(e) => setOnlineOnly(e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <div className="flex gap-2 flex-wrap items-center mb-3">
                     <span className="text-xs text-gray-500">City:</span>
