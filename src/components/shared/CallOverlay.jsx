@@ -20,6 +20,8 @@ function CallOverlay({ socket, currentUser }) {
     const [statusText, setStatusText] = useState("Calling...");
     const [showBanner, setShowBanner] = useState(true);
 
+    const [netQuality, setNetQuality] = useState({ status: 'good', rtt: 30, label: '🟢 HD Quality (Strong Signal)' });
+
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
     const remoteAudioRef = useRef(null);
@@ -31,6 +33,7 @@ function CallOverlay({ socket, currentUser }) {
     const ringtoneTimerRef = useRef(null);
     const timerIntervalRef = useRef(null);
     const callingTimeoutRef = useRef(null);
+    const statsIntervalRef = useRef(null);
 
     const hasLoggedCallRef = useRef(false);
     const callDurationRef = useRef(0);
@@ -59,28 +62,26 @@ function CallOverlay({ socket, currentUser }) {
         socket.emit("send_message", {
             sender_id: currentUser.id,
             receiver_id: partner.id,
+            message: logText,
             room: partner.room,
-            text: logText
+            is_call_log: true
         });
 
-        try {
-            const token = localStorage.getItem("token");
-            fetch("https://rentgf-and-bf.onrender.com/api/call-history", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    receiver_id: partner.id,
-                    call_type: callType,
-                    duration_seconds: callDurationRef.current || 0,
-                    status: callStatus
-                })
-            }).catch(e => console.error(e));
-        } catch (e) {
-            console.error("Failed to log call history:", e);
-        }
+        const token = localStorage.getItem("token");
+        fetch("https://rentgf-and-bf.onrender.com/api/call-history", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                caller_id: currentUser.id,
+                receiver_id: partner.id,
+                call_type: callType,
+                duration: callDurationRef.current,
+                status: callStatus
+            })
+        }).catch(err => console.error("Call history DB log error:", err));
     };
 
     // --- Web Audio Ringtone Synthesizer ---
@@ -132,9 +133,7 @@ function CallOverlay({ socket, currentUser }) {
             ringtoneTimerRef.current = null;
         }
         if (audioContextRef.current) {
-            try {
-                audioContextRef.current.close();
-            } catch (e) { }
+            audioContextRef.current.close().catch(() => {});
             audioContextRef.current = null;
         }
     };
@@ -149,6 +148,10 @@ function CallOverlay({ socket, currentUser }) {
         if (timerIntervalRef.current) {
             clearInterval(timerIntervalRef.current);
             timerIntervalRef.current = null;
+        }
+        if (statsIntervalRef.current) {
+            clearInterval(statsIntervalRef.current);
+            statsIntervalRef.current = null;
         }
         if (localStreamRef.current) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
@@ -166,6 +169,7 @@ function CallOverlay({ socket, currentUser }) {
         setIsVideoOff(false);
         setStatusText("Calling...");
         setShowBanner(true);
+        setNetQuality({ status: 'good', rtt: 30, label: '🟢 HD Quality (Strong Signal)' });
     };
 
     // --- WebRTC Peer Setup ---
@@ -184,6 +188,45 @@ function CallOverlay({ socket, currentUser }) {
 
             const pc = new RTCPeerConnection(ICE_SERVERS);
             peerConnectionRef.current = pc;
+
+            // Connection state change monitors
+            pc.onconnectionstatechange = () => {
+                if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+                    setNetQuality({ status: 'reconnecting', rtt: 0, label: '⚠️ Network Drop - Reconnecting...' });
+                } else if (pc.connectionState === 'connected') {
+                    setNetQuality({ status: 'good', rtt: 30, label: '🟢 HD Quality (Strong Signal)' });
+                }
+            };
+
+            pc.oniceconnectionstatechange = () => {
+                if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+                    setNetQuality({ status: 'reconnecting', rtt: 0, label: '⚠️ Reconnecting Call...' });
+                }
+            };
+
+            // Periodically check RTT and latency stats
+            if (statsIntervalRef.current) clearInterval(statsIntervalRef.current);
+            statsIntervalRef.current = setInterval(async () => {
+                if (pc && pc.connectionState === 'connected') {
+                    try {
+                        const stats = await pc.getStats();
+                        stats.forEach(report => {
+                            if (report.type === 'remote-inbound-rtp' || report.type === 'candidate-pair') {
+                                if (report.currentRoundTripTime !== undefined) {
+                                    const rttMs = Math.round(report.currentRoundTripTime * 1000);
+                                    if (rttMs > 300) {
+                                        setNetQuality({ status: 'poor', rtt: rttMs, label: `🔴 High Latency (${rttMs}ms)` });
+                                    } else if (rttMs > 120) {
+                                        setNetQuality({ status: 'fair', rtt: rttMs, label: `🟡 Fair Connection (${rttMs}ms)` });
+                                    } else {
+                                        setNetQuality({ status: 'good', rtt: rttMs, label: `🟢 HD Quality (${rttMs}ms)` });
+                                    }
+                                }
+                            }
+                        });
+                    } catch (e) {}
+                }
+            }, 3000);
 
             stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
@@ -515,9 +558,22 @@ function CallOverlay({ socket, currentUser }) {
 
                 {/* Top Bar / Caller Header */}
                 <div className="pt-10 px-6 flex flex-col items-center z-20 text-center">
-                    <span className="text-[10px] uppercase font-bold tracking-widest text-[#0095f6] bg-[#0095f6]/10 px-3 py-1 rounded-full border border-[#0095f6]/20 mb-3">
-                        {callType === 'video' ? 'HD Video Call' : 'Voice Call'}
-                    </span>
+                    <div className="flex items-center gap-2 mb-3">
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-[#0095f6] bg-[#0095f6]/10 px-3 py-1 rounded-full border border-[#0095f6]/20">
+                            {callType === 'video' ? 'HD Video Call' : 'Voice Call'}
+                        </span>
+                        {callState === 'active' && (
+                            <span className={`text-[10px] font-extrabold tracking-wide px-3 py-1 rounded-full border backdrop-blur-md transition-all duration-300 ${
+                                netQuality.status === 'good'
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                    : netQuality.status === 'fair'
+                                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                        : 'bg-red-500/20 border-red-500/40 text-red-400 animate-pulse'
+                            }`}>
+                                {netQuality.label}
+                            </span>
+                        )}
+                    </div>
 
                     {callState === 'active' && (
                         <div className="text-xl font-mono font-bold text-white tracking-widest bg-white/10 px-4 py-1 rounded-full backdrop-blur-md border border-white/10">
