@@ -62,6 +62,7 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS proposed_time TIME;");
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reschedule_by VARCHAR(10);");
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS reschedule_status VARCHAR(20) DEFAULT 'none';");
+        await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS time_slot VARCHAR(50);");
         
         // --- Username Column Migration & Unique Constraint ---
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");

@@ -9,6 +9,14 @@ const socket = io("https://rentgf-and-bf.onrender.com", {
     transports: ['websocket']
 });
 
+const TIME_SLOTS = [
+    { id: "morning", label: "Morning", timeRange: "10:00 AM - 12:00 PM", icon: "☕" },
+    { id: "afternoon", label: "Afternoon", timeRange: "01:00 PM - 03:00 PM", icon: "☀️" },
+    { id: "evening", label: "Evening", timeRange: "04:00 PM - 06:00 PM", icon: "🌅" },
+    { id: "night", label: "Night", timeRange: "07:00 PM - 09:00 PM", icon: "🌙" },
+    { id: "late_night", label: "Late Night", timeRange: "09:00 PM - 11:00 PM", icon: "✨" }
+];
+
 function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [hours, setHours] = useState(2);
     const [posts, setPosts] = useState([]);
@@ -76,6 +84,10 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const menuRef = useRef(null);
 
     const [showBookingModal, setShowBookingModal] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[2].id);
+    const [bookedSlots, setBookedSlots] = useState([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
+
     const [meetingInfo, setMeetingInfo] = useState(() => {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -91,6 +103,18 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [searchLoading, setSearchLoading] = useState(false);
     const [userCoords, setUserCoords] = useState(null);
+
+    useEffect(() => {
+        if (!showBookingModal || !profile?.id || !meetingInfo.date) return;
+        setLoadingSlots(true);
+        fetch(`https://rentgf-and-bf.onrender.com/api/bookings/booked-slots/${profile.id}?date=${meetingInfo.date}`)
+            .then(res => res.ok ? res.json() : { bookedSlots: [] })
+            .then(data => {
+                setBookedSlots(data.bookedSlots || []);
+            })
+            .catch(() => setBookedSlots([]))
+            .finally(() => setLoadingSlots(false));
+    }, [showBookingModal, profile?.id, meetingInfo.date]);
 
     useEffect(() => {
         if (showBookingModal && navigator.geolocation) {
@@ -390,13 +414,17 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
     const handleBookingSubmit = async () => {
         if (!currentUser) return alert("Please login first!");
-        if (!meetingInfo.date || !meetingInfo.time) return alert("Please select Date and Time!");
+        if (!meetingInfo.date) return alert("Please select a date!");
 
         setBookingStatus('loading');
         const amount = (profile.price || 1000) * hours;
 
         const boy_id = currentUser.role === 'boy' ? currentUser.id : profile.id;
         const girl_id = currentUser.role === 'girl' ? currentUser.id : profile.id;
+
+        const activeSlotObj = TIME_SLOTS.find(s => s.id === selectedSlot);
+        const slotLabel = activeSlotObj ? `${activeSlotObj.label} (${activeSlotObj.timeRange})` : meetingInfo.time;
+        const meetingTimeFormatted = activeSlotObj ? activeSlotObj.timeRange.split(' - ')[0] : meetingInfo.time;
 
         try {
             const token = localStorage.getItem('token');
@@ -412,7 +440,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                     hours,
                     amount,
                     meeting_date: meetingInfo.date,
-                    meeting_time: meetingInfo.time,
+                    meeting_time: meetingTimeFormatted,
+                    time_slot: slotLabel,
                     meeting_location: meetingInfo.location,
                     sender_id: currentUser.id
                 })
@@ -1032,9 +1061,10 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 <FiX size={16} />
                             </button>
                         </div>
-                        <div className="space-y-4">
+                        <div className="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
+                            {/* Date Picker */}
                             <div>
-                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1.5">Select Date</label>
+                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1.5">1. Select Date</label>
                                 <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                     {(() => {
                                         const days = [];
@@ -1077,54 +1107,55 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 </div>
                             </div>
                             
+                            {/* Time Slot Scheduler */}
                             <div>
-                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1.5">Select Time</label>
-                                <div className="flex gap-2.5 items-center">
-                                    {/* Hour Select */}
-                                    <div className="flex-1 relative">
-                                        <select 
-                                            value={timeHour} 
-                                            onChange={(e) => handleHourChange(e.target.value)} 
-                                            className="w-full bg-[#0D0D1A] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500 transition appearance-none cursor-pointer text-center font-bold"
-                                        >
-                                            {["01","02","03","04","05","06","07","08","09","10","11","12"].map(h => (
-                                                <option key={h} value={h} className="bg-[#16162A]">{h}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <span className="text-gray-600 font-bold text-sm">:</span>
-                                    {/* Minute Select */}
-                                    <div className="flex-1 relative">
-                                        <select 
-                                            value={timeMin} 
-                                            onChange={(e) => handleMinChange(e.target.value)} 
-                                            className="w-full bg-[#0D0D1A] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500 transition appearance-none cursor-pointer text-center font-bold"
-                                        >
-                                            {["00","15","30","45"].map(m => (
-                                                <option key={m} value={m} className="bg-[#16162A]">{m}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {/* AM/PM Select */}
-                                    <div className="flex-1 relative">
-                                        <select 
-                                            value={timeAmpm} 
-                                            onChange={(e) => handleAmpmChange(e.target.value)} 
-                                            className="w-full bg-[#0D0D1A] border border-white/10 text-white rounded-xl px-4 py-2.5 text-sm outline-none focus:border-pink-500 transition appearance-none cursor-pointer text-center font-bold"
-                                        >
-                                            {["AM","PM"].map(ap => (
-                                                <option key={ap} value={ap} className="bg-[#16162A]">{ap}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                <div className="flex justify-between items-center mb-1.5">
+                                    <label className="text-[10px] text-gray-500 uppercase font-bold">2. Available Time Slots</label>
+                                    {loadingSlots && <span className="text-[10px] text-pink-400 animate-pulse">Checking slots...</span>}
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {TIME_SLOTS.map((slot) => {
+                                        const isBooked = bookedSlots.some(b => b && b.toLowerCase().includes(slot.label.toLowerCase()));
+                                        const isSelected = selectedSlot === slot.id;
+                                        return (
+                                            <button
+                                                key={slot.id}
+                                                type="button"
+                                                disabled={isBooked}
+                                                onClick={() => setSelectedSlot(slot.id)}
+                                                className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
+                                                    isBooked
+                                                        ? 'bg-red-500/5 border-red-500/20 text-gray-500 cursor-not-allowed opacity-60'
+                                                        : isSelected
+                                                            ? `bg-gradient-to-r ${accentGrad} text-white border-transparent shadow-md scale-[1.02]`
+                                                            : 'bg-[#0D0D1A] border-white/10 text-gray-300 hover:border-pink-500/40 hover:text-white'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <span className="text-base">{slot.icon}</span>
+                                                    <div>
+                                                        <div className="text-xs font-bold leading-tight">{slot.label}</div>
+                                                        <div className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>{slot.timeRange}</div>
+                                                    </div>
+                                                </div>
+                                                {isBooked ? (
+                                                    <span className="text-[9px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">Booked</span>
+                                                ) : isSelected ? (
+                                                    <span className="text-xs font-bold">✓</span>
+                                                ) : null}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
+
+                            {/* Meeting Location */}
                             <div className="relative">
-                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">Location (optional)</label>
+                                <label className="text-[10px] text-gray-500 uppercase font-bold block mb-1">3. Meeting Location (optional)</label>
                                 <div className="relative">
                                     <input 
                                         type="text" 
-                                        placeholder="e.g., Starbucks, Café, etc." 
+                                        placeholder="e.g., Starbucks Coffee, Phoenix Mall, etc." 
                                         value={meetingInfo.location} 
                                         onChange={(e) => handleLocationChange(e.target.value)} 
                                         onFocus={() => { if (locationSuggestions.length > 0) setShowSuggestions(true); }}
@@ -1162,14 +1193,27 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                     </>
                                 )}
                             </div>
-                            <div className="flex gap-3 pt-2">
+
+                            {/* Booking Price Summary */}
+                            <div className="p-3.5 rounded-2xl bg-[#0D0D1A] border border-white/5 flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs font-semibold text-gray-300">Estimated Total</div>
+                                    <div className="text-[10px] text-gray-500">₹{profile.price || 1000}/hr × {hours} hours</div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-lg font-black text-pink-400">₹{((profile.price || 1000) * hours).toLocaleString()}</div>
+                                    <div className="text-[9px] text-emerald-400">Escrow Protected</div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-1">
                                 <button onClick={() => setShowBookingModal(false)} className="flex-1 py-3 text-sm font-bold text-gray-400 hover:text-white bg-white/5 rounded-xl transition">Cancel</button>
                                 <button
                                     onClick={handleBookingSubmit}
                                     disabled={bookingStatus === 'loading'}
                                     className={`flex-1 py-3 font-bold text-sm text-white rounded-xl transition bg-gradient-to-r ${accentGrad} hover:opacity-90 shadow-lg`}
                                 >
-                                    {bookingStatus === 'loading' ? 'Sending...' : 'Send Request'}
+                                    {bookingStatus === 'loading' ? 'Sending...' : 'Confirm & Request'}
                                 </button>
                             </div>
                         </div>

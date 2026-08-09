@@ -5,10 +5,37 @@ const { moderateContent } = require('../middleware/contentFilter');
 
 const router = express.Router();
 
+// ─── GET BOOKED TIME SLOTS FOR A COMPANION ON A GIVEN DATE ────
+router.get('/bookings/booked-slots/:companionId', async (req, res) => {
+    try {
+        const { companionId } = req.params;
+        const { date } = req.query;
+
+        if (!date) {
+            return res.status(400).json({ error: "date query parameter required (YYYY-MM-DD)" });
+        }
+
+        const result = await pool.query(`
+            SELECT time_slot 
+            FROM bookings 
+            WHERE (girl_id = $1 OR boy_id = $1)
+              AND meeting_date = $2
+              AND status IN ('pending', 'accepted', 'active')
+              AND time_slot IS NOT NULL
+        `, [companionId, date]);
+
+        const bookedSlots = result.rows.map(r => r.time_slot);
+        res.status(200).json({ date, bookedSlots });
+    } catch (err) {
+        console.error("Get booked slots error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // ─── CREATE BOOKING — AUTH REQUIRED ──────────────────────────
 router.post('/bookings', authenticateToken, async (req, res) => {
     try {
-        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details } = req.body;
+        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, time_slot } = req.body;
         const sender_id = req.user.id;
 
         // Validate required fields
@@ -34,8 +61,8 @@ router.post('/bookings', authenticateToken, async (req, res) => {
         }
 
         const newBooking = await pool.query(
-            "INSERT INTO bookings (boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, sender_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-            [boy_id, girl_id, hours, amount, meeting_date || null, meeting_time || null, meeting_location || null, meeting_details || null, sender_id]
+            "INSERT INTO bookings (boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, sender_id, time_slot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+            [boy_id, girl_id, hours, amount, meeting_date || null, meeting_time || null, meeting_location || null, meeting_details || null, sender_id, time_slot || null]
         );
         res.status(201).json(newBooking.rows[0]);
     } catch (err) {
