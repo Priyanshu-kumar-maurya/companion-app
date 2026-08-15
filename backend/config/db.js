@@ -203,7 +203,18 @@ const connectDB = async () => {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );`);
 
+        await pool.query(`CREATE TABLE IF NOT EXISTS stories (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            media_url TEXT NOT NULL,
+            caption TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '24 hours')
+        );`);
+
         // ─── Performance Indexes ───────────────────────────────────
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_stories_user ON stories(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_stories_expires ON stories(expires_at);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_caller ON call_history(caller_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_receiver ON call_history(receiver_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);");

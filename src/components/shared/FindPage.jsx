@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
 import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiNavigation } from "react-icons/fi";
+import StoriesBar from "./StoriesBar";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
@@ -196,7 +197,10 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                         Companion
                     </span>
                 </h1>
-                <p className="text-sm text-gray-400 mb-6">{filtered.length} profiles available</p>
+                <p className="text-sm text-gray-400 mb-4">{filtered.length} profiles available</p>
+
+                {/* 24-Hour Ephemeral Stories Bar */}
+                <StoriesBar currentUser={currentUser} />
 
                 {/* Search Bar + Geolocation Button */}
                 <div className="flex flex-col sm:flex-row gap-3 mb-4">
