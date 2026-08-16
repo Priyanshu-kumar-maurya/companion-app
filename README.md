@@ -196,7 +196,7 @@ Pull requests welcome hain! Large changes ke liye pehle issue open karo.
 
 <div align="center">
 
-**Built with ❤️ by [Priyanshu Kumar Maurya](https://github.com/Priyanshu-kumar-maurya)**
+**Built with ❤️ by Priyanshu Kumar Maurya(https://github.com/Priyanshu-kumar-maurya)**
 
 ⭐ **Agar pasand aaya toh star dena mat bhoolna!** ⭐
 
