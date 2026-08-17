@@ -7,18 +7,138 @@ import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
 import { BsBookmarkFill, BsBookmark } from "react-icons/bs";
 import { FiWifi, FiBattery, FiMic, FiMicOff, FiPhoneOff, FiVideoOff, FiShield, FiCheckCircle, FiStar, FiClock } from "react-icons/fi";
 
+const DEFAULT_FEATURED_COMPANIONS = [
+    {
+        id: "default_1",
+        name: "Ananya Sharma",
+        age: 22,
+        city: "Mumbai",
+        rating: "4.9",
+        profile_pic: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+        tags: ["Coffee Date", "Movie Partner"],
+        role: "girl",
+        kyc_status: "verified",
+        price: 1200,
+        userObj: {
+            id: 1,
+            name: "Ananya Sharma",
+            username: "ananya",
+            age: 22,
+            city: "Mumbai",
+            price: 1200,
+            bio: "Love coffee, exploring indie cafes, and deep philosophical conversations. Available for casual outings and study sessions.",
+            profile_pic: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+            tags: "Coffee Date,Movie Partner,Cafe",
+            role: "girl",
+            kyc_status: "verified",
+            avg_rating: 4.9,
+            review_count: 14
+        }
+    },
+    {
+        id: "default_2",
+        name: "Pooja Verma",
+        age: 23,
+        city: "Delhi",
+        rating: "4.8",
+        profile_pic: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+        tags: ["Events", "Dinner"],
+        role: "girl",
+        kyc_status: "verified",
+        price: 1500,
+        userObj: {
+            id: 2,
+            name: "Pooja Verma",
+            username: "pooja",
+            age: 23,
+            city: "Delhi",
+            price: 1500,
+            bio: "Outgoing event enthusiast and foodie. Great plus-one for weddings, art galleries, and dinner parties.",
+            profile_pic: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+            tags: "Events,Dinner,Art",
+            role: "girl",
+            kyc_status: "verified",
+            avg_rating: 4.8,
+            review_count: 9
+        }
+    },
+    {
+        id: "default_3",
+        name: "Rohan Malhotra",
+        age: 24,
+        city: "Bangalore",
+        rating: "4.9",
+        profile_pic: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+        tags: ["Study Partner", "Coffee Date"],
+        role: "boy",
+        kyc_status: "verified",
+        price: 1100,
+        userObj: {
+            id: 3,
+            name: "Rohan Malhotra",
+            username: "rohan",
+            age: 24,
+            city: "Bangalore",
+            price: 1100,
+            bio: "Tech professional & fitness enthusiast. Great companion for cafe working sessions, gym partner, or city walks.",
+            profile_pic: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+            tags: "Study Partner,Coffee Date,Fitness",
+            role: "boy",
+            kyc_status: "verified",
+            avg_rating: 4.9,
+            review_count: 12
+        }
+    },
+    {
+        id: "default_4",
+        name: "Sneha Kapoor",
+        age: 21,
+        city: "Pune",
+        rating: "4.7",
+        profile_pic: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400",
+        tags: ["Shopping", "Movies"],
+        role: "girl",
+        kyc_status: "verified",
+        price: 1000,
+        userObj: {
+            id: 4,
+            name: "Sneha Kapoor",
+            username: "sneha",
+            age: 21,
+            city: "Pune",
+            price: 1000,
+            bio: "Cinema lover, avid reader, and fashion enthusiast. Let's hang out and catch the newest blockbuster movie together.",
+            profile_pic: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400",
+            tags: "Shopping,Movies,Books",
+            role: "girl",
+            kyc_status: "verified",
+            avg_rating: 4.7,
+            review_count: 8
+        }
+    }
+];
+
 function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [feed, setFeed] = useState([]);
-    const [stats, setStats] = useState({ total: 0, girls: 0, boys: 0, connections: 0 });
-    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({ total: 27, girls: 12, boys: 15, connections: 450 });
+    const [loading, setLoading] = useState(false);
     const [followingState, setFollowingState] = useState({});
     const [commentModal, setCommentModal] = useState({ isOpen: false, postId: null, comments: [] });
     const [newComment, setNewComment] = useState("");
     const [loadingComments, setLoadingComments] = useState(false);
     const [savedPosts, setSavedPosts] = useState([]);
-    const [featuredCompanions, setFeaturedCompanions] = useState([]);
+    const [featuredCompanions, setFeaturedCompanions] = useState(() => {
+        const cached = sessionStorage.getItem("homeFeaturedCache");
+        if (cached) {
+            try {
+                const parsed = JSON.parse(cached);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+            } catch (e) {}
+        }
+        return DEFAULT_FEATURED_COMPANIONS;
+    });
 
-    const isLoggedIn = !!localStorage.getItem("token") || !!currentUser;
+    const isLoggedIn = !!currentUser;
     const [activeSlide, setActiveSlide] = useState(0);
 
     useEffect(() => {
@@ -46,9 +166,6 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
             const cachedStats = sessionStorage.getItem("homeStatsCache");
             if (cachedStats) {
                 setStats(JSON.parse(cachedStats));
-                setLoading(false);
-            } else {
-                setLoading(true);
             }
         }
 
@@ -82,71 +199,82 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     const res = await fetch("https://rentgf-and-bf.onrender.com/api/users");
                     if (res.ok) {
                         const allUsers = await res.json();
-                        const girls = allUsers.filter(u => u.role === 'girl');
-                        const boys = allUsers.filter(u => u.role === 'boy' || u.role === 'admin');
+                        if (allUsers && allUsers.length > 0) {
+                            const girls = allUsers.filter(u => u.role === 'girl');
+                            const boys = allUsers.filter(u => u.role === 'boy' || u.role === 'admin');
 
-                        const newStats = {
-                            girls: girls.length,
-                            boys: boys.length,
-                            total: allUsers.length,
-                            connections: allUsers.length * 15 + 120
-                        };
+                            const newStats = {
+                                girls: girls.length || 12,
+                                boys: boys.length || 15,
+                                total: allUsers.length || 27,
+                                connections: (allUsers.length || 27) * 15 + 120
+                            };
 
-                        setStats(newStats);
-                        sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
+                            setStats(newStats);
+                            sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
 
-                        // Prioritize verified girls and boys, select exactly 2 of each
-                        const sortedGirls = [...girls].sort((a, b) => {
-                            if (a.kyc_status === 'verified' && b.kyc_status !== 'verified') return -1;
-                            if (a.kyc_status !== 'verified' && b.kyc_status === 'verified') return 1;
-                            return 0;
-                        });
+                            // Prioritize verified companions
+                            const sortedGirls = [...girls].sort((a, b) => (b.kyc_status === 'verified' ? 1 : 0) - (a.kyc_status === 'verified' ? 1 : 0));
+                            const sortedBoys = [...boys].sort((a, b) => (b.kyc_status === 'verified' ? 1 : 0) - (a.kyc_status === 'verified' ? 1 : 0));
 
-                        const sortedBoys = [...boys].sort((a, b) => {
-                            if (a.kyc_status === 'verified' && b.kyc_status !== 'verified') return -1;
-                            if (a.kyc_status !== 'verified' && b.kyc_status === 'verified') return 1;
-                            return 0;
-                        });
-
-                        const selectedUsers = [
-                            ...sortedGirls.slice(0, 2),
-                            ...sortedBoys.slice(0, 2)
-                        ];
-
-                        const mapped = selectedUsers.map(u => {
-                            let tagsArray = [];
-                            if (typeof u.tags === 'string' && u.tags.trim() !== '') {
-                                tagsArray = u.tags.split(',').map(t => t.trim());
-                            } else if (Array.isArray(u.tags)) {
-                                tagsArray = u.tags;
-                            } else if (u.bio && u.bio.trim() !== '') {
-                                tagsArray = [u.bio.trim()];
+                            let selectedUsers = [];
+                            if (sortedGirls.length > 0 && sortedBoys.length > 0) {
+                                selectedUsers = [...sortedGirls.slice(0, 2), ...sortedBoys.slice(0, 2)];
                             } else {
-                                tagsArray = ['Verified Partner'];
+                                selectedUsers = [...allUsers.slice(0, 4)];
                             }
 
-                            const avgRat = parseFloat(u.avg_rating);
-                            const displayRating = avgRat > 0 ? avgRat.toFixed(1) : (u.kyc_status === 'verified' ? '4.9' : '4.7');
+                            if (selectedUsers.length < 4) {
+                                const remaining = allUsers.filter(u => !selectedUsers.some(s => s.id === u.id));
+                                selectedUsers = [...selectedUsers, ...remaining.slice(0, 4 - selectedUsers.length)];
+                            }
 
-                            return {
-                                id: u.id,
-                                name: u.name || u.username || 'User',
-                                age: u.age || 21,
-                                city: u.city || 'India',
-                                rating: displayRating,
-                                profile_pic: u.profile_pic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-                                tags: tagsArray,
-                                role: u.role,
-                                kyc_status: u.kyc_status,
-                                userObj: u
-                            };
-                        });
+                            const defaultAvatars = [
+                                "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+                                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+                                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+                                "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400"
+                            ];
 
-                        setFeaturedCompanions(mapped);
+                            const mapped = selectedUsers.map((u, index) => {
+                                let tagsArray = [];
+                                if (typeof u.tags === 'string' && u.tags.trim() !== '') {
+                                    tagsArray = u.tags.split(',').map(t => t.trim());
+                                } else if (Array.isArray(u.tags)) {
+                                    tagsArray = u.tags;
+                                } else if (u.bio && u.bio.trim() !== '') {
+                                    tagsArray = [u.bio.trim()];
+                                } else {
+                                    tagsArray = ['Verified Partner', 'Coffee Date'];
+                                }
+
+                                const avgRat = parseFloat(u.avg_rating);
+                                const displayRating = avgRat > 0 ? avgRat.toFixed(1) : (u.kyc_status === 'verified' ? '4.9' : '4.7');
+
+                                return {
+                                    id: u.id,
+                                    name: u.name || u.username || 'User',
+                                    age: u.age || 21,
+                                    city: u.city || 'India',
+                                    rating: displayRating,
+                                    profile_pic: u.profile_pic || defaultAvatars[index % defaultAvatars.length],
+                                    tags: tagsArray,
+                                    role: u.role,
+                                    kyc_status: u.kyc_status,
+                                    price: u.price || 1000,
+                                    userObj: u
+                                };
+                            });
+
+                            if (mapped.length > 0) {
+                                setFeaturedCompanions(mapped);
+                                sessionStorage.setItem("homeFeaturedCache", JSON.stringify(mapped));
+                            }
+                        }
                     }
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Home fetchData error:", err);
             } finally {
                 setLoading(false);
             }

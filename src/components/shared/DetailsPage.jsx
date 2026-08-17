@@ -128,6 +128,34 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
+    const handleMessageClick = () => {
+        if (!currentUser) {
+            alert("Please login first to chat with companions!");
+            setPage(PAGES.BOY_LOGIN);
+            return;
+        }
+        setPage(PAGES.CHAT);
+    };
+
+    const handleCallClick = (type) => {
+        if (!currentUser) {
+            alert(`Please login first to make ${type} calls!`);
+            setPage(PAGES.BOY_LOGIN);
+            return;
+        }
+        const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
+        window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type, room: roomId } }));
+    };
+
+    const handleFollowClick = () => {
+        if (!currentUser) {
+            alert("Please login first to follow companions!");
+            setPage(PAGES.BOY_LOGIN);
+            return;
+        }
+        handleFollowToggle();
+    };
+
     const [meetingInfo, setMeetingInfo] = useState(() => {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -745,9 +773,9 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
                         {/* Buttons below the bio on Desktop */}
                         <div className="flex gap-2 pt-2">
-                            {currentUser && currentUser.id !== profile.id && (
+                            {(!currentUser || currentUser.id !== profile.id) && (
                                 <button
-                                    onClick={handleFollowToggle}
+                                    onClick={handleFollowClick}
                                     disabled={followLoading}
                                     className={`px-6 py-2 rounded-lg font-bold text-xs transition min-w-[120px] ${followStats.isFollowing
                                         ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
@@ -757,28 +785,22 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                 </button>
                             )}
                             <button
-                                onClick={() => setPage(PAGES.CHAT)}
+                                onClick={handleMessageClick}
                                 className="px-5 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5"
                             >
                                 Message
                             </button>
-                            {currentUser && currentUser.id !== profile.id && (
+                            {(!currentUser || currentUser.id !== profile.id) && (
                                 <>
                                     <button
-                                        onClick={() => {
-                                            const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
-                                            window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'video', room: roomId } }));
-                                        }}
+                                        onClick={() => handleCallClick('video')}
                                         className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center"
                                         title="Video Call"
                                     >
                                         <FiVideo size={16} />
                                     </button>
                                     <button
-                                        onClick={() => {
-                                            const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
-                                            window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'audio', room: roomId } }));
-                                        }}
+                                        onClick={() => handleCallClick('audio')}
                                         className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center"
                                         title="Voice Call"
                                     >
@@ -865,9 +887,9 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
                     {/* Action buttons at the bottom on Mobile */}
                     <div className="flex gap-2 pt-2">
-                        {currentUser && currentUser.id !== profile.id && (
+                        {(!currentUser || currentUser.id !== profile.id) && (
                             <button
-                                onClick={handleFollowToggle}
+                                onClick={handleFollowClick}
                                 disabled={followLoading}
                                 className={`flex-1 py-2 rounded-lg font-bold text-xs transition ${followStats.isFollowing
                                     ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
@@ -877,28 +899,22 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                             </button>
                         )}
                         <button
-                            onClick={() => setPage(PAGES.CHAT)}
+                            onClick={handleMessageClick}
                             className="flex-1 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5"
                         >
                             Message
                         </button>
-                        {currentUser && currentUser.id !== profile.id && (
+                        {(!currentUser || currentUser.id !== profile.id) && (
                             <>
                                 <button
-                                    onClick={() => {
-                                        const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
-                                        window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'video', room: roomId } }));
-                                    }}
+                                    onClick={() => handleCallClick('video')}
                                     className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center shrink-0"
                                     title="Video Call"
                                 >
                                     <FiVideo size={16} />
                                 </button>
                                 <button
-                                    onClick={() => {
-                                        const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
-                                        window.dispatchEvent(new CustomEvent("rentgf_start_call", { detail: { targetUser: profile, type: 'audio', room: roomId } }));
-                                    }}
+                                    onClick={() => handleCallClick('audio')}
                                     className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center shrink-0"
                                     title="Voice Call"
                                 >
@@ -920,6 +936,24 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                         )}
                     </div>
                 </div>
+
+                {/* ── NON-LOGGED IN USER CTA BANNER ── */}
+                {!currentUser && (
+                    <div className="rounded-2xl overflow-hidden mb-6 p-6 border border-pink-500/20 bg-gradient-to-r from-[#16162A] to-[#201633] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                        <div>
+                            <h3 className="font-bold text-white text-base flex items-center gap-2">
+                                <span>☕ Connect with {profile.name}</span>
+                            </h3>
+                            <p className="text-xs text-gray-400 mt-1">Log in or create a free account to book dates, chat live, and make audio/video calls.</p>
+                        </div>
+                        <button
+                            onClick={() => setPage(PAGES.BOY_LOGIN)}
+                            className={`px-6 py-3 rounded-xl font-bold text-xs bg-gradient-to-r ${accentGrad} text-white shadow-md hover:opacity-90 transition whitespace-nowrap`}
+                        >
+                            Log In / Register
+                        </button>
+                    </div>
+                )}
 
                 {/* ── BOOKING SECTION ── */}
                 {currentUser && currentUser.id !== profile.id && (
