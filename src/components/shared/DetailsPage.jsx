@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
 import InstagramPostModal from "./InstagramPostModal";
-import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone } from "react-icons/fi";
+import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -32,6 +32,9 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0, isFollowing: false });
     const [followLoading, setFollowLoading] = useState(false);
     const [isOnline, setIsOnline] = useState(false);
+
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [favLoading, setFavLoading] = useState(false);
 
     // Followers / Following Modal States
     const [showFollowModal, setShowFollowModal] = useState(null); // 'followers' | 'following' | null
@@ -87,6 +90,43 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[2].id);
     const [bookedSlots, setBookedSlots] = useState([]);
     const [loadingSlots, setLoadingSlots] = useState(false);
+
+    useEffect(() => {
+        if (!currentUser || !profile?.id || currentUser.id === profile.id) return;
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        fetch(`https://rentgf-and-bf.onrender.com/api/favorites/check/${profile.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(r => r.ok ? r.json() : { isFavorited: false })
+        .then(data => setIsFavorited(!!data.isFavorited))
+        .catch(() => {});
+    }, [currentUser, profile?.id]);
+
+    const handleToggleFavorite = async () => {
+        if (!currentUser) return alert("Please login first to save companions to your favorites!");
+        setFavLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch("https://rentgf-and-bf.onrender.com/api/favorites/toggle", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ companion_id: profile.id })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setIsFavorited(data.isFavorited);
+            }
+        } catch (err) {
+            console.error("Toggle favorite failed:", err);
+        } finally {
+            setFavLoading(false);
+        }
+    };
 
     const [meetingInfo, setMeetingInfo] = useState(() => {
         const today = new Date();
@@ -744,6 +784,18 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                     >
                                         <FiPhone size={16} />
                                     </button>
+                                    <button
+                                        onClick={handleToggleFavorite}
+                                        disabled={favLoading}
+                                        className={`w-9 h-9 border rounded-lg font-bold transition flex items-center justify-center ${
+                                            isFavorited
+                                                ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-md shadow-red-500/10'
+                                                : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-400 hover:text-white'
+                                        }`}
+                                        title={isFavorited ? "Saved to Favorites" : "Save to Favorites"}
+                                    >
+                                        <FiHeart size={16} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
+                                    </button>
                                 </>
                             )}
                         </div>
@@ -851,6 +903,18 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                                     title="Voice Call"
                                 >
                                     <FiPhone size={16} />
+                                </button>
+                                <button
+                                    onClick={handleToggleFavorite}
+                                    disabled={favLoading}
+                                    className={`w-9 h-9 border rounded-lg font-bold transition flex items-center justify-center shrink-0 ${
+                                        isFavorited
+                                            ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-md shadow-red-500/10'
+                                            : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-400 hover:text-white'
+                                    }`}
+                                    title={isFavorited ? "Saved to Favorites" : "Save to Favorites"}
+                                >
+                                    <FiHeart size={16} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
                                 </button>
                             </>
                         )}

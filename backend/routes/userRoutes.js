@@ -443,4 +443,87 @@ router.post('/report', authenticateToken, async (req, res) => {
     }
 });
 
+// 15. Get All Favorited Companions — AUTH REQUIRED
+router.get('/favorites', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await pool.query(`
+            SELECT u.id, u.name, u.username, u.age, u.city, u.bio, u.price, u.profile_pic, u.tags,
+                   u.kyc_status, u.role, u.is_verified, u.show_online, u.latitude, u.longitude,
+                   COALESCE(AVG(r.rating), 0) as avg_rating,
+                   COUNT(r.id) as review_count,
+                   f.created_at as favorited_at
+            FROM favorites f
+            JOIN users u ON f.companion_id = u.id
+            LEFT JOIN reviews r ON u.id = r.companion_id
+            WHERE f.user_id = $1
+              AND u.is_frozen = false
+              AND u.is_platform_blocked = false
+            GROUP BY u.id, f.created_at
+            ORDER BY f.created_at DESC
+        `, [userId]);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("Get favorites error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 16. Toggle Favorite / Bookmark — AUTH REQUIRED
+router.post('/favorites/toggle', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { companion_id } = req.body;
+
+        if (!companion_id) {
+            return res.status(400).json({ error: "companion_id is required." });
+        }
+
+        if (parseInt(userId) === parseInt(companion_id)) {
+            return res.status(400).json({ error: "You cannot favorite yourself." });
+        }
+
+        const existing = await pool.query(
+            "SELECT * FROM favorites WHERE user_id = $1 AND companion_id = $2",
+            [userId, companion_id]
+        );
+
+        if (existing.rows.length > 0) {
+            await pool.query(
+                "DELETE FROM favorites WHERE user_id = $1 AND companion_id = $2",
+                [userId, companion_id]
+            );
+            return res.status(200).json({ isFavorited: false, message: "Removed from favorites." });
+        } else {
+            await pool.query(
+                "INSERT INTO favorites (user_id, companion_id) VALUES ($1, $2)",
+                [userId, companion_id]
+            );
+            return res.status(201).json({ isFavorited: true, message: "Added to favorites! ❤️" });
+        }
+    } catch (err) {
+        console.error("Toggle favorite error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// 17. Check Favorite Status for Companion — AUTH REQUIRED
+router.get('/favorites/check/:companionId', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { companionId } = req.params;
+
+        const result = await pool.query(
+            "SELECT 1 FROM favorites WHERE user_id = $1 AND companion_id = $2",
+            [userId, companionId]
+        );
+
+        res.status(200).json({ isFavorited: result.rows.length > 0 });
+    } catch (err) {
+        console.error("Check favorite error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 module.exports = router;

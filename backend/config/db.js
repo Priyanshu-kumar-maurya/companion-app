@@ -212,7 +212,17 @@ const connectDB = async () => {
             expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '24 hours')
         );`);
 
+        await pool.query(`CREATE TABLE IF NOT EXISTS favorites (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            companion_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, companion_id)
+        );`);
+
         // ─── Performance Indexes ───────────────────────────────────
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_favorites_companion ON favorites(companion_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_stories_user ON stories(user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_stories_expires ON stories(expires_at);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_caller ON call_history(caller_id);");

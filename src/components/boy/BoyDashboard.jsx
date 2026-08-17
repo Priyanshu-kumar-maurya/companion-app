@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { PAGES } from '../../App';
 import SettingsModal from '../shared/SettingsModal';
 import SOSButton from '../shared/SOSButton';
 import InstagramPostModal from '../shared/InstagramPostModal';
-import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield } from "react-icons/fi";
+import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart } from "react-icons/fi";
 import imageCompression from 'browser-image-compression';
 
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
@@ -14,6 +15,9 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [newBookingAlert, setNewBookingAlert] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
+
+    const [dashboardTab, setDashboardTab] = useState('posts'); // 'posts' | 'favorites'
+    const [favoritesList, setFavoritesList] = useState([]);
 
     const [activeStatModal, setActiveStatModal] = useState(null);
     const [bookingFilter, setBookingFilter] = useState('all');
@@ -65,6 +69,16 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 if (reviewRes.ok) {
                     const data = await reviewRes.json();
                     fetchedReviews = data.reviews;
+                }
+
+                if (token) {
+                    const favsRes = await fetch("https://rentgf-and-bf.onrender.com/api/favorites", {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (favsRes.ok) {
+                        const favsData = await favsRes.json();
+                        if (Array.isArray(favsData)) setFavoritesList(favsData);
+                    }
                 }
 
                 setMyPosts(fetchedPosts);
@@ -486,25 +500,99 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     </div>
                 </div>
 
-                {/* ── Instagram-style Posts Grid ── */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-2 text-white font-semibold mb-4 border-t border-white/5 pt-5">
-                        <FiGrid size={16} className="text-gray-400" />
-                        <span className="text-sm uppercase tracking-wider text-gray-300">Posts</span>
+                {/* ── Tabs Header (Posts vs Saved Favorites) ── */}
+                <div className="mb-6 border-t border-white/5 pt-3">
+                    <div className="flex justify-center sm:justify-start gap-2 border-b border-white/10 mb-4">
+                        <button
+                            onClick={() => setDashboardTab('posts')}
+                            className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition ${
+                                dashboardTab === 'posts'
+                                    ? 'border-blue-500 text-blue-400'
+                                    : 'border-transparent text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            <FiGrid size={15} /> Posts ({myPosts.length})
+                        </button>
+                        <button
+                            onClick={() => setDashboardTab('favorites')}
+                            className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition ${
+                                dashboardTab === 'favorites'
+                                    ? 'border-pink-500 text-pink-400'
+                                    : 'border-transparent text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            <FiHeart size={15} className={dashboardTab === 'favorites' ? "fill-pink-500 text-pink-500" : ""} /> Saved Favorites ({favoritesList.length})
+                        </button>
                     </div>
-                    {myPosts.length === 0 ? (
-                        <div className="text-sm text-gray-500 py-12 text-center flex flex-col items-center gap-2">
-                            <FiGrid size={40} className="text-gray-600" />
-                            <p>No photos posted yet.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-0.5">
-                            {myPosts.map(post => (
-                                <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group aspect-square cursor-pointer overflow-hidden">
-                                    <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:brightness-75" />
-                                </div>
-                            ))}
-                        </div>
+
+                    {/* Posts View */}
+                    {dashboardTab === 'posts' && (
+                        myPosts.length === 0 ? (
+                            <div className="text-sm text-gray-500 py-12 text-center flex flex-col items-center gap-2">
+                                <FiGrid size={40} className="text-gray-600" />
+                                <p>No photos posted yet.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-0.5">
+                                {myPosts.map(post => (
+                                    <div key={post.id} onClick={() => setExpandedPost(post)} className="relative group aspect-square cursor-pointer overflow-hidden">
+                                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:brightness-75" />
+                                    </div>
+                                ))}
+                            </div>
+                        )
+                    )}
+
+                    {/* Favorites View */}
+                    {dashboardTab === 'favorites' && (
+                        favoritesList.length === 0 ? (
+                            <div className="text-sm text-gray-500 py-12 text-center flex flex-col items-center gap-2">
+                                <FiHeart size={40} className="text-gray-600" />
+                                <p>No saved favorites yet.</p>
+                                <p className="text-xs text-gray-600">Tap the heart icon on any companion to save them here for quick access!</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                {favoritesList.map((fav) => (
+                                    <div
+                                        key={fav.id}
+                                        onClick={() => {
+                                            if (setSelectedGirl) setSelectedGirl(fav);
+                                            setPage(PAGES.DETAILS);
+                                        }}
+                                        className="bg-[#16162A] border border-white/5 hover:border-pink-500/30 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:-translate-y-1 transition group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <img
+                                                src={fav.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
+                                                alt={fav.name}
+                                                className="w-14 h-14 rounded-full object-cover border-2 border-pink-500/30 shrink-0"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-bold text-white truncate flex items-center gap-1.5">
+                                                    <span>{fav.name}</span>
+                                                    {fav.kyc_status === 'verified' && <span className="text-blue-400 text-xs">✔</span>}
+                                                </div>
+                                                <div className="text-[11px] text-gray-400 truncate">@{fav.username || fav.name.toLowerCase().replace(/\s+/g, '')}</div>
+                                                <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
+                                                    <FiMapPin size={11} /> {fav.city || "India"} · {fav.age || "22"} yrs
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                            <div className="text-xs font-bold text-pink-400">
+                                                ₹{fav.price || 1000}<span className="text-[10px] text-gray-500 font-normal">/hr</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 text-xs text-yellow-400">
+                                                <FiStar size={11} className="fill-yellow-400" />
+                                                <span>{fav.avg_rating > 0 ? Number(fav.avg_rating).toFixed(1) : 'New'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )
                     )}
                 </div>
 

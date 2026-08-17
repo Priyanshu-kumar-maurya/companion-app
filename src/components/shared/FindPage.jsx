@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
-import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiNavigation } from "react-icons/fi";
+import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiNavigation, FiHeart } from "react-icons/fi";
 import StoriesBar from "./StoriesBar";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
@@ -36,8 +36,58 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
 
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [favIds, setFavIds] = useState(new Set());
 
     const [genderFilter, setGenderFilter] = useState(currentUser?.role === "girl" ? "boy" : "girl");
+
+    // Fetch favorited IDs
+    useEffect(() => {
+        if (!currentUser) return;
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        fetch("https://rentgf-and-bf.onrender.com/api/favorites", {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(r => r.ok ? r.json() : [])
+        .then(data => {
+            if (Array.isArray(data)) {
+                setFavIds(new Set(data.map(f => f.id)));
+            }
+        })
+        .catch(() => {});
+    }, [currentUser]);
+
+    const handleQuickFavorite = async (e, companionId) => {
+        e.stopPropagation();
+        if (!currentUser) {
+            alert("Please login first to add companions to your favorites!");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+        try {
+            const res = await fetch("https://rentgf-and-bf.onrender.com/api/favorites/toggle", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ companion_id: companionId })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setFavIds(prev => {
+                    const next = new Set(prev);
+                    if (data.isFavorited) next.add(companionId);
+                    else next.delete(companionId);
+                    return next;
+                });
+            }
+        } catch (err) {
+            console.error("Quick favorite error:", err);
+        }
+    };
 
     const getUserLocation = () => {
         if (!navigator.geolocation) {
@@ -429,6 +479,16 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                                 <div className="absolute top-3 left-3 bg-purple-500/20 border border-purple-500/40 rounded-full px-2 py-0.5 text-xs text-purple-300 backdrop-blur-sm">
                                                     ✓ Verified
                                                 </div>
+                                            )}
+
+                                            {currentUser && currentUser.id !== u.id && (
+                                                <button
+                                                    onClick={(e) => handleQuickFavorite(e, u.id)}
+                                                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md hover:bg-black/60 flex items-center justify-center transition shadow-lg text-white group"
+                                                    title={favIds.has(u.id) ? "Remove Favorite" : "Save Favorite"}
+                                                >
+                                                    <FiHeart size={14} className={favIds.has(u.id) ? "fill-red-500 text-red-500" : "text-gray-300 group-hover:text-white"} />
+                                                </button>
                                             )}
                                             <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#16162A] to-transparent h-16" />
                                         </div>
