@@ -190,7 +190,7 @@ companion-app/
 
 ## 🤝 Contributing
 
-Pull requests welcome hain! Large changes ke liye pehle issue open karo.
+Pull Requests Welcome hain! Large changes ke liye pehle issue open karo.
 
 ---
 
