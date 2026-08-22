@@ -1,203 +1,207 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/RentGF-India's%20%231%20Companion%20App-ec4899?style=for-the-badge&logo=heart&logoColor=white" />
+# ☕ Coffeely — Premium Companion & Social Platform
 
-# 💖 RentGF — Find Your Perfect Companion
+**India's #1 Safe & Verified Companion Ecosystem**
+*Connect with authentic partners for coffee dates, movies, events, study sessions, and high-quality conversations.*
 
-**India's Premium Companion Platform** — Connect with real people for coffee dates, events, movies & meaningful conversations.
+[![Live Website](https://img.shields.io/badge/🌐_Live_App-coffeely.vercel.app-0095f6?style=for-the-badge&logo=vercel&logoColor=white)](https://rentgf-app.vercel.app)
+[![API Server](https://img.shields.io/badge/⚡_API_Server-Render_Live-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://rentgf-and-bf.onrender.com)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
+[![Security Status](https://img.shields.io/badge/Security-Hardened_HS256-green.svg?style=for-the-badge&logo=shield)](backend/server.js)
 
-[![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-rentgf--app.vercel.app-a855f7?style=for-the-badge)](https://rentgf-app.vercel.app)
-[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render)](https://rentgf-and-bf.onrender.com)
-[![Frontend](https://img.shields.io/badge/Frontend-Vercel-000000?style=for-the-badge&logo=vercel)](https://rentgf-app.vercel.app)
+<br />
+
+```
+       _____ ____  ______ ______ ______ ______ _    WW 
+      / ____/ __ \|  ____|  ____|  ____|  ____| |   __ 
+     | |   | |  | | |__  | |__  | |__  | |__  | |  |  |
+     | |   | |  | |  __| |  __| |  __| |  __| | |  |  |
+     | |___| |__| | |    | |    | |____| |____| |__|  |
+      \_____\____/|_|    |_|    |______|______|_____/ 
+```
 
 </div>
 
 ---
 
-## ✨ Features
+## 🌟 Key Highlights & Production Features
 
-| Feature | Description |
-|---|---|
-| 🔐 **OTP Email Verification** | Gmail SMTP powered OTP — register karo, email verify karo, tab login |
-| 👤 **Role-Based Dashboards** | Alag alag interface for Boys, Girls aur Admin |
-| 💬 **Real-Time Chat** | Socket.io powered instant messaging with read receipts & delete |
-| 📞 **WebRTC Calling** | Video & Audio calls with live ringing, instant silent connect, front/back camera toggling |
-| 🚨 **SOS Emergency System** | Add up to 3 emergency contacts ( validated ), trigger live GPS location alerts |
-| 📅 **Booking System** | Booking request bhejo, accept/reject karo, complete karo |
-| 🪪 **KYC Verification** | ID proof upload — platform safety ke liye |
-| 🖼️ **Gallery & Posts** | Profile pics, posts upload, like, comment, liked & saved posts views |
-| 🔔 **Notifications** | Real-time activity notifications |
-| 🛡️ **Super Admin Panel** | Full user control — freeze, block, delete, KYC approve, live SOS dashboard |
-| 🔍 **Smart Search & Filter** | Girls/Boys/KYC/Frozen filter + search by name, email, phone |
-| 📊 **Admin Analytics** | User stats, gender distribution, KYC rate charts |
-| 🎨 **UI Cleanup** | Emojis replaced with clean, professional React Icons (`FiStar`, `FiMapPin`, etc.) |
-| 📱 **Responsive Design** | Mobile, tablet, desktop — sab pe perfectly kaam karta hai |
+### 📞 1. WebRTC Peer-to-Peer HD Audio & Video Calling
+- **Instant Silent Connection**: High-definition zero-lag WebRTC calling with live ringtones and native incoming/outgoing call overlays.
+- **In-Call Controls**: Flip front/rear camera, toggle mute/unmute, disable video feed, and real-time duration counter.
+
+### 💬 2. Real-Time Socket.io Chat Engine
+- **Instant Messaging**: Real-time bi-directional chat with live typing indicators (`typing...`) and online/offline status pulses.
+- **Rich Media & Controls**: Image sharing with full screen lightbox, star favorite messages, block user, report abuse, and disapearing message settings.
+
+### 🚨 3. SOS Emergency Safety System
+- **One-Tap Emergency Alert**: Instant emergency trigger sending live GPS latitude/longitude coordinates to trusted contacts and live Admin Monitoring Dashboard.
+- **Trusted Contacts**: Store up to 3 validated emergency phone numbers & email addresses.
+
+### 📅 4. Availability Calendar & Time Slot Scheduler
+- **Time Slot Selection**: Morning (10am-12pm), Afternoon (1pm-3pm), Evening (4pm-6pm), Night (7pm-9pm), Late Night (9pm-11pm).
+- **Double Booking Protection**: Automatic server-side slot locking — disables booked slots with `Booked 🔒` badges.
+
+### 🎭 5. 24-Hour Ephemeral Stories
+- **Daily Highlights**: Share real-time photos and status updates that automatically expire after 24 hours.
+- **Instagram-Style Story Viewer**: 5-second progress bars, tap to skip left/right, press-to-pause, and creator controls.
+
+### ❤️ 6. Saved Favorites Collection
+- **1-Click Bookmark**: Save companion profiles with quick heart buttons directly from the feed or profile page.
+- **Dashboard Collections**: Dedicated `Saved Favorites` tab on user dashboards for instant access.
+
+### 🪪 7. Government KYC & Verification System
+- **Profile Authenticity**: Multi-tier KYC document review system with admin approval workflows, verified badges (`✔`), and automated bad-content filtering.
+
+### 👑 8. Super Admin Control Panel
+- **Comprehensive Oversight**: Manage user freeze/unfreeze, platform suspension, report resolution, live SOS alerts, and analytical charts.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack & Architecture
 
-### Frontend
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-06B6D4?style=flat-square&logo=tailwindcss)
-![Socket.io](https://img.shields.io/badge/Socket.io-Client-010101?style=flat-square&logo=socket.io)
+### **Frontend**
+- **Framework**: React 19 SPA (Single Page Application)
+- **Styling**: Tailwind CSS (Dark Cyberpunk & Sleek Modern Aesthetics)
+- **Icons**: React Icons (`fi`, `fa`, `ai`, `bs`)
+- **Real-time**: `socket.io-client` & WebRTC (`RTCPeerConnection`)
+- **PWA**: Installable Web App capabilities with offline caching
 
-### Backend
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js)
-![Express](https://img.shields.io/badge/Express-5-000000?style=flat-square&logo=express)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?style=flat-square&logo=postgresql)
-![Socket.io](https://img.shields.io/badge/Socket.io-Server-010101?style=flat-square&logo=socket.io)
-![Cloudinary](https://img.shields.io/badge/Cloudinary-Media-3448C5?style=flat-square&logo=cloudinary)
-![Nodemailer](https://img.shields.io/badge/Nodemailer-Gmail%20SMTP-22B573?style=flat-square)
-![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=flat-square&logo=jsonwebtokens)
-![Bcrypt](https://img.shields.io/badge/Bcrypt-Security-orange?style=flat-square)
+### **Backend**
+- **Runtime**: Node.js v18+ & Express.js
+- **Database**: PostgreSQL (Neon Cloud DB) with `pg.Pool` connection pooling
+- **Sockets**: `socket.io` server handling rooms, status, calling, & chat
+- **Email**: Brevo HTTP API (Transaction OTP Email Verification)
+- **Media Cloud**: Cloudinary API with `browser-image-compression`
 
-### Deployment
-![Vercel](https://img.shields.io/badge/Frontend-Vercel-000?style=flat-square&logo=vercel)
-![Render](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render)
-![NeonDB](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00E5A0?style=flat-square)
+### **Security & Shielding**
+- **JWT Protection**: `HS256` strict algorithm verification with auto-expiry
+- **Security Headers**: Helmet.js (`HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Permissions-Policy`)
+- **Input Sanitization**: XSS payload cleaner stripping `<script>`, `javascript:`, and null byte poisoning
+- **Rate Limiting**: Multi-tier IP throttling (Brute-force protection on Auth & API endpoints)
 
 ---
 
 ## ⚙️ Local Development Setup
 
-### 1. Clone the Repository
+### 1. Clone Repository
 ```bash
 git clone https://github.com/Priyanshu-kumar-maurya/companion-app.git
 cd companion-app
 ```
 
 ### 2. Install Dependencies
-
 ```bash
-# Frontend dependencies (root folder)
+# Install Frontend Dependencies
 npm install
 
-# Backend dependencies
+# Install Backend Dependencies
 cd backend
 npm install
 ```
 
-### 3. Environment Variables
-
-`backend/.env` file banao aur ye variables add karo:
+### 3. Setup Environment Variables (`backend/.env`)
+Create a `.env` file in the `backend/` folder:
 
 ```env
 PORT=5000
-DATABASE_URL=your_postgresql_connection_string
+DATABASE_URL=postgres://user:password@ep-host.neon.tech/neondb?sslmode=require
+JWT_SECRET=your_super_secret_jwt_key_here
 
-JWT_SECRET=your_jwt_secret_key
+# Brevo HTTP Email API
+BREVO_API_KEY=your_brevo_api_key_here
+EMAIL_USER=noreply@coffeely.com
+EMAIL_FROM_NAME=Coffeely
 
-# Gmail SMTP (OTP ke liye)
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_gmail_app_password_16chars
-
-# Cloudinary (image upload ke liye)
-CLOUDINARY_CLOUD_NAME=your_cloud_name
+# Cloudinary Storage
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
-> **Gmail App Password kaise banaye?**
-> Google Account → Security → 2-Step Verification ON karo → App Passwords → "Mail" select karo → 16 digit password copy karo
-
-### 4. Run the Application
-
+### 4. Start Local Development Servers
 ```bash
-# Terminal 1 — Frontend start karo (root folder mein)
+# Terminal 1 — Start React Frontend (Port 3000)
 npm start
 
-# Terminal 2 — Backend start karo
+# Terminal 2 — Start Express Backend (Port 5000)
 cd backend
 node server.js
 ```
 
-Frontend: `http://localhost:3000`
-Backend API: `http://localhost:5000`
-
 ---
 
-## 🗂️ Project Structure
+## 🗂️ Project Directory Structure
 
 ```
 companion-app/
-├── src/                        # React Frontend
+├── src/                            # React Frontend Source
 │   ├── components/
-│   │   ├── AdminDashboard.jsx  # Super Admin Panel
-│   │   ├── UnifiedLogin.jsx    # Login + Forgot Password
-│   │   ├── UnifiedRegister.jsx # Registration + OTP Verify
-│   │   ├── boy/                # Boy user components
-│   │   ├── girl/               # Girl user components
-│   │   └── shared/             # Shared components (Chat, Find, etc.)
+│   │   ├── HomePage.jsx            # Landing Page & Featured Companions
+│   │   ├── AdminDashboard.jsx      # Super Admin Control Panel
+│   │   ├── UnifiedLogin.jsx        # Login & Password Recovery
+│   │   ├── UnifiedRegister.jsx     # Account Registration & OTP Verification
+│   │   ├── NotificationsPage.jsx   # In-App Notification Center
+│   │   ├── boy/                    # Boy Dashboard Components
+│   │   ├── girl/                   # Companion Dashboard Components
+│   │   └── shared/                 # Shared Modules (Chat, Details, Find, Stories)
+│   │       ├── ChatPage.jsx        # WhatsApp-style Real-time Messaging
+│   │       ├── DetailsPage.jsx     # Companion Profile & Slot Booking
+│   │       ├── FindPage.jsx        # Companion Feed & Filters
+│   │       ├── CallOverlay.jsx     # WebRTC Video/Audio Call Overlay
+│   │       ├── SOSButton.jsx       # Emergency SOS Alert Trigger
+│   │       ├── StoriesBar.jsx      # 24h Ephemeral Stories Rings Bar
+│   │       └── StoryViewerModal.jsx# Fullscreen Story Player
 │   └── App.js
 │
-├── backend/
-│   ├── server.js               # Express server entry point
-│   ├── package.json            # Backend dependencies
+├── backend/                        # Node.js & Express REST Backend
+│   ├── server.js                   # Application Entry Point & Security Headers
 │   ├── config/
-│   │   └── db.js               # PostgreSQL connection + auto-migration
+│   │   └── db.js                   # PostgreSQL Pool & Auto Schema Migrations
 │   ├── routes/
-│   │   ├── authRoutes.js       # Register, Login, OTP, Forgot Password
-│   │   ├── userRoutes.js       # Profile, KYC, social features
-│   │   ├── bookingRoutes.js    # Booking system
-│   │   ├── postRoutes.js       # Posts, likes, comments
-│   │   ├── chatRoutes.js       # Chat messages
-│   │   ├── adminRoutes.js      # Admin controls
-│   │   └── sosRoutes.js        # SOS Emergency Alerts & Contacts
+│   │   ├── authRoutes.js           # Auth, Registration, Login, OTP
+│   │   ├── userRoutes.js           # Users, Favorites, Profiles, Followers
+│   │   ├── bookingRoutes.js        # Bookings & Availability Slots
+│   │   ├── chatRoutes.js           # Real-Time Chat Storage
+│   │   ├── postRoutes.js           # Gallery Posts & Likes
+│   │   ├── storyRoutes.js          # 24h Ephemeral Stories
+│   │   ├── sosRoutes.js            # Emergency SOS System
+│   │   └── adminRoutes.js          # Admin Controls & Moderation
 │   ├── middleware/
-│   │   ├── rateLimiter.js      # API rate limiting
-│   │   └── sanitize.js         # XSS protection
+│   │   ├── auth.js                 # JWT Authentication & Frozen Status Check
+│   │   ├── rateLimiter.js          # In-Memory Request Rate Limiter
+│   │   ├── sanitize.js             # XSS & Injection Sanitizer
+│   │   └── contentFilter.js        # Profanity & Contact-Sharing Moderation
 │   └── socket/
-│       └── socket.js           # Real-time Socket.io handler
-│
+│       └── socket.js               # Socket.io Calling & Messaging Handler
 └── README.md
 ```
 
 ---
 
-## 🔐 Security Features
+## 🔒 Security Infrastructure
 
-- ✅ **OTP Email Verification** — Har naya user email verify kare
-- ✅ **JWT Authentication** — 7-day tokens with auto-renewal
-- ✅ **Bcrypt Password Hashing** — 12 rounds, secure hashing
-- ✅ **Rate Limiting** — 5 auth attempts/min per IP
-- ✅ **CORS Whitelist** — Sirf approved origins allowed
-- ✅ **Helmet.js** — 30+ HTTP security headers
-- ✅ **XSS Sanitization** — Input sanitization middleware
-- ✅ **Admin Controls** — Freeze, block, delete users
+- 🛡️ **JWT Expiration & HS256 Whitelist**: Prevents token forgery and unauthorized payload manipulation.
+- 🛡️ **Helmet & HTTP Hardening**: Injects 30+ enterprise security headers including strict HSTS & CSP.
+- 🛡️ **XSS Input Sanitization**: Automatically strips `<script>`, `javascript:`, and null byte poisoning vectors.
+- 🛡️ **Parameter Pollution Guard**: Neutralizes array manipulation attacks in query parameters.
+- 🛡️ **Brute-Force Rate Limiting**: Multi-tier request throttling on sensitive auth endpoints.
 
 ---
 
-## 📸 Screenshots
+## 🌐 Live Services & Deployment Links
 
-| Home Page | Admin Panel | Chat |
-|---|---|---|
-| *Coming soon* | *Coming soon* | *Coming soon* |
-
----
-
-## 🌐 Live Links
-
-| Service | URL |
-|---|---|
-| 🌐 **Frontend (Vercel)** | https://rentgf-app.vercel.app |
-| ⚙️ **Backend API (Render)** | https://rentgf-and-bf.onrender.com |
-| 📦 **GitHub Repo** | https://github.com/Priyanshu-kumar-maurya/companion-app |
-
-> **Note:** Backend Render free tier pe hai — pehli request mein 30-60 seconds lag sakte hain server wake up hone mein.
-
----
-
-## 🤝 Contributing
-
-Pull Requests Welcome hain! Large changes ke liye pehle issue open karo.
+| Component | Host Service | Status | Live Link |
+| :--- | :--- | :--- | :--- |
+| **Frontend Web App** | Vercel | ![Vercel Status](https://img.shields.io/badge/Status-Online-brightgreen?style=flat-square) | [coffeely.vercel.app](https://rentgf-app.vercel.app) |
+| **Backend REST Server** | Render | ![Render Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square) | [rentgf-and-bf.onrender.com](https://rentgf-and-bf.onrender.com) |
+| **Database Cluster** | Neon PostgreSQL | ![PostgreSQL Status](https://img.shields.io/badge/Database-Connected-blue?style=flat-square) | Enterprise Cloud DB |
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by Priyanshu Kumar Maurya(https://github.com/Priyanshu-kumar-maurya)**
-
-⭐ **Agar pasand aaya toh star dena mat bhoolna!** ⭐
+**Crafted with ❤️ by [Priyanshu Kumar Maurya](https://github.com/Priyanshu-kumar-maurya)**
 
 </div>
