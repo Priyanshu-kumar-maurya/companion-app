@@ -24,6 +24,7 @@ const server = http.createServer(app);
 
 // ─── Allowed Origins (CORS Whitelist) ────────────────────────
 const ALLOWED_ORIGINS = [
+    'https://coffeely-app.vercel.app',
     'https://rentgf-app.vercel.app',
     'https://companion-app-jade.vercel.app',
     'https://companion-app.vercel.app',
@@ -34,8 +35,8 @@ const ALLOWED_ORIGINS = [
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Postman in dev)
-        if (!origin || ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
+        // Allow requests with no origin (mobile apps, curl, Postman in dev) or any .vercel.app frontend domain
+        if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app') || ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
             callback(null, true);
         } else {
             callback(new Error(`CORS blocked: ${origin}`));
@@ -50,7 +51,13 @@ const corsOptions = {
 // ─── Socket.IO with strict CORS ───────────────────────────────
 const io = new Server(server, {
     cors: {
-        origin: ALLOWED_ORIGINS,
+        origin: (origin, callback) => {
+            if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
+                callback(null, true);
+            } else {
+                callback(null, true);
+            }
+        },
         methods: ['GET', 'POST'],
         credentials: true,
     }
