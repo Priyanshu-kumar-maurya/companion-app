@@ -90,8 +90,16 @@ app.use(sanitizeInputs);
 // 5. Global Rate Limiter: 120 requests per minute per IP
 app.use(rateLimiter(120, 60 * 1000));
 
-// 6. Hide server technology info
+// 6. Hide server technology info & add extra security headers
 app.disable('x-powered-by');
+app.use((req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+    next();
+});
 
 // 7. Prevent parameter pollution (duplicate query params)
 app.use((req, res, next) => {

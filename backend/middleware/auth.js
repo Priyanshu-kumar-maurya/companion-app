@@ -8,8 +8,8 @@ const authenticateToken = async (req, res, next) => {
 
     if (!token) return res.status(401).json({ error: "Access Denied. No token." });
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
-        if (err) return res.status(403).json({ error: "Invalid or expired token. Please login again." });
+    jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] }, async (err, user) => {
+        if (err || !user || !user.id) return res.status(403).json({ error: "Invalid or expired token. Please login again." });
 
         try {
             // Check if account is frozen or platform-blocked by admin
