@@ -67,3 +67,55 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// ─── Web Push Notification Handler ───
+self.addEventListener('push', (event) => {
+  let data = { title: 'Coffeely', body: 'You have a new update.', icon: '/logo192.png', url: '/' };
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    if (event.data) data.body = event.data.text();
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/logo192.png',
+    badge: data.badge || '/logo192.png',
+    tag: data.tag || 'coffeely_push',
+    data: { url: data.url || '/' },
+    vibrate: [200, 100, 200, 100, 200],
+    requireInteraction: !!(data.title && (data.title.includes('Call') || data.title.includes('Incoming'))),
+    actions: [
+      { action: 'open', title: 'Open 💬' },
+      { action: 'close', title: 'Dismiss ✕' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// ─── Notification Click Handler ───
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  if (event.action === 'close') return;
+
+  const urlToOpen = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          if (client.navigate) client.navigate(urlToOpen);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

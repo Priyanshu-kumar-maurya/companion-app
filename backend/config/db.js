@@ -220,6 +220,16 @@ const connectDB = async () => {
             UNIQUE(user_id, companion_id)
         );`);
 
+        await pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            endpoint TEXT NOT NULL,
+            keys_p256dh TEXT NOT NULL,
+            keys_auth TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, endpoint)
+        );`);
+
         // ─── Performance Indexes ───────────────────────────────────
         await pool.query("CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_favorites_companion ON favorites(companion_id);");

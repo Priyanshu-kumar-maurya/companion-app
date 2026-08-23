@@ -1,6 +1,7 @@
 const { pool } = require('../config/db');
 let contentFilter;
 try { contentFilter = require('../middleware/contentFilter'); } catch(e) { console.error('ContentFilter load failed:', e.message); }
+const { sendPushNotification } = require('../routes/pushRoutes');
 
 const onlineUsers = new Map();
 
@@ -84,6 +85,14 @@ module.exports = (io) => {
                 io.to(data.room).emit("receive_message", data);
                 if (data.receiver_id) {
                     socket.to(data.receiver_id.toString()).emit("receive_message", data);
+                    // Trigger Web Push Notification
+                    sendPushNotification(data.receiver_id, {
+                        title: `💬 ${data.sender_name || 'Companion'}`,
+                        body: data.image_url ? '📷 Shared a photo' : (data.audio_url ? '🎤 Sent a voice note' : messageText),
+                        icon: data.sender_pic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                        url: '/#chat',
+                        tag: `chat_${data.sender_id}`
+                    });
                 }
             } catch (err) { console.error("send_message error:", err); }
         });
@@ -107,6 +116,14 @@ module.exports = (io) => {
             socket.to(data.room).emit("incoming_call", payload);
             if (data.receiver_id) {
                 socket.to(`user_${data.receiver_id}`).emit("incoming_call", payload);
+                // Trigger Web Push Notification for incoming call
+                sendPushNotification(data.receiver_id, {
+                    title: `📞 Incoming ${data.type === 'video' ? 'Video' : 'Voice'} Call`,
+                    body: `${data.caller_name || 'Someone'} is calling you...`,
+                    icon: data.caller_pic || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                    url: '/#chat',
+                    tag: `call_${data.caller_user_id}`
+                });
             }
 
             const isReceiverOnline = data.receiver_id && onlineUsers.has(data.receiver_id.toString());

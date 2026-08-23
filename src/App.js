@@ -16,6 +16,7 @@ import NotificationsPage from "./components/NotificationsPage";
 import LegalPages from "./components/shared/LegalPages";
 import PWAInstallBanner from "./components/shared/PWAInstallBanner";
 import CallOverlay from "./components/shared/CallOverlay";
+import { registerPushNotifications } from "./utils/pushManager";
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -164,6 +165,7 @@ function App() {
     if (currentUser && socket) {
       socket.emit("user_connected", currentUser.id);
       socket.emit("join_own_room", currentUser.id);
+      registerPushNotifications(currentUser);
     }
   }, [currentUser]);
 
