@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
-import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiNavigation, FiHeart } from "react-icons/fi";
+import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiNavigation, FiHeart, FiGrid, FiMap } from "react-icons/fi";
 import StoriesBar from "./StoriesBar";
+import CompanionMapView from "./CompanionMapView";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
@@ -37,6 +38,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [favIds, setFavIds] = useState(new Set());
+    const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'map'
 
     const [genderFilter, setGenderFilter] = useState(currentUser?.role === "girl" ? "boy" : "girl");
 
@@ -333,6 +335,34 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                     </div>
 
                     <div className="flex items-center gap-2">
+                        {/* View Switcher: Cards vs Map */}
+                        <div className="flex items-center bg-[#16162A] border border-white/10 rounded-xl p-1">
+                            <button
+                                onClick={() => setViewMode("grid")}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                                    viewMode === "grid"
+                                        ? "bg-pink-500 text-white shadow-md"
+                                        : "text-gray-400 hover:text-white"
+                                }`}
+                                title="Grid Cards View"
+                            >
+                                <FiGrid size={13} />
+                                <span className="hidden sm:inline">Cards</span>
+                            </button>
+                            <button
+                                onClick={() => setViewMode("map")}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                                    viewMode === "map"
+                                        ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md"
+                                        : "text-gray-400 hover:text-white"
+                                }`}
+                                title="Interactive Map View"
+                            >
+                                <FiMap size={13} />
+                                <span className="hidden sm:inline">Map 📍</span>
+                            </button>
+                        </div>
+
                         <span className="text-xs text-gray-500 hidden sm:inline">Sort:</span>
                         <select
                             value={sortBy}
@@ -450,6 +480,15 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
 
                 {loading ? (
                     <div className="text-center py-20 text-pink-500 animate-pulse">Loading profiles...</div>
+                ) : viewMode === "map" ? (
+                    <CompanionMapView
+                        companions={filtered}
+                        userLoc={userLoc}
+                        onSelectProfile={handleProfileClick}
+                        onLocateMe={getUserLocation}
+                        favIds={favIds}
+                        onToggleFavorite={handleQuickFavorite}
+                    />
                 ) : filtered.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">No companions found. Try different filters.</div>
                 ) : (
