@@ -1,12 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiMic, FiMicOff, FiVideo, FiVideoOff, FiPhone, FiPhoneOff, FiRefreshCw } from "react-icons/fi";
 
-const ICE_SERVERS = {
+const DEFAULT_ICE_SERVERS = {
     iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
-        { urls: "stun:stun2.l.google.com:19302" }
-    ]
+        { urls: "stun:stun2.l.google.com:19302" },
+        { urls: "stun:stun3.l.google.com:19302" },
+        { urls: "stun:stun4.l.google.com:19302" },
+        { urls: "stun:stun.services.mozilla.com" },
+        {
+            urls: [
+                "turn:openrelay.metered.ca:80",
+                "turn:openrelay.metered.ca:443",
+                "turn:openrelay.metered.ca:443?transport=tcp"
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject"
+        },
+        {
+            urls: [
+                "turns:openrelay.metered.ca:443",
+                "turns:openrelay.metered.ca:443?transport=tcp"
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject"
+        }
+    ],
+    iceCandidatePoolSize: 10
 };
 
 function CallOverlay({ socket, currentUser }) {
@@ -175,6 +196,17 @@ function CallOverlay({ socket, currentUser }) {
     // --- WebRTC Peer Setup ---
     const setupWebRTC = async (type, isCaller) => {
         try {
+            let iceServersConfig = DEFAULT_ICE_SERVERS;
+            try {
+                const res = await fetch("https://rentgf-and-bf.onrender.com/api/webrtc/ice-servers");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.iceServers && data.iceServers.length > 0) {
+                        iceServersConfig = { iceServers: data.iceServers, iceCandidatePoolSize: 10 };
+                    }
+                }
+            } catch (e) {}
+
             const constraints = {
                 audio: true,
                 video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false
@@ -186,7 +218,7 @@ function CallOverlay({ socket, currentUser }) {
                 localVideoRef.current.srcObject = stream;
             }
 
-            const pc = new RTCPeerConnection(ICE_SERVERS);
+            const pc = new RTCPeerConnection(iceServersConfig);
             peerConnectionRef.current = pc;
 
             // Connection state change monitors
@@ -194,13 +226,20 @@ function CallOverlay({ socket, currentUser }) {
                 if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
                     setNetQuality({ status: 'reconnecting', rtt: 0, label: '⚠️ Network Drop - Reconnecting...' });
                 } else if (pc.connectionState === 'connected') {
-                    setNetQuality({ status: 'good', rtt: 30, label: '🟢 HD Quality (Strong Signal)' });
+                    setNetQuality({ status: 'good', rtt: 30, label: '🟢 HD Quality (TURN Relay Active)' });
                 }
             };
 
             pc.oniceconnectionstatechange = () => {
-                if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+                if (pc.iceConnectionState === 'failed') {
+                    setNetQuality({ status: 'reconnecting', rtt: 0, label: '⚠️ Reconnecting NAT Stream...' });
+                    if (pc.restartIce) {
+                        try { pc.restartIce(); } catch (e) {}
+                    }
+                } else if (pc.iceConnectionState === 'disconnected') {
                     setNetQuality({ status: 'reconnecting', rtt: 0, label: '⚠️ Reconnecting Call...' });
+                } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                    setNetQuality({ status: 'good', rtt: 30, label: '🟢 HD Quality (TURN Relay Active)' });
                 }
             };
 
