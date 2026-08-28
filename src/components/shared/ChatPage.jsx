@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiUnlock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock, FiKey } from "react-icons/fi";
-import { isChatLocked, lockChat, unlockChat, hasChatLockPin } from "../../utils/chatLockManager";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock, FiKey } from "react-icons/fi";
+import { isChatLocked, lockChat, unlockChat, isChatHidden, hideChat, unhideChat, hasChatLockPin } from "../../utils/chatLockManager";
 import ChatLockPinModal from "./ChatLockPinModal";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -50,9 +50,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     });
     const [disappearingDuration, setDisappearingDuration] = useState("off"); // 'off' / '24h' / '7d' / '90d'
 
-    // WhatsApp Chat Lock States
+    // WhatsApp Chat Lock & Hide States
     const [isThisChatLocked, setIsThisChatLocked] = useState(() => isChatLocked(currentUser?.id, girl?.id));
-    const [isChatPinVerified, setIsChatPinVerified] = useState(() => !isChatLocked(currentUser?.id, girl?.id));
+    const [isThisChatHidden, setIsThisChatHidden] = useState(() => isChatHidden(currentUser?.id, girl?.id));
+    const [isChatPinVerified, setIsChatPinVerified] = useState(() => !isChatLocked(currentUser?.id, girl?.id) && !isChatHidden(currentUser?.id, girl?.id));
     const [showChatLockModal, setShowChatLockModal] = useState(false);
     const [chatLockModalMode, setChatLockModalMode] = useState("verify");
 
@@ -900,6 +901,30 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                     {isThisChatLocked ? <FiUnlock size={14} /> : <FiLock size={14} />}
                                     {isThisChatLocked ? 'Unlock Chat 🔓' : 'Lock Chat 🔒'}
                                 </button>
+                                <button
+                                    onClick={() => {
+                                        setShowMenu(false);
+                                        if (isThisChatHidden) {
+                                            unhideChat(currentUser?.id, girl?.id);
+                                            setIsThisChatHidden(false);
+                                            alert(`👁️ Chat with ${girl?.name || 'this companion'} is now unhidden.`);
+                                        } else {
+                                            if (!hasChatLockPin(currentUser?.id)) {
+                                                setChatLockModalMode("set_new");
+                                                setShowChatLockModal(true);
+                                            } else {
+                                                hideChat(currentUser?.id, girl?.id);
+                                                setIsThisChatHidden(true);
+                                                setIsThisChatLocked(true);
+                                                alert(`👁️‍🗨️ Chat with ${girl?.name || 'this companion'} is now hidden. Enter your PIN in the search bar to unhide.`);
+                                            }
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-pink-400 hover:bg-pink-500/10 flex items-center gap-2 transition"
+                                >
+                                    {isThisChatHidden ? <FiEye size={14} /> : <FiEyeOff size={14} />}
+                                    {isThisChatHidden ? 'Unhide Chat 👁️' : 'Hide Chat 👁️‍🗨️'}
+                                </button>
                                 <div className="h-px bg-white/5 my-1" />
                                 <button
                                     onClick={() => { handleClearChat(); setShowMenu(false); }}
@@ -1363,6 +1388,45 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                 }`}
                             >
                                 {isThisChatLocked ? "Locked 🔒" : "Lock Chat"}
+                            </button>
+                        </div>
+
+                        {/* WhatsApp-Style Hide Chat Toggle in Sidebar */}
+                        <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+                            <div>
+                                <div className="text-xs font-semibold text-gray-200 flex items-center gap-1.5">
+                                    <FiEyeOff size={12} className="text-pink-400" />
+                                    <span>Hide Chat</span>
+                                </div>
+                                <div className="text-[10px] text-gray-500 mt-0.5">
+                                    {isThisChatHidden ? "Chat is hidden from inbox" : "Hide completely from inbox"}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (isThisChatHidden) {
+                                        unhideChat(currentUser?.id, girl?.id);
+                                        setIsThisChatHidden(false);
+                                        alert(`👁️ Chat with ${girl?.name} is now unhidden.`);
+                                    } else {
+                                        if (!hasChatLockPin(currentUser?.id)) {
+                                            setChatLockModalMode("set_new");
+                                            setShowChatLockModal(true);
+                                        } else {
+                                            hideChat(currentUser?.id, girl?.id);
+                                            setIsThisChatHidden(true);
+                                            setIsThisChatLocked(true);
+                                            alert(`👁️‍🗨️ Chat with ${girl?.name} is now hidden.`);
+                                        }
+                                    }
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
+                                    isThisChatHidden
+                                        ? "bg-pink-500/20 border-pink-500/40 text-pink-300"
+                                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                                }`}
+                            >
+                                {isThisChatHidden ? "Hidden 👁️‍🗨️" : "Hide Chat"}
                             </button>
                         </div>
 
