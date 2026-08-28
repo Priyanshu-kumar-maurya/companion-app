@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock } from "react-icons/fi";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiUnlock, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock, FiKey } from "react-icons/fi";
+import { isChatLocked, lockChat, unlockChat, hasChatLockPin } from "../../utils/chatLockManager";
+import ChatLockPinModal from "./ChatLockPinModal";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -47,6 +49,12 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         return saved ? JSON.parse(saved) : [];
     });
     const [disappearingDuration, setDisappearingDuration] = useState("off"); // 'off' / '24h' / '7d' / '90d'
+
+    // WhatsApp Chat Lock States
+    const [isThisChatLocked, setIsThisChatLocked] = useState(() => isChatLocked(currentUser?.id, girl?.id));
+    const [isChatPinVerified, setIsChatPinVerified] = useState(() => !isChatLocked(currentUser?.id, girl?.id));
+    const [showChatLockModal, setShowChatLockModal] = useState(false);
+    const [chatLockModalMode, setChatLockModalMode] = useState("verify");
 
     // Audio recording states & refs
     const [isRecordingAudio, setIsRecordingAudio] = useState(false);
@@ -869,6 +877,29 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                     <FiSlash size={14} />
                                     {isBlocked ? 'Unblock User' : 'Block User'}
                                 </button>
+                                <button
+                                    onClick={() => {
+                                        setShowMenu(false);
+                                        if (isThisChatLocked) {
+                                            setChatLockModalMode("verify");
+                                            setShowChatLockModal(true);
+                                        } else {
+                                            if (!hasChatLockPin(currentUser?.id)) {
+                                                setChatLockModalMode("set_new");
+                                                setShowChatLockModal(true);
+                                            } else {
+                                                lockChat(currentUser?.id, girl?.id);
+                                                setIsThisChatLocked(true);
+                                                setIsChatPinVerified(true);
+                                                alert(`🔒 Chat with ${girl?.name || 'this companion'} has been locked. It will now appear in your Locked Chats folder.`);
+                                            }
+                                        }
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-xs font-semibold text-purple-400 hover:bg-purple-500/10 flex items-center gap-2 transition"
+                                >
+                                    {isThisChatLocked ? <FiUnlock size={14} /> : <FiLock size={14} />}
+                                    {isThisChatLocked ? 'Unlock Chat 🔓' : 'Lock Chat 🔒'}
+                                </button>
                                 <div className="h-px bg-white/5 my-1" />
                                 <button
                                     onClick={() => { handleClearChat(); setShowMenu(false); }}
@@ -895,8 +926,38 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     <span>Messages are end-to-end encrypted • Click to verify</span>
                 </div>
 
-                {/* ─── CHAT MESSAGES ─── */}
-                <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1" style={{ background: '#0D0D1A' }}>
+                {/* ─── CHAT MESSAGES OR LOCKED OVERLAY ─── */}
+                {isThisChatLocked && !isChatPinVerified ? (
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#0D0D1A]">
+                        <div className="w-20 h-20 rounded-3xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4 shadow-xl">
+                            <FiLock size={36} />
+                        </div>
+                        <h2 className="text-xl font-bold text-white mb-2">Chat is Locked 🔒</h2>
+                        <p className="text-xs text-gray-400 max-w-xs mb-6">
+                            This conversation with {girl?.name} is private and protected by your 4-digit security PIN.
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setChatLockModalMode("verify");
+                                    setShowChatLockModal(true);
+                                }}
+                                className="px-6 py-2.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-pink-500/20 hover:opacity-90 transition active:scale-95 flex items-center gap-2"
+                            >
+                                <FiKey size={14} /> Unlock Conversation
+                            </button>
+                            <button
+                                onClick={() => setPage(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)}
+                                className="px-4 py-2.5 bg-white/5 border border-white/10 text-gray-400 hover:text-white rounded-xl text-xs font-bold transition"
+                            >
+                                Back
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* ─── CHAT MESSAGES ─── */}
+                        <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1" style={{ background: '#0D0D1A' }}>
                     {filteredMessagesToShow.map((msg, index) => {
                         const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
                         const prevMsg = index > 0 ? filteredMessagesToShow[index - 1] : null;
@@ -1179,6 +1240,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         </button>
                     </div>
                 )}
+                    </>
+                )}
             </div>
 
             {/* ─── WHATSAPP STYLE CONTACT INFO SIDEBAR ─── */}
@@ -1263,6 +1326,44 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                     </button>
                                 ))}
                             </div>
+                        </div>
+
+                        {/* WhatsApp-Style Chat Lock Toggle in Sidebar */}
+                        <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+                            <div>
+                                <div className="text-xs font-semibold text-gray-200 flex items-center gap-1.5">
+                                    <FiLock size={12} className="text-purple-400" />
+                                    <span>Lock Chat</span>
+                                </div>
+                                <div className="text-[10px] text-gray-500 mt-0.5">
+                                    {isThisChatLocked ? "Chat is locked with PIN" : "Protect with 4-Digit PIN"}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (isThisChatLocked) {
+                                        setChatLockModalMode("verify");
+                                        setShowChatLockModal(true);
+                                    } else {
+                                        if (!hasChatLockPin(currentUser?.id)) {
+                                            setChatLockModalMode("set_new");
+                                            setShowChatLockModal(true);
+                                        } else {
+                                            lockChat(currentUser?.id, girl?.id);
+                                            setIsThisChatLocked(true);
+                                            setIsChatPinVerified(true);
+                                            alert(`🔒 Chat with ${girl?.name} locked.`);
+                                        }
+                                    }
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
+                                    isThisChatLocked
+                                        ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                                }`}
+                            >
+                                {isThisChatLocked ? "Locked 🔒" : "Lock Chat"}
+                            </button>
                         </div>
 
                         {/* Mute Notifications */}
@@ -1581,6 +1682,29 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     </div>
                 </div>
             )}
+
+            {/* WhatsApp-Style Chat Lock PIN Modal */}
+            <ChatLockPinModal
+                isOpen={showChatLockModal}
+                onClose={() => setShowChatLockModal(false)}
+                userId={currentUser?.id}
+                mode={chatLockModalMode}
+                onSuccess={() => {
+                    if (chatLockModalMode === "set_new") {
+                        lockChat(currentUser?.id, girl?.id);
+                        setIsThisChatLocked(true);
+                        setIsChatPinVerified(true);
+                        alert(`🔒 Chat with ${girl?.name || 'this companion'} has been locked. It will now appear in your Locked Chats folder.`);
+                    } else if (isThisChatLocked && isChatPinVerified) {
+                        unlockChat(currentUser?.id, girl?.id);
+                        setIsThisChatLocked(false);
+                        alert(`🔓 Chat with ${girl?.name || 'this companion'} is now unlocked.`);
+                    } else {
+                        setIsChatPinVerified(true);
+                    }
+                }}
+                companionName={girl?.name || "this companion"}
+            />
         </div>
     );
 }

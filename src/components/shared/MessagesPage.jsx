@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
-import { FiMessageCircle, FiRefreshCw, FiInbox, FiPhone, FiVideo, FiPhoneIncoming, FiPhoneOutgoing, FiPhoneMissed } from "react-icons/fi";
+import { FiMessageCircle, FiRefreshCw, FiInbox, FiPhone, FiLock, FiUnlock } from "react-icons/fi";
+import { isChatLocked } from "../../utils/chatLockManager";
+import ChatLockPinModal from "./ChatLockPinModal";
 
 function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [activeTab, setActiveTab] = useState("chats"); // 'chats' | 'calls'
@@ -8,6 +10,12 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [callLogs, setCallLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [callsLoading, setCallsLoading] = useState(false);
+
+    // WhatsApp-Style Chat Lock States
+    const [isLockedUnlocked, setIsLockedUnlocked] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pinModalMode, setPinModalMode] = useState("verify");
+    const [pendingChatToOpen, setPendingChatToOpen] = useState(null);
 
     useEffect(() => {
         if (!currentUser) {
@@ -130,10 +138,42 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
         return () => socket.off("receive_message", handleReceiveMessage);
     }, [socket, currentUser]);
 
+    // Split chats into Unlocked and Locked
+    const unlockedChats = chatHistory.filter(p => !isChatLocked(currentUser?.id, p.id));
+    const lockedChats = chatHistory.filter(p => isChatLocked(currentUser?.id, p.id));
+
     const handleChatClick = (person) => {
+        if (isChatLocked(currentUser?.id, person.id) && !isLockedUnlocked) {
+            setPendingChatToOpen(person);
+            setPinModalMode("verify");
+            setShowPinModal(true);
+            return;
+        }
+
         setChatHistory(prev => prev.map(p => String(p.id) === String(person.id) ? { ...p, unreadCount: 0 } : p));
         setSelectedGirl(person);
         setPage(PAGES.CHAT);
+    };
+
+    const handleUnlockLockedSection = () => {
+        if (isLockedUnlocked) {
+            setIsLockedUnlocked(false);
+        } else {
+            setPendingChatToOpen(null);
+            setPinModalMode("verify");
+            setShowPinModal(true);
+        }
+    };
+
+    const handlePinSuccess = () => {
+        setIsLockedUnlocked(true);
+        if (pendingChatToOpen) {
+            const target = pendingChatToOpen;
+            setPendingChatToOpen(null);
+            setChatHistory(prev => prev.map(p => String(p.id) === String(target.id) ? { ...p, unreadCount: 0 } : p));
+            setSelectedGirl(target);
+            setPage(PAGES.CHAT);
+        }
     };
 
     const formatDuration = (secs) => {
@@ -194,7 +234,96 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                         </div>
                     ) : (
                         <div className="flex flex-col divide-y divide-white/5">
-                            {chatHistory.map((person) => (
+                            {/* ── WhatsApp-Style "Locked Chats" Top Folder ── */}
+                            {lockedChats.length > 0 && (
+                                <div
+                                    onClick={handleUnlockLockedSection}
+                                    className={`p-4 sm:p-5 flex items-center justify-between cursor-pointer transition ${
+                                        isLockedUnlocked
+                                            ? "bg-emerald-500/10 border-b border-emerald-500/20"
+                                            : "bg-purple-950/20 hover:bg-purple-950/40 border-b border-purple-500/20"
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-3.5">
+                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg shadow-inner ${
+                                            isLockedUnlocked
+                                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                                : "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                        }`}>
+                                            {isLockedUnlocked ? <FiUnlock size={22} /> : <FiLock size={22} />}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-white text-base">Locked Chats</span>
+                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-500/30 text-purple-300 border border-purple-500/40">
+                                                    {lockedChats.length} Private
+                                                </span>
+                                            </div>
+                                            <div className="text-xs text-gray-400 mt-0.5">
+                                                {isLockedUnlocked ? "Unlocked · Tap to lock again" : "Protected with 4-Digit PIN · Tap to unlock"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-xs font-bold text-purple-400 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                                        {isLockedUnlocked ? "Lock 🔒" : "Unlock 🔑"}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ── Unlocked Private Chats List (Visible when folder is unlocked) ── */}
+                            {isLockedUnlocked && lockedChats.length > 0 && (
+                                <div className="bg-purple-950/10 divide-y divide-purple-500/10">
+                                    {lockedChats.map((person) => (
+                                        <div
+                                            key={person.id}
+                                            onClick={() => handleChatClick(person)}
+                                            className="flex items-center justify-between p-4 sm:p-5 hover:bg-purple-500/10 cursor-pointer transition pl-6 sm:pl-8"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="relative">
+                                                    {person.profile_pic ? (
+                                                        <img src={person.profile_pic} alt={person.name} className="w-14 h-14 rounded-full object-cover border-2 border-purple-500 shadow-md" />
+                                                    ) : (
+                                                        <div className="w-14 h-14 rounded-full bg-purple-500/30 flex items-center justify-center text-xl font-bold shadow-inner text-white border-2 border-purple-500">
+                                                            {person.name[0]}
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] shadow">
+                                                        <FiLock size={10} />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-bold text-white text-lg">{person.name}</span>
+                                                        <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-bold">LOCKED</span>
+                                                    </div>
+                                                    {person.unreadCount > 0 ? (
+                                                        <div className="text-sm text-green-400 font-semibold truncate max-w-[180px] sm:max-w-xs">
+                                                            {person.lastMessagePreview || "New message received..."}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="text-sm text-gray-400 truncate max-w-[180px] sm:max-w-xs">
+                                                            {person.lastMessagePreview || "Tap to view conversation"}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {person.unreadCount > 0 ? (
+                                                <div className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-[11px] font-bold text-white shadow-[0_0_10px_rgba(168,85,247,0.6)] animate-pulse">
+                                                    {person.unreadCount}
+                                                </div>
+                                            ) : (
+                                                <div className="text-purple-400 text-xl">›</div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* ── Regular Unlocked Chats ── */}
+                            {unlockedChats.map((person) => (
                                 <div key={person.id} onClick={() => handleChatClick(person)} className="flex items-center justify-between p-4 sm:p-5 hover:bg-white/5 cursor-pointer transition">
                                     <div className="flex items-center gap-4">
                                         <div className="relative">
@@ -248,50 +377,47 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                         <div className="flex flex-col divide-y divide-white/5">
                             {callLogs.map((log) => {
                                 const isOutgoing = parseInt(log.caller_id) === parseInt(currentUser.id);
-                                const partnerName = isOutgoing ? log.receiver_name : log.caller_name;
-                                const partnerPic = isOutgoing ? log.receiver_pic : log.caller_pic;
-                                const partnerId = isOutgoing ? log.receiver_id : log.caller_id;
-                                const isMissed = log.status === 'missed' || log.status === 'rejected';
-
+                                const isMissed = log.status === 'missed';
                                 return (
                                     <div key={log.id} className="flex items-center justify-between p-4 sm:p-5 hover:bg-white/5 transition">
                                         <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <img 
-                                                    src={partnerPic || "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"} 
-                                                    alt={partnerName} 
-                                                    className="w-12 h-12 rounded-full object-cover border border-white/10" 
-                                                />
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg ${
+                                                isMissed 
+                                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30' 
+                                                    : isOutgoing 
+                                                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                                                        : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                            }`}>
+                                                <FiPhone size={20} />
                                             </div>
 
                                             <div>
-                                                <div className="font-bold text-white text-base">{partnerName}</div>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    {isMissed ? (
-                                                        <span className="text-red-400 text-xs font-semibold flex items-center gap-1">
-                                                            <FiPhoneMissed size={12} /> Missed Call
-                                                        </span>
-                                                    ) : isOutgoing ? (
-                                                        <span className="text-blue-400 text-xs font-semibold flex items-center gap-1">
-                                                            <FiPhoneOutgoing size={12} /> Outgoing • {formatDuration(log.duration_seconds)}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-green-400 text-xs font-semibold flex items-center gap-1">
-                                                            <FiPhoneIncoming size={12} /> Incoming • {formatDuration(log.duration_seconds)}
-                                                        </span>
-                                                    )}
-                                                    <span className="text-gray-500 text-[10px]">
-                                                        • {new Date(log.created_at).toLocaleDateString()} {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                <div className="font-bold text-white text-base">
+                                                    {isOutgoing ? log.receiver_name || 'Companion' : log.caller_name || 'Companion'}
+                                                </div>
+                                                <div className="text-xs text-gray-400 mt-0.5 flex items-center gap-2">
+                                                    <span className={isMissed ? 'text-red-400 font-semibold' : ''}>
+                                                        {isMissed ? 'Missed Call' : isOutgoing ? 'Outgoing Call' : 'Incoming Call'}
                                                     </span>
+                                                    <span>•</span>
+                                                    <span>{formatDuration(log.duration_seconds)}</span>
+                                                    <span>•</span>
+                                                    <span>{new Date(log.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <button
-                                            onClick={() => handleChatClick({ id: partnerId, name: partnerName, profile_pic: partnerPic })}
-                                            className="px-3.5 py-1.5 bg-pink-500/10 hover:bg-pink-500 text-pink-400 hover:text-white border border-pink-500/20 rounded-full text-xs font-bold transition flex items-center gap-1"
+                                            onClick={() => {
+                                                const targetId = isOutgoing ? log.receiver_id : log.caller_id;
+                                                const targetName = isOutgoing ? log.receiver_name : log.caller_name;
+                                                const targetPic = isOutgoing ? log.receiver_pic : log.caller_pic;
+                                                setSelectedGirl({ id: targetId, name: targetName, profile_pic: targetPic });
+                                                setPage(PAGES.CHAT);
+                                            }}
+                                            className="px-3.5 py-1.5 bg-white/5 hover:bg-pink-500/20 text-gray-300 hover:text-pink-400 rounded-xl text-xs font-bold border border-white/10 transition flex items-center gap-1.5"
                                         >
-                                            {log.call_type === 'video' ? <FiVideo size={13} /> : <FiPhone size={13} />} Call Back
+                                            <FiMessageCircle size={13} /> Chat
                                         </button>
                                     </div>
                                 );
@@ -300,6 +426,19 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                     )
                 )}
             </div>
+
+            {/* WhatsApp-Style Chat Lock PIN Verification Modal */}
+            <ChatLockPinModal
+                isOpen={showPinModal}
+                onClose={() => {
+                    setShowPinModal(false);
+                    setPendingChatToOpen(null);
+                }}
+                userId={currentUser?.id}
+                mode={pinModalMode}
+                onSuccess={handlePinSuccess}
+                companionName={pendingChatToOpen ? pendingChatToOpen.name : "Locked Chats"}
+            />
         </div>
     );
 }
