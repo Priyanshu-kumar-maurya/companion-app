@@ -85,6 +85,9 @@ const connectDB = async () => {
             await pool.query("UPDATE users SET username = $1 WHERE id = $2;", [tempUsername, u.id]);
         }
         await pool.query("ALTER TABLE users ADD CONSTRAINT unique_username UNIQUE (username);").catch(() => {});
+        await pool.query("UPDATE users SET is_verified = true WHERE is_verified IS NULL;").catch(() => {});
+        await pool.query("UPDATE users SET is_frozen = false WHERE is_frozen IS NULL;").catch(() => {});
+        await pool.query("UPDATE users SET is_platform_blocked = false WHERE is_platform_blocked IS NULL;").catch(() => {});
 
         // Saved posts table
         await pool.query(`CREATE TABLE IF NOT EXISTS saved_posts (

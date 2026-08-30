@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiX } from "react-icons/fi";
+import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiX, FiCreditCard } from "react-icons/fi";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -177,6 +177,9 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                         <span className="relative"><FiMessageCircle size={20} />{unreadCount > 0 && <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[15px] text-center leading-[15px]">{unreadCount}</span>}</span>
                                         <span className="text-[9px] mt-0.5 font-semibold">Inbox</span>
                                     </button>
+                                    <button onClick={() => handleNavClick(PAGES.WALLET)} title="Wallet" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.WALLET ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                        <FiCreditCard size={20} /><span className="text-[9px] mt-0.5 font-semibold">Wallet</span>
+                                    </button>
                                     <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} title="Activity" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
                                         <FiBell size={20} /><span className="text-[9px] mt-0.5 font-semibold">Activity</span>
                                     </button>
@@ -193,6 +196,9 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                             <FiShield size={13} /> Admin
                                         </button>
                                     )}
+                                    <button onClick={() => handleNavClick(PAGES.WALLET)} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 rounded-full text-pink-300 transition shrink-0">
+                                        <FiCreditCard size={13} /> 💰 Wallet
+                                    </button>
                                     <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/5 border border-[#262626] hover:bg-white/10 rounded-full text-white transition shrink-0">
                                         <FiPlusCircle size={14} /> Post
                                     </button>
@@ -227,12 +233,20 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                     </h3>
 
                     {currentUser ? (
-                        <button
-                            onClick={() => setShowPostModal(true)}
-                            className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/10 border border-[#262626] hover:bg-white/20 rounded-full text-white transition"
-                        >
-                            <FiPlusCircle size={14} /> Post
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handleNavClick(PAGES.WALLET)}
+                                className="flex items-center gap-1 px-3 py-1.5 text-xs font-bold bg-pink-500/20 border border-pink-500/30 text-pink-300 rounded-full transition"
+                            >
+                                💰 Wallet
+                            </button>
+                            <button
+                                onClick={() => setShowPostModal(true)}
+                                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-white/10 border border-[#262626] hover:bg-white/20 rounded-full text-white transition"
+                            >
+                                <FiPlusCircle size={14} /> Post
+                            </button>
+                        </div>
                     ) : (
                         <button className="text-2xl text-white outline-none" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                             {isMenuOpen ? "✕" : "☰"}
@@ -278,6 +292,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                     )}
                                 </span>
                                 <span className="text-[9px] font-bold">Inbox</span>
+                            </button>
+                        )}
+
+                        {currentUser && (
+                            <button onClick={() => handleNavClick(PAGES.WALLET)} className={`flex flex-col items-center justify-center w-10 gap-1 transition-all duration-300 ${page === PAGES.WALLET ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                <FiCreditCard size={21} />
+                                <span className="text-[9px] font-bold">Wallet</span>
                             </button>
                         )}
 

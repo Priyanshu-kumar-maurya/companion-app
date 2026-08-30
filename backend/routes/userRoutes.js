@@ -60,9 +60,8 @@ router.get('/users', async (req, res) => {
                    COUNT(r.id) as review_count
             FROM users u
             LEFT JOIN reviews r ON u.id = r.companion_id
-            WHERE u.is_verified = true 
-              AND u.is_frozen = false 
-              AND u.is_platform_blocked = false
+            WHERE (u.is_frozen IS NOT TRUE) 
+              AND (u.is_platform_blocked IS NOT TRUE)
               ${roleFilter}
         `;
 
