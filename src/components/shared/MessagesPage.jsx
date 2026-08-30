@@ -210,7 +210,6 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
 
     const handleToggleHideChat = (e, person) => {
         e.stopPropagation();
-        setActiveActionMenuId(null);
         if (isChatHidden(currentUser?.id, person.id)) {
             unhideChat(currentUser?.id, person.id);
             setSecretCodeToast(`👁️ Chat with ${person.name} is now unhidden`);
@@ -231,7 +230,6 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
 
     const handleToggleLockChat = (e, person) => {
         e.stopPropagation();
-        setActiveActionMenuId(null);
         if (isChatLocked(currentUser?.id, person.id)) {
             unlockChat(currentUser?.id, person.id);
             setSecretCodeToast(`🔓 Chat with ${person.name} unlocked`);

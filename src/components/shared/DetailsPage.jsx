@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
 import InstagramPostModal from "./InstagramPostModal";
+import PaymentModal from "./PaymentModal";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -24,6 +25,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
     const [showDpModal, setShowDpModal] = useState(false);
 
     const [bookingStatus, setBookingStatus] = useState(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [pendingBookingData, setPendingBookingData] = useState(null);
     const [reviews, setReviews] = useState([]);
     const [avgRating, setAvgRating] = useState(0);
     const [newReviewText, setNewReviewText] = useState("");
@@ -480,19 +483,34 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
         }
     };
 
-    const handleBookingSubmit = async () => {
+    const handleOpenPaymentCheckout = () => {
         if (!currentUser) return alert("Please login first!");
         if (!meetingInfo.date) return alert("Please select a date!");
 
-        setBookingStatus('loading');
         const amount = (profile.price || 1000) * hours;
-
-        const boy_id = currentUser.role === 'boy' ? currentUser.id : profile.id;
-        const girl_id = currentUser.role === 'girl' ? currentUser.id : profile.id;
-
         const activeSlotObj = TIME_SLOTS.find(s => s.id === selectedSlot);
         const slotLabel = activeSlotObj ? `${activeSlotObj.label} (${activeSlotObj.timeRange})` : meetingInfo.time;
         const meetingTimeFormatted = activeSlotObj ? activeSlotObj.timeRange.split(' - ')[0] : meetingInfo.time;
+
+        setPendingBookingData({
+            hours,
+            amount,
+            meeting_date: meetingInfo.date,
+            meeting_time: meetingTimeFormatted,
+            time_slot: slotLabel,
+            meeting_location: meetingInfo.location
+        });
+
+        setShowBookingModal(false);
+        setShowPaymentModal(true);
+    };
+
+    const handlePaymentSuccess = async (paymentResult) => {
+        if (!pendingBookingData || !currentUser) return;
+        setBookingStatus('loading');
+
+        const boy_id = currentUser.role === 'boy' ? currentUser.id : profile.id;
+        const girl_id = currentUser.role === 'girl' ? currentUser.id : profile.id;
 
         try {
             const token = localStorage.getItem('token');
@@ -505,13 +523,16 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                 body: JSON.stringify({
                     boy_id,
                     girl_id,
-                    hours,
-                    amount,
-                    meeting_date: meetingInfo.date,
-                    meeting_time: meetingTimeFormatted,
-                    time_slot: slotLabel,
-                    meeting_location: meetingInfo.location,
-                    sender_id: currentUser.id
+                    hours: pendingBookingData.hours,
+                    amount: pendingBookingData.amount,
+                    meeting_date: pendingBookingData.meeting_date,
+                    meeting_time: pendingBookingData.meeting_time,
+                    time_slot: pendingBookingData.time_slot,
+                    meeting_location: pendingBookingData.meeting_location,
+                    sender_id: currentUser.id,
+                    payment_id: paymentResult.payment_id,
+                    payment_status: 'escrow_held',
+                    payment_method: paymentResult.payment_method
                 })
             });
 
@@ -520,11 +541,10 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                 socket.emit("send_booking_notification", {
                     receiver_id: profile.id,
                     sender_name: currentUser.name,
-                    hours: hours,
-                    amount: amount
+                    hours: pendingBookingData.hours,
+                    amount: pendingBookingData.amount
                 });
-                setShowBookingModal(false);
-                setTimeout(() => setBookingStatus(null), 3000);
+                setTimeout(() => setBookingStatus(null), 3500);
             } else {
                 const errData = await response.json().catch(() => ({}));
                 setBookingStatus(null);
@@ -534,6 +554,10 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
             setBookingStatus(null);
             alert("Network error. Please check your connection and try again.");
         }
+    };
+
+    const handleBookingSubmit = () => {
+        handleOpenPaymentCheckout();
     };
 
 
@@ -1512,6 +1536,16 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                     </div>
                 </div>
             )}
+
+            {/* Razorpay & Escrow Payment Checkout Modal */}
+            <PaymentModal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                bookingData={pendingBookingData}
+                companion={profile}
+                currentUser={currentUser}
+                onPaymentSuccess={handlePaymentSuccess}
+            />
         </div>
     );
 }

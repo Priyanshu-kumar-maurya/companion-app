@@ -3,7 +3,8 @@ import { PAGES } from '../../App';
 import SettingsModal from '../shared/SettingsModal';
 import SOSButton from '../shared/SOSButton';
 import InstagramPostModal from '../shared/InstagramPostModal';
-import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart } from "react-icons/fi";
+import InvoiceModal from '../shared/InvoiceModal';
+import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart, FiFileText } from "react-icons/fi";
 import imageCompression from 'browser-image-compression';
 
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
@@ -18,6 +19,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
     const [dashboardTab, setDashboardTab] = useState('posts'); // 'posts' | 'favorites'
     const [favoritesList, setFavoritesList] = useState([]);
+    const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
 
     const [activeStatModal, setActiveStatModal] = useState(null);
     const [bookingFilter, setBookingFilter] = useState('all');
@@ -774,7 +776,19 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                                                 </button>
                                                             </>
                                                         )}
-                                                        {booking.status === 'completed' && <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10 flex items-center gap-1"><FiCheckCircle size={12} /> Completed</span>}
+                                                        {booking.status === 'completed' && (
+                                                            <div className="flex items-center gap-2">
+                                                                <button
+                                                                    onClick={() => setInvoiceModalBooking(booking)}
+                                                                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-xs font-bold border border-white/10 transition flex items-center gap-1.5"
+                                                                >
+                                                                    <FiFileText size={13} className="text-pink-400" /> Invoice 📄
+                                                                </button>
+                                                                <span className="text-green-400 text-xs font-bold border border-green-400/20 px-3 py-1.5 rounded-lg bg-green-400/10 flex items-center gap-1">
+                                                                    <FiCheckCircle size={12} /> Completed
+                                                                </span>
+                                                            </div>
+                                                        )}
                                                         {booking.status === 'rejected' && <span className="text-red-400 text-xs font-bold border border-red-400/20 px-3 py-1.5 rounded-lg bg-red-400/10 flex items-center gap-1"><FiX size={12} /> Canceled</span>}
                                                     </div>
                                                 </div>
@@ -862,6 +876,15 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 </div>
             )}
             <SOSButton user={user} socket={socket} />
+
+            {/* Printable Digital Invoice Receipt Modal */}
+            <InvoiceModal
+                isOpen={!!invoiceModalBooking}
+                onClose={() => setInvoiceModalBooking(null)}
+                booking={invoiceModalBooking}
+                clientName={user?.name}
+                companionName={invoiceModalBooking?.girl_name}
+            />
         </div>
     );
 }

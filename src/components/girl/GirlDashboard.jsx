@@ -3,8 +3,9 @@ import { PAGES } from '../../App';
 import SettingsModal from '../shared/SettingsModal';
 import SOSButton from '../shared/SOSButton';
 import InstagramPostModal from '../shared/InstagramPostModal';
+import GirlWalletTab from './GirlWalletTab';
 import imageCompression from 'browser-image-compression';
-import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin, FiHeart, FiGrid } from "react-icons/fi";
+import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin, FiHeart, FiGrid, FiDollarSign } from "react-icons/fi";
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "No Rating" });
@@ -501,12 +502,12 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     </div>
                 </div>
 
-                {/* ── Tabs Header (Posts vs Saved Favorites) ── */}
+                {/* ── Tabs Header (Posts vs Saved Favorites vs Wallet) ── */}
                 <div className="mb-6 border-t border-white/5 pt-3">
-                    <div className="flex justify-center sm:justify-start gap-2 border-b border-white/10 mb-4">
+                    <div className="flex justify-center sm:justify-start gap-2 border-b border-white/10 mb-4 overflow-x-auto">
                         <button
                             onClick={() => setDashboardTab('posts')}
-                            className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition ${
+                            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
                                 dashboardTab === 'posts'
                                     ? 'border-pink-500 text-pink-400'
                                     : 'border-transparent text-gray-400 hover:text-white'
@@ -515,8 +516,18 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             <FiGrid size={15} /> Posts ({myPosts.length})
                         </button>
                         <button
+                            onClick={() => setDashboardTab('wallet')}
+                            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
+                                dashboardTab === 'wallet'
+                                    ? 'border-emerald-500 text-emerald-400'
+                                    : 'border-transparent text-gray-400 hover:text-white'
+                            }`}
+                        >
+                            <FiDollarSign size={15} /> Earnings & Wallet 💰
+                        </button>
+                        <button
                             onClick={() => setDashboardTab('favorites')}
-                            className={`flex items-center gap-2 py-3 px-6 text-xs font-bold border-b-2 transition ${
+                            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
                                 dashboardTab === 'favorites'
                                     ? 'border-pink-500 text-pink-400'
                                     : 'border-transparent text-gray-400 hover:text-white'
@@ -525,6 +536,11 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             <FiHeart size={15} className={dashboardTab === 'favorites' ? "fill-pink-500 text-pink-500" : ""} /> Saved Favorites ({favoritesList.length})
                         </button>
                     </div>
+
+                    {/* Wallet View */}
+                    {dashboardTab === 'wallet' && (
+                        <GirlWalletTab user={user} />
+                    )}
 
                     {/* Posts View */}
                     {dashboardTab === 'posts' && (
