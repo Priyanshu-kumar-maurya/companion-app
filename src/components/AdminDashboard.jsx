@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiShield, FiUser, FiAlertTriangle, FiCheckCircle, FiLock, FiUnlock, FiSlash, FiTrash2, FiBarChart2, FiPrinter, FiCalendar, FiMail, FiX, FiRefreshCw, FiArrowLeft } from "react-icons/fi";
+import { FiShield, FiUser, FiAlertTriangle, FiCheckCircle, FiLock, FiUnlock, FiSlash, FiTrash2, FiBarChart2, FiPrinter, FiCalendar, FiMail, FiX, FiRefreshCw, FiArrowLeft, FiDollarSign, FiCreditCard, FiSmartphone, FiClock, FiCheck } from "react-icons/fi";
 
-const API = "https://rentgf-and-bf.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+const API = `${API_BASE}/api`;
 
 function AdminDashboard({ user, setPage }) {
     const [stats, setStats] = useState(null);
     const [users, setUsers] = useState([]);
     const [reports, setReports] = useState([]);
+    const [payouts, setPayouts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("users");
     const [activeFilter, setActiveFilter] = useState("all"); // "all" | "girls" | "boys" | "frozen" | "blocked" | "pendingKyc" | "unverified"
@@ -22,16 +24,21 @@ function AdminDashboard({ user, setPage }) {
 
     const fetchAll = async () => {
         try {
-            const [statsRes, usersRes, reportsRes] = await Promise.all([
+            const [statsRes, usersRes, reportsRes, payoutsRes] = await Promise.all([
                 fetch(`${API}/admin/stats`, { headers }),
                 fetch(`${API}/admin/users`, { headers }),
                 fetch(`${API}/admin/reports`, { headers }),
+                fetch(`${API}/admin/payouts`, { headers }).catch(() => ({ ok: false }))
             ]);
             if (statsRes.ok) setStats(await statsRes.json());
             if (usersRes.ok) {
                 const usersData = await usersRes.json();
                 console.log('Admin users loaded:', usersData.length);
                 setUsers(usersData);
+            }
+            if (reportsRes.ok) setReports(await reportsRes.json());
+            if (payoutsRes && payoutsRes.ok) {
+                setPayouts(await payoutsRes.json());
             } else {
                 const errText = await usersRes.text().catch(() => '');
                 console.error('Admin users API failed:', usersRes.status, errText);
@@ -277,6 +284,17 @@ function AdminDashboard({ user, setPage }) {
                     {stats.pendingReports > 0 && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                             {stats.pendingReports}
+                        </span>
+                    )}
+                </button>
+                <button
+                    onClick={() => setActiveTab("payouts")}
+                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition flex items-center gap-1.5 relative ${activeTab === "payouts" ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+                >
+                    <FiDollarSign size={15} /> Payouts & Escrow
+                    {payouts.filter(p => p.status === 'pending').length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                            {payouts.filter(p => p.status === 'pending').length}
                         </span>
                     )}
                 </button>
@@ -690,6 +708,172 @@ function AdminDashboard({ user, setPage }) {
                     </div>
                 </div>
             )}
+
+            {/* ── PAYOUTS & ESCROW TAB ── */}
+            {activeTab === "payouts" && (() => {
+                const pendingPayouts = payouts.filter(p => p.status === 'pending');
+                const pendingAmount = pendingPayouts.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+                const approvedPayouts = payouts.filter(p => p.status === 'approved');
+                const approvedAmount = approvedPayouts.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+
+                const handleProcessPayout = async (id, action) => {
+                    let refId = null;
+                    if (action === 'approve') {
+                        refId = prompt("Enter Bank / UPI Transaction Reference ID (UTR / Txn ID):", `UTR_${Date.now().toString().slice(-8)}`);
+                        if (!refId) return;
+                    } else {
+                        const reason = prompt("Enter reason for payout rejection:");
+                        if (reason === null) return;
+                    }
+
+                    setActionLoading(prev => ({ ...prev, [`payout_${id}`]: true }));
+                    try {
+                        const res = await fetch(`${API}/admin/payouts/${id}/process`, {
+                            method: "POST",
+                            headers,
+                            body: JSON.stringify({
+                                action,
+                                reference_id: refId,
+                                admin_notes: action === 'approve' ? `Approved with Ref: ${refId}` : "Rejected by Admin"
+                            })
+                        });
+                        if (res.ok) {
+                            fetchAll();
+                        } else {
+                            const err = await res.json();
+                            alert(err.error || "Failed to process payout");
+                        }
+                    } catch (e) {
+                        console.error("Payout process error:", e);
+                    } finally {
+                        setActionLoading(prev => ({ ...prev, [`payout_${id}`]: false }));
+                    }
+                };
+
+                return (
+                    <div className="space-y-6 animate-fade-in text-left">
+                        {/* Summary Metrics */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="bg-[#16162A] border border-amber-500/30 rounded-2xl p-4 shadow-lg">
+                                <div className="text-gray-400 text-xs mb-1 flex items-center justify-between">
+                                    <span>Pending Payouts</span>
+                                    <FiClock size={16} className="text-amber-400" />
+                                </div>
+                                <div className="text-2xl font-bold text-amber-400">₹{pendingAmount.toLocaleString()}</div>
+                                <div className="text-[11px] text-gray-500 mt-1">{pendingPayouts.length} requests awaiting transfer</div>
+                            </div>
+
+                            <div className="bg-[#16162A] border border-emerald-500/30 rounded-2xl p-4 shadow-lg">
+                                <div className="text-gray-400 text-xs mb-1 flex items-center justify-between">
+                                    <span>Settled Payouts</span>
+                                    <FiCheckCircle size={16} className="text-emerald-400" />
+                                </div>
+                                <div className="text-2xl font-bold text-emerald-400">₹{approvedAmount.toLocaleString()}</div>
+                                <div className="text-[11px] text-gray-500 mt-1">{approvedPayouts.length} successful transfers</div>
+                            </div>
+
+                            <div className="bg-[#16162A] border border-white/10 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+                                <div className="text-gray-400 text-xs flex items-center justify-between">
+                                    <span>Total Requests</span>
+                                    <FiDollarSign size={16} className="text-pink-400" />
+                                </div>
+                                <div className="text-2xl font-bold text-white">{payouts.length}</div>
+                                <button
+                                    onClick={fetchAll}
+                                    className="w-fit px-3 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-bold text-gray-300 flex items-center gap-1.5 transition"
+                                >
+                                    <FiRefreshCw size={12} /> Refresh Payouts
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Payout Requests List */}
+                        <div className="bg-[#16162A] border border-white/10 rounded-3xl p-6 shadow-xl">
+                            <h3 className="text-base font-bold text-white mb-4">Companion Withdrawal Queue</h3>
+
+                            {payouts.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500 text-xs">
+                                    <FiCreditCard size={32} className="mx-auto mb-2 opacity-40 text-emerald-400" />
+                                    <p className="font-semibold">No payout requests found.</p>
+                                    <p className="text-[11px] text-gray-600 mt-1">When companions submit withdrawal requests, they will show up here for 1-click settlement.</p>
+                                </div>
+                            ) : (
+                                <div className="divide-y divide-white/5">
+                                    {payouts.map((p) => {
+                                        const isPending = p.status === 'pending';
+                                        const isApproved = p.status === 'approved';
+
+                                        return (
+                                            <div key={p.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-white/5 px-3 rounded-2xl transition">
+                                                <div className="flex items-center gap-3.5">
+                                                    {p.profile_pic ? (
+                                                        <img src={p.profile_pic} alt="" className="w-12 h-12 rounded-full object-cover border border-white/15" />
+                                                    ) : (
+                                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-base">
+                                                            {p.user_name?.[0]?.toUpperCase() || "U"}
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-bold text-white text-sm">{p.user_name}</span>
+                                                            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-pink-500/20 text-pink-300">
+                                                                {p.user_role}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{p.user_email}</div>
+                                                        <div className="text-xs text-gray-300 mt-1.5 bg-[#0E0E1C] px-2.5 py-1 rounded-lg border border-white/5 font-mono w-fit">
+                                                            {p.payout_method === 'upi' ? (
+                                                                <span>📱 UPI: <strong>{p.upi_id}</strong></span>
+                                                            ) : (
+                                                                <span>🏦 Bank: <strong>{p.account_holder_name}</strong> | A/C: <strong>{p.account_number}</strong> | IFSC: <strong>{p.ifsc_code}</strong></span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-4 self-end sm:self-center">
+                                                    <div className="text-right">
+                                                        <div className="text-xl font-black text-emerald-400">₹{parseFloat(p.amount).toLocaleString()}</div>
+                                                        <div className="text-[10px] text-gray-500">
+                                                            {new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                                            isPending ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                                                            isApproved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                                            'bg-red-500/20 text-red-400 border border-red-500/30'
+                                                        }`}>
+                                                            {p.status}
+                                                        </span>
+                                                    </div>
+
+                                                    {isPending && (
+                                                        <div className="flex flex-col gap-1.5">
+                                                            <button
+                                                                onClick={() => handleProcessPayout(p.id, 'approve')}
+                                                                disabled={actionLoading[`payout_${p.id}`]}
+                                                                className="px-3.5 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-bold shadow-md hover:opacity-90 transition disabled:opacity-50 flex items-center gap-1"
+                                                            >
+                                                                <FiCheck size={13} /> Approve
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleProcessPayout(p.id, 'reject')}
+                                                                disabled={actionLoading[`payout_${p.id}`]}
+                                                                className="px-3.5 py-1 bg-red-900/30 border border-red-500/30 text-red-400 hover:bg-red-900/50 rounded-xl text-[11px] font-bold transition disabled:opacity-50"
+                                                            >
+                                                                Reject
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ── USER DETAIL MODAL (Redesigned) ── */}
             {selectedUser && (() => {

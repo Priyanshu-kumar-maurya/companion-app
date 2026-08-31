@@ -27,17 +27,38 @@ export default function PaymentModal({
     const platformFee = Math.round(baseAmount * 0.05); // 5% platform trust & safety fee
     const totalAmount = baseAmount + platformFee;
 
-    const handlePayNow = () => {
+    const handlePayNow = async () => {
         setIsProcessing(true);
+        const pid = `pay_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+        const oid = `order_${Date.now().toString(36)}`;
 
-        // Simulate secure Razorpay / Escrow Gateway processing
+        try {
+            const token = localStorage.getItem("token");
+            if (bookingData?.id) {
+                const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+                await fetch(`${API_BASE}/api/payment/verify`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                    },
+                    body: JSON.stringify({
+                        booking_id: bookingData.id,
+                        payment_id: pid,
+                        order_id: oid,
+                        payment_method: paymentMethod,
+                        amount: baseAmount
+                    })
+                });
+            }
+        } catch (err) {
+            console.error("Payment verify backend error:", err);
+        }
+
         setTimeout(() => {
-            const fakePaymentId = `pay_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-            const fakeOrderId = `order_${Date.now().toString(36)}`;
-            
             const paymentResult = {
-                payment_id: fakePaymentId,
-                order_id: fakeOrderId,
+                payment_id: pid,
+                order_id: oid,
                 payment_method: paymentMethod,
                 amount: totalAmount,
                 base_amount: baseAmount,
@@ -53,7 +74,7 @@ export default function PaymentModal({
             if (onPaymentSuccess) {
                 onPaymentSuccess(paymentResult);
             }
-        }, 2000);
+        }, 1200);
     };
 
     return (

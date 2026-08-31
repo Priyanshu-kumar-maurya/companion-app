@@ -126,8 +126,57 @@ router.put('/bookings/:bookingId', authenticateToken, async (req, res) => {
             "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
             [status, bookingId]
         );
+
+        // ─── AUTO ESCROW ENGINE ───
+        if (status === 'completed' && booking.payment_status === 'escrow_held') {
+            const companionEarnings = parseFloat(booking.companion_earnings) || parseFloat(booking.amount) || 1000;
+            await pool.query("UPDATE bookings SET payment_status = 'escrow_released' WHERE id = $1", [bookingId]);
+            await pool.query(
+                `INSERT INTO wallet_balances (user_id, available_balance, pending_escrow, total_withdrawn, total_earned)
+                 VALUES ($1, $2, 0, 0, $2)
+                 ON CONFLICT (user_id) DO UPDATE 
+                 SET pending_escrow = GREATEST(0, wallet_balances.pending_escrow - $2),
+                     available_balance = wallet_balances.available_balance + $2,
+                     total_earned = wallet_balances.total_earned + $2,
+                     updated_at = NOW()`,
+                [booking.girl_id, companionEarnings]
+            );
+            await pool.query(
+                `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
+                 VALUES ($1, $2, 'escrow_release', $3, $4, $5, 'completed', 'Escrow Release')`,
+                [
+                    booking.girl_id,
+                    bookingId,
+                    companionEarnings,
+                    `Session Payout (Booking #${bookingId})`,
+                    `Date session completed. Escrow released to available wallet balance.`,
+                    booking.payment_method || 'Escrow Release'
+                ]
+            );
+        } else if ((status === 'rejected' || status === 'cancelled') && booking.payment_status === 'escrow_held') {
+            const companionEarnings = parseFloat(booking.companion_earnings) || parseFloat(booking.amount) || 1000;
+            await pool.query("UPDATE bookings SET payment_status = 'escrow_refunded' WHERE id = $1", [bookingId]);
+            await pool.query(
+                "UPDATE wallet_balances SET pending_escrow = GREATEST(0, pending_escrow - $1), updated_at = NOW() WHERE user_id = $2",
+                [companionEarnings, booking.girl_id]
+            );
+            await pool.query(
+                `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
+                 VALUES ($1, $2, 'refund', $3, $4, $5, 'completed', 'Auto Refund')`,
+                [
+                    booking.boy_id,
+                    bookingId,
+                    companionEarnings,
+                    `Refund for Booking #${bookingId}`,
+                    `Booking was not accepted. Escrow refunded to client payment source.`,
+                    booking.payment_method || 'Auto Refund'
+                ]
+            );
+        }
+
         res.status(200).json(updatedBooking.rows[0]);
     } catch (err) {
+        console.error("Update booking status error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
@@ -198,6 +247,29 @@ router.post('/bookings/:bookingId/cancel', authenticateToken, async (req, res) =
             "UPDATE bookings SET status = 'rejected', cancellation_reason = $1, canceled_by = $2 WHERE id = $3 RETURNING *",
             [reason || "No reason specified", canceled_by, bookingId]
         );
+
+        // Auto Refund Escrow
+        if (booking.payment_status === 'escrow_held') {
+            const companionEarnings = parseFloat(booking.companion_earnings) || parseFloat(booking.amount) || 1000;
+            await pool.query("UPDATE bookings SET payment_status = 'escrow_refunded' WHERE id = $1", [bookingId]);
+            await pool.query(
+                "UPDATE wallet_balances SET pending_escrow = GREATEST(0, pending_escrow - $1), updated_at = NOW() WHERE user_id = $2",
+                [companionEarnings, booking.girl_id]
+            );
+            await pool.query(
+                `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
+                 VALUES ($1, $2, 'refund', $3, $4, $5, 'completed', 'Auto Refund')`,
+                [
+                    booking.boy_id,
+                    bookingId,
+                    companionEarnings,
+                    `Refund for Booking #${bookingId}`,
+                    `Booking was canceled. Funds automatically refunded to original payment method.`,
+                    booking.payment_method || 'Auto Refund'
+                ]
+            );
+        }
+
         res.status(200).json(updated.rows[0]);
     } catch (err) {
         console.error("Cancel booking error:", err);

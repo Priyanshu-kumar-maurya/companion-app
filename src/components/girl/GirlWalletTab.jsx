@@ -1,11 +1,14 @@
-import React, { useState } from "react";
-import { FiDollarSign, FiLock, FiTrendingUp, FiArrowUpRight, FiArrowDownLeft, FiClock, FiCreditCard, FiSmartphone, FiX, FiCheck } from "react-icons/fi";
+import React, { useState, useEffect } from "react";
+import { FiDollarSign, FiLock, FiTrendingUp, FiArrowUpRight, FiArrowDownLeft, FiClock, FiCreditCard, FiSmartphone, FiX, FiCheck, FiRefreshCw } from "react-icons/fi";
+
+const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
 
 export default function GirlWalletTab({ user }) {
-    const [availableBalance, setAvailableBalance] = useState(18500);
-    const [escrowPending] = useState(4200);
-    const [totalEarned] = useState(52800);
-    const [totalWithdrawn, setTotalWithdrawn] = useState(30100);
+    const [availableBalance, setAvailableBalance] = useState(0);
+    const [escrowPending, setEscrowPending] = useState(0);
+    const [totalEarned, setTotalEarned] = useState(0);
+    const [totalWithdrawn, setTotalWithdrawn] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
 
     const [filterType, setFilterType] = useState("all"); // 'all' | 'escrow' | 'withdrawals'
     const [showWithdrawModal, setShowWithdrawModal] = useState(false);
@@ -17,95 +20,96 @@ export default function GirlWalletTab({ user }) {
     const [ifscCode, setIfscCode] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
-    // Simulated Transactions
-    const [transactions, setTransactions] = useState([
-        {
-            id: "tx_90123",
-            booking_id: "BK-8841",
-            type: "escrow_credit",
-            title: "Session Payout (Client: Rahul S.)",
-            amount: 2550,
-            status: "completed",
-            date: "Today, 4:30 PM",
-            method: "Escrow Release"
-        },
-        {
-            id: "tx_90119",
-            booking_id: "BK-8839",
-            type: "escrow_pending",
-            title: "Upcoming Session Escrow Hold",
-            amount: 4200,
-            status: "in_escrow",
-            date: "Tomorrow, 6:00 PM",
-            method: "Held in Escrow 🔒"
-        },
-        {
-            id: "tx_90105",
-            booking_id: null,
-            type: "withdrawal",
-            title: "Payout to UPI (priya@okicici)",
-            amount: 5000,
-            status: "completed",
-            date: "26 Aug 2026",
-            method: "Instant UPI"
-        },
-        {
-            id: "tx_90098",
-            booking_id: "BK-8812",
-            type: "escrow_credit",
-            title: "Session Payout (Client: Aman K.)",
-            amount: 3400,
-            status: "completed",
-            date: "24 Aug 2026",
-            method: "Escrow Release"
-        },
-        {
-            id: "tx_90074",
-            booking_id: null,
-            type: "withdrawal",
-            title: "Direct Bank Transfer (HDFC ***4891)",
-            amount: 15000,
-            status: "completed",
-            date: "20 Aug 2026",
-            method: "NEFT / IMPS"
+    const [transactions, setTransactions] = useState([]);
+
+    const fetchWalletData = async () => {
+        if (!user?.id) return;
+        setIsLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+
+            // Fetch balance
+            const balRes = await fetch(`${API_BASE}/api/wallet/${user.id}`, { headers });
+            if (balRes.ok) {
+                const balData = await balRes.json();
+                setAvailableBalance(balData.available_balance || 0);
+                setEscrowPending(balData.pending_escrow || 0);
+                setTotalEarned(balData.total_earned || 0);
+                setTotalWithdrawn(balData.total_withdrawn || 0);
+            }
+
+            // Fetch transactions
+            const txRes = await fetch(`${API_BASE}/api/wallet/transactions/${user.id}`, { headers });
+            if (txRes.ok) {
+                const txData = await txRes.json();
+                setTransactions(txData || []);
+            }
+        } catch (err) {
+            console.error("Fetch wallet error:", err);
+        } finally {
+            setIsLoading(false);
         }
-    ]);
+    };
 
-    const handleWithdrawSubmit = (e) => {
+    useEffect(() => {
+        fetchWalletData();
+    }, [user?.id]);
+
+    const handleWithdrawSubmit = async (e) => {
         e.preventDefault();
         const amt = parseFloat(withdrawAmount);
-        if (!amt || amt <= 0 || amt > availableBalance) {
-            alert("Please enter a valid withdrawal amount within your available balance.");
+        if (!amt || amt < 500) {
+            setErrorMessage("Minimum withdrawal amount is ₹500.");
+            return;
+        }
+        if (amt > availableBalance) {
+            setErrorMessage(`Insufficient balance. You have ₹${availableBalance.toLocaleString()} available.`);
             return;
         }
 
         setIsSubmitting(true);
-        setTimeout(() => {
-            const newTx = {
-                id: `tx_${Date.now().toString().slice(-5)}`,
-                booking_id: null,
-                type: "withdrawal",
-                title: withdrawMethod === "upi" ? `Payout to UPI (${upiId})` : `Bank Payout (${accountHolder})`,
-                amount: amt,
-                status: "completed",
-                date: "Just now",
-                method: withdrawMethod === "upi" ? "Instant UPI" : "Bank IMPS"
-            };
+        setErrorMessage("");
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/wallet/payout-request`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token ? { "Authorization": `Bearer ${token}` } : {})
+                },
+                body: JSON.stringify({
+                    amount: amt,
+                    payout_method: withdrawMethod,
+                    upi_id: withdrawMethod === "upi" ? upiId : undefined,
+                    account_holder_name: withdrawMethod === "bank" ? accountHolder : undefined,
+                    account_number: withdrawMethod === "bank" ? accountNumber : undefined,
+                    ifsc_code: withdrawMethod === "bank" ? ifscCode : undefined
+                })
+            });
 
-            setTransactions([newTx, ...transactions]);
-            setAvailableBalance(prev => prev - amt);
-            setTotalWithdrawn(prev => prev + amt);
+            const data = await res.json();
+            if (res.ok) {
+                setAvailableBalance(prev => Math.max(0, prev - amt));
+                setShowWithdrawModal(false);
+                setWithdrawAmount("");
+                setSuccessMessage(data.message || `🎉 Payout of ₹${amt.toLocaleString()} submitted!`);
+                fetchWalletData();
+                setTimeout(() => setSuccessMessage(""), 6000);
+            } else {
+                setErrorMessage(data.error || "Failed to submit withdrawal request.");
+            }
+        } catch (err) {
+            setErrorMessage("Network error. Please try again.");
+        } finally {
             setIsSubmitting(false);
-            setShowWithdrawModal(false);
-            setWithdrawAmount("");
-            setSuccessMessage(`🎉 Payout of ₹${amt.toLocaleString()} processed successfully to your ${withdrawMethod.toUpperCase()}!`);
-            setTimeout(() => setSuccessMessage(""), 5000);
-        }, 1500);
+        }
     };
 
     const filteredTransactions = transactions.filter(t => {
-        if (filterType === "escrow") return t.type.startsWith("escrow");
+        if (filterType === "escrow") return t.type && (t.type.includes("escrow") || t.type.includes("hold"));
         if (filterType === "withdrawals") return t.type === "withdrawal";
         return true;
     });
@@ -176,7 +180,16 @@ export default function GirlWalletTab({ user }) {
             <div className="bg-[#16162A] border border-white/10 rounded-3xl p-6 shadow-xl">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
                     <div>
-                        <h3 className="text-lg font-bold text-white">Wallet Activity & History</h3>
+                        <div className="flex items-center gap-2">
+                            <h3 className="text-lg font-bold text-white">Wallet Activity & History</h3>
+                            <button
+                                onClick={fetchWalletData}
+                                title="Refresh Balance & History"
+                                className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition"
+                            >
+                                <FiRefreshCw size={13} className={isLoading ? "animate-spin text-pink-400" : ""} />
+                            </button>
+                        </div>
                         <p className="text-xs text-gray-400">Track your completed date payouts and withdrawals</p>
                     </div>
 
@@ -210,56 +223,64 @@ export default function GirlWalletTab({ user }) {
                 </div>
 
                 {/* Transactions Table / List */}
-                <div className="divide-y divide-white/5">
-                    {filteredTransactions.map((tx) => {
-                        const isCredit = tx.type === "escrow_credit" || tx.type === "escrow_pending";
-                        const isInEscrow = tx.status === "in_escrow";
+                {filteredTransactions.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500 text-xs">
+                        <FiClock size={28} className="mx-auto mb-2 opacity-40 text-purple-400" />
+                        <p className="font-semibold">No transactions found.</p>
+                        <p className="text-[11px] text-gray-600 mt-1">When bookings are completed or payouts are requested, they will appear here.</p>
+                    </div>
+                ) : (
+                    <div className="divide-y divide-white/5">
+                        {filteredTransactions.map((tx) => {
+                            const isCredit = tx.type === "escrow_credit" || tx.type === "escrow_release" || tx.type === "escrow_hold";
+                            const isInEscrow = tx.status === "in_escrow";
 
-                        return (
-                            <div key={tx.id} className="py-3.5 flex items-center justify-between hover:bg-white/5 px-2 rounded-2xl transition">
-                                <div className="flex items-center gap-3.5">
-                                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-base ${
-                                        isInEscrow
-                                            ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
-                                            : isCredit
-                                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                                : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                    }`}>
-                                        {isInEscrow ? <FiLock size={18} /> : isCredit ? <FiArrowDownLeft size={18} /> : <FiArrowUpRight size={18} />}
-                                    </div>
+                            return (
+                                <div key={tx.id} className="py-3.5 flex items-center justify-between hover:bg-white/5 px-2 rounded-2xl transition">
+                                    <div className="flex items-center gap-3.5">
+                                        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-base ${
+                                            isInEscrow
+                                                ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                                                : isCredit
+                                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                                    : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                        }`}>
+                                            {isInEscrow ? <FiLock size={18} /> : isCredit ? <FiArrowDownLeft size={18} /> : <FiArrowUpRight size={18} />}
+                                        </div>
 
-                                    <div>
-                                        <div className="font-bold text-white text-xs sm:text-sm">{tx.title}</div>
-                                        <div className="text-[10px] text-gray-400 flex items-center gap-2 mt-0.5">
-                                            <span>{tx.date}</span>
-                                            <span>•</span>
-                                            <span className="font-mono">{tx.id}</span>
-                                            <span>•</span>
-                                            <span>{tx.method}</span>
+                                        <div>
+                                            <div className="font-bold text-white text-xs sm:text-sm">{tx.title}</div>
+                                            <div className="text-[10px] text-gray-400 flex items-center gap-2 mt-0.5">
+                                                <span>{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : (tx.date || "Recent")}</span>
+                                                <span>•</span>
+                                                <span className="font-mono">#{tx.id}</span>
+                                                <span>•</span>
+                                                <span>{tx.method || "Escrow"}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="text-right">
-                                    <div className={`text-sm sm:text-base font-extrabold ${
-                                        isInEscrow ? "text-purple-400" : isCredit ? "text-emerald-400" : "text-white"
-                                    }`}>
-                                        {isCredit ? "+" : "-"}₹{tx.amount.toLocaleString()}
+                                    <div className="text-right">
+                                        <div className={`text-sm sm:text-base font-extrabold ${
+                                            isInEscrow ? "text-purple-400" : isCredit ? "text-emerald-400" : "text-white"
+                                        }`}>
+                                            {isCredit ? "+" : "-"}₹{parseFloat(tx.amount || 0).toLocaleString()}
+                                        </div>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                            isInEscrow
+                                                ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                                                : tx.status === "completed"
+                                                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                                                    : "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                                        }`}>
+                                            {isInEscrow ? "In Escrow" : tx.status}
+                                        </span>
                                     </div>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                                        isInEscrow
-                                            ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
-                                            : tx.status === "completed"
-                                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                                                : "bg-red-500/20 text-red-400"
-                                    }`}>
-                                        {isInEscrow ? "In Escrow" : tx.status}
-                                    </span>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* ─── WITHDRAWAL MODAL ─── */}
@@ -277,6 +298,12 @@ export default function GirlWalletTab({ user }) {
                         <p className="text-xs text-gray-400 mb-4">
                             Available to withdraw: <strong className="text-emerald-400">₹{availableBalance.toLocaleString()}</strong>
                         </p>
+
+                        {errorMessage && (
+                            <div className="mb-4 p-3 rounded-xl bg-red-900/40 border border-red-500/50 text-red-300 text-xs font-semibold">
+                                {errorMessage}
+                            </div>
+                        )}
 
                         <form onSubmit={handleWithdrawSubmit} className="space-y-4">
                             {/* Payout Method */}

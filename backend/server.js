@@ -20,6 +20,7 @@ const sosRoutes = require('./routes/sosRoutes');
 const storyRoutes = require('./routes/storyRoutes');
 const { router: pushRoutes } = require('./routes/pushRoutes');
 const webrtcRoutes = require('./routes/webrtcRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -134,6 +135,7 @@ app.use('/api', sosRoutes);
 app.use('/api', storyRoutes);
 app.use('/api', pushRoutes);
 app.use('/api', webrtcRoutes);
+app.use('/api', paymentRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────
 app.get('/', (req, res) => {
