@@ -184,8 +184,8 @@ router.put('/bookings/:bookingId', authenticateToken, async (req, res) => {
 // ─── SUBMIT REVIEW — AUTH REQUIRED ───────────────────────────
 router.post('/reviews', authenticateToken, moderateContent, async (req, res) => {
     try {
-        const { companion_id, rating, comment } = req.body;
-        const reviewer_id = req.user.id; // Always use authenticated user's ID
+        const { companion_id, rating, comment, compliment_tags, booking_id } = req.body;
+        const reviewer_id = req.user.id;
 
         if (!companion_id || !rating) {
             return res.status(400).json({ error: "companion_id and rating are required." });
@@ -196,36 +196,150 @@ router.post('/reviews', authenticateToken, moderateContent, async (req, res) => 
             return res.status(400).json({ error: "Rating must be between 1 and 5." });
         }
 
+        // Prevent self-review
+        if (parseInt(reviewer_id) === parseInt(companion_id)) {
+            return res.status(400).json({ error: "You cannot review your own profile." });
+        }
+
+        // Check if there was a completed booking between reviewer and companion
+        let isVerifiedBooking = false;
+        if (booking_id) {
+            const bCheck = await pool.query(
+                "SELECT id FROM bookings WHERE id = $1 AND boy_id = $2 AND girl_id = $3",
+                [booking_id, reviewer_id, companion_id]
+            );
+            if (bCheck.rows.length > 0) {
+                isVerifiedBooking = true;
+            }
+        } else {
+            const anyCompletedBooking = await pool.query(
+                "SELECT id FROM bookings WHERE (boy_id = $1 AND girl_id = $2) AND status = 'completed' LIMIT 1",
+                [reviewer_id, companion_id]
+            );
+            if (anyCompletedBooking.rows.length > 0) {
+                isVerifiedBooking = true;
+            }
+        }
+
         // Sanitize comment
-        const safeComment = comment ? comment.replace(/<[^>]*>/g, '').trim().slice(0, 500) : null;
+        const safeComment = comment ? comment.replace(/<[^>]*>/g, '').trim().slice(0, 800) : null;
+        const tags = Array.isArray(compliment_tags) ? compliment_tags.slice(0, 6) : [];
 
         const newReview = await pool.query(
-            "INSERT INTO reviews (reviewer_id, companion_id, rating, comment) VALUES ($1, $2, $3, $4) RETURNING *",
-            [reviewer_id, companion_id, safeRating, safeComment]
+            `INSERT INTO reviews (reviewer_id, companion_id, rating, comment, compliment_tags, booking_id, is_verified_booking) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+            [reviewer_id, companion_id, safeRating, safeComment, tags, booking_id || null, isVerifiedBooking]
         );
-        res.status(201).json(newReview.rows[0]);
+
+        // Fetch reviewer info for clean return
+        const reviewerInfo = await pool.query("SELECT name, profile_pic FROM users WHERE id = $1", [reviewer_id]);
+        const resultReview = {
+            ...newReview.rows[0],
+            reviewer_name: reviewerInfo.rows[0]?.name || "Anonymous",
+            reviewer_pic: reviewerInfo.rows[0]?.profile_pic || null
+        };
+
+        res.status(201).json(resultReview);
     } catch (err) {
+        console.error("Submit review error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });
 
-// ─── GET REVIEWS — Public ─────────────────────────────────────
+// ─── GET REVIEWS WITH STAR BREAKDOWN & COMPLIMENTS — Public ───
 router.get('/reviews/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const reviews = await pool.query(`
-            SELECT r.*, u.name as reviewer_name, u.profile_pic as reviewer_pic
-            FROM reviews r JOIN users u ON r.reviewer_id = u.id
-            WHERE r.companion_id = $1 ORDER BY r.created_at DESC
-        `, [userId]);
-        const avgResult = await pool.query("SELECT ROUND(AVG(rating), 1) as avg_rating FROM reviews WHERE companion_id = $1", [userId]);
+        const currentUserId = req.query.currentUserId;
+
+        const reviewsRes = await pool.query(`
+            SELECT r.*, 
+                   u.name as reviewer_name, 
+                   u.profile_pic as reviewer_pic,
+                   COALESCE(r.helpful_count, 0) as helpful_count,
+                   CASE 
+                       WHEN $2::integer IS NOT NULL AND EXISTS(SELECT 1 FROM review_helpful_votes WHERE review_id = r.id AND user_id = $2::integer) 
+                       THEN true ELSE false 
+                   END as has_voted_helpful
+            FROM reviews r 
+            JOIN users u ON r.reviewer_id = u.id
+            WHERE r.companion_id = $1 
+            ORDER BY r.created_at DESC
+        `, [userId, currentUserId ? parseInt(currentUserId) : null]);
+
+        const avgResult = await pool.query(
+            "SELECT ROUND(AVG(rating), 1) as avg_rating, COUNT(id) as total_count FROM reviews WHERE companion_id = $1",
+            [userId]
+        );
+
+        const totalReviews = parseInt(avgResult.rows[0]?.total_count || 0);
+        const avgRating = parseFloat(avgResult.rows[0]?.avg_rating || 0);
+
+        // Calculate 5★, 4★, 3★, 2★, 1★ breakdown
+        const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        const complimentsMap = {};
+
+        reviewsRes.rows.forEach(r => {
+            if (breakdown[r.rating] !== undefined) {
+                breakdown[r.rating]++;
+            }
+            if (Array.isArray(r.compliment_tags)) {
+                r.compliment_tags.forEach(tag => {
+                    complimentsMap[tag] = (complimentsMap[tag] || 0) + 1;
+                });
+            }
+        });
+
+        // Sort top compliments by count
+        const topCompliments = Object.entries(complimentsMap)
+            .map(([tag, count]) => ({ tag, count }))
+            .sort((a, b) => b.count - a.count);
+
         res.status(200).json({
-            reviews: reviews.rows,
-            avgRating: avgResult.rows[0].avg_rating || 0,
-            totalReviews: reviews.rows.length
+            reviews: reviewsRes.rows,
+            avgRating,
+            totalReviews,
+            breakdown,
+            topCompliments
         });
     } catch (err) {
+        console.error("Get reviews error:", err);
         res.status(500).json({ error: "Server error" });
+    }
+});
+
+// ─── TOGGLE HELPFUL VOTE ON REVIEW ─────────────────────────────
+router.post('/reviews/:id/helpful', authenticateToken, async (req, res) => {
+    try {
+        const reviewId = req.params.id;
+        const userId = req.user.id;
+
+        const voteCheck = await pool.query(
+            "SELECT id FROM review_helpful_votes WHERE review_id = $1 AND user_id = $2",
+            [reviewId, userId]
+        );
+
+        let hasVoted = false;
+        if (voteCheck.rows.length > 0) {
+            // Remove vote
+            await pool.query("DELETE FROM review_helpful_votes WHERE id = $1", [voteCheck.rows[0].id]);
+            await pool.query("UPDATE reviews SET helpful_count = GREATEST(0, COALESCE(helpful_count, 0) - 1) WHERE id = $1", [reviewId]);
+            hasVoted = false;
+        } else {
+            // Add vote
+            await pool.query("INSERT INTO review_helpful_votes (review_id, user_id) VALUES ($1, $2)", [reviewId, userId]);
+            await pool.query("UPDATE reviews SET helpful_count = COALESCE(helpful_count, 0) + 1 WHERE id = $1", [reviewId]);
+            hasVoted = true;
+        }
+
+        const updatedReview = await pool.query("SELECT helpful_count FROM reviews WHERE id = $1", [reviewId]);
+        res.status(200).json({
+            hasVoted,
+            helpful_count: updatedReview.rows[0]?.helpful_count || 0
+        });
+    } catch (err) {
+        console.error("Helpful vote error:", err);
+        res.status(500).json({ error: "Failed to update helpful vote" });
     }
 });
 

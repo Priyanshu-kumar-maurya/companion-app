@@ -69,6 +69,10 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'upi';");
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 0;");
         await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS companion_earnings DECIMAL(10, 2) DEFAULT 0;");
+        await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS booking_id INTEGER REFERENCES bookings(id) ON DELETE SET NULL;");
+        await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS compliment_tags TEXT[];");
+        await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_verified_booking BOOLEAN DEFAULT true;");
+        await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS helpful_count INTEGER DEFAULT 0;");
         
         // --- Username Column Migration & Unique Constraint ---
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");
@@ -301,9 +305,38 @@ const connectDB = async () => {
         await pool.query("CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user ON wallet_transactions(user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_payout_requests_user ON payout_requests(user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_payout_requests_status ON payout_requests(status);");
+        await pool.query(`CREATE TABLE IF NOT EXISTS review_helpful_votes (
+            id SERIAL PRIMARY KEY,
+            review_id INTEGER REFERENCES reviews(id) ON DELETE CASCADE,
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(review_id, user_id)
+        );`);
+
+        // ─── Performance Indexes ───────────────────────────────────
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_favorites_companion ON favorites(companion_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_stories_user ON stories(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_stories_expires ON stories(expires_at);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_caller ON call_history(caller_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_call_history_receiver ON call_history(receiver_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_users_kyc ON users(kyc_status);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_boy ON bookings(boy_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_girl ON bookings(girl_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_bookings_payment_status ON bookings(payment_status);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_wallet_balances_user ON wallet_balances(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_wallet_transactions_user ON wallet_transactions(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_payout_requests_user ON payout_requests(user_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_payout_requests_status ON payout_requests(status);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_follows_follower ON follows(follower_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_follows_following ON follows(following_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_reviews_companion ON reviews(companion_id);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_reviews_helpful ON review_helpful_votes(review_id, user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_reports_reported ON reports(reported_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id);");

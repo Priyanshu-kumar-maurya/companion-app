@@ -4,6 +4,7 @@ import SettingsModal from '../shared/SettingsModal';
 import SOSButton from '../shared/SOSButton';
 import InstagramPostModal from '../shared/InstagramPostModal';
 import InvoiceModal from '../shared/InvoiceModal';
+import ReviewModal from '../shared/ReviewModal';
 import GirlWalletTab from '../girl/GirlWalletTab';
 import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart, FiFileText, FiDollarSign } from "react-icons/fi";
 import imageCompression from 'browser-image-compression';
@@ -21,6 +22,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [dashboardTab, setDashboardTab] = useState('posts'); // 'posts' | 'favorites'
     const [favoritesList, setFavoritesList] = useState([]);
     const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
+    const [reviewModalBooking, setReviewModalBooking] = useState(null);
 
     const [activeStatModal, setActiveStatModal] = useState(null);
     const [bookingFilter, setBookingFilter] = useState('all');
@@ -793,7 +795,13 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                                             </>
                                                         )}
                                                         {booking.status === 'completed' && (
-                                                            <div className="flex items-center gap-2">
+                                                            <div className="flex items-center gap-2 flex-wrap justify-end">
+                                                                <button
+                                                                    onClick={() => setReviewModalBooking(booking)}
+                                                                    className="px-3 py-1.5 bg-gradient-to-r from-amber-500/20 to-pink-500/20 hover:from-amber-500/30 hover:to-pink-500/30 text-amber-300 rounded-lg text-xs font-bold border border-amber-500/30 transition flex items-center gap-1.5 shadow-sm"
+                                                                >
+                                                                    <FiStar size={13} className="fill-amber-400 text-amber-400" /> Rate / Review ⭐
+                                                                </button>
                                                                 <button
                                                                     onClick={() => setInvoiceModalBooking(booking)}
                                                                     className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-xs font-bold border border-white/10 transition flex items-center gap-1.5"
@@ -901,6 +909,23 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                 clientName={user?.name}
                 companionName={invoiceModalBooking?.girl_name}
             />
+
+            {/* Leave Review Modal */}
+            {reviewModalBooking && (
+                <ReviewModal
+                    isOpen={!!reviewModalBooking}
+                    onClose={() => setReviewModalBooking(null)}
+                    companion={{
+                        id: reviewModalBooking.girl_id,
+                        name: reviewModalBooking.girl_name,
+                        profile_pic: reviewModalBooking.girl_pic
+                    }}
+                    bookingId={reviewModalBooking.id}
+                    onReviewSubmitted={() => {
+                        alert("🎉 Thank you! Your verified review and rating have been posted.");
+                    }}
+                />
+            )}
         </div>
     );
 }
