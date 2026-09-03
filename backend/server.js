@@ -108,6 +108,11 @@ app.use((req, res, next) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('X-DNS-Prefetch-Control', 'off');
+    res.setHeader('X-Download-Options', 'noopen');
+    res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
     next();
 });
 
@@ -139,7 +144,7 @@ app.use('/api', paymentRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────
 app.get('/', (req, res) => {
-    res.json({ status: 'ok', message: 'RentGF Backend running.' });
+    res.json({ status: 'ok', message: 'Coffeely Secure Backend running.' });
 });
 
 // ─── 404 Handler ─────────────────────────────────────────────
@@ -149,16 +154,20 @@ app.use((req, res) => {
 
 // ─── Global Error Handler ─────────────────────────────────────
 app.use((err, req, res, next) => {
-    // Don't leak stack traces in production
-    console.error("Unhandled error:", err.message);
+    // Suppress sensitive error stack traces
+    console.error("Security/Server Unhandled Error:", err.message);
     if (err.message && err.message.startsWith('CORS')) {
         return res.status(403).json({ error: "CORS: Origin not allowed." });
     }
     res.status(500).json({ error: "Internal server error." });
 });
 
-// ─── Start Server ─────────────────────────────────────────────
+// ─── Start Server with Slowloris & Timeout Protection ─────────
 const PORT = process.env.PORT || 5000;
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
+server.requestTimeout = 30000;
+
 server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🛡️ Coffeely Hardened Server running on port ${PORT}`);
 });

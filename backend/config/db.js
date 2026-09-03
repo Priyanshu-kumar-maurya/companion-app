@@ -74,6 +74,13 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_verified_booking BOOLEAN DEFAULT true;");
         await pool.query("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS helpful_count INTEGER DEFAULT 0;");
         
+        // --- Security & Account Lockout Columns ---
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_login_attempts INTEGER DEFAULT 0;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS failed_otp_attempts INTEGER DEFAULT 0;");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip VARCHAR(60);");
+        await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;");
+        
         // --- Username Column Migration & Unique Constraint ---
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50);");
         const checkNullUsernames = await pool.query("SELECT id, name FROM users WHERE username IS NULL OR username = '';");
