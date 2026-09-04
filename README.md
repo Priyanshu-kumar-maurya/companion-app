@@ -1,238 +1,266 @@
-<div align="center">
+# Coffeely
 
-# ☕ Coffeely — Premium Companion & Social Platform
+> Safe, verified companion booking & social interaction platform built with React, Node.js, Socket.IO, WebRTC, and PostgreSQL.
 
-**India's #1 Safe, Verified & Escrow-Protected Companion Ecosystem**
-*Connect with authentic partners for coffee dates, movies, events, study sessions, and high-quality conversations.*
-
-[![Live Website](https://img.shields.io/badge/🌐_Live_App-coffeely--app.vercel.app-0095f6?style=for-the-badge&logo=vercel&logoColor=white)](https://coffeely-app.vercel.app)
-[![API Server](https://img.shields.io/badge/⚡_API_Server-Render_Live-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://coffeely-backend.onrender.com)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
-[![Security Status](https://img.shields.io/badge/Security-Hardened_HS256_&_Escrow-green.svg?style=for-the-badge&logo=shield)](backend/server.js)
-
-<br />
-
-```
-       _____ ____  ______ ______ ______ ______ ______ _    WW 
-      / ____/ __ \|  ____|  ____|  ____|  ____|  ____| |   __ 
-     | |   | |  | | |__  | |__  | |__  | |__  | |__  | |  |  |
-     | |   | |  | |  __| |  __| |  __| |  __| |  __| | |  |  |
-     | |___| |__| | |    | |    | |____| |____| |____| |__|  |
-      \_____\____/|_|    |_|    |______|______|______|_____/ 
-```
-
-</div>
+[![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-square&logo=vercel)](https://coffeely-app.vercel.app)
+[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://coffeely-backend.onrender.com)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL_Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://neon.tech)
+[![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Node](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 ---
 
-## 🌟 Key Highlights & Production Features
+## Overview
 
-### 🛡️ 1. 100% Escrow Protection Engine & Razorpay Checkout
-- **Guaranteed Safety**: Client booking payments are held safely in 100% Escrow and only released to the companion after session completion.
-- **Multi-Method Gateway**: Supports Instant UPI (GPay, PhonePe, Paytm, BHIM, custom VPA), Debit/Credit Cards, and NetBanking.
-- **Automated Lifecycle**: Auto-releases funds to companion wallet when a date is marked complete, and issues automated 100% refunds upon session cancellation or rejection.
+Coffeely connects users for verified social outings — coffee meetups, movie companions, study sessions, event partners, and high-quality conversations.
 
-### 💰 2. Companion Wallet & Instant Payout System
-- **Real-Time Earnings Overview**: 3 live metric overview cards tracking **Available Balance**, **Locked in Escrow 🔒**, and **Lifetime Earnings 💰**.
-- **Flexible Withdrawal Channels**: 1-click payout requests via **⚡ Instant UPI ID** or **🏦 Direct Bank IMPS/NEFT Transfer** (Min ₹500).
-- **Audit-Ready History**: Complete transaction ledger filtering Escrow Credits, Holds, and Withdrawals.
-
-### 🔒 3. WhatsApp-Style Locked Private Chats & Hidden Ghost Mode
-- **4-Digit PIN Security**: Lock sensitive private conversations behind custom encrypted PIN security.
-- **Secret Ghost Mode**: Hide chats from the conversation feed completely. Reveal hidden chats only by typing your secret PIN in the chat search bar.
-
-### 🗺️ 4. Live Interactive Map View & Proximity Companion Discovery
-- **Geographic Exploration**: Interactive Leaflet + OpenStreetMap discovery view showcasing companions in your area.
-- **Proximity Filters & Distance Calculation**: Haversine distance calculator with custom search radii (5km, 10km, 25km, 50km) and direct 1-tap booking popups.
-
-### 📄 5. Digital PDF & Printable Tax Invoices
-- **Instant Tax Receipts**: Professional booking receipts with Invoice #, itemized rate breakdown, client/companion details, date/location, and digital verification seal.
-- **1-Click Print / Save as PDF**: Seamless `window.print()` integration formatted for standard A4 and PDF downloads.
-
-### 📞 6. WebRTC Peer-to-Peer HD Audio & Video Calling
-- **Zero-Lag Connection**: High-definition WebRTC calling with live ringtones and native incoming/outgoing call overlays.
-- **In-Call Controls**: Flip front/rear camera, toggle mute/unmute, disable video feed, and real-time duration counter.
-
-### 💬 7. Real-Time Socket.io Chat Engine
-- **Instant Messaging**: Real-time bi-directional chat with live typing indicators (`typing...`) and online/offline status pulses.
-- **Rich Media & Controls**: Photo sharing with full screen lightbox, star favorite messages, block user, report abuse, and disapearing message settings.
-
-### 🚨 8. SOS Emergency Safety System
-- **One-Tap Emergency Alert**: Instant emergency trigger sending live GPS latitude/longitude coordinates to trusted contacts and live Admin Monitoring Dashboard.
-- **Trusted Contacts**: Store up to 3 validated emergency phone numbers & email addresses.
-
-### 📅 9. Availability Calendar & Time Slot Scheduler
-- **Time Slot Selection**: Morning (10am-12pm), Afternoon (1pm-3pm), Evening (4pm-6pm), Night (7pm-9pm), Late Night (9pm-11pm).
-- **Double Booking Protection**: Automatic server-side slot locking — disables booked slots with `Booked 🔒` badges.
-
-### 🎭 10. 24-Hour Ephemeral Stories
-- **Daily Highlights**: Share real-time photos and status updates that automatically expire after 24 hours.
-- **Instagram-Style Story Viewer**: 5-second progress bars, tap to skip left/right, press-to-pause, and creator controls.
-
-### 👑 11. Super Admin Control Panel & Payout Settlement Queue
-- **Comprehensive Oversight**: Manage user freeze/unfreeze, platform suspension, report resolution, live SOS alerts, and analytical charts.
-- **1-Click Payout Settlement**: Review companion withdrawal requests and 1-click approve with Bank UTR reference tracking.
+The platform is designed with safety, transparency, and user privacy at its core. It incorporates an automated escrow payment mechanism to hold booking funds until dates conclude, verified client review tags, a one-tap emergency SOS broadcast system, WhatsApp-inspired PIN-locked and hidden private chats, real-time WebRTC audio/video calling, and interactive proximity-based companion discovery on live maps.
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## Table of Contents
 
-### **Frontend**
-- **Framework**: React 19 SPA (Single Page Application)
-- **Styling**: Tailwind CSS (Dark Glassmorphism & Sleek Cyberpunk Aesthetics)
-- **Maps**: Leaflet & React-Leaflet with OpenStreetMap tiles
-- **Icons**: React Icons (`fi`, `fa`, `ai`, `bs`)
-- **Real-time**: `socket.io-client` & WebRTC (`RTCPeerConnection`)
-- **Image Compression**: `browser-image-compression`
-
-### **Backend**
-- **Runtime**: Node.js v18+ & Express.js
-- **Database**: PostgreSQL (Neon Cloud DB) with `pg.Pool` connection pooling
-- **Sockets**: `socket.io` server handling rooms, status, calling, & chat
-- **Email**: Brevo HTTP API (Transaction OTP Email Verification)
-- **Media Cloud**: Cloudinary API
-- **Financials**: Custom Escrow Engine & Razorpay Gateway Integration
-
-### **Security & Shielding**
-- **JWT Protection**: `HS256` strict algorithm verification with auto-expiry
-- **Security Headers**: Helmet.js (`HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Permissions-Policy`)
-- **Input Sanitization**: XSS payload cleaner stripping `<script>`, `javascript:`, and null byte poisoning
-- **Rate Limiting**: Multi-tier IP throttling (Brute-force protection on Auth & API endpoints)
+- [Core Features](#-core-features)
+- [Tech Stack](#-tech-stack)
+- [System Architecture](#-system-architecture)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Frontend Setup](#frontend-setup)
+  - [Backend Setup](#backend-setup)
+  - [Environment Variables](#environment-variables)
+- [API Reference](#-api-reference)
+- [Database Schema](#-database-schema)
+- [Security Model](#-security-model)
+- [License](#-license)
 
 ---
 
-## ⚙️ Local Development Setup
+## 🚀 Core Features
 
-### 1. Clone Repository
-```bash
-git clone https://github.com/Priyanshu-kumar-maurya/companion-app.git
-cd companion-app
+### 1. 🛡️ Escrow Booking & Wallet Ledger
+- **Escrow Guarantee**: When a user books a companion, the session fee is safely held in escrow.
+- **Auto Release & Refunds**: Funds are automatically released into the companion's available wallet once the session is marked completed, or 100% refunded if rejected or canceled.
+- **Companion Withdrawals**: Companions can request instant payouts directly to their UPI ID or Bank Account (IMPS/NEFT) with real-time audit ledger tracking.
+- **Tax Invoices**: Auto-generates downloadable and printable digital PDF receipts with unique Invoice IDs and breakdown details.
+
+### 2. 📞 WebRTC Audio & Video Calling
+- Direct peer-to-peer HD voice and video calling powered by WebRTC and Socket.IO signaling.
+- Native incoming/outgoing call popups with custom audio ringtones, mute/unmute toggles, camera flipping, and real-time duration counters.
+
+### 3. 💬 Real-Time Messaging & Privacy
+- **Instant Messaging**: Real-time Socket.IO chat with live typing indicators, delivery receipts, and online presence.
+- **PIN-Locked Chats**: Protect sensitive conversations behind a custom 4-digit PIN.
+- **Ghost Mode (Hidden Chats)**: Completely conceal private chats from the main inbox list, revealable only by searching `#YOUR_PIN` in the search bar.
+
+### 4. 🗺️ Interactive Proximity Discovery
+- Interactive OpenStreetMap and Leaflet integration.
+- Filter companions by radius (5km, 10km, 25km, 50km) with automatic distance calculation (Haversine formula) and instant profile preview cards.
+
+### 5. ⭐ Reviews & Verified Client Badges
+- Post-session 5-star rating system with aggregate distribution analytics (5★–1★).
+- **Verified Client Tag**: Badges awarded exclusively to clients who completed an actual booked session.
+- Compliment chips (*"Great Listener"*, *"Punctual"*, *"Super Polite"*, *"Fun & Energetic"*).
+- Helpful vote counters on individual reviews.
+
+### 6. 🚨 SOS Emergency System
+- One-tap emergency broadcast sending live GPS coordinates (latitude/longitude) to trusted emergency contacts and the live Admin Safety Console.
+
+### 7. 🎭 24-Hour Stories & Gallery
+- Ephemeral photo and status stories that expire after 24 hours.
+- Instagram-style story viewer with touch-and-hold pause, tap to advance, and progress indicators.
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Technology | Description |
+| :--- | :--- |
+| **React 19** | Modern UI framework with hooks and functional architecture |
+| **Tailwind CSS** | Custom responsive dark glassmorphism styling |
+| **Socket.IO Client** | Bi-directional communication for chats, status, and notifications |
+| **WebSockets / WebRTC** | `RTCPeerConnection` for low-latency peer-to-peer audio & video calls |
+| **Leaflet & OpenStreetMap** | Interactive mapping and proximity searches |
+| **React Icons** | Feather (`fi`), FontAwesome (`fa`), and Bootstrap (`bs`) icon suites |
+| **Browser Image Compression** | Client-side compression before Cloudinary upload |
+
+### Backend
+| Technology | Description |
+| :--- | :--- |
+| **Node.js & Express** | RESTful API server with modular routing |
+| **PostgreSQL (Neon)** | Cloud relational database with connection pooling (`pg.Pool`) |
+| **Socket.IO Server** | Real-time signaling server for messaging, calls, and status |
+| **Brevo HTTP API** | Transactional email delivery for OTP verification and password resets |
+| **Cloudinary** | Cloud storage for profiles, post media, and stories |
+| **Razorpay API** | Integrated payment orders and webhook verification |
+
+---
+
+## 📐 System Architecture
+
+```
+[ Client Browser / PWA (React) ]
+             │
+             ├── HTTP / REST API ──> [ Express.js Backend Server ]
+             │                                   │
+             │                                   ├── PostgreSQL Database (Neon Pool)
+             │                                   ├── Brevo API (Transactional Emails)
+             │                                   ├── Cloudinary (Image Hosting)
+             │                                   └── Razorpay (Escrow Gateways)
+             │
+             ├── WebSocket (Socket.IO) ─> [ Signaling & Chat Rooms ]
+             │
+             └── P2P Audio / Video Stream (WebRTC Mesh) ──> [ Peer Client ]
 ```
 
-### 2. Install Dependencies
-```bash
-# Install Frontend Dependencies
-npm install
+---
 
-# Install Backend Dependencies
-cd backend
-npm install
-```
+## 💻 Getting Started
 
-### 3. Setup Environment Variables (`backend/.env`)
-Create a `.env` file in the `backend/` folder:
+### Prerequisites
+- Node.js (v18.0.0 or higher)
+- npm (v9.0.0 or higher)
+- PostgreSQL database URL (Neon, Supabase, or local instance)
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Priyanshu-kumar-maurya/companion-app.git
+   cd companion-app
+   ```
+
+2. **Install Frontend Dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Install Backend Dependencies:**
+   ```bash
+   cd backend
+   npm install
+   cd ..
+   ```
+
+### Environment Variables
+
+Create a `.env` file in the `backend/` directory with the following configuration:
 
 ```env
+# Server
 PORT=5000
-DATABASE_URL=postgres://user:password@ep-host.neon.tech/neondb?sslmode=require
+
+# Database (PostgreSQL / Neon)
+DATABASE_URL=postgres://your_user:your_password@ep-your-instance.neon.tech/neondb?sslmode=require
+
+# JWT Secret
 JWT_SECRET=your_super_secret_jwt_key_here
 
-# Brevo HTTP Email API
-BREVO_API_KEY=your_brevo_api_key_here
+# Brevo HTTP API (Emails & OTP)
+BREVO_API_KEY=your_brevo_api_key
 EMAIL_USER=noreply@coffeely.com
 EMAIL_FROM_NAME=Coffeely
 
-# Cloudinary Storage
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
+# Cloudinary (Media Uploads)
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-# Razorpay Escrow Gateway
+# Razorpay (Optional - Payments)
 RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+RAZORPAY_KEY_SECRET=your_razorpay_secret
 ```
 
-### 4. Start Local Development Servers
+Create a `.env` file in the root directory for the React frontend (optional for local testing):
+```env
+REACT_APP_API_URL=http://localhost:5000
+```
+
+### Running Locally
+
+Start both servers concurrently or in separate terminals:
+
 ```bash
-# Terminal 1 — Start React Frontend (Port 3000)
+# Terminal 1: Backend Server (runs on port 5000)
+cd backend
 npm start
 
-# Terminal 2 — Start Express Backend (Port 5000)
-cd backend
-node server.js
+# Terminal 2: React Frontend (runs on port 3000)
+npm start
 ```
 
----
-
-## 🗂️ Project Directory Structure
-
-```
-companion-app/
-├── src/                            # React Frontend Source
-│   ├── components/
-│   │   ├── HomePage.jsx            # Landing Page & Featured Companions
-│   │   ├── AdminDashboard.jsx      # Super Admin Panel & Payout Settlement
-│   │   ├── UnifiedLogin.jsx        # Login & Password Recovery
-│   │   ├── UnifiedRegister.jsx     # Registration & OTP Verification
-│   │   ├── NotificationsPage.jsx   # In-App Notification Center
-│   │   ├── Navbar.jsx              # Global Header & Mobile Bottom Nav Bar
-│   │   ├── boy/                    # Boy Dashboard & Invoice Viewer
-│   │   ├── girl/                   # Companion Dashboard & Wallet Hub
-│   │   │   ├── GirlDashboard.jsx   # Companion Profile & Schedule Hub
-│   │   │   └── GirlWalletTab.jsx   # Live Wallet Balance & Withdrawal Hub
-│   │   └── shared/                 # Shared Modules
-│   │       ├── ChatPage.jsx        # WhatsApp-style Real-time Messaging
-│   │       ├── MessagesPage.jsx    # Inbox, Locked & Hidden Chats Manager
-│   │       ├── DetailsPage.jsx     # Companion Profile & Slot Booking
-│   │       ├── FindPage.jsx        # Companion Feed & Filters
-│   │       ├── CompanionMapView.jsx# Leaflet Interactive Proximity Map
-│   │       ├── PaymentModal.jsx    # Razorpay & Escrow Checkout Modal
-│   │       ├── InvoiceModal.jsx    # Digital Tax Invoice Modal
-│   │       ├── CallOverlay.jsx     # WebRTC Video/Audio Call Overlay
-│   │       ├── SOSButton.jsx       # Emergency SOS Alert Trigger
-│   │       ├── StoriesBar.jsx      # 24h Ephemeral Stories Rings Bar
-│   │       └── StoryViewerModal.jsx# Fullscreen Story Player
-│   ├── utils/
-│   │   └── chatLockManager.js      # PIN Security & Ghost Mode Storage
-│   └── App.js
-│
-├── backend/                        # Node.js & Express REST Backend
-│   ├── server.js                   # Application Entry Point & Security
-│   ├── config/
-│   │   └── db.js                   # PostgreSQL Pool & Auto Schema Migrations
-│   ├── routes/
-│   │   ├── authRoutes.js           # Auth, Registration, Login, OTP
-│   │   ├── userRoutes.js           # Users, Favorites, Profiles, Followers
-│   │   ├── bookingRoutes.js        # Bookings & Auto Escrow Lifecycle
-│   │   ├── paymentRoutes.js        # Escrow Orders, Verification & Payouts
-│   │   ├── chatRoutes.js           # Real-Time Chat Storage
-│   │   ├── postRoutes.js           # Gallery Posts & Likes
-│   │   ├── storyRoutes.js          # 24h Ephemeral Stories
-│   │   ├── sosRoutes.js            # Emergency SOS System
-│   │   └── adminRoutes.js          # Admin Controls & Moderation
-│   ├── middleware/
-│   │   ├── auth.js                 # JWT Authentication & Status Check
-│   │   ├── rateLimiter.js          # In-Memory Request Rate Limiter
-│   │   ├── sanitize.js             # XSS & Injection Sanitizer
-│   │   └── contentFilter.js        # Profanity & Contact-Sharing Filter
-│   └── socket/
-│       └── socket.js               # Socket.io Calling & Messaging Handler
-└── README.md
-```
+Open `http://localhost:3000` in your browser.
 
 ---
 
-## 🔒 Security & Compliance Infrastructure
+## 📡 API Reference
 
-- 🛡️ **100% Escrow Protection**: All companion bookings are safely held until mutual completion.
-- 🛡️ **JWT Expiration & HS256 Whitelist**: Prevents token forgery and unauthorized payload manipulation.
-- 🛡️ **Helmet & HTTP Hardening**: Injects 30+ enterprise security headers including strict HSTS & CSP.
-- 🛡️ **XSS Input Sanitization**: Automatically strips `<script>`, `javascript:`, and null byte poisoning vectors.
-- 🛡️ **Parameter Pollution Guard**: Neutralizes array manipulation attacks in query parameters.
-- 🛡️ **Brute-Force Rate Limiting**: Multi-tier request throttling on sensitive auth endpoints.
+### Authentication (`/api`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/register` | Register new user & dispatch OTP email | No |
+| `POST` | `/login` | Authenticate user & receive JWT token | No |
+| `POST` | `/verify-otp` | Verify registration OTP code | No |
+| `POST` | `/forgot-password` | Request password reset OTP | No |
+| `POST` | `/reset-password` | Set new password with valid OTP | No |
+
+### Users & Profiles (`/api`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/users` | Fetch list of active companion profiles | No |
+| `GET` | `/users/:id` | Fetch specific user details | No |
+| `PUT` | `/profile` | Update current user profile info | Yes |
+| `POST` | `/favorites/toggle` | Add/remove companion to favorites | Yes |
+| `GET` | `/favorites` | Get authenticated user's saved list | Yes |
+
+### Bookings & Escrow (`/api`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/bookings` | Create new booking session with time slot | Yes |
+| `GET` | `/bookings/my` | Fetch user's incoming/outgoing bookings | Yes |
+| `PUT` | `/bookings/:id` | Update status (`accepted`, `completed`, `rejected`) | Yes |
+| `POST` | `/payment/create-order` | Calculate safety fees and create escrow order | Yes |
+| `POST` | `/payment/verify` | Capture payment and lock into companion escrow | Yes |
+| `POST` | `/wallet/payout-request` | Submit UPI or Bank transfer withdrawal request | Yes |
+
+### Reviews & Ratings (`/api`)
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/reviews/:companionId` | Get companion reviews, star breakdown, and highlights | No |
+| `POST` | `/reviews` | Submit star rating with verified client check | Yes |
+| `POST` | `/reviews/:id/helpful` | Toggle helpful vote on a review | Yes |
 
 ---
 
-## 🌐 Live Services & Deployment Links
+## 🗄️ Database Schema
 
-| Component | Host Service | Status | Live Link |
-| :--- | :--- | :--- | :--- |
-| **Frontend Web App** | Vercel | ![Vercel Status](https://img.shields.io/badge/Status-Online-brightgreen?style=flat-square) | [coffeely-app.vercel.app](https://coffeely-app.vercel.app) |
-| **Backend REST Server** | Render | ![Render Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square) | [coffeely-backend.onrender.com](https://coffeely-backend.onrender.com) |
-| **Database Cluster** | Neon PostgreSQL | ![PostgreSQL Status](https://img.shields.io/badge/Database-Connected-blue?style=flat-square) | Enterprise Cloud DB |
+The database runs on PostgreSQL and manages schema migrations automatically on startup (`backend/config/db.js`).
+
+- **`users`**: Auth credentials, KYC status, profile metadata, hourly rates, location coordinates, security lockout state.
+- **`bookings`**: Booking time slots, companion/client IDs, status, payment status, platform fee, and companion earnings.
+- **`wallet_balances`**: Available balance, pending escrow funds, total withdrawn, lifetime earnings.
+- **`wallet_transactions`**: Complete audit trail of escrow deposits, releases, withdrawals, and refunds.
+- **`payout_requests`**: Bank and UPI withdrawal records with admin approval notes and UTR references.
+- **`reviews`**: Ratings (1–5), comments, verified client booking flags, compliment tag arrays, and helpful vote counts.
+- **`messages`**: Real-time chat messages, media attachments, read receipts, and timestamps.
+- **`stories`**: Ephemeral photo stories with auto-expiration (24 hours).
+- **`sos_alerts`**: Emergency records with live GPS location coordinates and resolution state.
 
 ---
 
-<div align="center">
-  <sub>Built with ❤️ by the Coffeely Engineering Team. Protected by 100% Escrow & Zero-Trust Architecture.</sub>
-</div>
+## 🔒 Security Model
+
+- **Authentication**: Stateless JSON Web Tokens (JWT) signed with strict `HS256` validation and auto-expiration.
+- **Password Security**: Salted password hashing with `bcryptjs` (12 salt rounds).
+- **CSPRNG OTP Engine**: One-time codes generated via Node.js `crypto.randomInt` with timing-safe comparison (`crypto.timingSafeEqual`).
+- **Account Lockout**: 15-minute temporary lockout triggered after 5 consecutive failed login attempts.
+- **Slowloris & HTTP Protection**: Hardened HTTP server keepalive and header timeouts to prevent slow connection denial-of-service attacks.
+- **Content Sanitization**: Multi-tier input sanitization stripping null bytes, XSS payloads, script tags, and malicious markup.
+- **Security Headers**: Injected via Helmet (`HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options`, `Cross-Origin-Opener-Policy`).
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).
