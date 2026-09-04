@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FiStar, FiShield, FiThumbsUp, FiMessageCircle, FiSmile, FiPlus, FiCheck } from "react-icons/fi";
 import ReviewModal from "./ReviewModal";
 
-const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 
 export default function ReviewsSection({ companion, currentUser, onReviewAdded }) {
     const [reviewsData, setReviewsData] = useState({

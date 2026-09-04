@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FiX, FiStar, FiCheck, FiShield, FiHeart, FiClock, FiMessageCircle, FiSmile } from "react-icons/fi";
 
-const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 
 const AVAILABLE_COMPLIMENTS = [
     "Great Listener 💬",

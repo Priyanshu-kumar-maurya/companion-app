@@ -2,15 +2,25 @@ import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 import { FiShield, FiUser, FiAlertTriangle, FiCheckCircle, FiLock, FiUnlock, FiSlash, FiTrash2, FiBarChart2, FiPrinter, FiCalendar, FiMail, FiX, FiRefreshCw, FiArrowLeft, FiDollarSign, FiCreditCard, FiSmartphone, FiClock, FiCheck } from "react-icons/fi";
 
-const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
 function AdminDashboard({ user, setPage }) {
-    const [stats, setStats] = useState(null);
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        girls: 0,
+        boys: 0,
+        pendingKyc: 0,
+        posts: 0,
+        bookings: 0,
+        pendingReports: 0,
+        frozenUsers: 0
+    });
     const [users, setUsers] = useState([]);
     const [reports, setReports] = useState([]);
     const [payouts, setPayouts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [authError, setAuthError] = useState(null);
     const [activeTab, setActiveTab] = useState("users");
     const [activeFilter, setActiveFilter] = useState("all"); // "all" | "girls" | "boys" | "frozen" | "blocked" | "pendingKyc" | "unverified"
     const [actionLoading, setActionLoading] = useState({});
@@ -23,40 +33,61 @@ function AdminDashboard({ user, setPage }) {
     useEffect(() => { fetchAll(); }, []);
 
     const fetchAll = async () => {
+        setLoading(true);
+        setAuthError(null);
         try {
+            const currentToken = localStorage.getItem('token');
+            if (!currentToken) {
+                setAuthError("No authentication token found. Please login with a Super Admin account.");
+                setLoading(false);
+                return;
+            }
+
+            const currentHeaders = { 'Authorization': `Bearer ${currentToken}`, 'Content-Type': 'application/json' };
+
             const [statsRes, usersRes, reportsRes, payoutsRes] = await Promise.all([
-                fetch(`${API}/admin/stats`, { headers }),
-                fetch(`${API}/admin/users`, { headers }),
-                fetch(`${API}/admin/reports`, { headers }),
-                fetch(`${API}/admin/payouts`, { headers }).catch(() => ({ ok: false }))
+                fetch(`${API}/admin/stats`, { headers: currentHeaders }).catch(() => ({ ok: false, status: 500 })),
+                fetch(`${API}/admin/users`, { headers: currentHeaders }).catch(() => ({ ok: false, status: 500 })),
+                fetch(`${API}/admin/reports`, { headers: currentHeaders }).catch(() => ({ ok: false, status: 500 })),
+                fetch(`${API}/admin/payouts`, { headers: currentHeaders }).catch(() => ({ ok: false, status: 500 }))
             ]);
-            if (statsRes.ok) setStats(await statsRes.json());
+
+            if (statsRes.status === 401 || statsRes.status === 403 || usersRes.status === 401 || usersRes.status === 403) {
+                setAuthError("Access Restricted: Super Admin credentials required to view this dashboard.");
+                setLoading(false);
+                return;
+            }
+
+            if (statsRes.ok) {
+                const s = await statsRes.json();
+                setStats(s);
+            }
+
             if (usersRes.ok) {
                 const usersData = await usersRes.json();
-                console.log('Admin users loaded:', usersData.length);
-                setUsers(usersData);
+                if (Array.isArray(usersData)) {
+                    setUsers(usersData);
+                }
             }
-            if (reportsRes.ok) setReports(await reportsRes.json());
-            if (payoutsRes && payoutsRes.ok) {
-                setPayouts(await payoutsRes.json());
-            } else {
-                const errText = await usersRes.text().catch(() => '');
-                console.error('Admin users API failed:', usersRes.status, errText);
-                // Retry once after 2 seconds
-                setTimeout(async () => {
-                    try {
-                        const retry = await fetch(`${API}/admin/users`, { headers });
-                        if (retry.ok) {
-                            const retryData = await retry.json();
-                            console.log('Admin users retry success:', retryData.length);
-                            setUsers(retryData);
-                        }
-                    } catch (e) { console.error('Retry also failed:', e); }
-                }, 2000);
+
+            if (reportsRes.ok) {
+                const repData = await reportsRes.json();
+                if (Array.isArray(repData)) {
+                    setReports(repData);
+                }
             }
-            if (reportsRes.ok) setReports(await reportsRes.json());
-        } catch (err) { console.error('Admin fetchAll error:', err); }
-        finally { setLoading(false); }
+
+            if (payoutsRes.ok) {
+                const payData = await payoutsRes.json();
+                if (Array.isArray(payData)) {
+                    setPayouts(payData);
+                }
+            }
+        } catch (err) {
+            console.error('Admin fetchAll error:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const setLoaderFor = (key, val) => setActionLoading(prev => ({ ...prev, [key]: val }));
@@ -102,10 +133,39 @@ function AdminDashboard({ user, setPage }) {
         } catch (e) {} finally { setLoaderFor(`rep_${reportId}`, false); }
     };
 
-    if (loading || !stats) {
+    if (authError) {
         return (
-            <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center">
-                <div className="text-pink-400 animate-pulse text-xl font-bold">Loading Admin Panel...</div>
+            <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 text-center">
+                <div className="max-w-md w-full bg-[#16162A] border border-red-500/30 rounded-3xl p-8 shadow-2xl space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
+                        <FiSlash size={32} />
+                    </div>
+                    <h2 className="text-xl font-bold text-white">Super Admin Access Required</h2>
+                    <p className="text-xs text-gray-400 leading-relaxed">{authError}</p>
+                    <div className="flex gap-3 pt-2">
+                        <button
+                            onClick={() => { if (setPage) setPage(PAGES.HOME); else window.location.hash = "#home"; }}
+                            className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs transition border border-white/10"
+                        >
+                            Back to Home
+                        </button>
+                        <button
+                            onClick={() => { if (setPage) setPage(PAGES.BOY_LOGIN); else window.location.hash = "#boy_login"; }}
+                            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold text-xs shadow-lg hover:opacity-90 transition"
+                        >
+                            Admin Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-[100dvh] bg-[#0D0D1A] flex flex-col items-center justify-center gap-3">
+                <div className="w-10 h-10 border-3 border-pink-500 border-t-transparent rounded-full animate-spin" />
+                <div className="text-pink-400 font-bold text-sm tracking-wide animate-pulse">Loading Admin Panel...</div>
             </div>
         );
     }

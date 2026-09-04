@@ -35,7 +35,7 @@ export default function PaymentModal({
         try {
             const token = localStorage.getItem("token");
             if (bookingData?.id) {
-                const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+                const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
                 await fetch(`${API_BASE}/api/payment/verify`, {
                     method: "POST",
                     headers: {

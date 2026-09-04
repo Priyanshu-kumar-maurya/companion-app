@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiDollarSign, FiLock, FiTrendingUp, FiArrowUpRight, FiArrowDownLeft, FiClock, FiCreditCard, FiSmartphone, FiX, FiCheck, FiRefreshCw } from "react-icons/fi";
 
-const API_BASE = process.env.REACT_APP_API_URL || "https://coffeely-backend.onrender.com";
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 
 export default function GirlWalletTab({ user }) {
     const [availableBalance, setAvailableBalance] = useState(0);
