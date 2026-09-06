@@ -35,7 +35,21 @@ router.get('/bookings/booked-slots/:companionId', async (req, res) => {
 // ─── CREATE BOOKING — AUTH REQUIRED ──────────────────────────
 router.post('/bookings', authenticateToken, async (req, res) => {
     try {
-        const { boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, time_slot } = req.body;
+        const { 
+            boy_id, 
+            girl_id, 
+            hours, 
+            amount, 
+            meeting_date, 
+            meeting_time, 
+            meeting_location, 
+            meeting_details, 
+            time_slot,
+            payment_id,
+            payment_status,
+            payment_method,
+            order_id
+        } = req.body;
         const sender_id = req.user.id;
 
         // Validate required fields
@@ -60,11 +74,55 @@ router.post('/bookings', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: "Unauthorized: Only participants can make bookings." });
         }
 
+        const baseAmount = parseFloat(amount);
+        const platformFee = Math.round(baseAmount * 0.05);
+        const companionEarnings = baseAmount;
+        const effectivePaymentStatus = payment_status || (payment_id ? 'escrow_held' : 'pending');
+        const effectivePaymentMethod = payment_method || 'upi';
+
         const newBooking = await pool.query(
-            "INSERT INTO bookings (boy_id, girl_id, hours, amount, meeting_date, meeting_time, meeting_location, meeting_details, sender_id, time_slot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
-            [boy_id, girl_id, hours, amount, meeting_date || null, meeting_time || null, meeting_location || null, meeting_details || null, sender_id, time_slot || null]
+            `INSERT INTO bookings (
+                boy_id, girl_id, hours, amount, meeting_date, meeting_time, 
+                meeting_location, meeting_details, sender_id, time_slot,
+                payment_id, payment_status, payment_method, order_id, platform_fee, companion_earnings
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
+            RETURNING *`,
+            [
+                boy_id, girl_id, hours, amount, 
+                meeting_date || null, meeting_time || null, meeting_location || null, meeting_details || null, 
+                sender_id, time_slot || null,
+                payment_id || null, effectivePaymentStatus, effectivePaymentMethod, order_id || null, platformFee, companionEarnings
+            ]
         );
-        res.status(201).json(newBooking.rows[0]);
+
+        const booking = newBooking.rows[0];
+
+        // 🛡️ If payment was captured & held in Escrow, credit companion's pending_escrow immediately
+        if (effectivePaymentStatus === 'escrow_held') {
+            await pool.query(
+                `INSERT INTO wallet_balances (user_id, available_balance, pending_escrow, total_withdrawn, total_earned)
+                 VALUES ($1, 0, $2, 0, 0)
+                 ON CONFLICT (user_id) DO UPDATE 
+                 SET pending_escrow = wallet_balances.pending_escrow + $2,
+                     updated_at = NOW()`,
+                [girl_id, companionEarnings]
+            );
+
+            await pool.query(
+                `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
+                 VALUES ($1, $2, 'escrow_hold', $3, $4, $5, 'in_escrow', $6)`,
+                [
+                    girl_id,
+                    booking.id,
+                    companionEarnings,
+                    `Session Escrow Hold (Booking #${booking.id})`,
+                    `Funds held safely in 100% Escrow Protection. Auto-released upon session completion.`,
+                    effectivePaymentMethod
+                ]
+            );
+        }
+
+        res.status(201).json(booking);
     } catch (err) {
         console.error('Booking error:', err);
         res.status(500).json({ error: "Server error" });

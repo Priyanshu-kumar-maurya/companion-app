@@ -126,8 +126,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     const sendAudioMessage = (base64Audio) => {
         if (!currentUser || !girl) return;
-        const ids = [currentUser.id, girl.id].sort((a, b) => a - b);
-        const room = `chat_${ids[0]}_${ids[1]}`;
+        const room = roomId;
 
         const msgData = {
             sender_id: currentUser.id,

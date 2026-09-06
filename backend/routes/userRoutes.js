@@ -518,9 +518,38 @@ router.get('/favorites/check/:companionId', authenticateToken, async (req, res) 
             [userId, companionId]
         );
 
-        res.status(200).json({ isFavorited: result.rows.length > 0 });
+// 18. Get User / Companion Stats (Rating, Sessions, Bookings, Earnings)
+router.get(['/girl/stats/:userId', '/user/stats/:userId'], async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const avgResult = await pool.query(
+            "SELECT ROUND(AVG(rating), 1) as avg_rating, COUNT(id) as total_count FROM reviews WHERE companion_id = $1",
+            [userId]
+        );
+        const bookingResult = await pool.query(
+            "SELECT COUNT(id) as total_bookings, COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_sessions FROM bookings WHERE girl_id = $1 OR boy_id = $1",
+            [userId]
+        );
+        const walletResult = await pool.query(
+            "SELECT available_balance, pending_escrow, total_earned FROM wallet_balances WHERE user_id = $1",
+            [userId]
+        );
+
+        const totalCount = parseInt(avgResult.rows[0]?.total_count || 0);
+        const avgRating = totalCount > 0 ? parseFloat(avgResult.rows[0]?.avg_rating).toFixed(1) : "No Rating";
+        const sessions = parseInt(bookingResult.rows[0]?.completed_sessions || 0);
+        const bookings = parseInt(bookingResult.rows[0]?.total_bookings || 0);
+        const earnings = walletResult.rows.length > 0 ? parseFloat(walletResult.rows[0]?.total_earned || 0) : 0;
+
+        res.status(200).json({
+            rating: avgRating,
+            sessions,
+            bookings,
+            earnings,
+            totalReviews: totalCount
+        });
     } catch (err) {
-        console.error("Check favorite error:", err);
+        console.error("Get companion stats error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

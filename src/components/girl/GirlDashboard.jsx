@@ -480,7 +480,15 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 <div className="grid grid-cols-3 gap-3 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('rating')}>
                         <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiStar size={12} className="text-yellow-400 fill-yellow-400" /> Rating</div>
-                        <div className="text-xl font-bold text-yellow-400 flex items-center gap-1">{stats.rating} {stats.rating !== "No Rating" && <FiStar size={14} className="fill-yellow-400 text-yellow-400" />}</div>
+                        <div className="text-xl font-bold text-yellow-400 flex items-center gap-1">
+                            {reviews.length > 0 
+                                ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1) 
+                                : (stats.rating || "No Rating")
+                            }
+                            {(reviews.length > 0 || (stats.rating && stats.rating !== "No Rating")) && (
+                                <FiStar size={14} className="fill-yellow-400 text-yellow-400" />
+                            )}
+                        </div>
                     </div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative flex flex-col justify-between" onClick={() => setActiveStatModal('my_bookings')}>
                         <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiCalendar size={12} /> Bookings</div>

@@ -33,11 +33,21 @@ module.exports = (io) => {
         });
 
         socket.on("join_own_room", (userId) => {
-            socket.join(`user_${userId}`);
+            if (userId) {
+                socket.join(`user_${userId}`);
+                socket.join(userId.toString());
+            }
         });
 
         socket.on("join_room", (room) => {
-            socket.join(room);
+            if (room) {
+                socket.join(room);
+                if (room.startsWith("chat_")) {
+                    socket.join(room.replace("chat_", ""));
+                } else {
+                    socket.join(`chat_${room}`);
+                }
+            }
         });
 
         socket.on("send_message", async (data) => {
@@ -84,7 +94,8 @@ module.exports = (io) => {
 
                 io.to(data.room).emit("receive_message", data);
                 if (data.receiver_id) {
-                    socket.to(data.receiver_id.toString()).emit("receive_message", data);
+                    io.to(`user_${data.receiver_id}`).emit("receive_message", data);
+                    io.to(data.receiver_id.toString()).emit("receive_message", data);
                     // Trigger Web Push Notification
                     sendPushNotification(data.receiver_id, {
                         title: `💬 ${data.sender_name || 'Companion'}`,
@@ -178,7 +189,8 @@ module.exports = (io) => {
         });
 
         socket.on("send_booking_notification", (data) => {
-            socket.to(`user_${data.receiver_id}`).emit("receive_booking_notification", data);
+            io.to(`user_${data.receiver_id}`).emit("receive_booking_notification", data);
+            io.to(data.receiver_id.toString()).emit("receive_booking_notification", data);
         });
 
         socket.on("active_status_changed", async () => {
