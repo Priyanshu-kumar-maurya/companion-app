@@ -475,11 +475,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('earnings')}>
-                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiCreditCard size={12} className="text-blue-400" /> Earnings</div>
-                        <div className="text-xl font-bold text-blue-400">₹{totalEarnings}</div>
-                    </div>
+                <div className="grid grid-cols-3 gap-3 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('rating')}>
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiStar size={12} className="text-yellow-400" /> Rating</div>
                         <div className="text-xl font-bold text-yellow-400">

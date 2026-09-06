@@ -477,11 +477,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('earnings')}>
-                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiCreditCard size={12} /> Earnings</div>
-                        <div className="text-xl font-bold text-pink-400">₹{stats.earnings}</div>
-                    </div>
+                <div className="grid grid-cols-3 gap-3 mb-7">
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('rating')}>
                         <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiStar size={12} className="text-yellow-400 fill-yellow-400" /> Rating</div>
                         <div className="text-xl font-bold text-yellow-400 flex items-center gap-1">{stats.rating} {stats.rating !== "No Rating" && <FiStar size={14} className="fill-yellow-400 text-yellow-400" />}</div>
@@ -497,7 +493,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         )}
                     </div>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('notifications')}>
-                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiBell size={12} /> Notifications</div>
+                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiBell size={12} /> Alerts</div>
                         <div className="text-xl font-bold text-purple-400">{notificationsList.length}</div>
                     </div>
                 </div>
