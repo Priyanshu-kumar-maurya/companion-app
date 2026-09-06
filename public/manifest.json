@@ -1,6 +1,7 @@
 {
   "short_name": "Coffeely",
   "name": "Coffeely - India's #1 Companion App",
+  "version": "2.4.0",
   "description": "Find verified companions for coffee dates, movies, events & more. Safe, trusted, premium experience.",
   "icons": [
     {

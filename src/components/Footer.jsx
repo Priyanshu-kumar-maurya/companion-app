@@ -1,5 +1,6 @@
 import React from "react";
 import { PAGES } from "../App";
+import { APP_VERSION_TAG } from "../config/version";
 
 function Footer({ setPage }) {
     return (
@@ -70,9 +71,15 @@ function Footer({ setPage }) {
                     </div>
                 </div>
                 <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-xs text-gray-500">
-                        © {new Date().getFullYear()} Coffeely. All rights reserved.
-                    </p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <p className="text-xs text-gray-500">
+                            © {new Date().getFullYear()} Coffeely. All rights reserved.
+                        </p>
+                        <span className="inline-flex items-center gap-1.5 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            {APP_VERSION_TAG} (Latest)
+                        </span>
+                    </div>
                     <div className="flex gap-4 text-sm text-gray-400">
                         <a href="https://www.instagram.com/rentgf.in?igsh=b29iNDkxejFnaDJt" target="_blank" rel="noreferrer">
                             <span className="hover:text-pink-400 cursor-pointer transition">📸 Instagram</span>

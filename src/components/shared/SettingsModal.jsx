@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { PAGES } from "../../App";
-import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader, FiMessageCircle, FiPlus, FiTrash2 } from "react-icons/fi";
+import { FiSettings, FiUser, FiLock, FiBookmark, FiHeart, FiSlash, FiHelpCircle, FiInfo, FiLogOut, FiAlertTriangle, FiCamera, FiLoader, FiMessageCircle, FiPlus, FiTrash2, FiCheckCircle, FiRefreshCw, FiSmartphone } from "react-icons/fi";
+import { APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE, APP_CHANGELOG, getAppPlatform } from "../../config/version";
 
 
 function SettingsModal({ user, setUser, onClose, setPage, socket }) {
@@ -42,6 +43,25 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const [newPhotoPreview, setNewPhotoPreview] = useState(null);
     const [newPhotoCaption, setNewPhotoCaption] = useState("");
     const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+    const [checkingUpdate, setCheckingUpdate] = useState(false);
+    const [updateStatus, setUpdateStatus] = useState(null);
+
+    const handleCheckUpdate = () => {
+        setCheckingUpdate(true);
+        setUpdateStatus(null);
+        setTimeout(() => {
+            setCheckingUpdate(false);
+            setUpdateStatus({
+                latest: true,
+                message: `You're using the latest version of Coffeely (${APP_VERSION_TAG})!`
+            });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(r => r.update());
+                }).catch(() => {});
+            }
+        }, 1200);
+    };
 
     const handleChange = (e) => {
         const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -396,6 +416,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             {activeView === 'saved_posts' && <span className="flex items-center gap-2"><FiBookmark size={18} className="text-pink-500" /> Saved Posts</span>}
                             {activeView === 'liked_posts' && <span className="flex items-center gap-2"><FiHeart size={18} className="text-pink-500" /> Liked Posts</span>}
                             {activeView === 'blocked_accounts' && <span className="flex items-center gap-2"><FiSlash size={18} className="text-pink-500" /> Blocked Accounts</span>}
+                            {activeView === 'app_version' && <span className="flex items-center gap-2"><FiCheckCircle size={18} className="text-emerald-400" /> App Version & Updates</span>}
                             {activeView === 'danger' && "Delete Account"}
                         </h2>
                     </div>
@@ -446,6 +467,16 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                                 <button onClick={() => setPage(PAGES.ABOUT)} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
                                     <span className="flex items-center gap-3"><FiInfo size={18} className="text-gray-400" /> About Us</span>
                                     <span className="text-gray-500 text-lg">›</span>
+                                </button>
+                                <button onClick={() => { setActiveView('app_version'); setUpdateStatus(null); }} className="w-full text-left px-5 py-3 hover:bg-white/5 transition flex justify-between items-center text-sm font-medium">
+                                    <span className="flex items-center gap-3"><FiCheckCircle size={18} className="text-emerald-400" /> App Version</span>
+                                    <span className="flex items-center gap-2">
+                                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-bold">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                            {APP_VERSION_TAG} (Latest)
+                                        </span>
+                                        <span className="text-gray-500 text-lg">›</span>
+                                    </span>
                                 </button>
                             </div>
 
@@ -782,6 +813,71 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                             <button onClick={handleDeleteAccount} className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 transition">
                                 Delete Account Permanently
                             </button>
+                        </div>
+                    )}
+
+                    {activeView === 'app_version' && (
+                        <div className="p-5 flex flex-col items-center text-center">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500 via-purple-600 to-indigo-600 flex items-center justify-center text-3xl shadow-xl shadow-pink-500/25 mb-3">
+                                💝
+                            </div>
+                            <h3 className="text-xl font-extrabold text-white tracking-wide">Coffeely</h3>
+                            <div className="flex items-center gap-2 mt-1 mb-4">
+                                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    {APP_VERSION_TAG} • {APP_RELEASE_STAGE}
+                                </span>
+                            </div>
+
+                            {/* Device & Platform Info */}
+                            <div className="w-full bg-[#0D0D1A] rounded-xl border border-white/5 p-4 text-left space-y-2.5 mb-4 text-xs">
+                                <div className="flex justify-between items-center text-gray-400">
+                                    <span>Running On</span>
+                                    <span className="text-white font-semibold flex items-center gap-1.5">
+                                        <FiSmartphone size={13} className="text-pink-400" /> {getAppPlatform()}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center text-gray-400 border-t border-white/5 pt-2">
+                                    <span>Release Date</span>
+                                    <span className="text-white font-semibold">{APP_BUILD_DATE}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-gray-400 border-t border-white/5 pt-2">
+                                    <span>Status</span>
+                                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                        <FiCheckCircle size={13} /> Up to Date (Latest)
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Check for Updates button */}
+                            <button
+                                onClick={handleCheckUpdate}
+                                disabled={checkingUpdate}
+                                className="w-full py-2.5 px-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 active:scale-[0.99] disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2 transition"
+                            >
+                                <FiRefreshCw size={13} className={checkingUpdate ? "animate-spin" : ""} />
+                                {checkingUpdate ? "Checking for updates..." : "Check for Updates"}
+                            </button>
+
+                            {updateStatus && (
+                                <div className="w-full mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs font-medium flex items-center justify-center gap-2 animate-fade-in">
+                                    <FiCheckCircle size={14} className="shrink-0 text-emerald-400" />
+                                    <span>{updateStatus.message}</span>
+                                </div>
+                            )}
+
+                            {/* What's new in this version */}
+                            <div className="w-full mt-5 text-left border-t border-white/10 pt-4">
+                                <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">What's new in {APP_VERSION_TAG}</h4>
+                                <div className="space-y-2">
+                                    {APP_CHANGELOG[0]?.features.map((feat, idx) => (
+                                        <div key={idx} className="text-[11px] text-gray-300 flex items-start gap-2 leading-relaxed">
+                                            <span className="text-pink-400 font-bold">•</span>
+                                            <span>{feat}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
 

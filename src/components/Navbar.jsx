@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiX, FiCreditCard } from "react-icons/fi";
+import { APP_VERSION_TAG } from "../config/version";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -247,6 +248,10 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                     <div className="flex flex-col gap-3">
                         <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-2 text-sm border border-[#e1306c] text-[#e1306c] rounded-xl text-center">Join as Girl</button>
                         <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-2 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-xl text-center">Find Companion</button>
+                    </div>
+                    <div className="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-white/5 mt-1">
+                        <span>Coffeely App</span>
+                        <span className="font-mono text-emerald-400 font-semibold">{APP_VERSION_TAG} (Latest)</span>
                     </div>
                 </div>
             )}
