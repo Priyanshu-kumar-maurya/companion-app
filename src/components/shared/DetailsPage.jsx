@@ -8,7 +8,10 @@ import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShiel
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
-    transports: ['websocket']
+    transports: ['websocket'],
+    auth: (cb) => {
+        cb({ token: localStorage.getItem('token') });
+    }
 });
 
 const TIME_SLOTS = [

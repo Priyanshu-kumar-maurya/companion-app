@@ -7,7 +7,10 @@ import ChatLockPinModal from "./ChatLockPinModal";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
-    transports: ['websocket']
+    transports: ['websocket'],
+    auth: (cb) => {
+        cb({ token: localStorage.getItem('token') });
+    }
 });
 
 function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {

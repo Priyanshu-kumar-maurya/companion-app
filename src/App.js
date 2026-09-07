@@ -21,7 +21,10 @@ import { registerPushNotifications } from "./utils/pushManager";
 import { io } from "socket.io-client";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
-  transports: ['websocket']
+  transports: ['websocket'],
+  auth: (cb) => {
+    cb({ token: localStorage.getItem('token') });
+  }
 });
 
 export const PAGES = {

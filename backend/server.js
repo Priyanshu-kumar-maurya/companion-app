@@ -34,12 +34,22 @@ const ALLOWED_ORIGINS = [
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000',
 ];
+
+const isAllowedOrigin = (origin) => {
+    // Allow requests with no origin (native mobile apps, PWA standalone, server-to-server)
+    if (!origin) return true;
+    if (ALLOWED_ORIGINS.includes(origin)) return true;
+    // Allow only verified project Vercel deployments (prevents foreign *.vercel.app malicious sites)
+    const isProjectVercel = /^https:\/\/(coffeely|rentgf|companion-app)(-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
+    if (isProjectVercel) return true;
+    return false;
+};
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Postman in dev) or any .vercel.app frontend domain
-        if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app') || ALLOWED_ORIGINS.some(o => origin.startsWith(o))) {
+        if (isAllowedOrigin(origin)) {
             callback(null, true);
         } else {
             callback(new Error(`CORS blocked: ${origin}`));
@@ -55,10 +65,10 @@ const corsOptions = {
 const io = new Server(server, {
     cors: {
         origin: (origin, callback) => {
-            if (!origin || ALLOWED_ORIGINS.includes(origin) || origin.endsWith('.vercel.app')) {
+            if (isAllowedOrigin(origin)) {
                 callback(null, true);
             } else {
-                callback(null, true);
+                callback(new Error(`Socket CORS blocked: ${origin}`));
             }
         },
         methods: ['GET', 'POST'],
@@ -140,6 +150,11 @@ app.use('/api', sosRoutes);
 app.use('/api', storyRoutes);
 app.use('/api', pushRoutes);
 app.use('/api', webrtcRoutes);
+
+// 🛡️ Dedicated rate limiting on financial & payment operations (25 req/min)
+const paymentRateLimit = rateLimiter(25, 60 * 1000, "Too many payment or wallet attempts. Please wait a minute.");
+app.use('/api/payment', paymentRateLimit);
+app.use('/api/wallet', paymentRateLimit);
 app.use('/api', paymentRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────

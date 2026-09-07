@@ -62,6 +62,14 @@ router.post('/payment/verify', authenticateToken, async (req, res) => {
         }
 
         const booking = bookingRes.rows[0];
+
+        // 🛡️ Security Check: Ensure caller is the paying client or admin
+        const isClient = parseInt(req.user.id) === parseInt(booking.boy_id);
+        const isAdmin = req.user.role === 'admin';
+        if (!isClient && !isAdmin) {
+            return res.status(403).json({ error: "Forbidden: You are not authorized to verify payment for this booking." });
+        }
+
         const baseAmount = booking.amount || parseFloat(amount) || 1000;
         const platformFee = Math.round(baseAmount * 0.05);
         const companionEarnings = baseAmount; // 100% of base rate goes to companion
@@ -123,6 +131,14 @@ router.post('/payment/release-escrow/:bookingId', authenticateToken, async (req,
         }
 
         const booking = bookingRes.rows[0];
+
+        // 🛡️ Security Check: Ensure caller is participant (boy_id or girl_id) or admin
+        const isParticipant = parseInt(req.user.id) === parseInt(booking.boy_id) || parseInt(req.user.id) === parseInt(booking.girl_id);
+        const isAdmin = req.user.role === 'admin';
+        if (!isParticipant && !isAdmin) {
+            return res.status(403).json({ error: "Forbidden: Only booking participants or admins can release escrow." });
+        }
+
         if (booking.payment_status === 'escrow_released') {
             return res.status(200).json({ message: "Escrow funds already released." });
         }
@@ -178,6 +194,14 @@ router.post('/payment/refund-escrow/:bookingId', authenticateToken, async (req, 
         }
 
         const booking = bookingRes.rows[0];
+
+        // 🛡️ Security Check: Ensure caller is participant or admin
+        const isParticipant = parseInt(req.user.id) === parseInt(booking.boy_id) || parseInt(req.user.id) === parseInt(booking.girl_id);
+        const isAdmin = req.user.role === 'admin';
+        if (!isParticipant && !isAdmin) {
+            return res.status(403).json({ error: "Forbidden: Only participants or admins can process refunds." });
+        }
+
         if (booking.payment_status === 'escrow_refunded') {
             return res.status(200).json({ message: "Escrow already refunded." });
         }
@@ -219,10 +243,16 @@ router.post('/payment/refund-escrow/:bookingId', authenticateToken, async (req, 
     }
 });
 
-// 5. Get User Wallet Balance
+// 5. Get User Wallet Balance — AUTH & OWNERSHIP REQUIRED
 router.get('/wallet/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // 🛡️ Security Check: Prevent IDOR - only owner or admin can view wallet
+        if (parseInt(req.user.id) !== parseInt(userId) && req.user.role !== 'admin') {
+            return res.status(403).json({ error: "Forbidden: You can only view your own wallet balance." });
+        }
+
         const wallet = await ensureWalletExists(userId);
         res.status(200).json({
             user_id: parseInt(userId),
@@ -238,10 +268,16 @@ router.get('/wallet/:userId', authenticateToken, async (req, res) => {
     }
 });
 
-// 6. Get Wallet Transactions History
+// 6. Get Wallet Transactions History — AUTH & OWNERSHIP REQUIRED
 router.get('/wallet/transactions/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
+
+        // 🛡️ Security Check: Prevent IDOR - only owner or admin can view transaction history
+        if (parseInt(req.user.id) !== parseInt(userId) && req.user.role !== 'admin') {
+            return res.status(403).json({ error: "Forbidden: You can only view your own transaction history." });
+        }
+
         const txs = await pool.query(
             "SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
             [userId]

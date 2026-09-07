@@ -26,8 +26,8 @@ router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => 
         console.log(`✅ Admin users fetched: ${users.rows.length} users`);
         res.status(200).json(users.rows);
     } catch (err) {
-        console.error('❌ Admin /admin/users error:', err.message, err.stack);
-        res.status(500).json({ error: "Server error fetching users", details: err.message });
+        console.error('❌ Admin /admin/users error:', err.message);
+        res.status(500).json({ error: "Server error fetching users." });
     }
 });
 
