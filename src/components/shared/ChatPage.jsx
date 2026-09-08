@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock, FiKey } from "react-icons/fi";
 import { isChatLocked, lockChat, unlockChat, isChatHidden, hideChat, unhideChat, hasChatLockPin } from "../../utils/chatLockManager";
 import ChatLockPinModal from "./ChatLockPinModal";
+import { getStoredPreferences } from "../../utils/themePreferences";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -14,6 +15,14 @@ const socket = io("https://rentgf-and-bf.onrender.com", {
 });
 
 function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
+    const userPrefs = getStoredPreferences();
+    const wallpaperBackgrounds = {
+        dark: '#0D0D1A',
+        midnight: 'linear-gradient(to bottom, #0B0F19, #111827)',
+        emerald: 'linear-gradient(to bottom, #061A14, #0A2E23)',
+        sunset: 'linear-gradient(to bottom, #1A0B1E, #2E1029)',
+        amoled: '#000000'
+    };
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [uploadingImage, setUploadingImage] = useState(false);
@@ -984,7 +993,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 ) : (
                     <>
                         {/* ─── CHAT MESSAGES ─── */}
-                        <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1" style={{ background: '#0D0D1A' }}>
+                        <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1 transition-colors duration-300" style={{ background: wallpaperBackgrounds[userPrefs?.chatWallpaper] || '#0D0D1A' }}>
                     {filteredMessagesToShow.map((msg, index) => {
                         const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
                         const prevMsg = index > 0 ? filteredMessagesToShow[index - 1] : null;

@@ -197,8 +197,8 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                             <FiShield size={13} /> Admin
                                         </button>
                                     )}
-                                    <button onClick={() => handleNavClick(PAGES.WALLET)} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 rounded-full text-pink-300 transition shrink-0">
-                                        <FiCreditCard size={13} /> 💰 Wallet
+                                    <button onClick={() => handleNavClick(PAGES.WALLET)} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 rounded-full text-pink-300 transition shrink-0 shadow-sm">
+                                        <FiCreditCard size={13} /> Wallet
                                     </button>
                                     <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/5 border border-[#262626] hover:bg-white/10 rounded-full text-white transition shrink-0">
                                         <FiPlusCircle size={14} /> Post

@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { pool } = require('../config/db');
 const rateLimiter = require('../middleware/rateLimiter');
+const authenticateToken = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -491,20 +492,49 @@ router.post('/verify-otp', authRateLimit, async (req, res) => {
             { expiresIn: '7d' }
         );
 
-        res.status(200).json({
-            message: "Email verified! Welcome to Coffeely!",
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                username: user.username,
-                email: user.email,
-                role: user.role
-            }
-        });
+// ─── CHANGE PASSWORD (AUTHENTICATED) ─────────────────────────
+router.post('/change-password', authenticateToken, rateLimiter(5, 60 * 1000), async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword) {
+            return res.status(400).json({ error: "Current password is required." });
+        }
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ error: "New password must be at least 6 characters long." });
+        }
+
+        const userResult = await pool.query(
+            "SELECT id, password FROM users WHERE id = $1",
+            [req.user.id]
+        );
+
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: "User account not found." });
+        }
+
+        const user = userResult.rows[0];
+
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ error: "Current password is incorrect." });
+        }
+
+        if (currentPassword === newPassword) {
+            return res.status(400).json({ error: "New password cannot be the same as your old password." });
+        }
+
+        const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+        await pool.query(
+            "UPDATE users SET password = $1 WHERE id = $2",
+            [hashedNewPassword, req.user.id]
+        );
+
+        res.status(200).json({ message: "Password changed successfully! You can now use your new password." });
     } catch (err) {
-        console.error("Verify OTP error:", err);
-        res.status(500).json({ error: "Failed to verify OTP. Please try again." });
+        console.error("Change password error:", err);
+        res.status(500).json({ error: "Server error while changing password. Please try again." });
     }
 });
 
