@@ -17,6 +17,20 @@ async function ensureWalletExists(userId) {
     return inserted.rows[0];
 }
 
+// Helper: Check if user has uploaded KYC document
+async function checkUserHasDocument(userId) {
+    try {
+        const userRes = await pool.query("SELECT id, kyc_status, id_proof_url, role FROM users WHERE id = $1", [userId]);
+        if (userRes.rows.length === 0) return false;
+        const u = userRes.rows[0];
+        if (u.role === 'admin') return true;
+        return Boolean(u.id_proof_url || u.kyc_status === 'verified' || u.kyc_status === 'pending');
+    } catch (e) {
+        return false;
+    }
+}
+
+
 // 1. Create Razorpay / Escrow Payment Order
 router.post('/payment/create-order', authenticateToken, async (req, res) => {
     try {
@@ -253,6 +267,14 @@ router.get('/wallet/:userId', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: "Forbidden: You can only view your own wallet balance." });
         }
 
+        // 🛡️ KYC Document Check: User must have uploaded an ID document to view wallet
+        if (req.user.role !== 'admin') {
+            const hasDoc = await checkUserHasDocument(userId);
+            if (!hasDoc) {
+                return res.status(403).json({ error: "Document verification required to access wallet.", kyc_required: true });
+            }
+        }
+
         const wallet = await ensureWalletExists(userId);
         res.status(200).json({
             user_id: parseInt(userId),
@@ -278,6 +300,14 @@ router.get('/wallet/transactions/:userId', authenticateToken, async (req, res) =
             return res.status(403).json({ error: "Forbidden: You can only view your own transaction history." });
         }
 
+        // 🛡️ KYC Document Check: User must have uploaded an ID document to view transactions
+        if (req.user.role !== 'admin') {
+            const hasDoc = await checkUserHasDocument(userId);
+            if (!hasDoc) {
+                return res.status(403).json({ error: "Document verification required to access wallet transactions.", kyc_required: true });
+            }
+        }
+
         const txs = await pool.query(
             "SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50",
             [userId]
@@ -298,6 +328,14 @@ router.post('/wallet/payout-request', authenticateToken, async (req, res) => {
 
         if (!reqAmt || reqAmt < 500) {
             return res.status(400).json({ error: "Minimum payout amount is ₹500" });
+        }
+
+        // 🛡️ KYC Document Check: User must have uploaded an ID document to request payouts
+        if (req.user.role !== 'admin') {
+            const hasDoc = await checkUserHasDocument(userId);
+            if (!hasDoc) {
+                return res.status(403).json({ error: "Document verification required to withdraw funds.", kyc_required: true });
+            }
         }
 
         const wallet = await ensureWalletExists(userId);

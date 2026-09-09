@@ -17,6 +17,7 @@ import LegalPages from "./components/shared/LegalPages";
 import PWAInstallBanner from "./components/shared/PWAInstallBanner";
 import CallOverlay from "./components/shared/CallOverlay";
 import GirlWalletTab from "./components/girl/GirlWalletTab";
+import KYCUploadPrompt from "./components/shared/KYCUploadPrompt";
 import { registerPushNotifications } from "./utils/pushManager";
 import { io } from "socket.io-client";
 
@@ -295,20 +296,35 @@ function App() {
         return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} currentUser={currentUser} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
       case PAGES.CHAT:
         return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={currentUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
-      case PAGES.WALLET:
+      case PAGES.WALLET: {
+        const hasDoc = Boolean(currentUser?.id_proof_url || currentUser?.kyc_status === 'verified' || currentUser?.kyc_status === 'pending');
         return currentUser ? (
-          <div className="pt-20 pb-24 min-h-[100dvh] max-w-4xl mx-auto px-4">
-            <div className="mb-6 text-left">
-              <h1 className="text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
-                My Wallet & Earnings 💰
-              </h1>
-              <p className="text-xs text-gray-400 mt-0.5">Manage your available balance, escrow holds, and instant payouts</p>
+          !hasDoc ? (
+            <div className="pt-20 pb-24 min-h-[100dvh] max-w-lg mx-auto px-4 flex flex-col items-center justify-center">
+              <KYCUploadPrompt
+                user={currentUser}
+                onUploadSuccess={(updatedUser) => {
+                  if (currentUser.role === 'girl') setGirlUser(updatedUser);
+                  else setBoyUser(updatedUser);
+                }}
+                onCancel={() => setPage(PAGES.HOME)}
+              />
             </div>
-            <GirlWalletTab user={currentUser} />
-          </div>
+          ) : (
+            <div className="pt-20 pb-24 min-h-[100dvh] max-w-4xl mx-auto px-4">
+              <div className="mb-6 text-left">
+                <h1 className="text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
+                  My Wallet & Earnings 💰
+                </h1>
+                <p className="text-xs text-gray-400 mt-0.5">Manage your available balance, escrow holds, and instant payouts</p>
+              </div>
+              <GirlWalletTab user={currentUser} />
+            </div>
+          )
         ) : (
           <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} />
         );
+      }
       case PAGES.LEGAL:
         return <LegalPages setPage={setPage} />;
       default:

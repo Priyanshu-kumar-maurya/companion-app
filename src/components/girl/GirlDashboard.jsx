@@ -4,6 +4,7 @@ import SettingsModal from '../shared/SettingsModal';
 import SOSButton from '../shared/SOSButton';
 import InstagramPostModal from '../shared/InstagramPostModal';
 import GirlWalletTab from './GirlWalletTab';
+import KYCUploadPrompt from '../shared/KYCUploadPrompt';
 import imageCompression from 'browser-image-compression';
 import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin, FiHeart, FiGrid, FiDollarSign } from "react-icons/fi";
 
@@ -29,6 +30,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
     });
     const [followList, setFollowList] = useState([]);
     const [followListLoading, setFollowListLoading] = useState(false);
+    const hasDocument = Boolean(user?.id_proof_url || user?.kyc_status === 'verified' || user?.kyc_status === 'pending');
 
 
     useEffect(() => {
@@ -519,16 +521,18 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         >
                             <FiGrid size={15} /> Posts ({myPosts.length})
                         </button>
-                        <button
-                            onClick={() => setDashboardTab('wallet')}
-                            className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
-                                dashboardTab === 'wallet'
-                                    ? 'border-emerald-500 text-emerald-400'
-                                    : 'border-transparent text-gray-400 hover:text-white'
-                            }`}
-                        >
-                            <FiDollarSign size={15} /> Earnings & Wallet 💰
-                        </button>
+                        {hasDocument && (
+                            <button
+                                onClick={() => setDashboardTab('wallet')}
+                                className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
+                                    dashboardTab === 'wallet'
+                                        ? 'border-emerald-500 text-emerald-400'
+                                        : 'border-transparent text-gray-400 hover:text-white'
+                                }`}
+                            >
+                                <FiDollarSign size={15} /> Earnings & Wallet 💰
+                            </button>
+                        )}
                         <button
                             onClick={() => setDashboardTab('favorites')}
                             className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
@@ -543,7 +547,13 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
                     {/* Wallet View */}
                     {dashboardTab === 'wallet' && (
-                        <GirlWalletTab user={user} />
+                        hasDocument ? (
+                            <GirlWalletTab user={user} />
+                        ) : (
+                            <div className="py-6 max-w-lg mx-auto">
+                                <KYCUploadPrompt user={user} onUploadSuccess={(updated) => setGirlUser(updated)} />
+                            </div>
+                        )
                     )}
 
                     {/* Posts View */}

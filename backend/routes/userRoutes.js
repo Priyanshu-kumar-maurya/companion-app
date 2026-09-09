@@ -19,7 +19,7 @@ const isOwner = (req, res, userId) => {
 router.get('/me', authenticateToken, async (req, res) => {
     try {
         const userResult = await pool.query(
-            "SELECT id, name, username, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, social_link, latitude, longitude FROM users WHERE id = $1",
+            "SELECT id, name, username, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, id_proof_url, social_link, latitude, longitude FROM users WHERE id = $1",
             [req.user.id]
         );
         if (userResult.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
@@ -120,7 +120,7 @@ router.put('/users/:userId', authenticateToken, moderateContent, async (req, res
             `UPDATE users 
              SET age = $1, city = $2, bio = $3, price = $4, tags = $5, is_private = $6, show_online = $7, name = $8, username = $9, social_link = $10, latitude = COALESCE($11, latitude), longitude = COALESCE($12, longitude) 
              WHERE id = $13 
-             RETURNING id, name, username, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status, social_link, latitude, longitude`,
+             RETURNING id, name, username, email, role, age, city, bio, price, tags, is_private, show_online, kyc_status, id_proof_url, social_link, latitude, longitude`,
             [age || null, city || '', bio || '', safePrice, tags || 'Coffee Date, Movie', is_private || false, show_online !== false, name || '', cleanUsername, link || '', latitude || null, longitude || null, parseInt(userId)]
         );
         res.status(200).json({ message: "Profile Updated", user: updatedUser.rows[0] });
@@ -517,6 +517,12 @@ router.get('/favorites/check/:companionId', authenticateToken, async (req, res) 
             "SELECT 1 FROM favorites WHERE user_id = $1 AND companion_id = $2",
             [userId, companionId]
         );
+        res.status(200).json({ isFavorited: result.rows.length > 0 });
+    } catch (err) {
+        console.error("Check favorite error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
 
 // 18. Get User / Companion Stats (Rating, Sessions, Bookings, Earnings)
 router.get(['/girl/stats/:userId', '/user/stats/:userId'], async (req, res) => {

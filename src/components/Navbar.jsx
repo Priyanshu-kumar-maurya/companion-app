@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiX, FiCreditCard } from "react-icons/fi";
+import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart } from "react-icons/fi";
 import { APP_VERSION_TAG } from "../config/version";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
@@ -11,6 +11,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     const [postCaption, setPostCaption] = useState("");
     const [isPosting, setIsPosting] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);
 
     // Instagram style post destinations & settings
     const [showOnFeed, setShowOnFeed] = useState(true);
@@ -22,6 +23,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     const currentUser = boyUser || girlUser || adminUser;
     const isBoy = boyUser !== null;
     const isAdmin = adminUser !== null;
+    const hasDocument = Boolean(currentUser?.id_proof_url || currentUser?.kyc_status === 'verified' || currentUser?.kyc_status === 'pending');
 
     useEffect(() => {
         if (!currentUser) return;
@@ -46,7 +48,23 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             } catch (err) { }
         };
 
+        const fetchTotalUnreadNotifs = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const notifs = await res.json();
+                    if (Array.isArray(notifs)) {
+                        setUnreadNotifsCount(notifs.filter(n => !n.is_read).length);
+                    }
+                }
+            } catch (err) { }
+        };
+
         fetchTotalUnread();
+        fetchTotalUnreadNotifs();
 
         if (socket) {
             const handleNewMessage = (data) => {
@@ -61,12 +79,20 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 }
             };
 
+            const handleNewNotif = () => {
+                setUnreadNotifsCount((prev) => prev + 1);
+            };
+
             socket.on("receive_message", handleNewMessage);
             socket.on("messages_read_update", handleMessagesRead);
+            socket.on("new_notification", handleNewNotif);
+            socket.on("notification_received", handleNewNotif);
 
             return () => {
                 socket.off("receive_message", handleNewMessage);
                 socket.off("messages_read_update", handleMessagesRead);
+                socket.off("new_notification", handleNewNotif);
+                socket.off("notification_received", handleNewNotif);
             };
         }
     }, [socket, currentUser, page]);
@@ -178,11 +204,19 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                         <span className="relative"><FiMessageCircle size={20} />{unreadCount > 0 && <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[15px] text-center leading-[15px]">{unreadCount}</span>}</span>
                                         <span className="text-[9px] mt-0.5 font-semibold">Inbox</span>
                                     </button>
-                                    <button onClick={() => handleNavClick(PAGES.WALLET)} title="Wallet" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.WALLET ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-                                        <FiCreditCard size={20} /><span className="text-[9px] mt-0.5 font-semibold">Wallet</span>
-                                    </button>
-                                    <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} title="Activity" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-                                        <FiBell size={20} /><span className="text-[9px] mt-0.5 font-semibold">Activity</span>
+                                    {hasDocument && (
+                                        <button onClick={() => handleNavClick(PAGES.WALLET)} title="Wallet" className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.WALLET ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                            <FiCreditCard size={20} /><span className="text-[9px] mt-0.5 font-semibold">Wallet</span>
+                                        </button>
+                                    )}
+                                    <button onClick={() => handleNavClick(PAGES.NOTIFICATIONS)} title="Activity" className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c] bg-[#e1306c]/10' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
+                                        <span className="relative">
+                                            <FiBell size={20} />
+                                            {unreadNotifsCount > 0 && (
+                                                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
+                                            )}
+                                        </span>
+                                        <span className="text-[9px] mt-0.5 font-semibold">Activity</span>
                                     </button>
                                 </>
                             )}
@@ -197,9 +231,11 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                             <FiShield size={13} /> Admin
                                         </button>
                                     )}
-                                    <button onClick={() => handleNavClick(PAGES.WALLET)} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 rounded-full text-pink-300 transition shrink-0 shadow-sm">
-                                        <FiCreditCard size={13} /> Wallet
-                                    </button>
+                                    {hasDocument && (
+                                        <button onClick={() => handleNavClick(PAGES.WALLET)} className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold bg-pink-500/10 border border-pink-500/30 hover:bg-pink-500/20 rounded-full text-pink-300 transition shrink-0 shadow-sm">
+                                            <FiCreditCard size={13} /> Wallet
+                                        </button>
+                                    )}
                                     <button onClick={() => setShowPostModal(true)} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold bg-white/5 border border-[#262626] hover:bg-white/10 rounded-full text-white transition shrink-0">
                                         <FiPlusCircle size={14} /> Post
                                     </button>
@@ -226,6 +262,47 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 </nav>
             )}
 
+
+            {/* ─── MOBILE TOP BAR: Instagram Style for Logged In, Guest Header for Visitors ─── */}
+            {!isHiddenScreen && currentUser && (
+                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] h-14 flex items-center justify-between px-4">
+                    <button onClick={() => handleNavClick(PAGES.HOME)} className="flex items-center gap-2 outline-none">
+                        <h3 className="text-2xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider select-none">
+                            Coffeely
+                        </h3>
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        {/* Notifications (Instagram-Style Heart Activity) */}
+                        <button
+                            onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
+                            className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c]' : 'text-white hover:text-gray-300'}`}
+                            title="Notifications"
+                            aria-label="Notifications"
+                        >
+                            <FiHeart size={24} className={page === PAGES.NOTIFICATIONS ? "fill-[#e1306c] text-[#e1306c]" : ""} />
+                            {unreadNotifsCount > 0 && (
+                                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
+                            )}
+                        </button>
+
+                        {/* Direct Messages Icon */}
+                        <button
+                            onClick={() => handleNavClick(PAGES.MESSAGES)}
+                            className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.MESSAGES ? 'text-[#e1306c]' : 'text-white hover:text-gray-300'}`}
+                            title="Direct Messages"
+                            aria-label="Direct Messages"
+                        >
+                            <FiMessageCircle size={24} />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full min-w-[16px] h-4 flex items-center justify-center ring-2 ring-black">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {!isHiddenScreen && !currentUser && (
                 <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur border-b border-[#262626] h-14 flex items-center justify-between px-4">
@@ -290,7 +367,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                             </button>
                         )}
 
-                        {currentUser && (
+                        {currentUser && hasDocument && (
                             <button onClick={() => handleNavClick(PAGES.WALLET)} className={`flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 ${page === PAGES.WALLET ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <FiCreditCard size={22} />
                                 <span className="text-[9px] font-bold">Wallet</span>
