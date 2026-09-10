@@ -293,7 +293,18 @@ function App() {
       case PAGES.FIND:
         return <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
       case PAGES.DETAILS:
-        return selectedGirl ? <DetailsPage girl={selectedGirl} setPage={setPage} currentUser={currentUser} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
+        return selectedGirl ? (
+          <DetailsPage 
+            girl={selectedGirl} 
+            setPage={setPage} 
+            currentUser={currentUser} 
+            setSelectedGirl={setSelectedGirl} 
+            onUpdateUser={(updated) => {
+              if (currentUser?.role === 'girl') setGirlUser(updated);
+              else setBoyUser(updated);
+            }} 
+          />
+        ) : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
       case PAGES.CHAT:
         return selectedGirl ? <ChatPage girl={selectedGirl} currentUser={currentUser} setPage={setPage} setSelectedGirl={setSelectedGirl} /> : <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />;
       case PAGES.WALLET: {

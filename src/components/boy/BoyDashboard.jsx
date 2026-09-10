@@ -118,6 +118,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         socket.emit("join_own_room", user.id);
 
         const handleReceiveBooking = (data) => {
+            if (!hasDocument) return;
             setNewBookingAlert(data);
             fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -331,17 +332,19 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
         return b.status === bookingFilter;
     });
 
-    const notificationsList = pendingBookings.map(b => ({
-        id: `booking-${b.id}`,
-        type: 'booking',
-        message: `${b.girl_name || 'Someone'} requested a booking for ${b.hours} hrs.`,
-        time: b.created_at,
-        pic: b.girl_pic
-    }));
+    const notificationsList = hasDocument
+        ? pendingBookings.map(b => ({
+            id: `booking-${b.id}`,
+            type: 'booking',
+            message: `${b.girl_name || 'Someone'} requested a booking for ${b.hours} hrs.`,
+            time: b.created_at,
+            pic: b.girl_pic
+        }))
+        : [];
 
     return (
         <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
-            {newBookingAlert && (
+            {newBookingAlert && hasDocument && (
                 <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <FiBell size={22} />
                     <div>
@@ -482,7 +485,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-7">
+                <div className={`grid ${hasDocument ? 'grid-cols-3' : 'grid-cols-2'} gap-3 mb-7`}>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('rating')}>
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiStar size={12} className="text-yellow-400" /> Rating</div>
                         <div className="text-xl font-bold text-yellow-400">
@@ -492,16 +495,18 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             }
                         </div>
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative group" onClick={() => setActiveStatModal('my_bookings')}>
-                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiCalendar size={12} className="text-green-400" /> Bookings</div>
-                        <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
-                        {pendingBookings.length > 0 && (
-                            <span className="absolute top-2 right-2 flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
-                            </span>
-                        )}
-                    </div>
+                    {hasDocument && (
+                        <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative group" onClick={() => setActiveStatModal('my_bookings')}>
+                            <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiCalendar size={12} className="text-green-400" /> Bookings</div>
+                            <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
+                            {pendingBookings.length > 0 && (
+                                <span className="absolute top-2 right-2 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                                </span>
+                            )}
+                        </div>
+                    )}
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group" onClick={() => setActiveStatModal('notifications')}>
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2"><FiBell size={12} className="text-purple-400" /> Alerts</div>
                         <div className="text-xl font-bold text-purple-400">{notificationsList.length}</div>
@@ -712,6 +717,14 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         <div className="overflow-y-auto p-5 space-y-4 custom-scrollbar">
 
                             {activeStatModal === 'my_bookings' && (
+                                !hasDocument ? (
+                                    <div className="py-8 text-center flex flex-col items-center gap-3">
+                                        <FiShield size={36} className="text-blue-400" />
+                                        <div className="font-bold text-white text-sm">ID Verification Required</div>
+                                        <p className="text-xs text-gray-400 max-w-xs">Date Bookings & Companion requests access karne ke liye apna Govt ID document upload karein.</p>
+                                        <button onClick={() => { setActiveStatModal(null); setShowSettings(true); }} className="px-5 py-2 rounded-xl text-xs font-bold bg-blue-500 text-white">Upload Document</button>
+                                    </div>
+                                ) : (
                                 <>
                                     <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar shrink-0 sticky top-0 bg-[#16162A] z-10 -mt-2 pt-2">
                                         {['all', 'pending', 'accepted', 'completed', 'canceled'].map(filter => (
@@ -830,7 +843,8 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                             ))}
                                         </div>
                                     )}
-                                </>
+                                    </>
+                                )
                             )}
 
                             {activeStatModal === 'earnings' && (

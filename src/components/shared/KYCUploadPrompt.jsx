@@ -8,7 +8,15 @@ const DOC_TYPES = [
     { id: "passport", label: "Passport", hint: "First page with personal details" }
 ];
 
-export default function KYCUploadPrompt({ user, onUploadSuccess, onCancel }) {
+export default function KYCUploadPrompt({ 
+    user, 
+    onUploadSuccess, 
+    onCancel, 
+    title = "Document Verification", 
+    badge = "Security Gate", 
+    subtitle = "Financial safety aur user protection ke liye Date Booking & Wallet features unlock karne se pehle apna government ID proof verify karana zaroori hai.",
+    buttonText = "Upload Document & Continue"
+}) {
     const [selectedDocType, setSelectedDocType] = useState("aadhaar");
     const [file, setFile] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -100,10 +108,10 @@ export default function KYCUploadPrompt({ user, onUploadSuccess, onCancel }) {
                     </div>
                     <div>
                         <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-pink-500/10 border border-pink-500/20 text-pink-400">
-                            Wallet Security Gate
+                            {badge}
                         </span>
                         <h2 className="text-xl font-black text-white mt-1">
-                            Document Verification
+                            {title}
                         </h2>
                     </div>
                 </div>
@@ -120,7 +128,7 @@ export default function KYCUploadPrompt({ user, onUploadSuccess, onCancel }) {
 
             {/* Subtitle / Explanation */}
             <p className="text-xs sm:text-sm text-gray-300 leading-relaxed mb-6">
-                Financial safety aur government compliance ke liye wallet access unlock karne se pehle apna government ID proof verify karana zaroori hai.
+                {subtitle}
             </p>
 
             {/* Success Banner */}
@@ -236,7 +244,7 @@ export default function KYCUploadPrompt({ user, onUploadSuccess, onCancel }) {
                         ) : (
                             <>
                                 <FiShield size={16} />
-                                <span>Upload Document & Unlock Wallet</span>
+                                <span>{buttonText}</span>
                             </>
                         )}
                     </button>

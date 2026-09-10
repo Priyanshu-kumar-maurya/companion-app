@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import InstagramPostModal from "./InstagramPostModal";
 import PaymentModal from "./PaymentModal";
 import ReviewsSection from "./ReviewsSection";
+import KYCUploadPrompt from "./KYCUploadPrompt";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -22,11 +23,14 @@ const TIME_SLOTS = [
     { id: "late_night", label: "Late Night", timeRange: "09:00 PM - 11:00 PM", icon: "✨" }
 ];
 
-function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
+function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onUpdateUser }) {
     const [hours, setHours] = useState(2);
     const [posts, setPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
     const [showDpModal, setShowDpModal] = useState(false);
+    const [showKycModal, setShowKycModal] = useState(false);
+
+    const hasDocument = Boolean(currentUser?.id_proof_url || currentUser?.kyc_status === 'verified' || currentUser?.kyc_status === 'pending');
 
     const [bookingStatus, setBookingStatus] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -489,6 +493,11 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
     const handleOpenPaymentCheckout = () => {
         if (!currentUser) return alert("Please login first!");
+        if (!hasDocument) {
+            setShowBookingModal(false);
+            setShowKycModal(true);
+            return;
+        }
         if (!meetingInfo.date) return alert("Please select a date!");
 
         const amount = (profile.price || 1000) * hours;
@@ -985,44 +994,75 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
 
                 {/* ── BOOKING SECTION ── */}
                 {currentUser && currentUser.id !== profile.id && (
-                    <div className="rounded-2xl overflow-hidden mb-6 border border-white/5" style={{ background: '#16162A' }}>
-                        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                            <div className="flex items-center gap-2 font-bold text-white">
-                                <FiCalendar size={16} style={{ color: accentColor }} />
-                                Book a Session
+                    hasDocument ? (
+                        <div className="rounded-2xl overflow-hidden mb-6 border border-white/5" style={{ background: '#16162A' }}>
+                            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                                <div className="flex items-center gap-2 font-bold text-white">
+                                    <FiCalendar size={16} style={{ color: accentColor }} />
+                                    Book a Session
+                                </div>
+                                <span className="text-xs text-gray-400">₹{profile.price || 1000}/hr</span>
                             </div>
-                            <span className="text-xs text-gray-400">₹{profile.price || 1000}/hr</span>
-                        </div>
-                        <div className="px-5 py-4">
-                            <div className="flex gap-2 flex-wrap mb-5">
-                                {[1, 2, 3, 4, 5].map((h) => (
+                            <div className="px-5 py-4">
+                                <div className="flex gap-2 flex-wrap mb-5">
+                                    {[1, 2, 3, 4, 5].map((h) => (
+                                        <button
+                                            key={h}
+                                            onClick={() => setHours(h)}
+                                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${hours === h
+                                                ? `bg-gradient-to-r ${accentGrad} text-white shadow-md`
+                                                : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'}`}
+                                        >
+                                            {h} hr{h > 1 ? 's' : ''}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-xs text-gray-400 mb-1">Total</div>
+                                        <div className="text-3xl font-extrabold text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${accentColor}, #a855f7)` }}>
+                                            ₹{(profile.price || 1000) * hours}
+                                        </div>
+                                    </div>
                                     <button
-                                        key={h}
-                                        onClick={() => setHours(h)}
-                                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${hours === h
-                                            ? `bg-gradient-to-r ${accentGrad} text-white shadow-md`
-                                            : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'}`}
+                                        onClick={() => setShowBookingModal(true)}
+                                        className={`px-6 py-3 rounded-xl font-bold text-sm bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 transition shadow-lg`}
                                     >
-                                        {h} hr{h > 1 ? 's' : ''}
+                                        {bookingStatus === 'success' ? 'Request Sent ✓' : 'Book Now'}
                                     </button>
-                                ))}
+                                </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs text-gray-400 mb-1">Total</div>
-                                    <div className="text-3xl font-extrabold text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${accentColor}, #a855f7)` }}>
-                                        ₹{(profile.price || 1000) * hours}
+                        </div>
+                    ) : (
+                        <div className="rounded-2xl overflow-hidden mb-6 p-5 sm:p-6 border border-purple-500/20 bg-gradient-to-br from-[#16162A] via-[#1a142e] to-[#121224] shadow-xl">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-start gap-3.5">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0 mt-0.5 shadow-inner">
+                                        <FiShield size={24} />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                                                ID Verification Required
+                                            </span>
+                                            <span className="text-xs text-gray-400 font-semibold">₹{profile.price || 1000}/hr</span>
+                                        </div>
+                                        <h3 className="font-bold text-white text-base mt-1">Date Booking Locked</h3>
+                                        <p className="text-xs text-gray-300 mt-1 leading-relaxed max-w-lg">
+                                            Safe & verified companions ke sath date book karne ke liye apna government document upload karein. Normal Instagram ki tarah posts, stories, chat aur following aap bina verification ke chala sakte hain!
+                                        </p>
                                     </div>
                                 </div>
                                 <button
-                                    onClick={() => setShowBookingModal(true)}
-                                    className={`px-6 py-3 rounded-xl font-bold text-sm bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 transition shadow-lg`}
+                                    onClick={() => setShowKycModal(true)}
+                                    className="w-full sm:w-auto px-5 py-3 rounded-xl font-bold text-xs bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 text-white shadow-lg whitespace-nowrap flex items-center justify-center gap-2 transition active:scale-95"
                                 >
-                                    {bookingStatus === 'success' ? 'Request Sent ✓' : 'Book Now'}
+                                    <FiShield size={14} />
+                                    Upload ID to Unlock Booking
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    )
                 )}
 
                 {/* ── POSTS GRID (Instagram style) ── */}
@@ -1445,6 +1485,26 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl }) {
                 currentUser={currentUser}
                 onPaymentSuccess={handlePaymentSuccess}
             />
+
+            {/* KYC Upload Modal for Date Booking */}
+            {showKycModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+                    <div className="w-full max-w-lg">
+                        <KYCUploadPrompt
+                            user={currentUser}
+                            title="Verify ID to Book Dates"
+                            badge="Date Booking Security"
+                            subtitle="Dating & companion bookings ke liye apna government ID proof upload karein. Normal social features (posts, stories, reels, chat, follow) aap bina ID verification ke chala sakte hain."
+                            buttonText="Upload Document & Unlock Booking"
+                            onUploadSuccess={(updated) => {
+                                setShowKycModal(false);
+                                if (onUpdateUser) onUpdateUser(updated);
+                            }}
+                            onCancel={() => setShowKycModal(false)}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -74,6 +74,17 @@ router.post('/bookings', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: "Unauthorized: Only participants can make bookings." });
         }
 
+        // KYC Guard: Date booking requires document upload
+        const senderUserRes = await pool.query('SELECT id_proof_url, kyc_status, role FROM users WHERE id = $1', [sender_id]);
+        const senderUser = senderUserRes.rows[0];
+        const hasDoc = Boolean(senderUser?.id_proof_url || senderUser?.kyc_status === 'verified' || senderUser?.kyc_status === 'pending');
+        if (!hasDoc && senderUser?.role !== 'admin') {
+            return res.status(403).json({ 
+                error: "Date ya companion book karne ke liye apna government document upload karna anivarya hai (Govt ID Required).", 
+                kyc_required: true 
+            });
+        }
+
         const baseAmount = parseFloat(amount);
         const platformFee = Math.round(baseAmount * 0.05);
         const companionEarnings = baseAmount;
@@ -178,6 +189,19 @@ router.put('/bookings/:bookingId', authenticateToken, async (req, res) => {
 
         if (req.user.role !== 'admin' && !isParticipant) {
             return res.status(403).json({ error: "Forbidden: Only booking participants can update booking status." });
+        }
+
+        // Companion accepting booking must also have uploaded a document
+        if (status === 'accepted') {
+            const participantUserRes = await pool.query('SELECT id_proof_url, kyc_status, role FROM users WHERE id = $1', [req.user.id]);
+            const participantUser = participantUserRes.rows[0];
+            const hasDoc = Boolean(participantUser?.id_proof_url || participantUser?.kyc_status === 'verified' || participantUser?.kyc_status === 'pending');
+            if (!hasDoc && participantUser?.role !== 'admin') {
+                return res.status(403).json({ 
+                    error: "Booking request accept karne ke liye government ID upload karna anivarya hai.", 
+                    kyc_required: true 
+                });
+            }
         }
 
         const updatedBooking = await pool.query(

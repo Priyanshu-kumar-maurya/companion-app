@@ -6,7 +6,7 @@ import InstagramPostModal from '../shared/InstagramPostModal';
 import GirlWalletTab from './GirlWalletTab';
 import KYCUploadPrompt from '../shared/KYCUploadPrompt';
 import imageCompression from 'browser-image-compression';
-import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin, FiHeart, FiGrid, FiDollarSign } from "react-icons/fi";
+import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin, FiHeart, FiGrid, FiDollarSign, FiShield } from "react-icons/fi";
 
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "No Rating" });
@@ -122,6 +122,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         socket.emit("join_own_room", user.id);
 
         const handleReceiveBooking = (data) => {
+            if (!hasDocument) return;
             setNewBookingAlert(data);
             fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
@@ -338,17 +339,19 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         return b.status === bookingFilter;
     });
 
-    const notificationsList = pendingBookings.map(b => ({
-        id: `booking-${b.id}`,
-        type: 'booking',
-        message: `${b.boy_name} requested a booking for ${b.hours} hrs.`,
-        time: b.created_at,
-        pic: b.boy_pic
-    }));
+    const notificationsList = hasDocument
+        ? pendingBookings.map(b => ({
+            id: `booking-${b.id}`,
+            type: 'booking',
+            message: `${b.boy_name} requested a booking for ${b.hours} hrs.`,
+            time: b.created_at,
+            pic: b.boy_pic
+        }))
+        : [];
 
     return (
         <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
-            {newBookingAlert && (
+            {newBookingAlert && hasDocument && (
                 <div className="fixed top-20 right-6 z-50 bg-pink-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
                     <span className="text-2xl">🔔</span>
                     <div>
@@ -484,7 +487,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     )}
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-7">
+                <div className={`grid ${hasDocument ? 'grid-cols-3' : 'grid-cols-2'} gap-3 mb-7`}>
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('rating')}>
                         <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiStar size={12} className="text-yellow-400 fill-yellow-400" /> Rating</div>
                         <div className="text-xl font-bold text-yellow-400 flex items-center gap-1">
@@ -497,16 +500,18 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             )}
                         </div>
                     </div>
-                    <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative flex flex-col justify-between" onClick={() => setActiveStatModal('my_bookings')}>
-                        <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiCalendar size={12} /> Bookings</div>
-                        <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
-                        {pendingBookings.length > 0 && (
-                            <span className="absolute top-2 right-2 flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
-                            </span>
-                        )}
-                    </div>
+                    {hasDocument && (
+                        <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative flex flex-col justify-between" onClick={() => setActiveStatModal('my_bookings')}>
+                            <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiCalendar size={12} /> Bookings</div>
+                            <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
+                            {pendingBookings.length > 0 && (
+                                <span className="absolute top-2 right-2 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+                                </span>
+                            )}
+                        </div>
+                    )}
                     <div className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between" onClick={() => setActiveStatModal('notifications')}>
                         <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5"><FiBell size={12} /> Alerts</div>
                         <div className="text-xl font-bold text-purple-400">{notificationsList.length}</div>
@@ -717,6 +722,14 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         <div className="overflow-y-auto p-5 space-y-4 custom-scrollbar">
 
                             {activeStatModal === 'my_bookings' && (
+                                !hasDocument ? (
+                                    <div className="py-8 text-center flex flex-col items-center gap-3">
+                                        <FiShield size={36} className="text-pink-400" />
+                                        <div className="font-bold text-white text-sm">ID Verification Required</div>
+                                        <p className="text-xs text-gray-400 max-w-xs">Dating Requests aur Bookings access karne ke liye apna Govt ID document upload karein.</p>
+                                        <button onClick={() => { setActiveStatModal(null); setShowSettings(true); }} className="px-5 py-2 rounded-xl text-xs font-bold bg-pink-500 text-white">Upload Document</button>
+                                    </div>
+                                ) : (
                                 <>
                                     <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar shrink-0 sticky top-0 bg-[#16162A] z-10 -mt-2 pt-2">
                                         {['all', 'pending', 'accepted', 'completed', 'canceled'].map(filter => (
@@ -817,7 +830,8 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                             ))}
                                         </div>
                                     )}
-                                </>
+                                    </>
+                                )
                             )}
 
                             {activeStatModal === 'earnings' && (
