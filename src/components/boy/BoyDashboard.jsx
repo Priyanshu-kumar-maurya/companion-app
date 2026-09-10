@@ -35,6 +35,11 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [followListLoading, setFollowListLoading] = useState(false);
     const hasDocument = Boolean(user?.id_proof_url || user?.kyc_status === 'verified' || user?.kyc_status === 'pending');
 
+    useEffect(() => {
+        const handleOpenSettings = () => setShowSettings(true);
+        window.addEventListener('open-settings', handleOpenSettings);
+        return () => window.removeEventListener('open-settings', handleOpenSettings);
+    }, []);
 
     useEffect(() => {
         if (!user) return;

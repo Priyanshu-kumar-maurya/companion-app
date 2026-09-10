@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { PAGES } from "../../App";
-import { FiMessageCircle, FiRefreshCw, FiInbox, FiPhone, FiLock, FiUnlock, FiEye, FiEyeOff, FiSearch, FiShield, FiX } from "react-icons/fi";
+import { FiMessageCircle, FiRefreshCw, FiInbox, FiPhone, FiLock, FiUnlock, FiEye, FiEyeOff, FiSearch, FiShield, FiX, FiArrowLeft } from "react-icons/fi";
 import { isChatLocked, isChatHidden, hideChat, unhideChat, lockChat, unlockChat, isLockedFolderHidden, setLockedFolderHidden, verifyChatLockPin, hasChatLockPin } from "../../utils/chatLockManager";
 import ChatLockPinModal from "./ChatLockPinModal";
 
@@ -265,17 +265,64 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
         return `${m}m ${s}s`;
     };
 
+    // ─── Instagram-Style Swipe Gestures: Swipe Right to Return to Home Feed ───
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+
+    const handleTouchStart = (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (touchStartX.current === null || touchStartY.current === null) return;
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
+
+        const diffX = touchStartX.current - e.changedTouches[0].clientX;
+        const diffY = touchStartY.current - e.changedTouches[0].clientY;
+
+        touchStartX.current = null;
+        touchStartY.current = null;
+
+        // Ignore touches inside interactive elements
+        if (e.target && e.target.closest('button, input, textarea, a, select, [data-prevent-swipe]')) {
+            return;
+        }
+
+        // Swipe Right (diffX < -75: moved finger left to right) -> back to Home Feed
+        if (diffX < -75 && Math.abs(diffX) > Math.abs(diffY) * 1.4) {
+            if (typeof setPage === 'function') {
+                setPage(PAGES.HOME);
+            }
+        }
+    };
+
     if (!currentUser) return null;
 
     return (
-        <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-4 sm:px-6 max-w-3xl mx-auto">
+        <div 
+            className="pt-20 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-4 sm:px-6 max-w-3xl mx-auto"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+        >
             {/* Header & Tabs */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-white flex items-center gap-3">
-                        <FiMessageCircle className="text-pink-500" /> Communications
-                    </h1>
-                    <p className="text-xs text-gray-400 mt-1">End-to-end encrypted chats, calls & private lock</p>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => setPage(PAGES.HOME)}
+                        className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90 shrink-0"
+                        title="Back to Home Feed"
+                        aria-label="Back to Home Feed"
+                    >
+                        <FiArrowLeft size={20} />
+                    </button>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
+                            <FiMessageCircle className="text-pink-500" /> Direct Messages
+                        </h1>
+                        <p className="text-xs text-gray-400 mt-0.5">End-to-end encrypted chats, calls & private lock</p>
+                    </div>
                 </div>
 
                 {/* Tab Switcher */}

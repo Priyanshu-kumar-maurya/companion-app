@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart } from "react-icons/fi";
+import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart, FiMenu, FiPlusSquare, FiLock } from "react-icons/fi";
 import { APP_VERSION_TAG } from "../config/version";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
@@ -24,6 +24,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     const isBoy = boyUser !== null;
     const isAdmin = adminUser !== null;
     const hasDocument = Boolean(currentUser?.id_proof_url || currentUser?.kyc_status === 'verified' || currentUser?.kyc_status === 'pending');
+    const isProfilePage = page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD || page === PAGES.ADMIN_DASHBOARD;
 
     useEffect(() => {
         if (!currentUser) return;
@@ -266,41 +267,82 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             {/* ─── MOBILE TOP BAR: Instagram Style for Logged In, Guest Header for Visitors ─── */}
             {!isHiddenScreen && currentUser && (
                 <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] h-14 flex items-center justify-between px-4">
-                    <button onClick={() => handleNavClick(PAGES.HOME)} className="flex items-center gap-2 outline-none">
-                        <h3 className="text-2xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider select-none">
-                            Coffeely
-                        </h3>
-                    </button>
+                    {isProfilePage ? (
+                        <>
+                            {/* Instagram Profile Top Header: Username on Left */}
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                {currentUser.is_private && <FiLock size={14} className="text-gray-400 shrink-0" />}
+                                <h3 className="text-lg font-black text-white tracking-tight truncate max-w-[210px]">
+                                    {currentUser.username ? `@${currentUser.username}` : currentUser.name}
+                                </h3>
+                                {currentUser.kyc_status === 'verified' && (
+                                    <span className="w-4 h-4 rounded-full bg-[#0095f6] text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm">
+                                        ✓
+                                    </span>
+                                )}
+                            </div>
 
-                    <div className="flex items-center gap-1">
-                        {/* Notifications (Instagram-Style Heart Activity) */}
-                        <button
-                            onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
-                            className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c]' : 'text-white hover:text-gray-300'}`}
-                            title="Notifications"
-                            aria-label="Notifications"
-                        >
-                            <FiHeart size={24} className={page === PAGES.NOTIFICATIONS ? "fill-[#e1306c] text-[#e1306c]" : ""} />
-                            {unreadNotifsCount > 0 && (
-                                <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
-                            )}
-                        </button>
+                            {/* Instagram Profile Top Header: Create Post (+) & Settings Menu (☰) on Right (NO heart/DM on profile) */}
+                            <div className="flex items-center gap-1.5">
+                                <button
+                                    onClick={() => setShowPostModal(true)}
+                                    className="p-2 text-white hover:text-gray-300 transition active:scale-90"
+                                    title="New Post"
+                                    aria-label="New Post"
+                                >
+                                    <FiPlusSquare size={24} />
+                                </button>
+                                <button
+                                    onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))}
+                                    className="p-2 text-white hover:text-gray-300 transition active:scale-90"
+                                    title="Settings & Menu"
+                                    aria-label="Settings & Menu"
+                                >
+                                    <FiMenu size={26} />
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Instagram Feed Top Header: Coffeely on Left */}
+                            <button onClick={() => handleNavClick(PAGES.HOME)} className="flex items-center gap-2 outline-none">
+                                <h3 className="text-2xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider select-none">
+                                    Coffeely
+                                </h3>
+                            </button>
 
-                        {/* Direct Messages Icon */}
-                        <button
-                            onClick={() => handleNavClick(PAGES.MESSAGES)}
-                            className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.MESSAGES ? 'text-[#e1306c]' : 'text-white hover:text-gray-300'}`}
-                            title="Direct Messages"
-                            aria-label="Direct Messages"
-                        >
-                            <FiMessageCircle size={24} />
-                            {unreadCount > 0 && (
-                                <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full min-w-[16px] h-4 flex items-center justify-center ring-2 ring-black">
-                                    {unreadCount > 9 ? '9+' : unreadCount}
-                                </span>
-                            )}
-                        </button>
-                    </div>
+                            {/* Instagram Feed Top Header: Notification (Heart) + DM (Message) on Right */}
+                            <div className="flex items-center gap-1">
+                                {/* Notifications (Instagram-Style Heart Activity) */}
+                                <button
+                                    onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
+                                    className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.NOTIFICATIONS ? 'text-[#e1306c]' : 'text-white hover:text-gray-300'}`}
+                                    title="Notifications"
+                                    aria-label="Notifications"
+                                >
+                                    <FiHeart size={24} className={page === PAGES.NOTIFICATIONS ? "fill-[#e1306c] text-[#e1306c]" : ""} />
+                                    {unreadNotifsCount > 0 && (
+                                        <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
+                                    )}
+                                </button>
+
+                                {/* Direct Messages Icon */}
+                                <button
+                                    onClick={() => handleNavClick(PAGES.MESSAGES)}
+                                    className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.MESSAGES ? 'text-[#e1306c]' : 'text-white hover:text-gray-300'}`}
+                                    title="Direct Messages"
+                                    aria-label="Direct Messages"
+                                >
+                                    <FiMessageCircle size={24} />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full min-w-[16px] h-4 flex items-center justify-center ring-2 ring-black">
+                                            {unreadCount > 9 ? '9+' : unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
 
@@ -336,47 +378,42 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             {!isHiddenScreen && (
                 <div className="fixed bottom-0 left-0 w-full bg-[#121212]/95 backdrop-blur-xl border-t border-[#262626] z-40 md:hidden pb-2 pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
-                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                             <FiHome size={22} /><span className="text-[9px] font-bold">Home</span>
                         </button>
 
                         {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <FiSearch size={22} /><span className="text-[9px] font-bold">Explore</span>
                             </button>
                         )}
 
                         {currentUser && (
-                            <button onClick={() => setShowPostModal(true)} className="flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 text-pink-400 hover:text-pink-300">
-                                <FiPlusCircle size={23} />
+                            <button onClick={() => setShowPostModal(true)} className="flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 text-pink-400 hover:text-pink-300">
+                                <FiPlusCircle size={24} />
                                 <span className="text-[9px] font-bold">Post</span>
                             </button>
                         )}
 
-                        {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.MESSAGES)} className={`relative flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 ${page === PAGES.MESSAGES ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <span className="relative">
-                                    <FiMessageCircle size={22} />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-bounce shadow-lg">
-                                            {unreadCount}
-                                        </span>
-                                    )}
-                                </span>
-                                <span className="text-[9px] font-bold">Inbox</span>
-                            </button>
-                        )}
-
                         {currentUser && hasDocument && (
-                            <button onClick={() => handleNavClick(PAGES.WALLET)} className={`flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 ${page === PAGES.WALLET ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                            <button onClick={() => handleNavClick(PAGES.WALLET)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.WALLET ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                                 <FiCreditCard size={22} />
                                 <span className="text-[9px] font-bold">Wallet</span>
                             </button>
                         )}
 
                         {currentUser ? (
-                            <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-11 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <FiUser size={22} /><span className="text-[9px] font-bold">Profile</span>
+                            <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                {currentUser.profile_pic ? (
+                                    <img
+                                        src={currentUser.profile_pic}
+                                        alt=""
+                                        className={`w-6 h-6 rounded-full object-cover transition-all ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? "ring-2 ring-[#e1306c] ring-offset-1 ring-offset-black" : "border border-white/20"}`}
+                                    />
+                                ) : (
+                                    <FiUser size={22} />
+                                )}
+                                <span className="text-[9px] font-bold">Profile</span>
                             </button>
                         ) : (
                             <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../App";
 import Footer from "./Footer";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
@@ -479,9 +479,46 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         return `${diffDays}d`;
     };
 
+    // ─── Instagram-Style Swipe Gestures: Swipe Left to Open Direct Messages ───
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+
+    const handleTouchStart = (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (touchStartX.current === null || touchStartY.current === null) return;
+        if (!e.changedTouches || e.changedTouches.length === 0) return;
+
+        const diffX = touchStartX.current - e.changedTouches[0].clientX;
+        const diffY = touchStartY.current - e.changedTouches[0].clientY;
+
+        touchStartX.current = null;
+        touchStartY.current = null;
+
+        // Ignore touches inside interactive elements
+        if (e.target && e.target.closest('button, input, textarea, a, select, [data-prevent-swipe]')) {
+            return;
+        }
+
+        // Swipe Left (from right to left) -> open Direct Messages
+        if (diffX > 75 && Math.abs(diffX) > Math.abs(diffY) * 1.4) {
+            if (currentUser && typeof setPage === 'function') {
+                setPage(PAGES.MESSAGES);
+            }
+        }
+    };
+
     if (isLoggedIn) {
         return (
-            <div className="min-h-[100dvh] bg-black pt-20 pb-20 flex justify-center">
+            <div 
+                className="min-h-[100dvh] bg-black pt-20 pb-20 flex justify-center"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 <div className="w-full max-w-lg flex flex-col gap-6 px-4">
                     {loading ? (
                         <div className="flex justify-center items-center h-64">
