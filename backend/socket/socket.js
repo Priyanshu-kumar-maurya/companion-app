@@ -257,6 +257,13 @@ module.exports = (io) => {
             io.to(data.receiver_id.toString()).emit("receive_booking_notification", data);
         });
 
+        socket.on("send_activity_notification", (data) => {
+            if (data?.receiver_id) {
+                io.to(`user_${data.receiver_id}`).emit("receive_activity_notification", data);
+                io.to(data.receiver_id.toString()).emit("receive_activity_notification", data);
+            }
+        });
+
         socket.on("active_status_changed", async () => {
             await broadcastOnlineUsers(io);
         });
