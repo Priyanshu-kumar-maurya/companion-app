@@ -232,6 +232,14 @@ const connectDB = async () => {
             expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL '24 hours')
         );`);
 
+        await pool.query(`CREATE TABLE IF NOT EXISTS story_views (
+            id SERIAL PRIMARY KEY,
+            story_id INTEGER REFERENCES stories(id) ON DELETE CASCADE,
+            viewer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+            viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(story_id, viewer_id)
+        );`);
+
         await pool.query(`CREATE TABLE IF NOT EXISTS favorites (
             id SERIAL PRIMARY KEY,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

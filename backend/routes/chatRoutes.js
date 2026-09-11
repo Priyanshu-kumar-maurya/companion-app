@@ -57,6 +57,28 @@ router.get('/messages/:user1/:user2', authenticateToken, async (req, res) => {
     }
 });
 
+// Send Direct Message Route
+router.post('/messages', authenticateToken, async (req, res) => {
+    try {
+        const { receiver_id, text, image_url } = req.body;
+        const sender_id = req.user.id;
+
+        if (!receiver_id || (!text && !image_url)) {
+            return res.status(400).json({ error: "receiver_id and text or image_url required." });
+        }
+
+        const result = await pool.query(
+            "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING *",
+            [sender_id, receiver_id, text, image_url || null]
+        );
+
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error("Send message error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 // Clear Chat Messages Route
 router.post('/messages/clear', authenticateToken, async (req, res) => {
     try {

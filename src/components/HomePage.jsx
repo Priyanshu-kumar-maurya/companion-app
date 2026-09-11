@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../App";
 import Footer from "./Footer";
+import StoriesBar from "./shared/StoriesBar";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
 import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
@@ -520,6 +521,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 onTouchEnd={handleTouchEnd}
             >
                 <div className="w-full max-w-lg flex flex-col gap-6 px-4">
+                    {/* 📸 24-Hour Ephemeral Stories Bar */}
+                    <StoriesBar currentUser={currentUser} />
+
                     {loading ? (
                         <div className="flex justify-center items-center h-64">
                             <RiLoader4Line className="text-[#e1306c] text-5xl animate-spin" />
