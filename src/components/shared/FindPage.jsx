@@ -3,6 +3,7 @@ import { PAGES } from "../../App";
 import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiNavigation, FiHeart, FiGrid, FiMap } from "react-icons/fi";
 import StoriesBar from "./StoriesBar";
 import CompanionMapView from "./CompanionMapView";
+import VerifiedBadge from "./VerifiedBadge";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
@@ -519,9 +520,9 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                             )}
 
                                             {u.kyc_status === 'verified' && (
-                                                <div className="absolute top-3 left-3 bg-emerald-500/20 border border-emerald-500/40 rounded-full px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 backdrop-blur-md flex items-center gap-1 shadow-sm">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                                    ✓ Verified
+                                                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/15 rounded-full pl-1.5 pr-2.5 py-0.5 text-[11px] font-bold text-white flex items-center gap-1.5 shadow-md">
+                                                    <VerifiedBadge size="xs" />
+                                                    <span>Verified</span>
                                                 </div>
                                             )}
 

@@ -5,6 +5,7 @@ import InstagramPostModal from "./InstagramPostModal";
 import PaymentModal from "./PaymentModal";
 import ReviewsSection from "./ReviewsSection";
 import KYCUploadPrompt from "./KYCUploadPrompt";
+import VerifiedBadge from "./VerifiedBadge";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -731,7 +732,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                             <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                                 {profile.name}
                                 {profile.kyc_status === 'verified' && (
-                                    <span className="text-blue-400" title="Verified Companion">✔</span>
+                                    <VerifiedBadge size="sm" />
                                 )}
                             </h1>
                             <span className="text-xs text-gray-500 mt-0.5 font-semibold block">
@@ -868,7 +869,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                         <h1 className="text-lg font-bold text-white flex items-center gap-2">
                             {profile.name}
                             {profile.kyc_status === 'verified' && (
-                                <span className="text-blue-400" title="Verified Companion">✔</span>
+                                <VerifiedBadge size="sm" />
                             )}
                         </h1>
                         <span className="text-[11px] text-gray-500 font-semibold block">

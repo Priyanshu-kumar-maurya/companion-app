@@ -7,6 +7,7 @@ import InvoiceModal from '../shared/InvoiceModal';
 import ReviewModal from '../shared/ReviewModal';
 import GirlWalletTab from '../girl/GirlWalletTab';
 import KYCUploadPrompt from '../shared/KYCUploadPrompt';
+import VerifiedBadge from '../shared/VerifiedBadge';
 import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart, FiFileText, FiDollarSign } from "react-icons/fi";
 import imageCompression from 'browser-image-compression';
 
@@ -403,9 +404,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         <div className="flex items-center gap-2 mb-1.5">
                             <h1 className="text-base sm:text-lg font-bold text-white">{user.name}</h1>
                             {user.kyc_status === 'verified' && (
-                                <span className="flex items-center gap-1 text-[9px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-500/20">
-                                    <FiShield size={9} /> Verified
-                                </span>
+                                <VerifiedBadge size="sm" />
                             )}
                         </div>
                         {user.bio && <p className="text-gray-300 text-sm leading-relaxed mb-1">{user.bio}</p>}
@@ -413,20 +412,33 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             <a
                                 href={user.social_link.startsWith('http') ? user.social_link : `https://${user.social_link}`}
                                 target="_blank" rel="noreferrer"
-                                className="text-blue-400 text-xs hover:underline flex items-center gap-1 w-fit mt-1.5"
+                                className="text-pink-400 text-xs hover:underline flex items-center gap-1 w-fit mt-1.5"
                             >
                                 <FiLink size={12} /> {user.social_link}
                             </a>
                         )}
                     </div>
 
-                    {/* Full-width action button for Edit Profile */}
-                    <div className="w-full flex gap-3">
+                    {/* Instagram-Style Profile Action Buttons */}
+                    <div className="w-full flex gap-2">
                         <button
                             onClick={() => setShowSettings(true)}
-                            className="flex-1 py-2 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold hover:bg-white/20 transition flex items-center justify-center gap-1.5"
+                            className="flex-1 py-1.5 bg-[#262626] hover:bg-[#363636] text-white rounded-lg text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5"
                         >
-                            <FiSettings size={13} /> Edit Profile
+                            <FiSettings size={13} /> Edit profile
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (navigator.share) {
+                                    navigator.share({ title: user.name, url: window.location.href }).catch(() => {});
+                                } else {
+                                    navigator.clipboard.writeText(window.location.href);
+                                    alert("Profile link copied! 📋");
+                                }
+                            }}
+                            className="flex-1 py-1.5 bg-[#262626] hover:bg-[#363636] text-white rounded-lg text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5"
+                        >
+                            Share profile
                         </button>
                     </div>
                 </div>
@@ -607,7 +619,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                             <div className="flex-1 min-w-0">
                                                 <div className="text-sm font-bold text-white truncate flex items-center gap-1.5">
                                                     <span>{fav.name}</span>
-                                                    {fav.kyc_status === 'verified' && <span className="text-blue-400 text-xs">✔</span>}
+                                                    {fav.kyc_status === 'verified' && <VerifiedBadge size="xs" />}
                                                 </div>
                                                 <div className="text-[11px] text-gray-400 truncate">@{fav.username || fav.name.toLowerCase().replace(/\s+/g, '')}</div>
                                                 <div className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">

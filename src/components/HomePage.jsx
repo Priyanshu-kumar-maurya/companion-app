@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { PAGES } from "../App";
 import Footer from "./Footer";
 import StoriesBar from "./shared/StoriesBar";
+import VerifiedBadge from "./shared/VerifiedBadge";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
 import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
@@ -736,7 +737,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                                 <div className="bg-[#121212]/90 backdrop-blur-md p-3 relative z-10 border-t border-[#262626]">
                                                     <div className="flex items-center gap-1.5 mb-0.5">
                                                         <span className="font-extrabold text-[12px] text-white">Ananya, 21</span>
-                                                        <span className="bg-[#0095f6] text-white text-[7px] px-1.5 py-0.5 rounded-full font-bold">VERIFIED</span>
+                                                        <VerifiedBadge size="xs" />
                                                     </div>
                                                     <p className="text-[9px] text-gray-300 flex items-center gap-1">
                                                         Mumbai • <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block animate-pulse"></span> Online
@@ -942,8 +943,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                         <FiStar size={11} className="fill-yellow-400" /> {comp.rating}
                                     </div>
                                     {comp.kyc_status === 'verified' && (
-                                        <span className="absolute bottom-3 left-3 bg-[#0095f6] text-white text-[9px] px-2.5 py-0.5 rounded-full font-bold tracking-wider uppercase shadow-md flex items-center gap-1 border border-[#0095f6]/20">
-                                            <FiCheckCircle size={10} /> Verified
+                                        <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] pl-1.5 pr-2.5 py-0.5 rounded-full font-bold shadow-md flex items-center gap-1.5 border border-white/15">
+                                            <VerifiedBadge size="xs" />
+                                            <span>Verified</span>
                                         </span>
                                     )}
                                 </div>

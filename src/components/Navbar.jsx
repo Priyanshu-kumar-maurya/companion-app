@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
 import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart, FiMenu, FiPlusSquare, FiLock } from "react-icons/fi";
 import { APP_VERSION_TAG } from "../config/version";
+import VerifiedBadge from "./shared/VerifiedBadge";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -276,29 +277,27 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                     {currentUser.username ? `@${currentUser.username}` : currentUser.name}
                                 </h3>
                                 {currentUser.kyc_status === 'verified' && (
-                                    <span className="w-4 h-4 rounded-full bg-[#0095f6] text-white flex items-center justify-center text-[10px] font-black shrink-0 shadow-sm">
-                                        ✓
-                                    </span>
+                                    <VerifiedBadge size="sm" />
                                 )}
                             </div>
 
-                            {/* Instagram Profile Top Header: Create Post (+) & Settings Menu (☰) on Right (NO heart/DM on profile) */}
-                            <div className="flex items-center gap-1.5">
+                            {/* Instagram Profile Top Header: Create Post (+) & Settings Menu (☰) on Right */}
+                            <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setShowPostModal(true)}
-                                    className="p-2 text-white hover:text-gray-300 transition active:scale-90"
+                                    className="w-10 h-10 rounded-full hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90"
                                     title="New Post"
                                     aria-label="New Post"
                                 >
-                                    <FiPlusSquare size={24} />
+                                    <FiPlusSquare size={23} />
                                 </button>
                                 <button
                                     onClick={() => window.dispatchEvent(new CustomEvent('open-settings'))}
-                                    className="p-2 text-white hover:text-gray-300 transition active:scale-90"
+                                    className="w-10 h-10 rounded-full hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90"
                                     title="Settings & Menu"
                                     aria-label="Settings & Menu"
                                 >
-                                    <FiMenu size={26} />
+                                    <FiMenu size={25} />
                                 </button>
                             </div>
                         </>

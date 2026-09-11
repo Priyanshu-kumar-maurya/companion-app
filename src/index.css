@@ -94,3 +94,31 @@
 .animate-pulse-glow {
   animation: pulseGlow 2s infinite ease-in-out;
 }
+
+/* ─── Instagram Signature Button Styles ─── */
+.insta-btn-primary {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+}
+.insta-btn-primary:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+.insta-btn-secondary {
+  background-color: #262626;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+}
+.insta-btn-secondary:hover {
+  background-color: #363636;
+}
+.insta-btn-secondary:active {
+  transform: scale(0.96);
+  background-color: #1a1a1a;
+}
