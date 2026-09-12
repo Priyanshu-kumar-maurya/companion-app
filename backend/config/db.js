@@ -37,6 +37,7 @@ const connectDB = async () => {
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS longitude DECIMAL(11, 8);");
         await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS image_url TEXT;");
         await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS audio_url TEXT;");
+        await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS reaction VARCHAR(20);");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS kyc_status VARCHAR(20) DEFAULT 'unverified';");
         await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS id_proof_url TEXT;");
         await pool.query("ALTER TABLE messages ADD COLUMN IF NOT EXISTS deleted_for INTEGER[] DEFAULT '{}';");

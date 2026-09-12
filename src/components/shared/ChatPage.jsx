@@ -1,10 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { PAGES } from "../../App";
 import { io } from "socket.io-client";
-import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock, FiKey } from "react-icons/fi";
+import { FiArrowLeft, FiPhone, FiVideo, FiPaperclip, FiSend, FiMic, FiEdit2, FiTrash2, FiLock, FiUnlock, FiEye, FiEyeOff, FiX, FiCheck, FiMoreVertical, FiPhoneCall, FiPhoneOff, FiPhoneMissed, FiVideoOff, FiMicOff, FiSlash, FiFlag, FiUser, FiAlertTriangle, FiCheckCircle, FiStar, FiInfo, FiFolder, FiRefreshCw, FiClock, FiKey, FiSmile } from "react-icons/fi";
 import { isChatLocked, lockChat, unlockChat, isChatHidden, hideChat, unhideChat, hasChatLockPin } from "../../utils/chatLockManager";
 import ChatLockPinModal from "./ChatLockPinModal";
+import VoiceNotePlayer from "./VoiceNotePlayer";
 import { getStoredPreferences } from "../../utils/themePreferences";
+
+const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🙏", "🔥"];
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
     autoConnect: false,
@@ -38,6 +41,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const [hoveredMsgId, setHoveredMsgId] = useState(null);
     const [messageToDelete, setMessageToDelete] = useState(null);
     const [lightboxImg, setLightboxImg] = useState(null); // fullscreen image viewer
+    const [activeReactionPickerId, setActiveReactionPickerId] = useState(null);
+    const longPressTimerRef = useRef(null);
     
     const [showMenu, setShowMenu] = useState(false);
     const [isBlocked, setIsBlocked] = useState(false);
@@ -188,6 +193,29 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             localStorage.setItem(`stars_${currentUser?.id}_${girl?.id}`, JSON.stringify(updated));
             return updated;
         });
+    };
+
+    // Toggle emoji reaction on message
+    const handleToggleReaction = (msgId, emoji) => {
+        const targetMsg = messages.find(m => String(m.id) === String(msgId));
+        const newReaction = targetMsg?.reaction === emoji ? null : emoji;
+
+        setMessages(prev => prev.map(m => String(m.id) === String(msgId) ? { ...m, reaction: newReaction } : m));
+        setActiveReactionPickerId(null);
+
+        socket.emit("react_message", { messageId: msgId, reaction: newReaction, room: roomId });
+
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetch(`https://rentgf-and-bf.onrender.com/api/messages/${msgId}/react`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ reaction: newReaction })
+            }).catch(() => {});
+        }
     };
 
     // Toggle Disappearing Settings
@@ -555,6 +583,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         const date = new Date(msg.created_at);
                         return {
                             id: msg.id, text: msg.message, imageUrl: msg.image_url, audio_url: msg.audio_url,
+                            reaction: msg.reaction || null,
                             sent: String(msg.sender_id) === String(currentUser.id),
                             time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                             timestamp: date.getTime(), is_read: msg.is_read
@@ -580,6 +609,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 const date = data.created_at ? new Date(data.created_at) : new Date();
                 return [...prev, {
                     id: data.id, text: data.text || data.message, imageUrl: data.image_url, audio_url: data.audio_url,
+                    reaction: data.reaction || null,
                     sent: String(data.sender_id) === String(currentUser.id),
                     time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                     timestamp: date.getTime(), is_read: data.is_read || false
@@ -602,12 +632,26 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             }
         };
 
+        const handlePartnerStopTyping = (data) => {
+            if (!data || String(data.sender_id) === String(girl.id)) {
+                setIsPartnerTyping(false);
+            }
+        };
+
+        const handleMessageReactionUpdated = (data) => {
+            if (data && data.messageId) {
+                setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, reaction: data.reaction } : msg));
+            }
+        };
+
         socket.on("receive_message", handleReceiveMessage);
         socket.on("update_online_users", (usersArray) => setOnlineUsers(usersArray));
         socket.on("message_edited", (data) => setMessages(prev => prev.map(msg => String(msg.id) === String(data.messageId) ? { ...msg, text: data.newText } : msg)));
         socket.on("message_deleted", (deletedId) => setMessages(prev => prev.filter(msg => String(msg.id) !== String(deletedId))));
         socket.on("messages_read_update", handleMessagesReadUpdate);
         socket.on("partner_typing", handlePartnerTyping);
+        socket.on("partner_stop_typing", handlePartnerStopTyping);
+        socket.on("message_reaction_updated", handleMessageReactionUpdated);
 
         // Content moderation: blocked message warning
         socket.on("message_blocked", (data) => {
@@ -621,6 +665,8 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
             socket.off("message_deleted");
             socket.off("messages_read_update");
             socket.off("partner_typing", handlePartnerTyping);
+            socket.off("partner_stop_typing", handlePartnerStopTyping);
+            socket.off("message_reaction_updated", handleMessageReactionUpdated);
             socket.off("message_blocked");
             socket.disconnect();
         };
@@ -721,18 +767,20 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         // Clear existing timeout
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
 
-        // Set timeout to emit isTyping: false after 2.5s of inactivity
+        // Set timeout to emit isTyping: false after 2s of inactivity
         typingTimeoutRef.current = setTimeout(() => {
             if (lastEmitTypingRef.current) {
                 lastEmitTypingRef.current = false;
                 socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: false });
+                socket.emit("stop_typing", { room: roomId, sender_id: currentUser.id });
             }
-        }, 2500);
+        }, 2000);
 
         // If the user cleared the text, emit typing: false immediately
         if (val.trim().length === 0 && lastEmitTypingRef.current) {
             lastEmitTypingRef.current = false;
             socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: false });
+            socket.emit("stop_typing", { room: roomId, sender_id: currentUser.id });
         }
     };
 
@@ -745,6 +793,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         if (lastEmitTypingRef.current) {
             lastEmitTypingRef.current = false;
             socket.emit("typing", { room: roomId, sender_id: currentUser.id, isTyping: false });
+            socket.emit("stop_typing", { room: roomId, sender_id: currentUser.id });
         }
 
         if (editingMsgId) {
@@ -993,7 +1042,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 ) : (
                     <>
                         {/* ─── CHAT MESSAGES ─── */}
-                        <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1 transition-colors duration-300" style={{ background: wallpaperBackgrounds[userPrefs?.chatWallpaper] || '#0D0D1A' }}>
+                        <div className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1 transition-colors duration-300" style={{ background: wallpaperBackgrounds[userPrefs?.chatWallpaper] || '#0D0D1A' }} onClick={() => setActiveReactionPickerId(null)}>
                     {filteredMessagesToShow.map((msg, index) => {
                         const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
                         const prevMsg = index > 0 ? filteredMessagesToShow[index - 1] : null;
@@ -1001,6 +1050,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         const isMissedCall = msg.text && (msg.text.includes('Missed Video Call') || msg.text.includes('Missed Audio Call'));
                         const isCompletedCall = msg.text && msg.text.includes('Call -');
                         const isCallLog = isMissedCall || isCompletedCall;
+                        const isLastSentMsg = index === filteredMessagesToShow.map(m => m.sent).lastIndexOf(true);
 
                         const isSystemNotice = msg.text && msg.text.startsWith('📢');
 
@@ -1029,127 +1079,198 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div
-                                        className={`flex ${msg.sent ? 'justify-end' : 'justify-start'} group mb-0.5`}
-                                        onMouseEnter={() => setHoveredMsgId(msg.id)}
-                                        onMouseLeave={() => setHoveredMsgId(null)}
-                                    >
-                                        <div className="relative max-w-[75%] sm:max-w-[60%]">
-                                            {/* Hover action buttons */}
-                                            {hoveredMsgId === msg.id && (
-                                                <div className={`absolute top-1 ${msg.sent ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} flex gap-1 z-10`}>
-                                                    <div className="flex gap-1 rounded-lg px-1.5 py-1 shadow-lg border border-white/10" style={{ background: '#16162A' }}>
-                                                        {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
-                                                            <button onClick={() => editMessage(msg.id, msg.text)} className="p-1 text-gray-500 hover:text-pink-400 transition" title="Edit">
-                                                                <FiEdit2 size={13} />
+                                    <div className="flex flex-col mb-1">
+                                        <div
+                                            className={`flex ${msg.sent ? 'justify-end' : 'justify-start'} group relative`}
+                                            onMouseEnter={() => setHoveredMsgId(msg.id)}
+                                            onMouseLeave={() => setHoveredMsgId(null)}
+                                            onTouchStart={() => {
+                                                longPressTimerRef.current = setTimeout(() => {
+                                                    setActiveReactionPickerId(msg.id);
+                                                }, 400);
+                                            }}
+                                            onTouchEnd={() => {
+                                                if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                                            }}
+                                            onTouchMove={() => {
+                                                if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+                                            }}
+                                        >
+                                            <div className="relative max-w-[80%] sm:max-w-[65%]">
+                                                {/* Floating Emoji Reaction Popover */}
+                                                {activeReactionPickerId === msg.id && (
+                                                    <div
+                                                        className={`absolute -top-11 ${msg.sent ? 'right-0' : 'left-0'} z-30 flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#18182f] border border-pink-500/30 shadow-2xl backdrop-blur-md animate-fade-in`}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                    >
+                                                        {QUICK_REACTIONS.map(emoji => (
+                                                            <button
+                                                                key={emoji}
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleToggleReaction(msg.id, emoji);
+                                                                }}
+                                                                className={`text-base p-1 rounded-full hover:scale-130 active:scale-95 transition-all ${msg.reaction === emoji ? 'bg-pink-500/30 scale-110' : 'hover:bg-white/10'}`}
+                                                                title={`React ${emoji}`}
+                                                            >
+                                                                {emoji}
                                                             </button>
-                                                        )}
-                                                        <button onClick={() => toggleStarMessage(msg.id)} className="p-1 text-gray-500 hover:text-yellow-400 transition" title="Star Message">
-                                                            <FiStar size={13} className={starredMessages.includes(msg.id) ? "fill-yellow-400 text-yellow-400" : ""} />
-                                                        </button>
-                                                        <button onClick={() => setMessageToDelete(msg)} className="p-1 text-gray-500 hover:text-red-400 transition" title="Delete">
-                                                            <FiTrash2 size={13} />
-                                                        </button>
+                                                        ))}
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {/* Message bubble */}
-                                            {/* Message bubble */}
-                                            <div
-                                                className="relative shadow-sm text-sm leading-relaxed"
-                                                style={{
-                                                    background: msg.sent ? '#2d1457' : '#16162A',
-                                                    color: '#f1f5f9',
-                                                    borderRadius: msg.sent ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
-                                                    border: msg.sent ? '1px solid rgba(236,72,153,0.15)' : '1px solid rgba(255,255,255,0.06)',
-                                                    padding: (msg.imageUrl && !msg.text) ? '3px' : (msg.imageUrl && msg.text) ? '4px 4px 6px 4px' : '6px 12px'
-                                                }}
-                                            >
-                                                {msg.imageUrl && !msg.text && (
-                                                    <div className="relative overflow-hidden" style={{ borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px' }}>
-                                                        <img
-                                                            src={msg.imageUrl}
-                                                            alt="attachment"
-                                                            className="w-full max-w-[260px] xs:max-w-[280px] object-cover cursor-pointer active:scale-95 transition-transform block"
-                                                            style={{
-                                                                maxHeight: '300px',
-                                                                borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px'
-                                                            }}
-                                                            onClick={() => setLightboxImg(msg.imageUrl)}
-                                                        />
-                                                        {/* Timestamp overlay on image */}
-                                                        <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/50 px-1.5 py-0.5 rounded-md backdrop-blur-[1px] text-[9px] text-white/90 select-none pointer-events-none">
-                                                            {starredMessages.includes(msg.id) && (
-                                                                <span className="text-yellow-400 text-[10px]">★</span>
+                                                {/* Hover action buttons */}
+                                                {hoveredMsgId === msg.id && (
+                                                    <div className={`absolute top-1 ${msg.sent ? 'left-0 -translate-x-full pr-2' : 'right-0 translate-x-full pl-2'} flex gap-1 z-10`}>
+                                                        <div className="flex gap-1 rounded-lg px-1.5 py-1 shadow-lg border border-white/10" style={{ background: '#16162A' }}>
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setActiveReactionPickerId(activeReactionPickerId === msg.id ? null : msg.id);
+                                                                }}
+                                                                className="p-1 text-gray-500 hover:text-pink-400 transition"
+                                                                title="Add Reaction"
+                                                            >
+                                                                <FiSmile size={13} />
+                                                            </button>
+                                                            {msg.sent && isWithinTimeLimit && !msg.imageUrl && (
+                                                                <button onClick={() => editMessage(msg.id, msg.text)} className="p-1 text-gray-500 hover:text-pink-400 transition" title="Edit">
+                                                                    <FiEdit2 size={13} />
+                                                                </button>
                                                             )}
-                                                            <span>{msg.time}</span>
-                                                            {msg.sent && (
-                                                                <span className="text-[10px]" style={{ color: msg.is_read ? '#a78bfa' : '#ffffff80' }}>
-                                                                    {msg.is_read ? '✓✓' : '✓'}
-                                                                </span>
-                                                            )}
+                                                            <button onClick={() => toggleStarMessage(msg.id)} className="p-1 text-gray-500 hover:text-yellow-400 transition" title="Star Message">
+                                                                <FiStar size={13} className={starredMessages.includes(msg.id) ? "fill-yellow-400 text-yellow-400" : ""} />
+                                                            </button>
+                                                            <button onClick={() => setMessageToDelete(msg)} className="p-1 text-gray-500 hover:text-red-400 transition" title="Delete">
+                                                                <FiTrash2 size={13} />
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 )}
 
-                                                {msg.imageUrl && msg.text && (
-                                                    <>
-                                                        <img
-                                                            src={msg.imageUrl}
-                                                            alt="attachment"
-                                                            className="w-full max-w-[260px] xs:max-w-[280px] object-cover cursor-pointer active:scale-95 transition-transform block mb-1.5"
-                                                            style={{
-                                                                maxHeight: '300px',
-                                                                borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px'
-                                                            }}
-                                                            onClick={() => setLightboxImg(msg.imageUrl)}
-                                                        />
-                                                        <div className="px-1.5 pb-1">
-                                                            <span className="break-words text-gray-200">{msg.text}</span>
-                                                            <div className="flex items-center justify-end gap-1 mt-1 -mb-0.5 ml-3">
+                                                {/* Message bubble */}
+                                                <div
+                                                    className="relative shadow-sm text-sm leading-relaxed"
+                                                    style={{
+                                                        background: msg.sent ? '#2d1457' : '#16162A',
+                                                        color: '#f1f5f9',
+                                                        borderRadius: msg.sent ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+                                                        border: msg.sent ? '1px solid rgba(236,72,153,0.2)' : '1px solid rgba(255,255,255,0.08)',
+                                                        padding: (msg.imageUrl && !msg.text) ? '3px' : (msg.imageUrl && msg.text) ? '4px 4px 6px 4px' : '6px 12px'
+                                                    }}
+                                                >
+                                                    {msg.imageUrl && !msg.text && (
+                                                        <div className="relative overflow-hidden" style={{ borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px' }}>
+                                                            <img
+                                                                src={msg.imageUrl}
+                                                                alt="attachment"
+                                                                className="w-full max-w-[260px] xs:max-w-[280px] object-cover cursor-pointer active:scale-95 transition-transform block"
+                                                                style={{
+                                                                    maxHeight: '300px',
+                                                                    borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px'
+                                                                }}
+                                                                onClick={() => setLightboxImg(msg.imageUrl)}
+                                                            />
+                                                            {/* Timestamp overlay on image */}
+                                                            <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/50 px-1.5 py-0.5 rounded-md backdrop-blur-[1px] text-[9px] text-white/90 select-none pointer-events-none">
+                                                                {starredMessages.includes(msg.id) && (
+                                                                    <span className="text-yellow-400 text-[10px]">★</span>
+                                                                )}
+                                                                <span>{msg.time}</span>
+                                                                {msg.sent && (
+                                                                    <span
+                                                                        className="text-[10px] font-bold tracking-tighter"
+                                                                        style={{ color: msg.is_read ? '#38bdf8' : onlineUsers.includes(girl.id?.toString()) ? '#9ca3af' : '#6b7280' }}
+                                                                    >
+                                                                        {msg.is_read ? '✓✓' : onlineUsers.includes(girl.id?.toString()) ? '✓✓' : '✓'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {msg.imageUrl && msg.text && (
+                                                        <>
+                                                            <img
+                                                                src={msg.imageUrl}
+                                                                alt="attachment"
+                                                                className="w-full max-w-[260px] xs:max-w-[280px] object-cover cursor-pointer active:scale-95 transition-transform block mb-1.5"
+                                                                style={{
+                                                                    maxHeight: '300px',
+                                                                    borderRadius: msg.sent ? '10px 10px 2px 10px' : '10px 10px 10px 2px'
+                                                                }}
+                                                                onClick={() => setLightboxImg(msg.imageUrl)}
+                                                            />
+                                                            <div className="px-1.5 pb-1">
+                                                                <span className="break-words text-gray-200">{msg.text}</span>
+                                                                <div className="flex items-center justify-end gap-1 mt-1 -mb-0.5 ml-3">
+                                                                    {starredMessages.includes(msg.id) && (
+                                                                        <span className="text-yellow-400 text-[10px] mr-1">★</span>
+                                                                    )}
+                                                                    <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
+                                                                    {msg.sent && (
+                                                                        <span
+                                                                            className="text-[11px] font-bold tracking-tighter select-none"
+                                                                            style={{ color: msg.is_read ? '#38bdf8' : onlineUsers.includes(girl.id?.toString()) ? '#9ca3af' : '#6b7280' }}
+                                                                        >
+                                                                            {msg.is_read ? '✓✓' : onlineUsers.includes(girl.id?.toString()) ? '✓✓' : '✓'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </>
+                                                    )}
+
+                                                    {!msg.imageUrl && (
+                                                        <>
+                                                            {msg.audio_url || (msg.text && (msg.text.startsWith('data:audio') || msg.text.startsWith('blob:'))) ? (
+                                                                <VoiceNotePlayer audioSrc={msg.audio_url || msg.text} sent={msg.sent} />
+                                                            ) : (
+                                                                msg.text && <span className="break-words">{msg.text}</span>
+                                                            )}
+                                                            <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
                                                                 {starredMessages.includes(msg.id) && (
                                                                     <span className="text-yellow-400 text-[10px] mr-1">★</span>
                                                                 )}
                                                                 <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
                                                                 {msg.sent && (
-                                                                    <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
-                                                                        {msg.is_read ? '✓✓' : '✓'}
+                                                                    <span
+                                                                        className="text-[11px] font-bold tracking-tighter select-none"
+                                                                        style={{ color: msg.is_read ? '#38bdf8' : onlineUsers.includes(girl.id?.toString()) ? '#9ca3af' : '#6b7280' }}
+                                                                        title={msg.is_read ? "Seen" : onlineUsers.includes(girl.id?.toString()) ? "Delivered" : "Sent"}
+                                                                    >
+                                                                        {msg.is_read ? '✓✓' : onlineUsers.includes(girl.id?.toString()) ? '✓✓' : '✓'}
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                        </div>
-                                                    </>
-                                                )}
+                                                        </>
+                                                    )}
 
-                                                {!msg.imageUrl && (
-                                                    <>
-                                                        {msg.audio_url || (msg.text && (msg.text.startsWith('data:audio') || msg.text.startsWith('blob:'))) ? (
-                                                            <div className="flex flex-col gap-1 py-1">
-                                                                <div className="flex items-center gap-1.5 mb-1">
-                                                                    <FiMic size={13} className="text-pink-400" />
-                                                                    <span className="text-xs font-bold text-pink-300">Voice Note</span>
-                                                                </div>
-                                                                <audio controls src={msg.audio_url || msg.text} className="max-w-[220px] sm:max-w-[260px] h-9 rounded-lg border border-white/10" />
-                                                            </div>
-                                                        ) : (
-                                                            msg.text && <span className="break-words">{msg.text}</span>
-                                                        )}
-                                                        <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
-                                                            {starredMessages.includes(msg.id) && (
-                                                                <span className="text-yellow-400 text-[10px] mr-1">★</span>
-                                                            )}
-                                                            <span className="text-[10px] select-none" style={{ color: '#6b7280' }}>{msg.time}</span>
-                                                            {msg.sent && (
-                                                                <span className="text-[11px]" style={{ color: msg.is_read ? '#a78bfa' : '#6b7280' }}>
-                                                                    {msg.is_read ? '✓✓' : '✓'}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </>
-                                                )}
+                                                    {/* Pinned Reaction Badge */}
+                                                    {msg.reaction && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleToggleReaction(msg.id, msg.reaction);
+                                                            }}
+                                                            className={`absolute -bottom-2.5 ${msg.sent ? 'right-2' : 'left-2'} z-20 px-1.5 py-0.5 rounded-full bg-[#1c1833] border border-pink-500/40 text-[11px] shadow-md hover:scale-110 active:scale-95 transition-all flex items-center cursor-pointer`}
+                                                            title="Tap to remove reaction"
+                                                        >
+                                                            <span>{msg.reaction}</span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Instagram style "Seen" Receipt */}
+                                        {isLastSentMsg && msg.sent && msg.is_read && (
+                                            <div className="flex justify-end pr-2 mt-0.5 select-none">
+                                                <span className="text-[10px] text-gray-400 font-medium">Seen</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </React.Fragment>
@@ -1217,24 +1338,36 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                     <div className="flex items-center justify-between px-4 py-3 bg-[#16162A] border-t border-pink-500/30 text-white shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-                            <span className="text-xs font-bold text-red-400">
-                                Recording... {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                            <span className="text-xs font-bold text-red-400 font-mono tracking-wider">
+                                {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
                             </span>
+                            {/* Live Soundwave Equalizer */}
+                            <div className="flex items-center gap-1 ml-1">
+                                <span className="w-1 h-3 bg-red-400 rounded-full animate-pulse" />
+                                <span className="w-1 h-5 bg-red-500 rounded-full animate-pulse delay-75" />
+                                <span className="w-1 h-2.5 bg-red-400 rounded-full animate-pulse delay-150" />
+                                <span className="w-1 h-4 bg-red-500 rounded-full animate-pulse delay-100" />
+                                <span className="w-1 h-3 bg-red-400 rounded-full animate-pulse delay-200" />
+                            </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5">
                             <button
+                                type="button"
                                 onClick={cancelRecording}
-                                className="p-2 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-full transition"
+                                className="px-3 py-1.5 bg-white/5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded-full transition flex items-center gap-1.5 text-xs font-semibold"
                                 title="Cancel Recording"
                             >
-                                <FiX size={18} />
+                                <FiTrash2 size={15} />
+                                <span>Cancel</span>
                             </button>
                             <button
+                                type="button"
                                 onClick={stopRecording}
-                                className="p-2.5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full transition shadow-lg hover:scale-105 active:scale-95"
+                                className="px-3.5 py-1.5 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full transition shadow-lg shadow-pink-500/20 hover:scale-105 active:scale-95 flex items-center gap-1.5 text-xs font-bold"
                                 title="Send Voice Note"
                             >
-                                <FiSend size={16} />
+                                <FiSend size={14} />
+                                <span>Send</span>
                             </button>
                         </div>
                     </div>

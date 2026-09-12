@@ -43,7 +43,7 @@ router.get('/messages/:user1/:user2', authenticateToken, async (req, res) => {
         }
 
         const query = `
-            SELECT id, sender_id, receiver_id, text AS message, image_url, audio_url, created_at, is_read 
+            SELECT id, sender_id, receiver_id, text AS message, image_url, audio_url, created_at, is_read, reaction 
             FROM messages 
             WHERE ((sender_id = $1 AND receiver_id = $2) 
                OR (sender_id = $2 AND receiver_id = $1))
@@ -60,21 +60,40 @@ router.get('/messages/:user1/:user2', authenticateToken, async (req, res) => {
 // Send Direct Message Route
 router.post('/messages', authenticateToken, async (req, res) => {
     try {
-        const { receiver_id, text, image_url } = req.body;
+        const { receiver_id, text, image_url, audio_url } = req.body;
         const sender_id = req.user.id;
 
-        if (!receiver_id || (!text && !image_url)) {
-            return res.status(400).json({ error: "receiver_id and text or image_url required." });
+        if (!receiver_id || (!text && !image_url && !audio_url)) {
+            return res.status(400).json({ error: "receiver_id and text, audio_url, or image_url required." });
         }
 
         const result = await pool.query(
-            "INSERT INTO messages (sender_id, receiver_id, text, image_url) VALUES ($1, $2, $3, $4) RETURNING *",
-            [sender_id, receiver_id, text, image_url || null]
+            "INSERT INTO messages (sender_id, receiver_id, text, image_url, audio_url) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [sender_id, receiver_id, text || null, image_url || null, audio_url || null]
         );
 
         res.status(201).json(result.rows[0]);
     } catch (err) {
         console.error("Send message error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Message Reaction Route (Add/Remove reaction)
+router.post('/messages/:id/react', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reaction } = req.body;
+        const result = await pool.query(
+            "UPDATE messages SET reaction = $1 WHERE id = $2 RETURNING *",
+            [reaction || null, id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Message not found" });
+        }
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error("React to message error:", err);
         res.status(500).json({ error: "Server error" });
     }
 });

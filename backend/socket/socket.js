@@ -130,7 +130,7 @@ module.exports = (io) => {
                 } catch (modErr) { console.error('Chat moderation error:', modErr.message); }
 
                 const result = await pool.query(
-                    "INSERT INTO messages (sender_id, receiver_id, text, image_url, audio_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, is_read",
+                    "INSERT INTO messages (sender_id, receiver_id, text, image_url, audio_url) VALUES ($1, $2, $3, $4, $5) RETURNING id, created_at, is_read, reaction",
                     [verifiedSenderId, data.receiver_id, messageText, data.image_url || null, data.audio_url || null]
                 );
                 const savedMessage = result.rows[0];
@@ -140,6 +140,7 @@ module.exports = (io) => {
                 data.message = messageText;
                 data.created_at = savedMessage.created_at;
                 data.is_read = savedMessage.is_read;
+                data.reaction = savedMessage.reaction || null;
 
                 // Lookup sender profile details
                 const senderDetails = await pool.query(
@@ -287,6 +288,20 @@ module.exports = (io) => {
 
         socket.on("typing", (data) => {
             socket.to(data.room).emit("partner_typing", data);
+        });
+
+        socket.on("stop_typing", (data) => {
+            socket.to(data.room).emit("partner_stop_typing", data);
+        });
+
+        socket.on("react_message", async (data) => {
+            try {
+                const { messageId, reaction, room } = data;
+                await pool.query("UPDATE messages SET reaction = $1 WHERE id = $2", [reaction || null, messageId]);
+                io.to(room).emit("message_reaction_updated", { messageId, reaction: reaction || null });
+            } catch (err) {
+                console.error("react_message socket error:", err);
+            }
         });
 
         socket.on("disconnect", async () => {
