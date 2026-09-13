@@ -18,7 +18,12 @@ if (connectionString) {
 
 const pool = new Pool({
     connectionString,
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
+    max: parseInt(process.env.DB_POOL_MAX || '25', 10),
+    min: parseInt(process.env.DB_POOL_MIN || '2', 10),
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MS || '30000', 10),
+    connectionTimeoutMillis: parseInt(process.env.DB_CONN_TIMEOUT_MS || '8000', 10),
+    allowExitOnIdle: false
 });
 
 pool.on('error', (err) => {
@@ -358,6 +363,14 @@ const connectDB = async () => {
         await pool.query("CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_sos_alerts_user ON sos_alerts(user_id);");
         await pool.query("CREATE INDEX IF NOT EXISTS idx_emergency_contacts_user ON emergency_contacts(user_id);");
+
+        // ─── High-Throughput Composite Indexes for Scale (100k+ Users) ───
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_chat_composite ON messages (sender_id, receiver_id, created_at);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_chat_rev_composite ON messages (receiver_id, sender_id, created_at);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_messages_unread ON messages (receiver_id, is_read);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications (user_id, is_read);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications (user_id, created_at DESC);");
+        await pool.query("CREATE INDEX IF NOT EXISTS idx_posts_feed_lookup ON posts (created_at DESC);");
 
         console.log('✅ Database Auto-Fixed: Tables & Indexes ready!');
     } catch (err) {

@@ -24,23 +24,45 @@ const isSocketRateLimited = (socketId, maxPerWindow = 10, windowMs = 3000) => {
     return record.count > maxPerWindow;
 };
 
+// Periodic cleanup for stale rate limiter entries (every 5 minutes)
+setInterval(() => {
+    const now = Date.now();
+    for (const [sId, record] of socketRateLimits.entries()) {
+        if (now - record.lastReset > 60000) {
+            socketRateLimits.delete(sId);
+        }
+    }
+}, 5 * 60 * 1000).unref();
+
+let onlineUsersBroadcastTimer = null;
+
+const debouncedBroadcastOnlineUsers = (io, delay = 2500) => {
+    if (onlineUsersBroadcastTimer) return;
+    onlineUsersBroadcastTimer = setTimeout(async () => {
+        onlineUsersBroadcastTimer = null;
+        await broadcastOnlineUsers(io);
+    }, delay);
+};
+
 const broadcastOnlineUsers = async (io) => {
     try {
-        const userIds = Array.from(onlineUsers.keys()).map(id => parseInt(id)).filter(id => !isNaN(id));
+        const userIds = Array.from(onlineUsers.keys()).map(id => parseInt(id, 10)).filter(id => !isNaN(id));
         if (userIds.length === 0) {
             io.emit("update_online_users", []);
             return;
         }
-        const placeholders = userIds.map((_, i) => `$${i + 1}`).join(',');
+        // Scale safety: Cap to 2,000 IDs to avoid Postgres parameter limits (max 65,535) & network flood
+        const safeUserIds = userIds.slice(0, 2000);
+        const placeholders = safeUserIds.map((_, i) => `$${i + 1}`).join(',');
         const result = await pool.query(
             `SELECT id FROM users WHERE id IN (${placeholders}) AND show_online = true`,
-            userIds
+            safeUserIds
         );
         const visibleOnlineUsers = result.rows.map(row => row.id.toString());
         io.emit("update_online_users", visibleOnlineUsers);
     } catch (err) {
-        console.error("Broadcast online users error:", err);
-        io.emit("update_online_users", Array.from(onlineUsers.keys()));
+        console.error("Broadcast online users error:", err.message || err);
+        io.emit("update_online_users", Array.from(onlineUsers.keys()).slice(0, 500));
     }
 };
 
@@ -70,7 +92,7 @@ module.exports = (io) => {
                 return;
             }
             onlineUsers.set(userId.toString(), socket.id);
-            await broadcastOnlineUsers(io);
+            debouncedBroadcastOnlineUsers(io);
         });
 
         socket.on("join_own_room", (userId) => {
@@ -407,7 +429,7 @@ module.exports = (io) => {
                 }
             }
             if (disconnectedUserId) {
-                await broadcastOnlineUsers(io);
+                debouncedBroadcastOnlineUsers(io);
             }
         });
     });

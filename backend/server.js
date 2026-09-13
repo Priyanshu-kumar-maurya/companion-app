@@ -3,6 +3,7 @@ const cors = require('cors');
 const http = require('http');
 const helmet = require('helmet');
 const { Server } = require('socket.io');
+const compression = require('compression');
 require('dotenv').config();
 
 const { connectDB } = require('./config/db');
@@ -76,6 +77,26 @@ const io = new Server(server, {
     }
 });
 socketHandler(io);
+
+// ─── Redis Adapter for Multi-Instance Socket.IO Clustering ───
+if (process.env.REDIS_URL) {
+    try {
+        const { createAdapter } = require('@socket.io/redis-adapter');
+        const Redis = require('ioredis');
+        const pubClient = new Redis(process.env.REDIS_URL, {
+            maxRetriesPerRequest: null,
+            enableReadyCheck: false
+        });
+        const subClient = pubClient.duplicate();
+        io.adapter(createAdapter(pubClient, subClient));
+        console.log('⚡ Redis Adapter connected: Multi-instance Socket.IO clustering enabled');
+    } catch (err) {
+        console.warn('⚠️ Redis adapter setup skipped/failed:', err.message);
+    }
+}
+
+// ─── Performance & Compression ─────────────────────────────────
+app.use(compression());
 
 // ─── Security Middleware ───────────────────────────────────────
 
@@ -177,12 +198,54 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: "Internal server error." });
 });
 
-// ─── Start Server with Slowloris & Timeout Protection ─────────
-const PORT = process.env.PORT || 5000;
-server.keepAliveTimeout = 65000;
-server.headersTimeout = 66000;
-server.requestTimeout = 30000;
+// ─── Multi-Core Process Clustering & Server Launch ─────────────
+const cluster = require('cluster');
+const os = require('os');
 
-server.listen(PORT, () => {
-    console.log(`🛡️ Coffeely Hardened Server running on port ${PORT}`);
-});
+const numWorkers = parseInt(process.env.WEB_CONCURRENCY || '0', 10) || (process.env.CLUSTER_MODE === 'true' ? os.cpus().length : 1);
+
+const startServer = () => {
+    const PORT = process.env.PORT || 5000;
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
+    server.requestTimeout = 30000;
+
+    server.listen(PORT, () => {
+        console.log(`🛡️ Coffeely Hardened Server (pid: ${process.pid}) running on port ${PORT}`);
+    });
+};
+
+// ─── Graceful Shutdown & DB Connection Drain ───────────────────
+const gracefulShutdown = (signal) => {
+    console.log(`\n🛑 ${signal} received. Draining pool and closing server (pid: ${process.pid})...`);
+    server.close(async () => {
+        try {
+            const { pool } = require('./config/db');
+            await pool.end();
+            console.log('✅ PostgreSQL connection pool drained.');
+        } catch (e) {
+            console.error('⚠️ Error closing pool:', e.message);
+        }
+        process.exit(0);
+    });
+    setTimeout(() => {
+        console.error('⚠️ Force terminating after shutdown timeout.');
+        process.exit(1);
+    }, 10000).unref();
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+if (cluster.isPrimary && numWorkers > 1) {
+    console.log(`🚀 Primary process ${process.pid} running. Forking ${numWorkers} worker processes across CPU cores...`);
+    for (let i = 0; i < numWorkers; i++) {
+        cluster.fork();
+    }
+    cluster.on('exit', (worker, code, signal) => {
+        console.warn(`⚠️ Worker ${worker.process.pid} exited (${signal || code}). Spawning replacement...`);
+        cluster.fork();
+    });
+} else {
+    startServer();
+}
