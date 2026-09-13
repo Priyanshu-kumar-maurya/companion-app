@@ -32,6 +32,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
     const [showKycModal, setShowKycModal] = useState(false);
 
     const hasDocument = Boolean(currentUser?.id_proof_url || currentUser?.kyc_status === 'verified' || currentUser?.kyc_status === 'pending');
+    const showBookingCard = !currentUser || currentUser.id !== profile.id;
 
     const [bookingStatus, setBookingStatus] = useState(null);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -623,7 +624,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
             {/* ── TOP NAV BAR ── */}
             <div className="sticky top-0 bg-[#0D0D1A]/85 backdrop-blur-md z-30 border-b border-white/5">
-                <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+                <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
                     <button
                         onClick={() => setPage(PAGES.FIND)}
                         className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition"
@@ -683,7 +684,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
             </div>
 
             {/* ── INSTAGRAM LAYOUT HEADER ── */}
-            <div className="max-w-4xl mx-auto px-4 pt-6 md:pt-10 pb-6 border-b border-white/5 mb-6">
+            <div className="max-w-5xl mx-auto px-4 pt-6 md:pt-10 pb-6 border-b border-white/5 mb-6">
                 {/* Mobile: Avatar & Stats side-by-side. Desktop: Left avatar, right content */}
                 <div className="flex items-center md:items-start gap-6 md:gap-20 mb-4 md:mb-6">
                     {/* Avatar */}
@@ -810,44 +811,44 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                         </div>
 
                         {/* Buttons below the bio on Desktop */}
-                        <div className="flex gap-2 pt-2">
+                        <div className="flex items-center gap-2 pt-2 flex-wrap">
                             {(!currentUser || currentUser.id !== profile.id) && (
                                 <button
                                     onClick={handleFollowClick}
                                     disabled={followLoading}
-                                    className={`px-6 py-2 rounded-lg font-bold text-xs transition min-w-[120px] ${followStats.isFollowing
+                                    className={`px-6 py-2 rounded-xl font-bold text-xs transition min-w-[110px] active:scale-95 shadow-sm ${followStats.isFollowing
                                         ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
-                                        : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-md`}`}
+                                        : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90`}`}
                                 >
                                     {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
                                 </button>
                             )}
                             <button
                                 onClick={handleMessageClick}
-                                className="px-5 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5"
+                                className="px-5 py-2 bg-[#262626] hover:bg-[#363636] border border-white/10 text-white rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
                             >
-                                Message
+                                <FiMessageCircle size={14} /> Message
                             </button>
                             {(!currentUser || currentUser.id !== profile.id) && (
                                 <>
                                     <button
                                         onClick={() => handleCallClick('video')}
-                                        className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center"
+                                        className="px-3.5 py-2 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-xl font-bold text-xs transition flex items-center gap-1.5 active:scale-95"
                                         title="Video Call"
                                     >
-                                        <FiVideo size={16} />
+                                        <FiVideo size={14} /> Video Call
                                     </button>
                                     <button
                                         onClick={() => handleCallClick('audio')}
-                                        className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center"
+                                        className="px-3.5 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl font-bold text-xs transition flex items-center gap-1.5 active:scale-95"
                                         title="Voice Call"
                                     >
-                                        <FiPhone size={16} />
+                                        <FiPhone size={14} /> Voice Call
                                     </button>
                                     <button
                                         onClick={handleToggleFavorite}
                                         disabled={favLoading}
-                                        className={`w-9 h-9 border rounded-lg font-bold transition flex items-center justify-center ${
+                                        className={`w-9 h-9 border rounded-xl font-bold transition flex items-center justify-center active:scale-95 ${
                                             isFavorited
                                                 ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-md shadow-red-500/10'
                                                 : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-400 hover:text-white'
@@ -924,190 +925,209 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                     </div>
 
                     {/* Action buttons at the bottom on Mobile */}
-                    <div className="flex gap-2 pt-2">
-                        {(!currentUser || currentUser.id !== profile.id) && (
+                    <div className="flex flex-col gap-2 pt-2">
+                        <div className="flex gap-2">
+                            {(!currentUser || currentUser.id !== profile.id) && (
+                                <button
+                                    onClick={handleFollowClick}
+                                    disabled={followLoading}
+                                    className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition active:scale-95 shadow-sm ${followStats.isFollowing
+                                        ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
+                                        : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90`}`}
+                                >
+                                    {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
+                                </button>
+                            )}
                             <button
-                                onClick={handleFollowClick}
-                                disabled={followLoading}
-                                className={`flex-1 py-2 rounded-lg font-bold text-xs transition ${followStats.isFollowing
-                                    ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
-                                    : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 shadow-md`}`}
+                                onClick={handleMessageClick}
+                                className="flex-1 py-2.5 bg-[#262626] hover:bg-[#363636] border border-white/10 text-white rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
                             >
-                                {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
+                                <FiMessageCircle size={15} /> Message
                             </button>
-                        )}
-                        <button
-                            onClick={handleMessageClick}
-                            className="flex-1 py-2 bg-[#262626] hover:bg-[#363636] border border-white/5 text-white rounded-lg font-bold text-xs transition flex items-center justify-center gap-1.5"
-                        >
-                            Message
-                        </button>
+                        </div>
+
                         {(!currentUser || currentUser.id !== profile.id) && (
-                            <>
+                            <div className="flex gap-2">
                                 <button
                                     onClick={() => handleCallClick('video')}
-                                    className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center shrink-0"
+                                    className="flex-1 py-2 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95"
                                     title="Video Call"
                                 >
-                                    <FiVideo size={16} />
+                                    <FiVideo size={14} /> Video Call
                                 </button>
                                 <button
                                     onClick={() => handleCallClick('audio')}
-                                    className="w-9 h-9 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-lg font-bold transition flex items-center justify-center shrink-0"
+                                    className="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95"
                                     title="Voice Call"
                                 >
-                                    <FiPhone size={16} />
+                                    <FiPhone size={14} /> Voice Call
                                 </button>
                                 <button
                                     onClick={handleToggleFavorite}
                                     disabled={favLoading}
-                                    className={`w-9 h-9 border rounded-lg font-bold transition flex items-center justify-center shrink-0 ${
+                                    className={`px-3.5 py-2 border rounded-xl font-bold transition flex items-center justify-center shrink-0 active:scale-95 ${
                                         isFavorited
-                                            ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-md shadow-red-500/10'
+                                            ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-sm shadow-red-500/10'
                                             : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-400 hover:text-white'
                                     }`}
                                     title={isFavorited ? "Saved to Favorites" : "Save to Favorites"}
                                 >
                                     <FiHeart size={16} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
                                 </button>
-                            </>
+                            </div>
                         )}
                     </div>
-                </div>
+            </div>
 
-                {/* ── NON-LOGGED IN USER CTA BANNER ── */}
-                {!currentUser && (
-                    <div className="rounded-2xl overflow-hidden mb-6 p-6 border border-pink-500/20 bg-gradient-to-r from-[#16162A] to-[#201633] flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+            {/* ── PROFILE BODY: 2-COLUMN RESPONSIVE LAYOUT (Grid on Desktop, Stack on Mobile) ── */}
+            <div className="max-w-5xl mx-auto px-4 py-8">
+                <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+
+                    {/* ── MAIN CONTENT: Posts Grid & Reviews (Order 2 on mobile, Order 1 on desktop) ── */}
+                    <div className={`${showBookingCard ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-8 order-2 lg:order-1`}>
+                        {/* ── POSTS GRID (Instagram style) ── */}
                         <div>
-                            <h3 className="font-bold text-white text-base flex items-center gap-2">
-                                <span>☕ Connect with {profile.name}</span>
-                            </h3>
-                            <p className="text-xs text-gray-400 mt-1">Log in or create a free account to book dates, chat live, and make audio/video calls.</p>
-                        </div>
-                        <button
-                            onClick={() => setPage(PAGES.BOY_LOGIN)}
-                            className={`px-6 py-3 rounded-xl font-bold text-xs bg-gradient-to-r ${accentGrad} text-white shadow-md hover:opacity-90 transition whitespace-nowrap`}
-                        >
-                            Log In / Register
-                        </button>
-                    </div>
-                )}
-
-                {/* ── BOOKING SECTION ── */}
-                {currentUser && currentUser.id !== profile.id && (
-                    hasDocument ? (
-                        <div className="rounded-2xl overflow-hidden mb-6 border border-white/5" style={{ background: '#16162A' }}>
-                            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
-                                <div className="flex items-center gap-2 font-bold text-white">
-                                    <FiCalendar size={16} style={{ color: accentColor }} />
-                                    Book a Session
-                                </div>
-                                <span className="text-xs text-gray-400">₹{profile.price || 1000}/hr</span>
+                            <div className="flex items-center gap-2 text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 pb-2 border-b border-white/5">
+                                <FiGrid size={15} />
+                                Posts ({posts.length})
                             </div>
-                            <div className="px-5 py-4">
-                                <div className="flex gap-2 flex-wrap mb-5">
-                                    {[1, 2, 3, 4, 5].map((h) => (
-                                        <button
-                                            key={h}
-                                            onClick={() => setHours(h)}
-                                            className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${hours === h
-                                                ? `bg-gradient-to-r ${accentGrad} text-white shadow-md`
-                                                : 'bg-white/5 text-gray-400 hover:text-white border border-white/10'}`}
+                            {(profile.is_private && !followStats.isFollowing && profile.id !== currentUser?.id) ? (
+                                <div className="py-16 text-center flex flex-col items-center gap-3 bg-[#16162A]/40 rounded-2xl border border-white/5">
+                                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                                        <FiLock size={24} className="text-gray-500" />
+                                    </div>
+                                    <p className="text-gray-400 text-sm font-medium">This account is private</p>
+                                    <p className="text-gray-600 text-xs">Follow to see their photos</p>
+                                </div>
+                            ) : posts.length === 0 ? (
+                                <div className="py-16 text-center flex flex-col items-center gap-2 bg-[#16162A]/40 rounded-2xl border border-white/5">
+                                    <FiGrid size={36} className="text-gray-700" />
+                                    <p className="text-gray-500 text-sm">No posts yet</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-3 gap-1 sm:gap-2">
+                                    {posts.map(post => (
+                                        <div
+                                            key={post.id}
+                                            onClick={() => setExpandedPost(post)}
+                                            className="relative group aspect-square cursor-pointer overflow-hidden rounded-xl bg-white/5"
                                         >
-                                            {h} hr{h > 1 ? 's' : ''}
-                                        </button>
+                                            <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                                            {post.caption && (
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-2.5">
+                                                    <p className="text-white text-[10px] line-clamp-2">{post.caption}</p>
+                                                </div>
+                                            )}
+                                        </div>
                                     ))}
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs text-gray-400 mb-1">Total</div>
-                                        <div className="text-3xl font-extrabold text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${accentColor}, #a855f7)` }}>
-                                            ₹{(profile.price || 1000) * hours}
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowBookingModal(true)}
-                                        className={`px-6 py-3 rounded-xl font-bold text-sm bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 transition shadow-lg`}
-                                    >
-                                        {bookingStatus === 'success' ? 'Request Sent ✓' : 'Book Now'}
-                                    </button>
-                                </div>
-                            </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="rounded-2xl overflow-hidden mb-6 p-5 sm:p-6 border border-purple-500/20 bg-gradient-to-br from-[#16162A] via-[#1a142e] to-[#121224] shadow-xl">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div className="flex items-start gap-3.5">
-                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0 mt-0.5 shadow-inner">
-                                        <FiShield size={24} />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-pink-500/10 text-pink-400 border border-pink-500/20">
-                                                ID Verification Required
-                                            </span>
-                                            <span className="text-xs text-gray-400 font-semibold">₹{profile.price || 1000}/hr</span>
-                                        </div>
-                                        <h3 className="font-bold text-white text-base mt-1">Date Booking Locked</h3>
-                                        <p className="text-xs text-gray-300 mt-1 leading-relaxed max-w-lg">
-                                            Safe & verified companions ke sath date book karne ke liye apna government document upload karein. Normal Instagram ki tarah posts, stories, chat aur following aap bina verification ke chala sakte hain!
-                                        </p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setShowKycModal(true)}
-                                    className="w-full sm:w-auto px-5 py-3 rounded-xl font-bold text-xs bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 text-white shadow-lg whitespace-nowrap flex items-center justify-center gap-2 transition active:scale-95"
-                                >
-                                    <FiShield size={14} />
-                                    Upload ID to Unlock Booking
-                                </button>
-                            </div>
-                        </div>
-                    )
-                )}
 
-                {/* ── POSTS GRID (Instagram style) ── */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3 pt-2 border-t border-white/5">
-                        <FiGrid size={15} />
-                        Posts
+                        {/* ── REVIEWS & RATINGS SECTION ── */}
+                        <div className="border-t border-white/5 pt-6">
+                            <ReviewsSection companion={profile} currentUser={currentUser} />
+                        </div>
                     </div>
-                    {(profile.is_private && !followStats.isFollowing && profile.id !== currentUser?.id) ? (
-                        <div className="py-16 text-center flex flex-col items-center gap-3">
-                            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-                                <FiLock size={24} className="text-gray-500" />
-                            </div>
-                            <p className="text-gray-400 text-sm font-medium">This account is private</p>
-                            <p className="text-gray-600 text-xs">Follow to see their photos</p>
-                        </div>
-                    ) : posts.length === 0 ? (
-                        <div className="py-16 text-center flex flex-col items-center gap-2">
-                            <FiGrid size={36} className="text-gray-700" />
-                            <p className="text-gray-500 text-sm">No posts yet</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-3 gap-0.5">
-                            {posts.map(post => (
-                                <div
-                                    key={post.id}
-                                    onClick={() => setExpandedPost(post)}
-                                    className="relative group aspect-square cursor-pointer overflow-hidden"
-                                >
-                                    <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition duration-300 group-hover:brightness-75" />
-                                    {post.caption && (
-                                        <div className="absolute inset-0 flex items-end opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-2">
-                                            <p className="text-white text-[10px] line-clamp-2">{post.caption}</p>
+
+                    {/* ── SIDEBAR: Sticky Booking & Action Card (Order 1 on mobile, Order 2 on desktop) ── */}
+                    {showBookingCard && (
+                        <div className="lg:col-span-5 order-1 lg:order-2 mb-8 lg:mb-0">
+                            <div className="lg:sticky lg:top-20 space-y-6">
+                                {/* ── NON-LOGGED IN USER CTA BANNER ── */}
+                                {!currentUser && (
+                                    <div className="rounded-2xl overflow-hidden p-6 border border-pink-500/20 bg-gradient-to-br from-[#16162A] to-[#201633] flex flex-col gap-4 shadow-xl">
+                                        <div>
+                                            <h3 className="font-bold text-white text-base flex items-center gap-2">
+                                                <span>☕ Connect with {profile.name}</span>
+                                            </h3>
+                                            <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Log in or create a free account to book dates, chat live, and make audio/video calls.</p>
                                         </div>
-                                    )}
-                                </div>
-                            ))}
+                                        <button
+                                            onClick={() => setPage(PAGES.BOY_LOGIN)}
+                                            className={`w-full py-3 rounded-xl font-bold text-xs bg-gradient-to-r ${accentGrad} text-white shadow-md hover:opacity-90 transition whitespace-nowrap text-center`}
+                                        >
+                                            Log In / Register
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* ── BOOKING SECTION ── */}
+                                {currentUser && currentUser.id !== profile.id && (
+                                    hasDocument ? (
+                                        <div className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl" style={{ background: '#16162A' }}>
+                                            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                                                <div className="flex items-center gap-2 font-bold text-white">
+                                                    <FiCalendar size={16} style={{ color: accentColor }} />
+                                                    Book a Session
+                                                </div>
+                                                <span className="text-xs font-bold text-pink-400">₹{profile.price || 1000}/hr</span>
+                                            </div>
+                                            <div className="px-5 py-4">
+                                                <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Select Duration</label>
+                                                <div className="grid grid-cols-5 gap-1.5 sm:gap-2 mb-5">
+                                                    {[1, 2, 3, 4, 5].map((h) => (
+                                                        <button
+                                                            key={h}
+                                                            onClick={() => setHours(h)}
+                                                            className={`py-2.5 rounded-xl text-xs sm:text-sm font-bold transition text-center active:scale-95 ${hours === h
+                                                                ? `bg-gradient-to-r ${accentGrad} text-white shadow-lg`
+                                                                : 'bg-white/5 text-gray-400 hover:text-white border border-white/10 hover:bg-white/10'}`}
+                                                        >
+                                                            {h} hr{h > 1 ? 's' : ''}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
+                                                    <div>
+                                                        <div className="text-[11px] font-semibold text-gray-400">Total Price</div>
+                                                        <div className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${accentColor}, #a855f7)` }}>
+                                                            ₹{(profile.price || 1000) * hours}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setShowBookingModal(true)}
+                                                        className={`px-6 py-3 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r ${accentGrad} text-white hover:opacity-90 transition shadow-lg active:scale-95 whitespace-nowrap`}
+                                                    >
+                                                        {bookingStatus === 'success' ? 'Request Sent ✓' : 'Book Now'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-2xl overflow-hidden p-5 sm:p-6 border border-purple-500/20 bg-gradient-to-br from-[#16162A] via-[#1a142e] to-[#121224] shadow-xl">
+                                            <div className="flex flex-col gap-4">
+                                                <div className="flex items-start gap-3.5">
+                                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0 mt-0.5 shadow-inner">
+                                                        <FiShield size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                                                                ID Verification Required
+                                                            </span>
+                                                            <span className="text-xs text-gray-400 font-semibold">₹{profile.price || 1000}/hr</span>
+                                                        </div>
+                                                        <h3 className="font-bold text-white text-base mt-1">Date Booking Locked</h3>
+                                                        <p className="text-xs text-gray-300 mt-1 leading-relaxed">
+                                                            Safe & verified companions ke sath date book karne ke liye apna government document upload karein. Normal Instagram ki tarah posts, stories, chat aur following aap bina verification ke chala sakte hain!
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setShowKycModal(true)}
+                                                    className="w-full px-5 py-3 rounded-xl font-bold text-xs bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 text-white shadow-lg whitespace-nowrap flex items-center justify-center gap-2 transition active:scale-95"
+                                                >
+                                                    <FiShield size={14} />
+                                                    Upload ID to Unlock Booking
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )
+                                )}
+                            </div>
                         </div>
                     )}
-                </div>
-
-                {/* ── REVIEWS & RATINGS SECTION ── */}
-                <div className="mb-10 border-t border-white/5 pt-6">
-                    <ReviewsSection companion={profile} currentUser={currentUser} />
                 </div>
             </div>
 
