@@ -32,13 +32,26 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
         const fetchTotalUnread = async () => {
             try {
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`);
+                const token = localStorage.getItem('token');
+                if (!token) return;
+                const headers = { 'Authorization': `Bearer ${token}` };
+
+                // ⚡ Direct high-performance single query
+                const fastRes = await fetch(`https://rentgf-and-bf.onrender.com/api/unread-messages-count`, { headers });
+                if (fastRes.ok) {
+                    const data = await fastRes.json();
+                    setUnreadCount(data.count || 0);
+                    return;
+                }
+
+                // Fallback with auth headers
+                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`, { headers });
                 if (res.ok) {
                     const users = await res.json();
                     let totalUnread = 0;
 
                     await Promise.all(users.map(async (person) => {
-                        const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`);
+                        const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`, { headers });
                         if (msgRes.ok) {
                             const msgs = await msgRes.json();
                             const unread = msgs.filter(m => String(m.sender_id) === String(person.id) && !m.is_read).length;

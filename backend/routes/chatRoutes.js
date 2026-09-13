@@ -4,6 +4,25 @@ const authenticateToken = require('../middleware/auth');
 
 const router = express.Router();
 
+// ─── GET TOTAL UNREAD MESSAGES COUNT — AUTH REQUIRED ──────────
+router.get('/unread-messages-count', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await pool.query(
+            `SELECT COUNT(*)::int AS count 
+             FROM messages 
+             WHERE receiver_id = $1 
+               AND is_read = false 
+               AND NOT ($1 = ANY(COALESCE(deleted_for, '{}')))`,
+            [userId]
+        );
+        res.status(200).json({ count: result.rows[0]?.count || 0 });
+    } catch (err) {
+        console.error("Get unread messages count error:", err);
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
 router.get('/chats/:userId', authenticateToken, async (req, res) => {
     try {
         const { userId } = req.params;
