@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rentgf-v2';
+const CACHE_NAME = 'rentgf-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Files to cache immediately
@@ -39,11 +39,14 @@ self.addEventListener('activate', (event) => {
 
 // Fetch — Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET, API calls, and socket connections
+  // Skip non-GET, API calls, sockets, and media streams
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('/api/')) return;
   if (event.request.url.includes('socket.io')) return;
   if (event.request.url.includes('cloudinary.com')) return;
+  if (event.request.destination === 'audio' || event.request.destination === 'video') return;
+  if (event.request.url.match(/\.(mp3|wav|ogg|mp4|webm)(\?.*)?$/i)) return;
+  if (event.request.headers.get('range')) return;
 
   event.respondWith(
     fetch(event.request)

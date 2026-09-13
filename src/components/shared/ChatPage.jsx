@@ -387,8 +387,38 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     const remoteVideoRef = useRef(null);
     const localVideoRef = useRef(null);
 
-    const incomingRingRef = useRef(typeof Audio !== "undefined" ? new Audio('/ringtone.mp3') : null);
-    const outgoingRingRef = useRef(typeof Audio !== "undefined" ? new Audio('/calling.mp3') : null);
+    const incomingRingRef = useRef(null);
+    const outgoingRingRef = useRef(null);
+
+    useEffect(() => {
+        if (typeof Audio !== "undefined") {
+            try {
+                const inc = new Audio('/ringtone.mp3');
+                inc.preload = 'none';
+                inc.loop = true;
+                incomingRingRef.current = inc;
+
+                const out = new Audio('/calling.mp3');
+                out.preload = 'none';
+                out.loop = true;
+                outgoingRingRef.current = out;
+            } catch (e) {
+                console.warn("Audio initialization warning:", e);
+            }
+        }
+        return () => {
+            try {
+                if (incomingRingRef.current) {
+                    incomingRingRef.current.pause();
+                    incomingRingRef.current.src = "";
+                }
+                if (outgoingRingRef.current) {
+                    outgoingRingRef.current.pause();
+                    outgoingRingRef.current.src = "";
+                }
+            } catch (e) { }
+        };
+    }, []);
 
     const roomId = currentUser?.id < girl?.id
         ? `${currentUser?.id}_${girl?.id}`
@@ -401,23 +431,18 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     // Ringtone logic
     useEffect(() => {
-        if (incomingRingRef.current && outgoingRingRef.current) {
-            incomingRingRef.current.loop = true;
-            outgoingRingRef.current.loop = true;
+        if (callStatus === 'calling' && outgoingRingRef.current) {
+            outgoingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+        } else if (outgoingRingRef.current) {
+            outgoingRingRef.current.pause();
+            outgoingRingRef.current.currentTime = 0;
+        }
 
-            if (callStatus === 'calling') {
-                outgoingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
-            } else {
-                outgoingRingRef.current.pause();
-                outgoingRingRef.current.currentTime = 0;
-            }
-
-            if (callStatus === 'receiving') {
-                incomingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
-            } else {
-                incomingRingRef.current.pause();
-                incomingRingRef.current.currentTime = 0;
-            }
+        if (callStatus === 'receiving' && incomingRingRef.current) {
+            incomingRingRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+        } else if (incomingRingRef.current) {
+            incomingRingRef.current.pause();
+            incomingRingRef.current.currentTime = 0;
         }
     }, [callStatus]);
 
