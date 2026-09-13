@@ -49,6 +49,9 @@ function CallOverlay({ socket, currentUser }) {
 
     const peerConnectionRef = useRef(null);
     const localStreamRef = useRef(null);
+    const partnerRef = useRef(null);
+    const callTypeRef = useRef("video");
+    const callStateRef = useRef("idle");
     const iceQueueRef = useRef([]);
     const audioContextRef = useRef(null);
     const ringtoneTimerRef = useRef(null);
@@ -63,28 +66,30 @@ function CallOverlay({ socket, currentUser }) {
         if (hasLoggedCallRef.current) return;
         hasLoggedCallRef.current = true;
 
-        if (!socket || !partner || !currentUser) return;
+        const p = partnerRef.current || partner;
+        const currentType = callTypeRef.current || callType;
+        if (!socket || !p || !currentUser) return;
 
         let logText = overrideText;
         let callStatus = 'completed';
         if (!logText) {
-            if (callState === 'active' && callDurationRef.current > 0) {
+            if (callStateRef.current === 'active' && callDurationRef.current > 0) {
                 const m = Math.floor(callDurationRef.current / 60);
                 const s = callDurationRef.current % 60;
                 const durStr = `${m}m ${s}s`;
-                logText = `📞 ${callType === 'video' ? 'Video' : 'Voice'} Call - ${durStr}`;
+                logText = `📞 ${currentType === 'video' ? 'Video' : 'Voice'} Call - ${durStr}`;
                 callStatus = 'completed';
             } else {
-                logText = `📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`;
+                logText = `📞 Missed ${currentType === 'video' ? 'Video' : 'Voice'} Call`;
                 callStatus = 'missed';
             }
         }
 
         socket.emit("send_message", {
             sender_id: currentUser.id,
-            receiver_id: partner.id,
+            receiver_id: p.id,
             message: logText,
-            room: partner.room,
+            room: p.room,
             is_call_log: true
         });
 
@@ -97,8 +102,8 @@ function CallOverlay({ socket, currentUser }) {
             },
             body: JSON.stringify({
                 caller_id: currentUser.id,
-                receiver_id: partner.id,
-                call_type: callType,
+                receiver_id: p.id,
+                call_type: currentType,
                 duration: callDurationRef.current,
                 status: callStatus
             })
@@ -182,7 +187,18 @@ function CallOverlay({ socket, currentUser }) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
         }
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = null;
+        }
+        if (remoteAudioRef.current) {
+            remoteAudioRef.current.srcObject = null;
+        }
+        if (localVideoRef.current) {
+            localVideoRef.current.srcObject = null;
+        }
         iceQueueRef.current = [];
+        partnerRef.current = null;
+        callStateRef.current = "idle";
         setCallState("idle");
         setPartner(null);
         setCallDuration(0);
@@ -270,33 +286,43 @@ function CallOverlay({ socket, currentUser }) {
             stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
             pc.ontrack = (event) => {
-                if (event.streams && event.streams[0]) {
-                    if (type === 'video' && remoteVideoRef.current) {
-                        remoteVideoRef.current.srcObject = event.streams[0];
-                    } else if (remoteAudioRef.current) {
-                        remoteAudioRef.current.srcObject = event.streams[0];
-                    }
+                const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+                if (type === 'video' && remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = stream;
+                    remoteVideoRef.current.play().catch(e => console.warn("Remote video play error:", e));
+                }
+                // ALWAYS bind to remoteAudioRef to ensure audio is audible on both mobile & desktop
+                if (remoteAudioRef.current) {
+                    remoteAudioRef.current.srcObject = stream;
+                    remoteAudioRef.current.play().catch(e => console.warn("Remote audio play error:", e));
                 }
             };
 
             pc.onicecandidate = (event) => {
-                if (event.candidate && partner && socket) {
+                const p = partnerRef.current || partner;
+                if (event.candidate && p && socket) {
                     socket.emit("webrtc_ice_candidate", {
-                        room: partner.room,
+                        room: p.room,
                         candidate: event.candidate,
-                        to: partner.id
+                        to: p.id
                     });
                 }
             };
 
             if (isCaller) {
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                socket.emit("webrtc_offer", {
-                    room: partner.room,
-                    offer: offer,
-                    to: partner.id
+                const p = partnerRef.current || partner;
+                const offer = await pc.createOffer({
+                    offerToReceiveAudio: true,
+                    offerToReceiveVideo: type === 'video'
                 });
+                await pc.setLocalDescription(offer);
+                if (p && socket) {
+                    socket.emit("webrtc_offer", {
+                        room: p.room,
+                        offer: offer,
+                        to: p.id
+                    });
+                }
             }
 
             return pc;
@@ -313,18 +339,29 @@ function CallOverlay({ socket, currentUser }) {
             const { targetUser, type, room } = e.detail;
             hasLoggedCallRef.current = false;
             callDurationRef.current = 0;
-            setCallType(type);
-            setPartner({
+            const p = {
                 id: targetUser.id,
                 name: targetUser.name || 'Companion',
                 pic: targetUser.profile_pic || targetUser.pic || '',
                 room: room
-            });
+            };
+            partnerRef.current = p;
+            callTypeRef.current = type;
+            callStateRef.current = "calling";
+            setCallType(type);
+            setPartner(p);
             setCallState("calling");
             setStatusText("Calling...");
+
+            // Ensure global socket joins room
+            if (socket && room) {
+                socket.emit("join_room", room);
+            }
+
             socket.emit("initiate_call", {
                 room: room,
                 receiver_id: targetUser.id,
+                to: targetUser.id,
                 type: type,
                 caller_name: currentUser?.name || 'User',
                 caller_pic: currentUser?.profile_pic || '',
@@ -352,19 +389,29 @@ function CallOverlay({ socket, currentUser }) {
             // Ignore if I am the caller!
             if (currentUser && data.caller_user_id && String(data.caller_user_id) === String(currentUser.id)) return;
             if (data.caller_id === socket.id) return;
-            if (callState !== "idle") return; // Busy
+            if (callStateRef.current !== "idle") return; // Busy
             hasLoggedCallRef.current = false;
             callDurationRef.current = 0;
-            setCallType(data.type || "video");
-            setPartner({
+            const callTypeVal = data.type || "video";
+            const p = {
                 id: data.caller_user_id || data.caller_id,
                 name: data.caller_name || "Incoming Caller",
                 pic: data.caller_pic || "",
                 room: data.room
-            });
+            };
+            partnerRef.current = p;
+            callTypeRef.current = callTypeVal;
+            callStateRef.current = "receiving";
+            setCallType(callTypeVal);
+            setPartner(p);
             setCallState("receiving");
             setShowBanner(true);
             startRingtone();
+
+            // Ensure global socket joins room for incoming call
+            if (data.room) {
+                socket.emit("join_room", data.room);
+            }
         };
 
         const handleCallStatusUpdate = (data) => {
@@ -375,24 +422,30 @@ function CallOverlay({ socket, currentUser }) {
 
         const handleCallAccepted = async () => {
             stopRingtone();
-            if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
+            if (callingTimeoutRef.current) {
+                clearTimeout(callingTimeoutRef.current);
+                callingTimeoutRef.current = null;
+            }
             hasLoggedCallRef.current = false;
             callDurationRef.current = 0;
+            callStateRef.current = "active";
             setCallState("active");
             setCallDuration(0);
+            if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
             timerIntervalRef.current = setInterval(() => {
                 setCallDuration(prev => {
                     callDurationRef.current = prev + 1;
                     return prev + 1;
                 });
             }, 1000);
-            if (partner) {
-                await setupWebRTC(callType, true);
-            }
+
+            const type = callTypeRef.current || "video";
+            await setupWebRTC(type, true);
         };
 
         const handleCallRejected = () => {
-            logCallHistory(`📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`);
+            const currentType = callTypeRef.current || callType;
+            logCallHistory(`📞 Missed ${currentType === 'video' ? 'Video' : 'Voice'} Call`);
             cleanupCall();
         };
 
@@ -401,36 +454,52 @@ function CallOverlay({ socket, currentUser }) {
             cleanupCall();
         };
 
-        const handleWebrtcOffer = async (offer) => {
+        const handleWebrtcOffer = async (data) => {
+            const offer = data?.offer || data;
+            const type = callTypeRef.current || callType;
+            const p = partnerRef.current || partner;
             if (!peerConnectionRef.current) {
-                await setupWebRTC(callType, false);
+                await setupWebRTC(type, false);
             }
             const pc = peerConnectionRef.current;
-            if (pc) {
-                await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                socket.emit("webrtc_answer", { room: partner.room, answer: answer, to: partner.id });
+            if (pc && offer) {
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    if (p && socket) {
+                        socket.emit("webrtc_answer", { room: p.room, answer: answer, to: p.id });
+                    }
 
-                while (iceQueueRef.current.length > 0) {
-                    const candidate = iceQueueRef.current.shift();
-                    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+                    while (iceQueueRef.current.length > 0) {
+                        const candidate = iceQueueRef.current.shift();
+                        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+                    }
+                } catch (err) {
+                    console.error("handleWebrtcOffer error:", err);
                 }
             }
         };
 
-        const handleWebrtcAnswer = async (answer) => {
+        const handleWebrtcAnswer = async (data) => {
+            const answer = data?.answer || data;
             const pc = peerConnectionRef.current;
-            if (pc && pc.signalingState === "have-local-offer") {
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-                while (iceQueueRef.current.length > 0) {
-                    const candidate = iceQueueRef.current.shift();
-                    try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+            if (pc && answer && (pc.signalingState === "have-local-offer" || pc.signalingState !== "stable")) {
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                    while (iceQueueRef.current.length > 0) {
+                        const candidate = iceQueueRef.current.shift();
+                        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+                    }
+                } catch (err) {
+                    console.error("handleWebrtcAnswer error:", err);
                 }
             }
         };
 
-        const handleWebrtcIceCandidate = async (candidate) => {
+        const handleWebrtcIceCandidate = async (data) => {
+            const candidate = data?.candidate || data;
+            if (!candidate) return;
             const pc = peerConnectionRef.current;
             if (pc && pc.remoteDescription && pc.remoteDescription.type) {
                 try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
@@ -458,38 +527,56 @@ function CallOverlay({ socket, currentUser }) {
             socket.off("webrtc_answer", handleWebrtcAnswer);
             socket.off("webrtc_ice_candidate", handleWebrtcIceCandidate);
         };
-    }, [socket, callState, callType, partner]);
+    }, [socket, currentUser]);
 
     // --- User Actions ---
     const acceptCall = async () => {
         stopRingtone();
-        if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
+        if (callingTimeoutRef.current) {
+            clearTimeout(callingTimeoutRef.current);
+            callingTimeoutRef.current = null;
+        }
         hasLoggedCallRef.current = false;
         callDurationRef.current = 0;
+        callStateRef.current = "active";
         setCallState("active");
         setCallDuration(0);
+        if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = setInterval(() => {
             setCallDuration(prev => {
                 callDurationRef.current = prev + 1;
                 return prev + 1;
             });
         }, 1000);
-        await setupWebRTC(callType, false);
-        socket.emit("accept_call", { room: partner.room, to: partner.id });
+
+        const p = partnerRef.current || partner;
+        const currentType = callTypeRef.current || callType;
+
+        if (p?.room && socket) {
+            socket.emit("join_room", p.room);
+        }
+
+        await setupWebRTC(currentType, false);
+        if (p && socket) {
+            socket.emit("accept_call", { room: p.room, to: p.id });
+        }
     };
 
     const rejectCall = () => {
-        logCallHistory(`📞 Missed ${callType === 'video' ? 'Video' : 'Voice'} Call`);
-        if (partner && socket) {
-            socket.emit("reject_call", { room: partner.room, to: partner.id });
+        const p = partnerRef.current || partner;
+        const currentType = callTypeRef.current || callType;
+        logCallHistory(`📞 Missed ${currentType === 'video' ? 'Video' : 'Voice'} Call`);
+        if (p && socket) {
+            socket.emit("reject_call", { room: p.room, to: p.id });
         }
         cleanupCall();
     };
 
     const endCall = () => {
+        const p = partnerRef.current || partner;
         logCallHistory();
-        if (partner && socket) {
-            socket.emit("end_call", { room: partner.room, to: partner.id });
+        if (p && socket) {
+            socket.emit("end_call", { room: p.room, to: p.id });
         }
         cleanupCall();
     };
@@ -593,7 +680,7 @@ function CallOverlay({ socket, currentUser }) {
             {/* ── FULL SCREEN CALL MODAL ── */}
             <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col justify-between overflow-hidden animate-fade-in">
                 {/* Hidden Audio Element for Voice Calls */}
-                <audio ref={remoteAudioRef} autoPlay />
+                <audio ref={remoteAudioRef} autoPlay playsInline style={{ display: 'none' }} />
 
                 {/* Top Bar / Caller Header */}
                 <div className="pt-10 px-6 flex flex-col items-center z-20 text-center">

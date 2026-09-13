@@ -178,6 +178,16 @@ module.exports = (io) => {
 
         socket.on("initiate_call", (data) => {
             const callerUserId = socket.user ? socket.user.id : data.caller_user_id;
+            
+            if (data.room) {
+                socket.join(data.room);
+                if (data.room.startsWith("chat_")) {
+                    socket.join(data.room.replace("chat_", ""));
+                } else {
+                    socket.join(`chat_${data.room}`);
+                }
+            }
+
             const payload = {
                 type: data.type,
                 caller_id: socket.id,
@@ -186,9 +196,18 @@ module.exports = (io) => {
                 room: data.room,
                 caller_user_id: callerUserId
             };
-            socket.to(data.room).emit("incoming_call", payload);
+
+            if (data.room) {
+                socket.to(data.room).emit("incoming_call", payload);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("incoming_call", payload);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("incoming_call", payload);
+                }
+            }
             if (data.receiver_id) {
-                socket.to(`user_${data.receiver_id}`).emit("incoming_call", payload);
+                io.to(`user_${data.receiver_id}`).emit("incoming_call", payload);
+                io.to(data.receiver_id.toString()).emit("incoming_call", payload);
                 // Trigger Web Push Notification for incoming call
                 sendPushNotification(data.receiver_id, {
                     title: `📞 Incoming ${data.type === 'video' ? 'Video' : 'Voice'} Call`,
@@ -207,15 +226,54 @@ module.exports = (io) => {
         });
 
         socket.on("accept_call", (data) => {
-            socket.to(data.room).emit("call_accepted");
+            if (data.room) {
+                socket.join(data.room);
+                if (data.room.startsWith("chat_")) {
+                    socket.join(data.room.replace("chat_", ""));
+                } else {
+                    socket.join(`chat_${data.room}`);
+                }
+                socket.to(data.room).emit("call_accepted", data);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("call_accepted", data);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("call_accepted", data);
+                }
+            }
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("call_accepted", data);
+                io.to(data.to.toString()).emit("call_accepted", data);
+            }
         });
 
         socket.on("reject_call", (data) => {
-            socket.to(data.room).emit("call_rejected");
+            if (data.room) {
+                socket.to(data.room).emit("call_rejected", data);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("call_rejected", data);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("call_rejected", data);
+                }
+            }
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("call_rejected", data);
+                io.to(data.to.toString()).emit("call_rejected", data);
+            }
         });
 
         socket.on("end_call", (data) => {
-            socket.to(data.room).emit("call_ended");
+            if (data.room) {
+                socket.to(data.room).emit("call_ended", data);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("call_ended", data);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("call_ended", data);
+                }
+            }
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("call_ended", data);
+                io.to(data.to.toString()).emit("call_ended", data);
+            }
         });
 
         socket.on("edit_message", async (data) => {
@@ -227,15 +285,51 @@ module.exports = (io) => {
         });
 
         socket.on("webrtc_offer", (data) => {
-            socket.to(data.room).emit("webrtc_offer", data.offer);
+            const offerPayload = data.offer || data;
+            if (data.room) {
+                socket.to(data.room).emit("webrtc_offer", offerPayload);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("webrtc_offer", offerPayload);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("webrtc_offer", offerPayload);
+                }
+            }
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("webrtc_offer", offerPayload);
+                io.to(data.to.toString()).emit("webrtc_offer", offerPayload);
+            }
         });
 
         socket.on("webrtc_answer", (data) => {
-            socket.to(data.room).emit("webrtc_answer", data.answer);
+            const answerPayload = data.answer || data;
+            if (data.room) {
+                socket.to(data.room).emit("webrtc_answer", answerPayload);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("webrtc_answer", answerPayload);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("webrtc_answer", answerPayload);
+                }
+            }
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("webrtc_answer", answerPayload);
+                io.to(data.to.toString()).emit("webrtc_answer", answerPayload);
+            }
         });
 
         socket.on("webrtc_ice_candidate", (data) => {
-            socket.to(data.room).emit("webrtc_ice_candidate", data.candidate);
+            const candidatePayload = data.candidate || data;
+            if (data.room) {
+                socket.to(data.room).emit("webrtc_ice_candidate", candidatePayload);
+                if (data.room.startsWith("chat_")) {
+                    socket.to(data.room.replace("chat_", "")).emit("webrtc_ice_candidate", candidatePayload);
+                } else {
+                    socket.to(`chat_${data.room}`).emit("webrtc_ice_candidate", candidatePayload);
+                }
+            }
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("webrtc_ice_candidate", candidatePayload);
+                io.to(data.to.toString()).emit("webrtc_ice_candidate", candidatePayload);
+            }
         });
 
         socket.on("delete_message", async (data) => {
