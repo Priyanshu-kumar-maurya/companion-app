@@ -15,8 +15,28 @@ router.get('/webrtc/ice-servers', (req, res) => {
         { urls: "stun:stun4.l.google.com:19302" },
         { urls: "stun:stun.services.mozilla.com" },
         { urls: "stun:global.stun.twilio.com:3478" },
+        { urls: "stun:stun.relay.metered.ca:80" },
 
-        // OpenRelay TURN Servers (UDP & TCP 443 / 80 - For Strict Symmetric NAT & Firewall Traversal)
+        // OpenRelay Standard TURN Servers (UDP & TCP 443 / 80 - For Strict Mobile 4G/5G Carrier NAT Traversal)
+        {
+            urls: [
+                "turn:standard.relay.metered.ca:80",
+                "turn:standard.relay.metered.ca:80?transport=tcp",
+                "turn:standard.relay.metered.ca:443",
+                "turn:standard.relay.metered.ca:443?transport=tcp"
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject"
+        },
+        {
+            urls: [
+                "turns:standard.relay.metered.ca:443?transport=tcp",
+                "turns:standard.relay.metered.ca:5349",
+                "turns:standard.relay.metered.ca:5349?transport=tcp"
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject"
+        },
         {
             urls: [
                 "turn:openrelay.metered.ca:80",

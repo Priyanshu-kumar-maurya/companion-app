@@ -9,6 +9,27 @@ const DEFAULT_ICE_SERVERS = {
         { urls: "stun:stun3.l.google.com:19302" },
         { urls: "stun:stun4.l.google.com:19302" },
         { urls: "stun:stun.services.mozilla.com" },
+        { urls: "stun:global.stun.twilio.com:3478" },
+        { urls: "stun:stun.relay.metered.ca:80" },
+        {
+            urls: [
+                "turn:standard.relay.metered.ca:80",
+                "turn:standard.relay.metered.ca:80?transport=tcp",
+                "turn:standard.relay.metered.ca:443",
+                "turn:standard.relay.metered.ca:443?transport=tcp"
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject"
+        },
+        {
+            urls: [
+                "turns:standard.relay.metered.ca:443?transport=tcp",
+                "turns:standard.relay.metered.ca:5349",
+                "turns:standard.relay.metered.ca:5349?transport=tcp"
+            ],
+            username: "openrelayproject",
+            credential: "openrelayproject"
+        },
         {
             urls: [
                 "turn:openrelay.metered.ca:80",
@@ -30,6 +51,23 @@ const DEFAULT_ICE_SERVERS = {
     iceCandidatePoolSize: 10
 };
 
+const extractIceCandidate = (data) => {
+    if (!data) return null;
+    let cand = data.candidate !== undefined && typeof data.candidate === 'object' ? data.candidate : data;
+    if (typeof cand === 'string') {
+        if (data.sdpMid !== undefined || data.sdpMLineIndex !== undefined) {
+            return {
+                candidate: cand,
+                sdpMid: data.sdpMid,
+                sdpMLineIndex: data.sdpMLineIndex,
+                usernameFragment: data.usernameFragment
+            };
+        }
+        return { candidate: cand };
+    }
+    return cand;
+};
+
 function CallOverlay({ socket, currentUser }) {
     const [callState, setCallState] = useState("idle"); // 'idle' | 'calling' | 'receiving' | 'active'
     const [callType, setCallType] = useState("video"); // 'audio' | 'video'
@@ -49,6 +87,7 @@ function CallOverlay({ socket, currentUser }) {
 
     const peerConnectionRef = useRef(null);
     const localStreamRef = useRef(null);
+    const remoteStreamRef = useRef(null);
     const partnerRef = useRef(null);
     const callTypeRef = useRef("video");
     const callStateRef = useRef("idle");
@@ -183,6 +222,10 @@ function CallOverlay({ socket, currentUser }) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
         }
+        if (remoteStreamRef.current) {
+            remoteStreamRef.current.getTracks().forEach(track => track.stop());
+            remoteStreamRef.current = null;
+        }
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
@@ -285,15 +328,35 @@ function CallOverlay({ socket, currentUser }) {
 
             stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
+            if (!remoteStreamRef.current) {
+                remoteStreamRef.current = new MediaStream();
+            }
+            const remoteStream = remoteStreamRef.current;
+
             pc.ontrack = (event) => {
-                const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
-                if (type === 'video' && remoteVideoRef.current) {
-                    remoteVideoRef.current.srcObject = stream;
+                if (event.streams && event.streams[0]) {
+                    event.streams[0].getTracks().forEach(track => {
+                        if (!remoteStream.getTracks().some(t => t.id === track.id)) {
+                            remoteStream.addTrack(track);
+                        }
+                    });
+                } else if (event.track) {
+                    if (!remoteStream.getTracks().some(t => t.id === event.track.id)) {
+                        remoteStream.addTrack(event.track);
+                    }
+                }
+
+                if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
+                    remoteVideoRef.current.srcObject = remoteStream;
+                }
+                if (remoteVideoRef.current) {
                     remoteVideoRef.current.play().catch(e => console.warn("Remote video play error:", e));
                 }
-                // ALWAYS bind to remoteAudioRef to ensure audio is audible on both mobile & desktop
+
+                if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== remoteStream) {
+                    remoteAudioRef.current.srcObject = remoteStream;
+                }
                 if (remoteAudioRef.current) {
-                    remoteAudioRef.current.srcObject = stream;
                     remoteAudioRef.current.play().catch(e => console.warn("Remote audio play error:", e));
                 }
             };
@@ -301,9 +364,15 @@ function CallOverlay({ socket, currentUser }) {
             pc.onicecandidate = (event) => {
                 const p = partnerRef.current || partner;
                 if (event.candidate && p && socket) {
+                    const candData = {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex,
+                        usernameFragment: event.candidate.usernameFragment
+                    };
                     socket.emit("webrtc_ice_candidate", {
                         room: p.room,
-                        candidate: event.candidate,
+                        candidate: candData,
                         to: p.id
                     });
                 }
@@ -456,14 +525,20 @@ function CallOverlay({ socket, currentUser }) {
 
         const handleWebrtcOffer = async (data) => {
             const offer = data?.offer || data;
+            if (!offer || !offer.sdp) return;
             const type = callTypeRef.current || callType;
             const p = partnerRef.current || partner;
+
             if (!peerConnectionRef.current) {
                 await setupWebRTC(type, false);
             }
             const pc = peerConnectionRef.current;
             if (pc && offer) {
                 try {
+                    if (pc.signalingState !== "stable" && pc.signalingState !== "have-local-offer") {
+                        console.warn("Ignoring offer because signalingState is:", pc.signalingState);
+                        return;
+                    }
                     await pc.setRemoteDescription(new RTCSessionDescription(offer));
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
@@ -472,8 +547,11 @@ function CallOverlay({ socket, currentUser }) {
                     }
 
                     while (iceQueueRef.current.length > 0) {
-                        const candidate = iceQueueRef.current.shift();
-                        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+                        const rawCand = iceQueueRef.current.shift();
+                        const parsed = extractIceCandidate(rawCand);
+                        if (parsed) {
+                            try { await pc.addIceCandidate(new RTCIceCandidate(parsed)); } catch (e) { }
+                        }
                     }
                 } catch (err) {
                     console.error("handleWebrtcOffer error:", err);
@@ -483,13 +561,17 @@ function CallOverlay({ socket, currentUser }) {
 
         const handleWebrtcAnswer = async (data) => {
             const answer = data?.answer || data;
+            if (!answer || !answer.sdp) return;
             const pc = peerConnectionRef.current;
-            if (pc && answer && (pc.signalingState === "have-local-offer" || pc.signalingState !== "stable")) {
+            if (pc && answer && pc.signalingState === "have-local-offer") {
                 try {
                     await pc.setRemoteDescription(new RTCSessionDescription(answer));
                     while (iceQueueRef.current.length > 0) {
-                        const candidate = iceQueueRef.current.shift();
-                        try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+                        const rawCand = iceQueueRef.current.shift();
+                        const parsed = extractIceCandidate(rawCand);
+                        if (parsed) {
+                            try { await pc.addIceCandidate(new RTCIceCandidate(parsed)); } catch (e) { }
+                        }
                     }
                 } catch (err) {
                     console.error("handleWebrtcAnswer error:", err);
@@ -498,13 +580,17 @@ function CallOverlay({ socket, currentUser }) {
         };
 
         const handleWebrtcIceCandidate = async (data) => {
-            const candidate = data?.candidate || data;
-            if (!candidate) return;
+            const parsed = extractIceCandidate(data);
+            if (!parsed) return;
             const pc = peerConnectionRef.current;
             if (pc && pc.remoteDescription && pc.remoteDescription.type) {
-                try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch (e) { }
+                try {
+                    await pc.addIceCandidate(new RTCIceCandidate(parsed));
+                } catch (e) {
+                    console.warn("addIceCandidate error:", e);
+                }
             } else {
-                iceQueueRef.current.push(candidate);
+                iceQueueRef.current.push(parsed);
             }
         };
 
@@ -528,6 +614,26 @@ function CallOverlay({ socket, currentUser }) {
             socket.off("webrtc_ice_candidate", handleWebrtcIceCandidate);
         };
     }, [socket, currentUser]);
+
+    // Stream re-attachment when active call screen mounts
+    useEffect(() => {
+        if (callState === 'active') {
+            const remoteStream = remoteStreamRef.current;
+            if (remoteStream) {
+                if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
+                    remoteVideoRef.current.srcObject = remoteStream;
+                    remoteVideoRef.current.play().catch(() => {});
+                }
+                if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== remoteStream) {
+                    remoteAudioRef.current.srcObject = remoteStream;
+                    remoteAudioRef.current.play().catch(() => {});
+                }
+            }
+            if (localStreamRef.current && localVideoRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
+                localVideoRef.current.srcObject = localStreamRef.current;
+            }
+        }
+    }, [callState]);
 
     // --- User Actions ---
     const acceptCall = async () => {

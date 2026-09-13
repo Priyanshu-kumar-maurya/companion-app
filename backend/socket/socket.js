@@ -286,7 +286,10 @@ module.exports = (io) => {
 
         socket.on("webrtc_offer", (data) => {
             const offerPayload = data.offer || data;
-            if (data.room) {
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("webrtc_offer", offerPayload);
+                io.to(data.to.toString()).emit("webrtc_offer", offerPayload);
+            } else if (data.room) {
                 socket.to(data.room).emit("webrtc_offer", offerPayload);
                 if (data.room.startsWith("chat_")) {
                     socket.to(data.room.replace("chat_", "")).emit("webrtc_offer", offerPayload);
@@ -294,15 +297,14 @@ module.exports = (io) => {
                     socket.to(`chat_${data.room}`).emit("webrtc_offer", offerPayload);
                 }
             }
-            if (data.to) {
-                io.to(`user_${data.to}`).emit("webrtc_offer", offerPayload);
-                io.to(data.to.toString()).emit("webrtc_offer", offerPayload);
-            }
         });
 
         socket.on("webrtc_answer", (data) => {
             const answerPayload = data.answer || data;
-            if (data.room) {
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("webrtc_answer", answerPayload);
+                io.to(data.to.toString()).emit("webrtc_answer", answerPayload);
+            } else if (data.room) {
                 socket.to(data.room).emit("webrtc_answer", answerPayload);
                 if (data.room.startsWith("chat_")) {
                     socket.to(data.room.replace("chat_", "")).emit("webrtc_answer", answerPayload);
@@ -310,25 +312,21 @@ module.exports = (io) => {
                     socket.to(`chat_${data.room}`).emit("webrtc_answer", answerPayload);
                 }
             }
-            if (data.to) {
-                io.to(`user_${data.to}`).emit("webrtc_answer", answerPayload);
-                io.to(data.to.toString()).emit("webrtc_answer", answerPayload);
-            }
         });
 
         socket.on("webrtc_ice_candidate", (data) => {
-            const candidatePayload = data.candidate || data;
-            if (data.room) {
+            // Keep full candidate object ({ candidate, sdpMid, sdpMLineIndex }) intact
+            const candidatePayload = (data && data.candidate && typeof data.candidate === 'object') ? data.candidate : data;
+            if (data.to) {
+                io.to(`user_${data.to}`).emit("webrtc_ice_candidate", candidatePayload);
+                io.to(data.to.toString()).emit("webrtc_ice_candidate", candidatePayload);
+            } else if (data.room) {
                 socket.to(data.room).emit("webrtc_ice_candidate", candidatePayload);
                 if (data.room.startsWith("chat_")) {
                     socket.to(data.room.replace("chat_", "")).emit("webrtc_ice_candidate", candidatePayload);
                 } else {
                     socket.to(`chat_${data.room}`).emit("webrtc_ice_candidate", candidatePayload);
                 }
-            }
-            if (data.to) {
-                io.to(`user_${data.to}`).emit("webrtc_ice_candidate", candidatePayload);
-                io.to(data.to.toString()).emit("webrtc_ice_candidate", candidatePayload);
             }
         });
 
