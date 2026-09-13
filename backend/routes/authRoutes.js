@@ -258,6 +258,7 @@ router.post('/login', authRateLimit, async (req, res) => {
         console.error("Login error:", err);
         res.status(500).json({ error: "Server error. Please try again." });
     }
+});
 // ─── FORGOT PASSWORD (Send OTP) ───────────────────────────────
 router.post('/forgot-password', authRateLimit, async (req, res) => {
     try {
@@ -491,6 +492,22 @@ router.post('/verify-otp', authRateLimit, async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
+
+        res.status(200).json({
+            message: "Email verified! Welcome to Coffeely 🎉",
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (err) {
+        console.error("Verify OTP error:", err);
+        res.status(500).json({ error: "OTP verify karne mein error. Dobara try karo." });
+    }
+});
 
 // ─── CHANGE PASSWORD (AUTHENTICATED) ─────────────────────────
 router.post('/change-password', authenticateToken, rateLimiter(5, 60 * 1000), async (req, res) => {
