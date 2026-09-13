@@ -1047,9 +1047,9 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                         const isWithinTimeLimit = Date.now() - msg.timestamp < 15 * 60 * 1000;
                         const prevMsg = index > 0 ? filteredMessagesToShow[index - 1] : null;
                         const showDateDivider = !prevMsg || new Date(msg.timestamp).toDateString() !== new Date(prevMsg.timestamp).toDateString();
-                        const isMissedCall = msg.text && (msg.text.includes('Missed Video Call') || msg.text.includes('Missed Audio Call'));
-                        const isCompletedCall = msg.text && msg.text.includes('Call -');
-                        const isCallLog = isMissedCall || isCompletedCall;
+                        const isMissedCall = msg.text && (msg.text.includes('Missed Video Call') || msg.text.includes('Missed Audio Call') || msg.text.includes('Missed Voice Call') || msg.text.includes('Missed'));
+                        const isCompletedCall = msg.text && (msg.text.includes('Call -') || msg.text.includes('Call'));
+                        const isCallLog = msg.text && (msg.text.includes('📞') || isMissedCall || isCompletedCall) && (msg.text.includes('Voice Call') || msg.text.includes('Video Call') || msg.text.includes('Audio Call') || isMissedCall);
                         const isLastSentMsg = index === filteredMessagesToShow.map(m => m.sent).lastIndexOf(true);
 
                         const isSystemNotice = msg.text && msg.text.startsWith('📢');
@@ -1071,11 +1071,34 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                                         </span>
                                     </div>
                                 ) : isCallLog ? (
-                                    <div className="flex justify-center my-1">
-                                        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs border border-white/5" style={{ background: '#16162A', color: '#6b7280' }}>
-                                            <FiPhoneMissed size={14} className={isMissedCall ? 'text-red-400' : 'text-green-400'} />
-                                            <span style={{ color: isMissedCall ? '#f87171' : '#4ade80' }}>{msg.text.replace('❌ ', '').replace('✅ ', '')}</span>
-                                            <span className="ml-1 text-[10px]" style={{ color: '#6b7280' }}>{msg.time}</span>
+                                    <div className={`flex ${msg.sent ? 'justify-end' : 'justify-start'} my-1 px-1`}>
+                                        <div className={`flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-xs border backdrop-blur-md shadow-md ${
+                                            msg.sent
+                                                ? 'bg-gradient-to-r from-purple-900/40 to-pink-900/40 border-pink-500/25 text-white rounded-br-sm'
+                                                : 'bg-[#16162A] border-white/10 text-gray-200 rounded-bl-sm'
+                                        }`}>
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isMissedCall ? 'bg-red-500/15 text-red-400' : 'bg-green-500/15 text-green-400'}`}>
+                                                {isMissedCall ? (
+                                                    <FiPhoneMissed size={14} />
+                                                ) : msg.text && msg.text.includes('Video') ? (
+                                                    <FiVideo size={14} />
+                                                ) : (
+                                                    <FiPhone size={14} />
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-1.5 font-medium">
+                                                    <span className={isMissedCall ? 'text-red-400 font-semibold' : 'text-emerald-400 font-semibold'}>
+                                                        {msg.text.replace('📞 ', '').replace('❌ ', '').replace('✅ ', '')}
+                                                    </span>
+                                                </div>
+                                                <span className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+                                                    <span>{msg.sent ? 'Outgoing' : 'Incoming'}</span>
+                                                    <span>•</span>
+                                                    <span>{msg.time}</span>
+                                                    {msg.sent && <span className="text-blue-400 font-bold ml-0.5">✓✓</span>}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (

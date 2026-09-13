@@ -89,6 +89,7 @@ function CallOverlay({ socket, currentUser }) {
     const localStreamRef = useRef(null);
     const remoteStreamRef = useRef(null);
     const partnerRef = useRef(null);
+    const isCallerRef = useRef(false);
     const callTypeRef = useRef("video");
     const callStateRef = useRef("idle");
     const iceQueueRef = useRef([]);
@@ -104,6 +105,9 @@ function CallOverlay({ socket, currentUser }) {
     const logCallHistory = (overrideText) => {
         if (hasLoggedCallRef.current) return;
         hasLoggedCallRef.current = true;
+
+        // ONLY the caller initiates the chat call log and DB history to avoid duplicate entries
+        if (!isCallerRef.current) return;
 
         const p = partnerRef.current || partner;
         const currentType = callTypeRef.current || callType;
@@ -241,6 +245,7 @@ function CallOverlay({ socket, currentUser }) {
         }
         iceQueueRef.current = [];
         partnerRef.current = null;
+        isCallerRef.current = false;
         callStateRef.current = "idle";
         setCallState("idle");
         setPartner(null);
@@ -408,6 +413,7 @@ function CallOverlay({ socket, currentUser }) {
             const { targetUser, type, room } = e.detail;
             hasLoggedCallRef.current = false;
             callDurationRef.current = 0;
+            isCallerRef.current = true;
             const p = {
                 id: targetUser.id,
                 name: targetUser.name || 'Companion',
@@ -461,6 +467,7 @@ function CallOverlay({ socket, currentUser }) {
             if (callStateRef.current !== "idle") return; // Busy
             hasLoggedCallRef.current = false;
             callDurationRef.current = 0;
+            isCallerRef.current = false;
             const callTypeVal = data.type || "video";
             const p = {
                 id: data.caller_user_id || data.caller_id,
