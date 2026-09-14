@@ -38,18 +38,17 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             const data = await response.json();
 
             if (response.ok) {
-                // Check if account is verified
-                if (data.user.is_verified === false) {
-                    // Send OTP and go to verify step
+                // Defensive check if account is not verified
+                if (data.user && data.user.is_verified === false) {
                     setVerifyEmail(data.user.email || formData.emailOrPhone);
                     setVerifyOtp("");
                     await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email: data.user.email })
-                    });
+                        body: JSON.stringify({ email: data.user.email || formData.emailOrPhone })
+                    }).catch(() => {});
                     setStep("verify");
-                    setError("");
+                    setError("Aapka account verified nahi hai. Naya OTP bheja gaya hai.");
                     return;
                 }
 
@@ -66,6 +65,22 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     if (setBoyUser) setBoyUser(data.user);
                     setPage(PAGES.BOY_DASHBOARD);
                 }
+            } else if (response.status === 403 && data.error === "UNVERIFIED_ACCOUNT") {
+                const targetEmail = data.email || formData.emailOrPhone;
+                setVerifyEmail(targetEmail);
+                setVerifyOtp("");
+                try {
+                    await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: targetEmail })
+                    });
+                } catch (sendErr) {
+                    console.error("Auto send OTP error:", sendErr);
+                }
+                setStep("verify");
+                setError("Aapka account verified nahi hai. Ek naya verification code aapke email par bhej diya gaya hai.");
+                return;
             } else {
                 setError(data.error || "Login failed. Please try again.");
             }
@@ -93,8 +108,16 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 setTimeout(() => {
                     localStorage.setItem("token", data.token);
                     localStorage.setItem("user", JSON.stringify(data.user));
-                    if (data.user.role === 'girl') { if (setGirlUser) setGirlUser(data.user); setPage(PAGES.GIRL_DASHBOARD); }
-                    else { if (setBoyUser) setBoyUser(data.user); setPage(PAGES.BOY_DASHBOARD); }
+                    if (data.user.role === 'girl') {
+                        if (setGirlUser) setGirlUser(data.user);
+                        setPage(PAGES.GIRL_DASHBOARD);
+                    } else if (data.user.role === 'admin') {
+                        if (setAdminUser) setAdminUser(data.user);
+                        setPage(PAGES.ADMIN_DASHBOARD);
+                    } else {
+                        if (setBoyUser) setBoyUser(data.user);
+                        setPage(PAGES.BOY_DASHBOARD);
+                    }
                 }, 1000);
             } else {
                 setError(data.error || "Invalid OTP.");
@@ -255,9 +278,39 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                 {loading ? "Verifying..." : "Verify & Login"}
                             </button>
                         </form>
-                        <button onClick={() => { setStep("login"); setError(""); }} className="mt-4 text-xs text-gray-500 hover:text-gray-300 transition w-full text-center">
-                            ← Back to Login
-                        </button>
+                        <div className="mt-4 flex items-center justify-between text-xs px-1">
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={async () => {
+                                    setLoading(true);
+                                    setError("");
+                                    try {
+                                        const res = await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({ email: verifyEmail })
+                                        });
+                                        const d = await res.json();
+                                        if (res.ok) {
+                                            setSuccess("Naya OTP bhej diya gaya hai! Email check karein.");
+                                        } else {
+                                            setError(d.error || "OTP bhejne mein dikkat aayi.");
+                                        }
+                                    } catch (err) {
+                                        setError("Server se sampark nahi ho paya.");
+                                    } finally {
+                                        setLoading(false);
+                                    }
+                                }}
+                                className="text-pink-400 hover:text-pink-300 transition font-medium"
+                            >
+                                🔄 Resend Code
+                            </button>
+                            <button onClick={() => { setStep("login"); setError(""); setSuccess(""); }} className="text-gray-500 hover:text-gray-300 transition">
+                                ← Back to Login
+                            </button>
+                        </div>
                     </>
                 )}
 

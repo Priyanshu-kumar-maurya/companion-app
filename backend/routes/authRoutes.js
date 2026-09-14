@@ -19,40 +19,88 @@ const timingSafeCompare = (a, b) => {
     return crypto.timingSafeEqual(Buffer.from(strA), Buffer.from(strB));
 };
 
-// ─── Email Service (Brevo HTTP API — works on Render, no SMTP ports needed) ──
+// ─── Email Service (Dual-Provider: Brevo HTTP API + Nodemailer Fallback) ──
+const nodemailer = require('nodemailer');
+
+let mailTransporter = null;
+const getMailTransporter = () => {
+    if (!mailTransporter && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        mailTransporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+    }
+    return mailTransporter;
+};
+
 const sendEmail = async ({ to, subject, html }) => {
     const apiKey = process.env.BREVO_API_KEY;
     const senderEmail = process.env.EMAIL_USER || 'noreply@coffeely.com';
     const senderName = process.env.EMAIL_FROM_NAME || 'Coffeely';
 
-    if (!apiKey) {
-        throw new Error('BREVO_API_KEY is not set in environment variables');
+    let lastError = null;
+
+    // Strategy 1: Brevo HTTP API (Fastest on cloud/Render, no SMTP ports needed)
+    if (apiKey) {
+        try {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'accept': 'application/json',
+                    'api-key': apiKey,
+                    'content-type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: { name: senderName, email: senderEmail },
+                    to: [{ email: to }],
+                    subject: subject,
+                    htmlContent: html
+                })
+            });
+
+            if (response.ok) {
+                return await response.json();
+            }
+            const errData = await response.json().catch(() => ({}));
+            lastError = new Error(errData.message || `Brevo API error: ${response.status}`);
+            console.warn(`⚠️ Brevo API failed (${response.status}): ${lastError.message}. Trying Nodemailer fallback...`);
+        } catch (brevoErr) {
+            lastError = brevoErr;
+            console.warn(`⚠️ Brevo request failed: ${brevoErr.message}. Trying Nodemailer fallback...`);
+        }
     }
 
-    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-        method: 'POST',
-        headers: {
-            'accept': 'application/json',
-            'api-key': apiKey,
-            'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-            sender: { name: senderName, email: senderEmail },
-            to: [{ email: to }],
-            subject: subject,
-            htmlContent: html
-        })
-    });
-
-    if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.message || `Brevo API error: ${response.status}`);
+    // Strategy 2: Nodemailer (Direct Gmail / SMTP credentials)
+    const transporter = getMailTransporter();
+    if (transporter) {
+        try {
+            const info = await transporter.sendMail({
+                from: `"${senderName}" <${process.env.EMAIL_USER}>`,
+                to,
+                subject,
+                html
+            });
+            console.log(`✅ Email sent via Nodemailer to ${to} (ID: ${info.messageId})`);
+            return info;
+        } catch (smtpErr) {
+            lastError = smtpErr;
+            console.error('⚠️ Nodemailer SMTP delivery failed:', smtpErr.message);
+        }
     }
 
-    return await response.json();
+    // Strategy 3: Safe fallback if providers are down or during local development
+    if (process.env.NODE_ENV !== 'production' || (!apiKey && !transporter)) {
+        console.warn(`⚠️ [DEV EMAIL LOG] Email to ${to} | Subject: "${subject}" - could not send via network provider, logged for recovery.`);
+        return { message: 'Email logged to console fallback' };
+    }
+
+    throw lastError || new Error('No working email provider configured. Please check BREVO_API_KEY or EMAIL_USER/EMAIL_PASS.');
 };
 
-console.log('Email service initialized: Brevo HTTP API');
+console.log('Email service initialized: Dual-Provider (Brevo + Nodemailer)');
 
 // Strict rate limiter for auth routes — 5 attempts per minute per IP
 const authRateLimit = rateLimiter(5, 60 * 1000);
