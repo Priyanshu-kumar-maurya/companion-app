@@ -925,47 +925,45 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                     </div>
 
                     {/* Action buttons at the bottom on Mobile */}
-                    <div className="flex flex-col gap-2 pt-2">
-                        <div className="flex gap-2">
-                            {(!currentUser || currentUser.id !== profile.id) && (
-                                <button
-                                    onClick={handleFollowClick}
-                                    disabled={followLoading}
-                                    className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition active:scale-95 shadow-sm ${followStats.isFollowing
-                                        ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
-                                        : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90`}`}
-                                >
-                                    {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
-                                </button>
-                            )}
+                    <div className="flex items-center gap-2 pt-3 pb-1">
+                        {(!currentUser || currentUser.id !== profile.id) && (
                             <button
-                                onClick={handleMessageClick}
-                                className="flex-1 py-2.5 bg-[#262626] hover:bg-[#363636] border border-white/10 text-white rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
+                                onClick={handleFollowClick}
+                                disabled={followLoading}
+                                className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition active:scale-95 shadow-sm ${followStats.isFollowing
+                                    ? 'bg-white/10 text-white hover:bg-white/15 border border-white/10'
+                                    : `bg-gradient-to-r ${accentGrad} text-white hover:opacity-90`}`}
                             >
-                                <FiMessageCircle size={15} /> Message
+                                {followLoading ? '...' : followStats.isFollowing ? 'Following' : 'Follow'}
                             </button>
-                        </div>
+                        )}
+                        <button
+                            onClick={handleMessageClick}
+                            className="flex-1 py-2.5 bg-[#262626] hover:bg-[#363636] border border-white/10 text-white rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95 shadow-sm"
+                        >
+                            <FiMessageCircle size={15} /> Message
+                        </button>
 
                         {(!currentUser || currentUser.id !== profile.id) && (
-                            <div className="flex gap-2">
+                            <>
                                 <button
                                     onClick={() => handleCallClick('video')}
-                                    className="flex-1 py-2 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95"
+                                    className="w-10 h-10 bg-[#0095f6]/10 hover:bg-[#0095f6]/20 border border-[#0095f6]/30 text-[#0095f6] rounded-xl font-bold transition flex items-center justify-center shrink-0 active:scale-95 shadow-sm"
                                     title="Video Call"
                                 >
-                                    <FiVideo size={14} /> Video Call
+                                    <FiVideo size={16} />
                                 </button>
                                 <button
                                     onClick={() => handleCallClick('audio')}
-                                    className="flex-1 py-2 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 active:scale-95"
+                                    className="w-10 h-10 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl font-bold transition flex items-center justify-center shrink-0 active:scale-95 shadow-sm"
                                     title="Voice Call"
                                 >
-                                    <FiPhone size={14} /> Voice Call
+                                    <FiPhone size={16} />
                                 </button>
                                 <button
                                     onClick={handleToggleFavorite}
                                     disabled={favLoading}
-                                    className={`px-3.5 py-2 border rounded-xl font-bold transition flex items-center justify-center shrink-0 active:scale-95 ${
+                                    className={`w-10 h-10 border rounded-xl font-bold transition flex items-center justify-center shrink-0 active:scale-95 shadow-sm ${
                                         isFavorited
                                             ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-sm shadow-red-500/10'
                                             : 'bg-white/5 hover:bg-white/10 border-white/10 text-gray-400 hover:text-white'
@@ -974,13 +972,14 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                                 >
                                     <FiHeart size={16} className={isFavorited ? "fill-red-500 text-red-500" : ""} />
                                 </button>
-                            </div>
+                            </>
                         )}
                     </div>
+                </div>
             </div>
 
             {/* ── PROFILE BODY: 2-COLUMN RESPONSIVE LAYOUT (Grid on Desktop, Stack on Mobile) ── */}
-            <div className="max-w-5xl mx-auto px-4 py-8">
+            <div className="max-w-5xl mx-auto px-4 pt-4 pb-12">
                 <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
 
                     {/* ── MAIN CONTENT: Posts Grid & Reviews (Order 2 on mobile, Order 1 on desktop) ── */}
