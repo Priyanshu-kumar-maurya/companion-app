@@ -6,30 +6,7 @@ const DEFAULT_ICE_SERVERS = {
         { urls: "stun:stun.l.google.com:19302" },
         { urls: "stun:stun1.l.google.com:19302" },
         { urls: "stun:stun2.l.google.com:19302" },
-        { urls: "stun:stun3.l.google.com:19302" },
-        { urls: "stun:stun4.l.google.com:19302" },
         { urls: "stun:stun.services.mozilla.com" },
-        { urls: "stun:global.stun.twilio.com:3478" },
-        { urls: "stun:stun.relay.metered.ca:80" },
-        {
-            urls: [
-                "turn:standard.relay.metered.ca:80",
-                "turn:standard.relay.metered.ca:80?transport=tcp",
-                "turn:standard.relay.metered.ca:443",
-                "turn:standard.relay.metered.ca:443?transport=tcp"
-            ],
-            username: "openrelayproject",
-            credential: "openrelayproject"
-        },
-        {
-            urls: [
-                "turns:standard.relay.metered.ca:443?transport=tcp",
-                "turns:standard.relay.metered.ca:5349",
-                "turns:standard.relay.metered.ca:5349?transport=tcp"
-            ],
-            username: "openrelayproject",
-            credential: "openrelayproject"
-        },
         {
             urls: [
                 "turn:openrelay.metered.ca:80",
@@ -41,14 +18,14 @@ const DEFAULT_ICE_SERVERS = {
         },
         {
             urls: [
-                "turns:openrelay.metered.ca:443",
-                "turns:openrelay.metered.ca:443?transport=tcp"
+                "turns:openrelay.metered.ca:443?transport=tcp",
+                "turns:openrelay.metered.ca:5349"
             ],
             username: "openrelayproject",
             credential: "openrelayproject"
         }
     ],
-    iceCandidatePoolSize: 10
+    iceCandidatePoolSize: 2
 };
 
 const extractIceCandidate = (data) => {
@@ -78,6 +55,8 @@ function CallOverlay({ socket, currentUser }) {
     const [callDuration, setCallDuration] = useState(0);
     const [statusText, setStatusText] = useState("Calling...");
     const [showBanner, setShowBanner] = useState(true);
+    const [localStream, setLocalStream] = useState(null);
+    const [remoteStream, setRemoteStream] = useState(null);
 
     const [netQuality, setNetQuality] = useState({ status: 'good', rtt: 30, label: '🟢 HD Quality (Strong Signal)' });
 
@@ -226,10 +205,12 @@ function CallOverlay({ socket, currentUser }) {
             localStreamRef.current.getTracks().forEach(track => track.stop());
             localStreamRef.current = null;
         }
+        setLocalStream(null);
         if (remoteStreamRef.current) {
             remoteStreamRef.current.getTracks().forEach(track => track.stop());
             remoteStreamRef.current = null;
         }
+        setRemoteStream(null);
         if (peerConnectionRef.current) {
             peerConnectionRef.current.close();
             peerConnectionRef.current = null;
@@ -260,29 +241,48 @@ function CallOverlay({ socket, currentUser }) {
     // --- WebRTC Peer Setup ---
     const setupWebRTC = async (type, isCaller) => {
         try {
-            let iceServersConfig = DEFAULT_ICE_SERVERS;
-            try {
-                const res = await fetch("https://rentgf-and-bf.onrender.com/api/webrtc/ice-servers");
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.iceServers && data.iceServers.length > 0) {
-                        iceServersConfig = { iceServers: data.iceServers, iceCandidatePoolSize: 10 };
-                    }
-                }
-            } catch (e) {}
+            // 1. Instant Media Acquisition (reuse pre-warmed stream if active)
+            let stream = localStreamRef.current;
+            const hasValidVideo = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].readyState === 'live';
+            const hasValidAudio = stream && stream.getAudioTracks().length > 0 && stream.getAudioTracks()[0].readyState === 'live';
 
-            const constraints = {
-                audio: true,
-                video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false
-            };
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            localStreamRef.current = stream;
+            if (!stream || (type === 'video' && !hasValidVideo) || !hasValidAudio) {
+                if (stream) {
+                    stream.getTracks().forEach(t => t.stop());
+                }
+                const constraints = {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    },
+                    video: type === 'video' ? {
+                        facingMode: facingMode || 'user',
+                        width: { min: 320, ideal: 640, max: 1280 },
+                        height: { min: 240, ideal: 480, max: 720 },
+                        frameRate: { ideal: 24, max: 30 }
+                    } : false
+                };
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                } catch (mediaErr) {
+                    console.warn("Retrying getUserMedia with fallback constraints:", mediaErr);
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        audio: true,
+                        video: type === 'video' ? true : false
+                    });
+                }
+                localStreamRef.current = stream;
+                setLocalStream(stream);
+            }
 
             if (localVideoRef.current && type === 'video') {
                 localVideoRef.current.srcObject = stream;
+                localVideoRef.current.play().catch(() => {});
             }
 
-            const pc = new RTCPeerConnection(iceServersConfig);
+            // 2. Direct RTCPeerConnection using pre-loaded high-speed ICE configuration (NO blocking network fetch!)
+            const pc = new RTCPeerConnection(DEFAULT_ICE_SERVERS);
             peerConnectionRef.current = pc;
 
             // Connection state change monitors
@@ -331,38 +331,41 @@ function CallOverlay({ socket, currentUser }) {
                 }
             }, 3000);
 
+            // Add all tracks to RTCPeerConnection
             stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
-            if (!remoteStreamRef.current) {
-                remoteStreamRef.current = new MediaStream();
-            }
-            const remoteStream = remoteStreamRef.current;
-
+            // Reliable track receiver & stream listener
             pc.ontrack = (event) => {
+                let incomingStream = null;
                 if (event.streams && event.streams[0]) {
-                    event.streams[0].getTracks().forEach(track => {
-                        if (!remoteStream.getTracks().some(t => t.id === track.id)) {
-                            remoteStream.addTrack(track);
-                        }
-                    });
+                    incomingStream = event.streams[0];
                 } else if (event.track) {
-                    if (!remoteStream.getTracks().some(t => t.id === event.track.id)) {
-                        remoteStream.addTrack(event.track);
+                    if (!remoteStreamRef.current) {
+                        remoteStreamRef.current = new MediaStream();
                     }
+                    if (!remoteStreamRef.current.getTracks().some(t => t.id === event.track.id)) {
+                        remoteStreamRef.current.addTrack(event.track);
+                    }
+                    incomingStream = remoteStreamRef.current;
                 }
 
-                if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
-                    remoteVideoRef.current.srcObject = remoteStream;
-                }
-                if (remoteVideoRef.current) {
-                    remoteVideoRef.current.play().catch(e => console.warn("Remote video play error:", e));
-                }
+                if (incomingStream) {
+                    remoteStreamRef.current = incomingStream;
+                    setRemoteStream(incomingStream);
 
-                if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== remoteStream) {
-                    remoteAudioRef.current.srcObject = remoteStream;
-                }
-                if (remoteAudioRef.current) {
-                    remoteAudioRef.current.play().catch(e => console.warn("Remote audio play error:", e));
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = incomingStream;
+                        remoteVideoRef.current.play().catch(() => {
+                            if (remoteVideoRef.current) {
+                                remoteVideoRef.current.muted = true;
+                                remoteVideoRef.current.play().catch(() => {});
+                            }
+                        });
+                    }
+                    if (remoteAudioRef.current) {
+                        remoteAudioRef.current.srcObject = incomingStream;
+                        remoteAudioRef.current.play().catch(() => {});
+                    }
                 }
             };
 
@@ -409,7 +412,7 @@ function CallOverlay({ socket, currentUser }) {
 
     // --- Global Call Event Handler ---
     useEffect(() => {
-        const handleStartCall = (e) => {
+        const handleStartCall = async (e) => {
             const { targetUser, type, room } = e.detail;
             hasLoggedCallRef.current = false;
             callDurationRef.current = 0;
@@ -427,6 +430,24 @@ function CallOverlay({ socket, currentUser }) {
             setPartner(p);
             setCallState("calling");
             setStatusText("Calling...");
+
+            // Pre-warm camera & mic immediately so it's instantly ready when partner answers
+            try {
+                const constraints = {
+                    audio: { echoCancellation: true, noiseSuppression: true },
+                    video: type === 'video' ? {
+                        facingMode: 'user',
+                        width: { min: 320, ideal: 640, max: 1280 },
+                        height: { min: 240, ideal: 480, max: 720 },
+                        frameRate: { ideal: 24, max: 30 }
+                    } : false
+                };
+                const preStream = await navigator.mediaDevices.getUserMedia(constraints);
+                localStreamRef.current = preStream;
+                setLocalStream(preStream);
+            } catch (err) {
+                console.warn("Pre-warm media stream warning:", err);
+            }
 
             // Ensure global socket joins room
             if (socket && room) {
@@ -622,25 +643,39 @@ function CallOverlay({ socket, currentUser }) {
         };
     }, [socket, currentUser]);
 
-    // Stream re-attachment when active call screen mounts
+    // Stream re-attachment when active call screen mounts or streams change
     useEffect(() => {
-        if (callState === 'active') {
-            const remoteStream = remoteStreamRef.current;
-            if (remoteStream) {
-                if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== remoteStream) {
-                    remoteVideoRef.current.srcObject = remoteStream;
-                    remoteVideoRef.current.play().catch(() => {});
-                }
-                if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== remoteStream) {
-                    remoteAudioRef.current.srcObject = remoteStream;
-                    remoteAudioRef.current.play().catch(() => {});
-                }
+        const stream = localStream || localStreamRef.current;
+        if (callState === 'active' && stream && localVideoRef.current) {
+            if (localVideoRef.current.srcObject !== stream) {
+                localVideoRef.current.srcObject = stream;
             }
-            if (localStreamRef.current && localVideoRef.current && localVideoRef.current.srcObject !== localStreamRef.current) {
-                localVideoRef.current.srcObject = localStreamRef.current;
+            localVideoRef.current.play().catch(() => {});
+        }
+    }, [localStream, callState]);
+
+    useEffect(() => {
+        const stream = remoteStream || remoteStreamRef.current;
+        if (callState === 'active' && stream) {
+            if (remoteVideoRef.current && remoteVideoRef.current.srcObject !== stream) {
+                remoteVideoRef.current.srcObject = stream;
+            }
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.play().catch(() => {
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.muted = true;
+                        remoteVideoRef.current.play().catch(() => {});
+                    }
+                });
+            }
+            if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== stream) {
+                remoteAudioRef.current.srcObject = stream;
+            }
+            if (remoteAudioRef.current) {
+                remoteAudioRef.current.play().catch(() => {});
             }
         }
-    }, [callState]);
+    }, [remoteStream, callState]);
 
     // --- User Actions ---
     const acceptCall = async () => {
@@ -830,6 +865,7 @@ function CallOverlay({ socket, currentUser }) {
                                 ref={remoteVideoRef}
                                 autoPlay
                                 playsInline
+                                muted
                                 className="w-full h-full object-cover"
                             />
 
