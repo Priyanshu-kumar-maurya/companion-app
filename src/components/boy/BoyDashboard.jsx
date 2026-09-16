@@ -8,18 +8,64 @@ import ReviewModal from '../shared/ReviewModal';
 import GirlWalletTab from '../girl/GirlWalletTab';
 import KYCUploadPrompt from '../shared/KYCUploadPrompt';
 import VerifiedBadge from '../shared/VerifiedBadge';
-import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart, FiFileText, FiDollarSign } from "react-icons/fi";
+import ImageCropperModal from '../shared/ImageCropperModal';
+import { FiBell, FiSettings, FiLink, FiAlertTriangle, FiCheckCircle, FiClock, FiCreditCard, FiStar, FiCalendar, FiGrid, FiTrash2, FiMapPin, FiX, FiUser, FiShield, FiHeart, FiFileText, FiDollarSign, FiCamera } from "react-icons/fi";
 import imageCompression from 'browser-image-compression';
 
 function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     const [myPosts, setMyPosts] = useState([]);
     const [expandedPost, setExpandedPost] = useState(null);
     const [showDpModal, setShowDpModal] = useState(false);
+    const [cropModalData, setCropModalData] = useState(null);
     const [kycUploading, setKycUploading] = useState(false);
     const [myBookings, setMyBookings] = useState([]);
     const [newBookingAlert, setNewBookingAlert] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
     const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
+
+    const handleDpFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropModalData({
+                imageSrc: reader.result,
+                isCircular: true,
+                title: "Set Profile Picture",
+                onComplete: async ({ file: croppedFile }) => {
+                    setCropModalData(null);
+                    setShowDpModal(false);
+                    const uploadFormData = new FormData();
+                    uploadFormData.append('profile_pic', croppedFile);
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, {
+                            method: 'POST',
+                            body: uploadFormData,
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            const updated = { ...user, profile_pic: data.imageUrl };
+                            setBoyUser(updated);
+                            localStorage.setItem('user', JSON.stringify(updated));
+                            if (socket) {
+                                socket.emit('active_status_changed');
+                            }
+                            alert('Profile picture updated successfully!');
+                        } else {
+                            alert('Upload failed.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Error uploading profile picture.');
+                    }
+                }
+            });
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
 
     const [dashboardTab, setDashboardTab] = useState('posts'); // 'posts' | 'favorites'
     const [favoritesList, setFavoritesList] = useState([]);
@@ -374,6 +420,21 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Camera Edit Badge */}
+                            <label
+                                className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center cursor-pointer shadow-lg border-2 border-[#0D0D1A] hover:scale-110 active:scale-95 transition z-10"
+                                title="Change or adjust profile picture"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <FiCamera size={13} />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleDpFileSelect}
+                                />
+                            </label>
                         </div>
 
                         {/* Stats columns */}
@@ -691,10 +752,22 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                             />
                         </div>
                         
-                        {/* Label */}
-                        <div className="mt-4 text-center">
-                            <span className="text-white font-bold text-sm">{user.name}</span>
-                            <span className="text-gray-400 text-xs block mt-0.5">Profile Picture</span>
+                        {/* Label & Change Button */}
+                        <div className="mt-4 text-center flex flex-col items-center gap-2">
+                            <div>
+                                <span className="text-white font-bold text-sm">{user.name}</span>
+                                <span className="text-gray-400 text-xs block mt-0.5">Profile Picture</span>
+                            </div>
+                            <label className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xs font-bold shadow-lg shadow-blue-500/30 cursor-pointer transition active:scale-95">
+                                <FiCamera size={14} />
+                                <span>Change / Adjust Photo</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleDpFileSelect}
+                                />
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -961,6 +1034,16 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     onReviewSubmitted={() => {
                         alert("🎉 Thank you! Your verified review and rating have been posted.");
                     }}
+                />
+            )}
+
+            {cropModalData && (
+                <ImageCropperModal
+                    imageSrc={cropModalData.imageSrc}
+                    isCircular={cropModalData.isCircular}
+                    title={cropModalData.title}
+                    onCropComplete={cropModalData.onComplete}
+                    onClose={() => setCropModalData(null)}
                 />
             )}
         </div>

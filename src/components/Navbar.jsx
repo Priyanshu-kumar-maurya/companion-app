@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart, FiMenu, FiPlusSquare, FiLock } from "react-icons/fi";
+import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart, FiMenu, FiPlusSquare, FiLock, FiCrop } from "react-icons/fi";
 import { APP_VERSION_TAG } from "../config/version";
 import VerifiedBadge from "./shared/VerifiedBadge";
+import ImageCropperModal from "./shared/ImageCropperModal";
 
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
     const [postFile, setPostFile] = useState(null);
     const [postPreview, setPostPreview] = useState(null);
+    const [rawPostImageSrc, setRawPostImageSrc] = useState(null);
+    const [cropModalData, setCropModalData] = useState(null);
     const [postCaption, setPostCaption] = useState("");
     const [isPosting, setIsPosting] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -128,15 +131,50 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setPostFile(file);
-            setPostPreview(URL.createObjectURL(file));
+            const reader = new FileReader();
+            reader.onload = () => {
+                setRawPostImageSrc(reader.result);
+                setCropModalData({
+                    imageSrc: reader.result,
+                    isCircular: false,
+                    allowAspectChange: true,
+                    initialAspect: '1:1',
+                    title: 'Crop & Adjust Photo',
+                    onComplete: ({ file: croppedFile, dataUrl }) => {
+                        setPostFile(croppedFile);
+                        setPostPreview(dataUrl);
+                        setCropModalData(null);
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
         }
+    };
+
+    const handleReCrop = () => {
+        const source = rawPostImageSrc || postPreview;
+        if (!source) return;
+        setCropModalData({
+            imageSrc: source,
+            isCircular: false,
+            allowAspectChange: true,
+            initialAspect: '1:1',
+            title: 'Crop & Adjust Photo',
+            onComplete: ({ file: croppedFile, dataUrl }) => {
+                setPostFile(croppedFile);
+                setPostPreview(dataUrl);
+                setCropModalData(null);
+            }
+        });
     };
 
     const closePostModal = () => {
         setShowPostModal(false);
         setPostFile(null);
         setPostPreview(null);
+        setRawPostImageSrc(null);
+        setCropModalData(null);
         setPostCaption("");
         setShowOnFeed(true);
         setShowOnProfile(true);
@@ -463,9 +501,14 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                 <div className="flex flex-col gap-4 animate-fade-in">
                                     <div className="relative">
                                         <img src={postPreview} alt="Preview" className="w-full aspect-square object-cover rounded-xl border border-white/10 shadow-lg" />
-                                        <button onClick={() => { setPostFile(null); setPostPreview(null); }} className="absolute top-3 right-3 bg-black/60 text-white p-2 rounded-full backdrop-blur-md hover:bg-red-500 transition flex items-center gap-1 text-xs">
-                                            <FiTrash2 size={13} /> Remove
-                                        </button>
+                                        <div className="absolute top-3 right-3 flex items-center gap-2">
+                                            <button type="button" onClick={handleReCrop} className="bg-black/60 text-white px-2.5 py-1.5 rounded-full backdrop-blur-md hover:bg-white/20 transition flex items-center gap-1 text-xs">
+                                                <FiCrop size={13} className="text-pink-400" /> Adjust
+                                            </button>
+                                            <button type="button" onClick={() => { setPostFile(null); setPostPreview(null); setRawPostImageSrc(null); }} className="bg-black/60 text-white p-1.5 rounded-full backdrop-blur-md hover:bg-red-500 transition flex items-center gap-1 text-xs">
+                                                <FiTrash2 size={13} />
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="flex gap-3">
                                         <img src={currentUser?.profile_pic || (isBoy ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" : "https://cdn-icons-png.flaticon.com/512/3135/3135768.png")} alt="Profile" className="w-10 h-10 rounded-full object-cover border border-white/10" />
@@ -566,6 +609,18 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                         </div>
                     </div>
                 </div>
+            )}
+
+            {cropModalData && (
+                <ImageCropperModal
+                    imageSrc={cropModalData.imageSrc}
+                    isCircular={cropModalData.isCircular}
+                    allowAspectChange={cropModalData.allowAspectChange}
+                    initialAspect={cropModalData.initialAspect}
+                    title={cropModalData.title}
+                    onCropComplete={cropModalData.onComplete}
+                    onClose={() => setCropModalData(null)}
+                />
             )}
         </>
     );

@@ -8,10 +8,12 @@ import {
 } from 'react-icons/fi';
 import { APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE, APP_CHANGELOG, getAppPlatform } from '../../config/version';
 import { THEME_ACCENTS, CHAT_WALLPAPERS, getStoredPreferences, savePreferences } from '../../utils/themePreferences';
+import ImageCropperModal from './ImageCropperModal';
 
 function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const [activeView, setActiveView] = useState('menu');
     const [searchQuery, setSearchQuery] = useState('');
+    const [cropModalData, setCropModalData] = useState(null);
 
     // User Preferences (WhatsApp & Instagram style)
     const [preferences, setPreferences] = useState(getStoredPreferences);
@@ -217,25 +219,50 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         }
     };
 
-    const handleImageUpload = async (e) => {
+    const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
-        setUploading(true);
-        const uploadFormData = new FormData();
-        uploadFormData.append('profile_pic', file);
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, {
-                method: 'POST',
-                body: uploadFormData,
-                headers: { 'Authorization': `Bearer ${token}` }
+        const reader = new FileReader();
+        reader.onload = () => {
+            setCropModalData({
+                imageSrc: reader.result,
+                isCircular: true,
+                title: "Set Profile Picture",
+                onComplete: async ({ file: croppedFile }) => {
+                    setCropModalData(null);
+                    setUploading(true);
+                    const uploadFormData = new FormData();
+                    uploadFormData.append('profile_pic', croppedFile);
+                    try {
+                        const token = localStorage.getItem('token');
+                        const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, {
+                            method: 'POST',
+                            body: uploadFormData,
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            const updatedUser = { ...user, profile_pic: data.imageUrl };
+                            setUser(updatedUser);
+                            localStorage.setItem('user', JSON.stringify(updatedUser));
+                            if (socket) {
+                                socket.emit('active_status_changed');
+                            }
+                            alert('Profile picture updated successfully!');
+                        } else {
+                            alert('Failed to upload profile picture.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Server error while uploading profile picture.');
+                    } finally {
+                        setUploading(false);
+                    }
+                }
             });
-            if (response.ok) {
-                const data = await response.json();
-                setUser({ ...user, profile_pic: data.imageUrl });
-                alert('Profile picture updated!');
-            }
-        } catch (err) { console.error(err); } finally { setUploading(false); }
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
     };
 
     const handleLogout = async () => {
@@ -1828,6 +1855,16 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {cropModalData && (
+                <ImageCropperModal
+                    imageSrc={cropModalData.imageSrc}
+                    isCircular={cropModalData.isCircular}
+                    title={cropModalData.title}
+                    onCropComplete={cropModalData.onComplete}
+                    onClose={() => setCropModalData(null)}
+                />
             )}
         </div>
     );
