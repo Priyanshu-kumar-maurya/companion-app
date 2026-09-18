@@ -38,9 +38,10 @@ jobs:
         run: |
           chmod +x android/gradlew
 
-      - name: Accept Android SDK Licenses
+      - name: Accept Android SDK Licenses & Ensure Platforms
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0" || true
 
       - name: Build React Web App
         env:
