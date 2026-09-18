@@ -57,9 +57,26 @@ jobs:
           cp capacitor.config.json android/app/src/main/assets/capacitor.config.json
 
       - name: Build Android Debug APK with Gradle
+        id: gradle_build
+        continue-on-error: true
         run: |
           cd android
-          ./gradlew assembleDebug --stacktrace --no-daemon
+          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee ../gradle_output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload Build Log if Failed
+        if: steps.gradle_build.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-error-log
+          path: gradle_output.txt
+
+      - name: Fail if Gradle Failed
+        if: steps.gradle_build.outcome != 'success'
+        run: |
+          echo "===== GRADLE FAILURE LOG (TAIL 100 LINES) ====="
+          tail -n 100 gradle_output.txt
+          exit 1
 
       - name: Locate and Prepare Coffeely APK
         run: |
