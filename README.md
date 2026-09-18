@@ -1,14 +1,44 @@
-# Coffeely
+# Coffeely ☕
 
-> Safe, verified companion booking and real-time social interaction platform built with React, Node.js, Socket.IO, WebRTC, and PostgreSQL.
+> Safe, verified companion booking and real-time social interaction platform built with React, Node.js, Socket.IO, WebRTC, PostgreSQL, and Capacitor (Android Native).
+
+[![Download Android APK](https://img.shields.io/badge/📥_Download-Coffeely_APK_(v2.4.0)-FF4B4B?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
+[![GitHub Releases](https://img.shields.io/badge/📦_GitHub-Releases-7952b3?style=for-the-badge&logo=github)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases)
 
 [![Version](https://img.shields.io/badge/Version-v2.4.0_(Latest)-10B981?style=flat-square)](src/config/version.js)
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-square&logo=vercel)](https://coffeely-app.vercel.app)
 [![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://rentgf-and-bf.onrender.com)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL_Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://neon.tech)
 [![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Capacitor](https://img.shields.io/badge/Capacitor-Android_Native-119EFF?style=flat-square&logo=capacitor&logoColor=white)](https://capacitorjs.com)
 [![Node](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+---
+
+## 📱 Android App Download (APK)
+
+Get the official **Coffeely** Android app directly on your mobile device!
+
+### 📥 Direct Download Links:
+* 🚀 **[Download coffeely.apk (Latest v2.4.0)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** *(Direct APK file for phone)*
+* 📦 **[Browse All Releases & Versions](https://github.com/Priyanshu-kumar-maurya/companion-app/releases)**
+
+### 🛠️ App Specifications:
+| Specification | Details |
+| :--- | :--- |
+| **App Name** | **Coffeely** |
+| **Package ID** | `com.coffeely.app` |
+| **File Name** | `coffeely.apk` |
+| **App Version** | `v2.4.0` |
+| **Compatible OS** | Android 7.0 (Nougat) to Android 15+ (API 24 - 35) |
+| **Permissions** | Camera, Microphone, Internet, Audio (for Video & Voice Calling) |
+
+### 📲 How to Install on Android (आसान तरीका):
+1. **Download APK**: Upar diye gaye **[Download coffeely.apk](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** link par click karein.
+2. **Open File**: Download hone ke baad notification panel ya mobile ke `Downloads` folder se `coffeely.apk` file par tap karein.
+3. **Allow Permission**: Agar phone me *"For your security, your phone is not allowed to install unknown apps from this source"* dikhe, to **Settings** me jaakar **"Allow from this source"** enable karein.
+4. **Install**: **Install** button press karein aur Coffeely app aapke phone me install ho jayega!
 
 ---
 
@@ -20,11 +50,13 @@ The application is engineered with safety, privacy, and transparency at its foun
 - **100% Escrow Protection**: Booking payments are held in escrow until sessions are marked completed.
 - **Real-Time Communication**: P2P WebRTC audio/video calling and encrypted Socket.IO chat with voice notes.
 - **Privacy & Security**: PIN-locked and hidden chats, GPS-based emergency SOS alerts, and multi-tier rate limiting.
-- **PWA Experience**: Installable on both desktop/laptops and mobile devices with live version tracking (`v2.4.0`).
+- **Android Native & PWA Experience**: Installable as a native Android APK (`coffeely.apk`) and across desktop/mobile browsers.
 
 ---
 
 ## Table of Contents
+
+- [📱 Android App Download (APK)](#-android-app-download-apk)
 
 - [Key Features](#-key-features)
 - [Tech Stack](#-tech-stack)
