@@ -102,15 +102,24 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v2.4.0
-          name: "Coffeely App v2.4.0 (Official APK)"
+          tag_name: v2.4.1
+          name: "Coffeely App v2.4.1 (Official APK)"
           body: |
-            ### ☕ Coffeely Android App v2.4.0
+            ### ☕ Coffeely Android App v2.4.1
             
             Official installable Android APK package for **Coffeely** - Safe & Verified Companion Booking Platform.
             
+            #### 🆕 What's New in v2.4.1:
+            - 🎨 **Official Coffeely App Icon**: Replaced default Capacitor icon with high-res dark Coffeely branding across all device resolutions.
+            - 🌟 **Custom Splash Screen**: Smooth themed splash screen on app launch.
+            - 📹 **Camera & Microphone Auto-Permission**: Fixed WebRTC video & voice call permissions in Android WebView.
+            - 🔙 **Android Hardware Back-Button Support**: Pressing back navigates screens smoothly instead of closing the app.
+            - 📱 **Edge-to-Edge Safe Area Insets**: Fixed top notch / status bar and bottom navigation bar overlap.
+            - 🚫 **Suppressed PWA Banner in Native APK**: Pure native look and feel without browser prompts.
+            
             #### 📥 Direct Download:
-            - **[Click here to Download coffeely.apk](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/download/v2.4.0/coffeely.apk)**
+            - **[Click here to Download coffeely.apk](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/download/v2.4.1/coffeely.apk)**
+            - **[Always Download Latest APK](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)**
             
             #### 📱 Installation Instructions:
             1. Download `coffeely.apk` directly on your Android mobile.

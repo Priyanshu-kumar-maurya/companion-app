@@ -1,12 +1,23 @@
-export const APP_VERSION = "2.4.0";
-export const APP_VERSION_TAG = "v2.4.0";
+export const APP_VERSION = "2.4.1";
+export const APP_VERSION_TAG = "v2.4.1";
 export const APP_RELEASE_STAGE = "Latest Stable";
 export const APP_BUILD_DATE = "September 2026";
 export const IS_LATEST_VERSION = true;
 
 export const APP_CHANGELOG = [
     {
-        version: "v2.4.0 (Latest)",
+        version: "v2.4.1 (Latest)",
+        date: "September 2026",
+        features: [
+            "🎨 Official Coffeely App Icon across all Android screen resolutions",
+            "🌟 Custom branded Coffeely splash launch screen",
+            "📹 WebRTC Camera & Microphone auto-grant permissions for video calls",
+            "🔙 Android hardware back button gesture navigation",
+            "📱 Edge-to-edge safe area notch and navigation bar spacing"
+        ]
+    },
+    {
+        version: "v2.4.0",
         date: "September 2026",
         features: [
             "⚡ Enhanced PWA install experience for Laptop, Desktop & Mobile",

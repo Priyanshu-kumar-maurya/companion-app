@@ -10,8 +10,9 @@ function PWAInstallBanner() {
         // Check if already dismissed this session
         if (sessionStorage.getItem('pwa-dismissed')) return;
 
-        // Check if already running as standalone app
-        const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+        // Check if already running as standalone app or native Capacitor APK
+        const isNative = Boolean(window.Capacitor && (window.Capacitor.isNativePlatform ? window.Capacitor.isNativePlatform() : true));
+        const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone || isNative;
         if (isStandalone) return;
 
         const handler = (e) => {

@@ -318,7 +318,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
             {/* ─── MOBILE TOP BAR: Instagram Style for Logged In, Guest Header for Visitors ─── */}
             {!isHiddenScreen && currentUser && (
-                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] h-14 flex items-center justify-between px-4">
+                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
                     {isProfilePage ? (
                         <>
                             {/* Instagram Profile Top Header: Username on Left */}
@@ -426,7 +426,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             )}
 
             {!isHiddenScreen && (
-                <div className="fixed bottom-0 left-0 w-full bg-[#121212]/95 backdrop-blur-xl border-t border-[#262626] z-40 md:hidden pb-2 pt-2">
+                <div className="fixed bottom-0 left-0 w-full bg-[#121212]/95 backdrop-blur-xl border-t border-[#262626] z-40 md:hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
                         <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
                             <FiHome size={22} /><span className="text-[9px] font-bold">Home</span>
