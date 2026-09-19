@@ -1,12 +1,21 @@
-export const APP_VERSION = "2.4.1";
-export const APP_VERSION_TAG = "v2.4.1";
+export const APP_VERSION = "2.4.2";
+export const APP_VERSION_TAG = "v2.4.2";
 export const APP_RELEASE_STAGE = "Latest Stable";
 export const APP_BUILD_DATE = "September 2026";
 export const IS_LATEST_VERSION = true;
 
 export const APP_CHANGELOG = [
     {
-        version: "v2.4.1 (Latest)",
+        version: "v2.4.2 (Latest)",
+        date: "September 2026",
+        features: [
+            "☕ Redesigned brand logo: Authentic Coffee Cup with rising Heart Steam",
+            "🚀 Fixed login server wake-up cold start messages",
+            "🛡️ Enhanced Vercel CI deployment rules and single-page routing rewrites"
+        ]
+    },
+    {
+        version: "v2.4.1",
         date: "September 2026",
         features: [
             "🎨 Official Coffeely App Icon across all Android screen resolutions",

@@ -2,10 +2,10 @@
 
 > Safe, verified companion booking and real-time social interaction platform built with React, Node.js, Socket.IO, WebRTC, PostgreSQL, and Capacitor (Android Native).
 
-[![Download Android APK](https://img.shields.io/badge/📥_Download-Coffeely_APK_(v2.4.1)-FF4B4B?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
+[![Download Android APK](https://img.shields.io/badge/📥_Download-Coffeely_APK_(v2.4.2)-FF4B4B?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
 [![GitHub Releases](https://img.shields.io/badge/📦_GitHub-Releases-7952b3?style=for-the-badge&logo=github)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases)
 
-[![Version](https://img.shields.io/badge/Version-v2.4.1_(Latest)-10B981?style=flat-square)](src/config/version.js)
+[![Version](https://img.shields.io/badge/Version-v2.4.2_(Latest)-10B981?style=flat-square)](src/config/version.js)
 [![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-square&logo=vercel)](https://coffeely-app.vercel.app)
 [![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://rentgf-and-bf.onrender.com)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL_Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://neon.tech)
@@ -21,7 +21,7 @@
 Get the official **Coffeely** Android app directly on your mobile device!
 
 ### 📥 Direct Download Links:
-* 🚀 **[Download coffeely.apk (Latest v2.4.1)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** *(Direct APK file for phone)*
+* 🚀 **[Download coffeely.apk (Latest v2.4.2)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** *(Direct APK file for phone)*
 * 📦 **[Browse All Releases & Versions](https://github.com/Priyanshu-kumar-maurya/companion-app/releases)**
 
 ### 🛠️ App Specifications:
@@ -30,7 +30,7 @@ Get the official **Coffeely** Android app directly on your mobile device!
 | **App Name** | **Coffeely** |
 | **Package ID** | `com.coffeely.app` |
 | **File Name** | `coffeely.apk` |
-| **App Version** | `v2.4.1` |
+| **App Version** | `v2.4.2` |
 | **Compatible OS** | Android 7.0 (Nougat) to Android 15+ (API 24 - 35) |
 | **Permissions** | Camera, Microphone, Internet, Audio (for Video & Voice Calling) |
 

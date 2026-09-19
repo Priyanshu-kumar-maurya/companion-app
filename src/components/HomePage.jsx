@@ -848,12 +848,16 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             
                             {/* Platform Branding */}
                             <div className="flex items-center gap-2.5 mb-6">
-                                <svg className="w-9 h-9 text-[#0095f6]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M49.9999 15L23.157 30.5V61.5L49.9999 77L76.8428 61.5V30.5L49.9999 15Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M49.9999 35L36.1436 43V59L49.9999 67L63.8563 59V43L49.9999 35Z" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                                    <path d="M23 30.5L50 50M77 30.5L50 50M50 77V50" stroke="#0095f6" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                                <svg className="w-10 h-10 drop-shadow-[0_0_8px_rgba(225,48,108,0.4)]" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22 40H68C68 40 69 68 45 68C21 68 22 40 22 40Z" stroke="url(#home-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M68 45H75C80 45 83 48 83 53C83 58 80 61 75 61H66" stroke="url(#home-grad)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M18 75H72" stroke="url(#home-grad)" strokeWidth="6" strokeLinecap="round"/>
+                                    <path d="M45 29C40 23 32 30 39 37L45 42L51 37C58 30 50 23 45 29Z" fill="url(#home-grad)"/>
+                                    <path d="M31 27C30 24 31 21 33 19" stroke="url(#home-grad)" strokeWidth="4" strokeLinecap="round"/>
+                                    <path d="M59 27C60 24 59 21 57 19" stroke="url(#home-grad)" strokeWidth="4" strokeLinecap="round"/>
+                                    <defs><linearGradient id="home-grad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop stopColor="#f9ce3f" /><stop offset="0.5" stopColor="#e1306c" /><stop offset="1" stopColor="#833ab4" /></linearGradient></defs>
                                 </svg>
-                                <span className="text-3xl font-black text-white tracking-wide">Coffeely</span>
+                                <span className="text-3xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide">Coffeely</span>
                             </div>
  
                             {/* Short Intro */}
