@@ -15,6 +15,7 @@ import UnifiedLogin from "./components/UnifiedLogin";
 import NotificationsPage from "./components/NotificationsPage";
 import LegalPages from "./components/shared/LegalPages";
 import PWAInstallBanner from "./components/shared/PWAInstallBanner";
+import AppUpdateModal from "./components/shared/AppUpdateModal";
 import CallOverlay from "./components/shared/CallOverlay";
 import GirlWalletTab from "./components/girl/GirlWalletTab";
 import KYCUploadPrompt from "./components/shared/KYCUploadPrompt";
@@ -360,6 +361,7 @@ function App() {
       />
       {renderPage()}
       <PWAInstallBanner />
+      <AppUpdateModal />
       {/* Instagram-Style Top Floating Message Alert Banner */}
       {activeMessageAlert && (
         <div 

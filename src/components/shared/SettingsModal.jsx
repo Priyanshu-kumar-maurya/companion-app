@@ -6,7 +6,7 @@ import {
     FiCheckCircle, FiRefreshCw, FiSmartphone, FiShield, FiBell, FiEye, FiEyeOff, 
     FiHardDrive, FiCheck, FiSearch, FiChevronRight, FiKey, FiGlobe, FiDatabase 
 } from 'react-icons/fi';
-import { APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE, APP_CHANGELOG, getAppPlatform } from '../../config/version';
+import { APP_VERSION, APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE, APP_CHANGELOG, getAppPlatform } from '../../config/version';
 import { THEME_ACCENTS, CHAT_WALLPAPERS, getStoredPreferences, savePreferences } from '../../utils/themePreferences';
 import ImageCropperModal from './ImageCropperModal';
 
@@ -917,8 +917,25 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                                 </div>
                             )}
 
+                            {/* ── App Update Check ── */}
+                            <div className="pt-2">
+                                <button 
+                                    type="button"
+                                    onClick={() => {
+                                        window.dispatchEvent(new CustomEvent('check-for-coffeely-update', { detail: { manual: true } }));
+                                    }} 
+                                    className="w-full py-2.5 px-4 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-transparent hover:bg-white/10 rounded-xl transition flex items-center justify-between text-xs font-bold text-gray-200 border border-pink-500/20 active:scale-98"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <FiRefreshCw size={14} className="text-pink-400" />
+                                        <span>Check for App Updates</span>
+                                    </div>
+                                    <span className="text-[10px] bg-white/10 text-pink-300 font-mono px-2 py-0.5 rounded-full border border-pink-500/30">v{APP_VERSION}</span>
+                                </button>
+                            </div>
+
                             {/* ── Log Out & Danger Zone ── */}
-                            <div className="pt-2 space-y-2">
+                            <div className="space-y-2">
                                 <button 
                                     onClick={handleLogout} 
                                     className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl transition flex items-center justify-center gap-2 text-xs font-bold text-gray-300 hover:text-white border border-white/5"

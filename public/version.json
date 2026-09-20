@@ -1,0 +1,16 @@
+{
+  "version": "2.4.2",
+  "versionCode": 3,
+  "releaseTitle": "Coffeely Official Update",
+  "releaseNotes": [
+    "☕ Brand-new official Coffee Cup with Heart Steam logo",
+    "🚀 Faster login connection and instant server auto-reconnect",
+    "📲 In-App Auto-Update: Now get notified of new features instantly",
+    "🛡️ Android WebRTC camera/microphone auto-permissions",
+    "🔙 Hardware back gesture navigation support"
+  ],
+  "mandatory": false,
+  "apkDownloadUrl": "https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk",
+  "webUrl": "https://coffeely-app.vercel.app",
+  "releaseDate": "September 2026"
+}
