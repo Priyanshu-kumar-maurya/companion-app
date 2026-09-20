@@ -122,7 +122,13 @@ const DEFAULT_FEATURED_COMPANIONS = [
 
 function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [feed, setFeed] = useState([]);
-    const [stats, setStats] = useState({ total: 27, girls: 12, boys: 15, connections: 450 });
+    const [stats, setStats] = useState(() => {
+        const cached = sessionStorage.getItem("homeStatsCache");
+        if (cached) {
+            try { return JSON.parse(cached); } catch (e) {}
+        }
+        return { total: 0, girls: 0, boys: 0, connections: 0 };
+    });
     const [loading, setLoading] = useState(false);
     const [followingState, setFollowingState] = useState({});
     const [commentModal, setCommentModal] = useState({ isOpen: false, postId: null, comments: [] });
@@ -206,10 +212,10 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             const boys = allUsers.filter(u => u.role === 'boy' || u.role === 'admin');
 
                             const newStats = {
-                                girls: girls.length || 12,
-                                boys: boys.length || 15,
-                                total: allUsers.length || 27,
-                                connections: (allUsers.length || 27) * 15 + 120
+                                girls: girls.length,
+                                boys: boys.length,
+                                total: allUsers.length,
+                                connections: allUsers.length * 15 + 120
                             };
 
                             setStats(newStats);

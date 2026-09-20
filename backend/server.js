@@ -32,6 +32,10 @@ const ALLOWED_ORIGINS = [
     'https://rentgf-app.vercel.app',
     'https://companion-app-jade.vercel.app',
     'https://companion-app.vercel.app',
+    'https://localhost',
+    'http://localhost',
+    'capacitor://localhost',
+    'ionic://localhost',
     'http://localhost:5173',
     'http://localhost:3000',
     'http://127.0.0.1:5173',
@@ -42,6 +46,17 @@ const isAllowedOrigin = (origin) => {
     // Allow requests with no origin (native mobile apps, PWA standalone, server-to-server)
     if (!origin) return true;
     if (ALLOWED_ORIGINS.includes(origin)) return true;
+    // Allow native Capacitor / Android / iOS WebViews
+    if (
+        origin.startsWith('capacitor://') ||
+        origin.startsWith('ionic://') ||
+        origin.startsWith('http://localhost') ||
+        origin.startsWith('https://localhost') ||
+        origin.startsWith('http://127.0.0.1') ||
+        origin.startsWith('https://127.0.0.1')
+    ) {
+        return true;
+    }
     // Allow only verified project Vercel deployments (prevents foreign *.vercel.app malicious sites)
     const isProjectVercel = /^https:\/\/(coffeely|rentgf|companion-app)(-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
     if (isProjectVercel) return true;
