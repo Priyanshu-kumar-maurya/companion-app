@@ -48,7 +48,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                         body: JSON.stringify({ email: data.user.email || formData.emailOrPhone })
                     }).catch(() => {});
                     setStep("verify");
-                    setError("Aapka account verified nahi hai. Naya OTP bheja gaya hai.");
+                    setError("Your account is not verified. A new verification OTP has been sent to your email.");
                     return;
                 }
 
@@ -79,13 +79,13 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     console.error("Auto send OTP error:", sendErr);
                 }
                 setStep("verify");
-                setError("Aapka account verified nahi hai. Ek naya verification code aapke email par bhej diya gaya hai.");
+                setError("Your account is not verified. A new verification code has been sent to your email.");
                 return;
             } else {
                 setError(data.error || "Login failed. Please try again.");
             }
         } catch (err) {
-            setError("Server start ho raha hai (Render spin-up). Kripya 10-15 second baad dubara Login karein.");
+            setError("Unable to connect to server. Please wait a moment and try again.");
         } finally {
             setLoading(false);
         }
@@ -162,7 +162,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             } catch (firstErr) {
                 if (firstErr.name === "AbortError") {
                     // Auto-retry once — server was waking up
-                    setLoadingMsg("Server start ho raha hai... dobara try kar rahe hain (30s)...");
+                    setLoadingMsg("Connecting to server... retrying (30s)...");
                     await new Promise(r => setTimeout(r, 5000));
                     response = await sendOtpRequest();
                 } else {
@@ -179,7 +179,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             }
         } catch (err) {
             if (err.name === "AbortError") {
-                setError("Server abhi bhi start ho raha hai. Please 30 seconds baad dobara try karein.");
+                setError("Server is taking longer to respond. Please try again in a few moments.");
             } else {
                 setError("Server error. Please try again.");
             }
@@ -293,12 +293,12 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         });
                                         const d = await res.json();
                                         if (res.ok) {
-                                            setSuccess("Naya OTP bhej diya gaya hai! Email check karein.");
+                                            setSuccess("A new OTP has been sent! Please check your email.");
                                         } else {
-                                            setError(d.error || "OTP bhejne mein dikkat aayi.");
+                                            setError(d.error || "Failed to resend OTP. Please try again.");
                                         }
                                     } catch (err) {
-                                        setError("Server se sampark nahi ho paya.");
+                                        setError("Unable to connect to server. Please try again.");
                                     } finally {
                                         setLoading(false);
                                     }
