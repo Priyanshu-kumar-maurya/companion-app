@@ -102,14 +102,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v2.4.2
-          name: "Coffeely App v2.4.2 (Official APK)"
+          tag_name: v2.4.3
+          name: "Coffeely App v2.4.3 (Official APK)"
           body: |
-            ### ☕ Coffeely Android App v2.4.2
+            ### ☕ Coffeely Android App v2.4.3
             
             Official installable Android APK package for **Coffeely** - Safe & Verified Companion Booking Platform.
             
-            #### 🆕 What's New in v2.4.2:
+            #### 🆕 What's New in v2.4.3:
+            - 🔑 **Permanent Keystore Signature**: Fixed Android package conflict and signature matching for smooth in-place updates.
+            - 🌐 **Full Mobile CORS Connectivity**: Allowed Capacitor origin on backend for seamless login and live user sync.
+            - ☕ **Official Coffeely Logo**: Branded Coffee Cup with Heart Steam icon and splash screen.
             - ☕ **Brand-New Official Coffeely Logo**: Replaced old cube box with authentic coffee cup with rising heart steam on app icon, splash screen, and throughout the app.
             - ⚡ **Vercel & CI Fixes**: Cleaned build warnings, added SPA rewrites.
             - 🚀 **Server Reconnect**: Clear server wake-up feedback for free instance spin-ups.
