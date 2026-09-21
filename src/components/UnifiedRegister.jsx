@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
 import { FiEye, FiEyeOff, FiMail, FiX, FiRefreshCw, FiCheckCircle, FiUser } from "react-icons/fi";
+import { getFriendlyErrorMessage } from "../utils/errorHandler";
 
 function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -141,9 +142,20 @@ function UnifiedRegister({ setPage }) {
     const handleRegister = async (e) => {
         e.preventDefault();
 
+        // Check internet connection
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            showAlert("No internet connection. Please turn on mobile data or Wi-Fi to create an account.");
+            return;
+        }
+
         const age = calculateAge(formData.dob);
         if (age < 18) {
             showAlert("You must be at least 18 years old to join.");
+            return;
+        }
+
+        if (!formData.password || formData.password.length < 6) {
+            showAlert("Password must be at least 6 characters long.");
             return;
         }
 
@@ -163,11 +175,11 @@ function UnifiedRegister({ setPage }) {
                 setShowOtpModal(true);
                 startResendCooldown();
             } else {
-                showAlert(data.error || "Registration failed.");
+                showAlert(getFriendlyErrorMessage(null, data, "Registration failed. Please check your details."));
             }
         } catch (err) {
-            console.error(err);
-            showAlert("Server error. Please try again later.");
+            console.error("Register request failed:", err);
+            showAlert(getFriendlyErrorMessage(err, null, "Unable to connect to server. Please try again in a few moments."));
         } finally {
             setLoading(false);
         }
@@ -203,22 +215,35 @@ function UnifiedRegister({ setPage }) {
     // Resend OTP
     const handleResendOtp = async () => {
         if (resendCooldown > 0) return;
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            showAlert("No internet connection. Please check your network to resend OTP.");
+            return;
+        }
         try {
-            await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+            const res = await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: formData.email })
             });
-            startResendCooldown();
-            showAlert("OTP resent! Please check your email.");
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                startResendCooldown();
+                showAlert("OTP resent! Please check your email.");
+            } else {
+                showAlert(getFriendlyErrorMessage(null, data, "Failed to resend OTP. Try again."));
+            }
         } catch (err) {
-            showAlert("Failed to resend OTP. Try again.");
+            showAlert(getFriendlyErrorMessage(err, null, "Failed to resend OTP. Please check your connection."));
         }
     };
 
 
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            showAlert("No internet connection. Please check your network to verify OTP.");
+            return;
+        }
         if (otp.length !== 6) {
             showAlert("Please enter a valid 6-digit OTP.");
             return;
@@ -238,11 +263,11 @@ function UnifiedRegister({ setPage }) {
                 setShowOtpModal(false);
                 setPage(formData.role === 'girl' ? PAGES.GIRL_LOGIN : PAGES.BOY_LOGIN);
             } else {
-                showAlert(data.error || "Invalid OTP.");
+                showAlert(getFriendlyErrorMessage(null, data, "Invalid OTP code. Please check and try again."));
             }
         } catch (err) {
             console.error(err);
-            showAlert("Verification failed.");
+            showAlert(getFriendlyErrorMessage(err, null, "Verification failed. Please check your connection."));
         } finally {
             setVerifying(false);
         }

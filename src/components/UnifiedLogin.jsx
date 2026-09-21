@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { PAGES } from "../App";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { getFriendlyErrorMessage } from "../utils/errorHandler";
 
 function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole }) {
     const [step, setStep] = useState("login"); // "login" | "forgot" | "reset" | "verify"
@@ -25,8 +26,22 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     // ── LOGIN ──────────────────────────────────────────────────
     const handleLogin = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
+
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            setError("No internet connection. Please turn on mobile data or Wi-Fi to login.");
+            return;
+        }
+        if (!formData.emailOrPhone?.trim()) {
+            setError("Please enter your email or phone number.");
+            return;
+        }
+        if (!formData.password) {
+            setError("Please enter your password.");
+            return;
+        }
+
+        setLoading(true);
 
         try {
             const response = await fetch("https://rentgf-and-bf.onrender.com/api/login", {
@@ -35,17 +50,18 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 body: JSON.stringify(formData)
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (response.ok) {
                 // Defensive check if account is not verified
                 if (data.user && data.user.is_verified === false) {
-                    setVerifyEmail(data.user.email || formData.emailOrPhone);
+                    const targetEmail = data.user.email || formData.emailOrPhone;
+                    setVerifyEmail(targetEmail);
                     setVerifyOtp("");
                     await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email: data.user.email || formData.emailOrPhone })
+                        body: JSON.stringify({ email: targetEmail })
                     }).catch(() => {});
                     setStep("verify");
                     setError("Your account is not verified. A new verification OTP has been sent to your email.");
@@ -81,11 +97,14 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 setStep("verify");
                 setError("Your account is not verified. A new verification code has been sent to your email.");
                 return;
+            } else if (response.status === 401) {
+                setError(data.error || "Incorrect email/phone or password. Please try again.");
             } else {
-                setError(data.error || "Login failed. Please try again.");
+                setError(getFriendlyErrorMessage(null, data, "Login failed. Please check your credentials."));
             }
         } catch (err) {
-            setError("Unable to connect to server. Please wait a moment and try again.");
+            console.error("Login fetch error:", err);
+            setError(getFriendlyErrorMessage(err, null, "Unable to connect to server. Please try again in a few moments."));
         } finally {
             setLoading(false);
         }
@@ -94,15 +113,21 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     // ── VERIFY OTP (for unverified accounts at login) ──
     const handleVerifyOtpAtLogin = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
+
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            setError("No internet connection. Please check your network to verify OTP.");
+            return;
+        }
+
+        setLoading(true);
         try {
             const response = await fetch("https://rentgf-and-bf.onrender.com/api/verify-otp", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: verifyEmail, otp: verifyOtp })
             });
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (response.ok) {
                 setSuccess("Account verified! Logging you in...");
                 setTimeout(() => {
@@ -120,10 +145,10 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     }
                 }, 1000);
             } else {
-                setError(data.error || "Invalid OTP.");
+                setError(getFriendlyErrorMessage(null, data, "Invalid OTP code. Please check and try again."));
             }
         } catch (err) {
-            setError("Verification failed.");
+            setError(getFriendlyErrorMessage(err, null, "Verification failed. Please check your connection."));
         } finally {
             setLoading(false);
         }
@@ -132,9 +157,15 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     // ── FORGOT PASSWORD — SEND OTP ─────────────────────────────
     const handleForgotPassword = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
         setSuccess("");
+
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            setError("No internet connection. Please check your network to send OTP.");
+            return;
+        }
+
+        setLoading(true);
         setLoadingMsg("Sending OTP...");
 
         const sendOtpRequest = async () => {
@@ -170,19 +201,15 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 }
             }
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (response.ok) {
                 setSuccess("OTP sent! Please check your email inbox and spam folder.");
                 setTimeout(() => { setSuccess(""); setStep("reset"); }, 2000);
             } else {
-                setError(data.error || "Something went wrong. Please try again.");
+                setError(getFriendlyErrorMessage(null, data, "Unable to send OTP. Please check the email address."));
             }
         } catch (err) {
-            if (err.name === "AbortError") {
-                setError("Server is taking longer to respond. Please try again in a few moments.");
-            } else {
-                setError("Server error. Please try again.");
-            }
+            setError(getFriendlyErrorMessage(err, null, "Unable to reach server. Please check your connection and try again."));
         } finally {
             setLoading(false);
             setLoadingMsg("");
@@ -192,20 +219,24 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     // ── RESET PASSWORD — VERIFY OTP + SET NEW PASSWORD ─────────
     const handleResetPassword = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
         setSuccess("");
 
+        if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            setError("No internet connection. Please check your network to reset password.");
+            return;
+        }
+
         if (resetData.newPassword !== resetData.confirmPassword) {
-            setError("Passwords do not match.");
-            setLoading(false);
+            setError("Passwords do not match. Please re-enter.");
             return;
         }
-        if (resetData.newPassword.length < 5) {
-            setError("Password must be at least 5 characters.");
-            setLoading(false);
+        if (resetData.newPassword.length < 6) {
+            setError("Password must be at least 6 characters long.");
             return;
         }
+
+        setLoading(true);
 
         try {
             const response = await fetch("https://rentgf-and-bf.onrender.com/api/reset-password", {
@@ -218,9 +249,9 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 })
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (response.ok) {
-                setSuccess("Password reset successfully! Please login.");
+                setSuccess("Password reset successfully! Please login with your new password.");
                 setTimeout(() => {
                     setStep("login");
                     setForgotEmail("");
@@ -228,10 +259,10 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     setSuccess("");
                 }, 2000);
             } else {
-                setError(data.error || "Password reset failed. Please try again.");
+                setError(getFriendlyErrorMessage(null, data, "Password reset failed. Please check the OTP."));
             }
         } catch (err) {
-            setError("Server error. Please try again.");
+            setError(getFriendlyErrorMessage(err, null, "Unable to reach server. Please check your connection and try again."));
         } finally {
             setLoading(false);
         }

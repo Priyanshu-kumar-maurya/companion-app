@@ -19,6 +19,7 @@ import AppUpdateModal from "./components/shared/AppUpdateModal";
 import CallOverlay from "./components/shared/CallOverlay";
 import GirlWalletTab from "./components/girl/GirlWalletTab";
 import KYCUploadPrompt from "./components/shared/KYCUploadPrompt";
+import OfflineBanner from "./components/shared/OfflineBanner";
 import { registerPushNotifications } from "./utils/pushManager";
 import { io } from "socket.io-client";
 
@@ -58,6 +59,20 @@ function App() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [globalAlert, setGlobalAlert] = useState(null);
   const [activeMessageAlert, setActiveMessageAlert] = useState(null);
+  const [isOnline, setIsOnline] = useState(() => (typeof navigator !== 'undefined' ? navigator.onLine : true));
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     window.alert = (msg) => {
@@ -142,6 +157,7 @@ function App() {
 
         if (response.ok) {
           const userData = await response.json();
+          localStorage.setItem("user", JSON.stringify(userData));
 
           if (userData.role === "admin") {
             setAdminUser(userData);
@@ -153,11 +169,29 @@ function App() {
             setGirlUser(userData);
             setPage(PAGES.GIRL_DASHBOARD);
           }
-        } else {
+        } else if (response.status === 401 || response.status === 403) {
           localStorage.removeItem("token");
+          localStorage.removeItem("user");
         }
       } catch (err) {
-        console.error(err);
+        console.warn("Session verification offline or server unreachable, attempting cached user fallback:", err);
+        // If offline or network error, restore cached user so user is not forcibly logged out
+        const cachedUserStr = localStorage.getItem("user");
+        if (cachedUserStr) {
+          try {
+            const cachedUser = JSON.parse(cachedUserStr);
+            if (cachedUser.role === "admin") {
+              setAdminUser(cachedUser);
+              setPage(PAGES.ADMIN_DASHBOARD);
+            } else if (cachedUser.role === "boy") {
+              setBoyUser(cachedUser);
+              setPage(PAGES.BOY_DASHBOARD);
+            } else if (cachedUser.role === "girl") {
+              setGirlUser(cachedUser);
+              setPage(PAGES.GIRL_DASHBOARD);
+            }
+          } catch (parseErr) { }
+        }
       } finally {
         setIsCheckingAuth(false);
       }
@@ -349,6 +383,7 @@ function App() {
 
   return (
     <div className="min-h-[100dvh] bg-black text-[#f5f5f5] overflow-x-hidden w-full relative">
+      <OfflineBanner isOnline={isOnline} />
       <Navbar
         page={page}
         setPage={setPage}

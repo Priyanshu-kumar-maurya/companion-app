@@ -3,73 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RentGF — Offline</title>
+    <title>Coffeely — Offline</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             min-height: 100vh;
-            background: #0D0D1A;
+            background: #000000;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            color: white;
-            padding: 20px;
+            color: #ffffff;
+            padding: 24px;
         }
-        .container {
+        .card {
+            background: #121212;
+            border: 1px solid #262626;
+            border-radius: 24px;
+            padding: 36px 28px;
             text-align: center;
-            max-width: 360px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
-        .emoji {
-            font-size: 64px;
-            margin-bottom: 20px;
-            animation: float 3s ease-in-out infinite;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        .icon-wrap {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 20px auto;
+            border-radius: 50%;
+            background: rgba(225, 48, 108, 0.12);
+            border: 1px solid rgba(225, 48, 108, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
         }
         h1 {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: 800;
-            background: linear-gradient(to right, #ec4899, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
         }
         p {
-            color: #9ca3af;
+            color: #a8a8a8;
             font-size: 14px;
             line-height: 1.6;
             margin-bottom: 24px;
         }
-        button {
-            background: linear-gradient(to right, #ec4899, #a855f7);
-            color: white;
+        .btn-retry {
+            background: linear-gradient(135deg, #f9ce3f, #e1306c, #833ab4);
+            color: #ffffff;
             border: none;
-            padding: 12px 32px;
+            padding: 13px 28px;
             border-radius: 12px;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
+            width: 100%;
+            transition: opacity 0.2s, transform 0.1s;
         }
-        button:hover { opacity: 0.9; transform: scale(1.05); }
-        button:active { transform: scale(0.95); }
+        .btn-retry:active { transform: scale(0.98); }
         .hint {
             margin-top: 20px;
-            color: #4b5563;
-            font-size: 11px;
+            color: #737373;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="emoji">📡</div>
-        <h1>You're Offline</h1>
-        <p>Internet connection nahi mil raha. Apna WiFi ya mobile data check karo aur dobara try karo.</p>
-        <button onclick="window.location.reload()">🔄 Try Again</button>
-        <div class="hint">RentGF will reconnect automatically when you're back online.</div>
+    <div class="card">
+        <div class="icon-wrap">📡</div>
+        <h1>No Internet Connection</h1>
+        <p>Please check your mobile data or Wi-Fi network and try again.</p>
+        <button class="btn-retry" onclick="window.location.reload()">🔄 Try Again</button>
+        <div class="hint">Coffeely will reconnect automatically when network is restored.</div>
     </div>
 </body>
 </html>

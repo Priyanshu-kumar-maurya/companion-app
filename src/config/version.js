@@ -1,5 +1,5 @@
-export const APP_VERSION = "2.4.3";
-export const APP_VERSION_TAG = "v2.4.3";
+export const APP_VERSION = "2.4.4";
+export const APP_VERSION_TAG = "v2.4.4";
 export const APP_RELEASE_STAGE = "Latest Stable";
 export const APP_BUILD_DATE = "September 2026";
 export const IS_LATEST_VERSION = true;

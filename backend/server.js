@@ -198,6 +198,10 @@ app.get('/', (req, res) => {
     res.json({ status: 'ok', message: 'Coffeely Secure Backend running.' });
 });
 
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', time: new Date().toISOString() });
+});
+
 // ─── 404 Handler ─────────────────────────────────────────────
 app.use((req, res) => {
     res.status(404).json({ error: "Route not found." });

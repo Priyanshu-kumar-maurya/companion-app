@@ -1,13 +1,13 @@
 {
-  "version": "2.4.3",
-  "versionCode": 4,
-  "releaseTitle": "Coffeely Official Update",
+  "version": "2.4.4",
+  "versionCode": 5,
+  "releaseTitle": "Coffeely v2.4.4 — Offline Mode & Smart Error Alerts",
   "releaseNotes": [
-    "☕ Brand-new official Coffee Cup with Heart Steam logo",
-    "🚀 Faster login connection and instant server auto-reconnect",
-    "📲 In-App Auto-Update: Now get notified of new features instantly",
-    "🛡️ Android WebRTC camera/microphone auto-permissions",
-    "🔙 Hardware back gesture navigation support"
+    "📡 Smart Offline Mode: Top banner notification when network is lost",
+    "⚡ Instant Reconnect: Smooth auto-recovery when connection returns",
+    "🔒 Accurate Auth Feedback: Clear error messages for wrong passwords, unverified accounts, and network issues",
+    "🚀 Session Preservation: Stay logged in even when opening app offline",
+    "☕ Official Coffeely branded offline experience"
   ],
   "mandatory": false,
   "apkDownloadUrl": "https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk",

@@ -9,6 +9,7 @@ import {
 import { APP_VERSION, APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE, APP_CHANGELOG, getAppPlatform } from '../../config/version';
 import { THEME_ACCENTS, CHAT_WALLPAPERS, getStoredPreferences, savePreferences } from '../../utils/themePreferences';
 import ImageCropperModal from './ImageCropperModal';
+import { getFriendlyErrorMessage } from '../../utils/errorHandler';
 
 function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const [activeView, setActiveView] = useState('menu');
@@ -164,7 +165,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             }
         } catch (error) {
             console.error(error);
-            alert('Server Error');
+            alert(getFriendlyErrorMessage(error, null, 'Failed to update profile. Please check your connection.'));
         } finally {
             setLoading(false);
         }
@@ -254,7 +255,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                         }
                     } catch (err) {
                         console.error(err);
-                        alert('Server error while uploading profile picture.');
+                        alert(getFriendlyErrorMessage(err, null, 'Failed to upload profile picture. Please check your connection.'));
                     } finally {
                         setUploading(false);
                     }
