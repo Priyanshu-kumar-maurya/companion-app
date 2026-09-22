@@ -703,8 +703,8 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 {/* Two Column Layout: Left (Phone Mockup) | Right (Login/Signup Box) */}
                 <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20 relative z-10 w-full">
                     
-                    {/* LEFT COLUMN: Phone Mockup */}
-                    <div className="shrink-0 scale-90 sm:scale-100 flex justify-center order-2 lg:order-1">
+                    {/* LEFT COLUMN: Phone Mockup (Visible on large screens, hidden on mobile for clean UX) */}
+                    <div className="shrink-0 scale-90 sm:scale-100 hidden lg:flex justify-center order-2 lg:order-1">
                         <div className="relative w-[280px] h-[550px] bg-black rounded-[45px] p-[10px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] border-[6px] border-[#262626] overflow-hidden">
                             {/* Notch */}
                             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-4 bg-black rounded-full z-30 flex items-center justify-center">
@@ -846,8 +846,8 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     </div>
  
                     {/* RIGHT COLUMN: Premium Card */}
-                    <div className="w-full max-w-[360px] flex flex-col gap-4 animate-fade-in order-1 lg:order-2">
-                        <div className="bg-[#121212]/95 border border-[#262626] rounded-3xl p-6 md:p-8 backdrop-blur-md relative overflow-hidden flex flex-col items-center shadow-xl">
+                    <div className="w-full max-w-[380px] sm:max-w-md flex flex-col gap-4 animate-fade-in order-1 lg:order-2">
+                        <div className="bg-[#121212]/95 border border-[#262626] rounded-3xl p-6 sm:p-8 backdrop-blur-md relative overflow-hidden flex flex-col items-center shadow-xl">
                             
                             {/* Ambient card glows */}
                             <div className="absolute -top-12 -right-12 w-24 h-24 bg-[#0095f6]/10 rounded-full blur-xl pointer-events-none"></div>
@@ -872,7 +872,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             </p>
  
                             {/* Login / Signup Buttons */}
-                            <div className="w-full flex flex-col gap-4">
+                            <div className="w-full flex flex-col gap-3.5">
                                 <button
                                     onClick={() => setPage(PAGES.BOY_LOGIN)}
                                     className="w-full py-3.5 rounded-xl font-bold bg-[#0095f6] hover:bg-[#1877f2] text-sm text-white shadow-lg shadow-[#0095f6]/20 transition transform hover:-translate-y-0.5 active:scale-95"
@@ -885,6 +885,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                     className="w-full py-3.5 bg-[#262626] hover:bg-[#363636] text-white border border-[#363636] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
                                 >
                                     Create New Account
+                                </button>
+
+                                <button
+                                    onClick={() => setPage(PAGES.FIND)}
+                                    className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 rounded-xl font-medium transition-all text-xs flex items-center justify-center gap-2"
+                                >
+                                    <span>🔍 Browse Companions First</span>
                                 </button>
                             </div>
  

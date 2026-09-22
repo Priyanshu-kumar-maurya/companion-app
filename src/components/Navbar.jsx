@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../App";
-import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart, FiMenu, FiPlusSquare, FiLock, FiCrop } from "react-icons/fi";
+import { FiHome, FiSearch, FiMessageCircle, FiBell, FiUser, FiCamera, FiTrash2, FiPlusCircle, FiShield, FiCreditCard, FiHeart, FiMenu, FiPlusSquare, FiLock, FiCrop, FiLogIn, FiUserPlus } from "react-icons/fi";
 import { APP_VERSION_TAG } from "../config/version";
 import VerifiedBadge from "./shared/VerifiedBadge";
 import ImageCropperModal from "./shared/ImageCropperModal";
@@ -218,7 +218,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
     const activeColor = "text-[#e1306c] drop-shadow-[0_0_8px_rgba(225,48,108,0.5)]";
     const inactiveColor = "text-gray-500 hover:text-gray-300";
-    const isHiddenScreen = page === PAGES.CHAT || page === PAGES.DETAILS;
+    const isHiddenScreen = 
+        page === PAGES.CHAT || 
+        page === PAGES.DETAILS || 
+        page === PAGES.BOY_LOGIN || 
+        page === PAGES.GIRL_LOGIN || 
+        page === PAGES.BOY_REGISTER || 
+        page === PAGES.GIRL_REGISTER;
 
     return (
         <>
@@ -414,12 +420,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             {isMenuOpen && !isHiddenScreen && !currentUser && (
                 <div className="md:hidden fixed top-14 left-0 w-full bg-[#121212] border-b border-[#262626] py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}>Home</button>
+                    <button onClick={() => handleNavClick(PAGES.FIND)} className={`text-left ${getLinkStyle(PAGES.FIND)} w-fit`}>Explore Companions</button>
                     <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`text-left ${getLinkStyle(PAGES.ABOUT)} w-fit`}>About</button>
                     <button onClick={() => handleNavClick(PAGES.HELP)} className={`text-left ${getLinkStyle(PAGES.HELP)} w-fit`}>Help</button>
                     <div className="h-px bg-white/10 w-full my-2"></div>
                     <div className="flex flex-col gap-3">
-                        <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-2 text-sm border border-[#e1306c] text-[#e1306c] rounded-xl text-center">Join as Girl</button>
-                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-2 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-xl text-center">Find Companion</button>
+                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-2.5 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-semibold rounded-xl text-center shadow-lg">Log In</button>
+                        <button onClick={() => handleNavClick(PAGES.BOY_REGISTER)} className="px-4 py-2.5 text-sm border border-white/20 hover:border-white/40 text-white font-semibold rounded-xl text-center bg-white/5">Create Account</button>
                     </div>
                     <div className="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-white/5 mt-1">
                         <span>Coffeely App</span>
@@ -431,47 +438,56 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             {!isHiddenScreen && (
                 <div className="fixed bottom-0 left-0 w-full bg-[#121212]/95 backdrop-blur-xl border-t border-[#262626] z-40 md:hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-2">
                     <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
-                        <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                            <FiHome size={22} /><span className="text-[9px] font-bold">Home</span>
-                        </button>
-
-                        {currentUser && (
-                            <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <FiSearch size={22} /><span className="text-[9px] font-bold">Explore</span>
-                            </button>
-                        )}
-
-                        {currentUser && (
-                            <button onClick={() => setShowPostModal(true)} className="flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 text-pink-400 hover:text-pink-300">
-                                <FiPlusCircle size={24} />
-                                <span className="text-[9px] font-bold">Post</span>
-                            </button>
-                        )}
-
-                        {currentUser && hasDocument && (
-                            <button onClick={() => handleNavClick(PAGES.WALLET)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.WALLET ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <FiCreditCard size={22} />
-                                <span className="text-[9px] font-bold">Wallet</span>
-                            </button>
-                        )}
-
                         {currentUser ? (
-                            <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                {currentUser.profile_pic ? (
-                                    <img
-                                        src={currentUser.profile_pic}
-                                        alt=""
-                                        className={`w-6 h-6 rounded-full object-cover transition-all ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? "ring-2 ring-[#e1306c] ring-offset-1 ring-offset-black" : "border border-white/20"}`}
-                                    />
-                                ) : (
-                                    <FiUser size={22} />
+                            <>
+                                <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <FiHome size={22} /><span className="text-[9px] font-bold">Home</span>
+                                </button>
+
+                                <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <FiSearch size={22} /><span className="text-[9px] font-bold">Explore</span>
+                                </button>
+
+                                <button onClick={() => setShowPostModal(true)} className="flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 text-pink-400 hover:text-pink-300">
+                                    <FiPlusCircle size={24} />
+                                    <span className="text-[9px] font-bold">Post</span>
+                                </button>
+
+                                {hasDocument && (
+                                    <button onClick={() => handleNavClick(PAGES.WALLET)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.WALLET ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                        <FiCreditCard size={22} />
+                                        <span className="text-[9px] font-bold">Wallet</span>
+                                    </button>
                                 )}
-                                <span className="text-[9px] font-bold">Profile</span>
-                            </button>
+
+                                <button onClick={() => handleNavClick(currentUser.role === 'girl' ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    {currentUser.profile_pic ? (
+                                        <img
+                                            src={currentUser.profile_pic}
+                                            alt=""
+                                            className={`w-6 h-6 rounded-full object-cover transition-all ${(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) ? "ring-2 ring-[#e1306c] ring-offset-1 ring-offset-black" : "border border-white/20"}`}
+                                        />
+                                    ) : (
+                                        <FiUser size={22} />
+                                    )}
+                                    <span className="text-[9px] font-bold">Profile</span>
+                                </button>
+                            </>
                         ) : (
-                            <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.ABOUT ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
-                                <FiUser size={22} /><span className="text-[9px] font-bold">About</span>
-                            </button>
+                            <>
+                                <button onClick={() => handleNavClick(PAGES.HOME)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.HOME ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <FiHome size={22} /><span className="text-[9px] font-bold">Home</span>
+                                </button>
+                                <button onClick={() => handleNavClick(PAGES.FIND)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.FIND ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <FiSearch size={22} /><span className="text-[9px] font-bold">Explore</span>
+                                </button>
+                                <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.BOY_LOGIN || page === PAGES.GIRL_LOGIN ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <FiLogIn size={22} /><span className="text-[9px] font-bold">Log In</span>
+                                </button>
+                                <button onClick={() => handleNavClick(PAGES.BOY_REGISTER)} className={`flex flex-col items-center justify-center w-12 gap-1 transition-all duration-300 ${page === PAGES.BOY_REGISTER || page === PAGES.GIRL_REGISTER ? activeColor + " scale-110 -translate-y-1" : inactiveColor}`}>
+                                    <FiUserPlus size={22} /><span className="text-[9px] font-bold">Register</span>
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>

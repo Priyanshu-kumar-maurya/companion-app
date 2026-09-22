@@ -48,6 +48,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
     const [isFavorited, setIsFavorited] = useState(false);
     const [favLoading, setFavLoading] = useState(false);
+    const [showGuestAuthModal, setShowGuestAuthModal] = useState(false);
+    const [guestModalReason, setGuestModalReason] = useState("");
 
     // Followers / Following Modal States
     const [showFollowModal, setShowFollowModal] = useState(null); // 'followers' | 'following' | null
@@ -118,7 +120,11 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
     }, [currentUser, profile?.id]);
 
     const handleToggleFavorite = async () => {
-        if (!currentUser) return alert("Please login first to save companions to your favorites!");
+        if (!currentUser) {
+            setGuestModalReason(`Log in to save ${profile.name} to your favorites.`);
+            setShowGuestAuthModal(true);
+            return;
+        }
         setFavLoading(true);
         try {
             const token = localStorage.getItem('token');
@@ -143,8 +149,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
     const handleMessageClick = () => {
         if (!currentUser) {
-            alert("Please login first to chat with companions!");
-            setPage(PAGES.BOY_LOGIN);
+            setGuestModalReason(`Sign in to chat live with ${profile.name}.`);
+            setShowGuestAuthModal(true);
             return;
         }
         setPage(PAGES.CHAT);
@@ -152,8 +158,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
     const handleCallClick = (type) => {
         if (!currentUser) {
-            alert(`Please login first to make ${type} calls!`);
-            setPage(PAGES.BOY_LOGIN);
+            setGuestModalReason(`Sign in to make ${type} calls with ${profile.name}.`);
+            setShowGuestAuthModal(true);
             return;
         }
         const roomId = [currentUser.id, profile.id].sort((a, b) => a - b).join('_');
@@ -162,8 +168,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
     const handleFollowClick = () => {
         if (!currentUser) {
-            alert("Please login first to follow companions!");
-            setPage(PAGES.BOY_LOGIN);
+            setGuestModalReason(`Sign in to follow ${profile.name} and see their latest updates.`);
+            setShowGuestAuthModal(true);
             return;
         }
         handleFollowToggle();
@@ -1522,6 +1528,45 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                             }}
                             onCancel={() => setShowKycModal(false)}
                         />
+                    </div>
+                </div>
+            )}
+
+            {/* ── GUEST AUTH MODAL (Instagram / Tinder style) ── */}
+            {showGuestAuthModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+                    <div className="w-full sm:max-w-sm bg-[#16162A] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative">
+                        <button
+                            onClick={() => setShowGuestAuthModal(false)}
+                            className="absolute right-4 top-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center text-sm transition"
+                        >
+                            ✕
+                        </button>
+                        <div className="text-center pt-2">
+                            <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-2xl shadow-inner">
+                                ☕
+                            </div>
+                            <h3 className="text-lg font-bold text-white mb-1.5">
+                                Connect with {profile.name}
+                            </h3>
+                            <p className="text-xs text-gray-400 max-w-xs mx-auto mb-6 leading-relaxed">
+                                {guestModalReason || "Sign in or create a free account to follow, chat, and call companions."}
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => { setShowGuestAuthModal(false); setPage(PAGES.BOY_LOGIN); }}
+                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white text-sm shadow-lg active:scale-95 transition"
+                                >
+                                    Log In
+                                </button>
+                                <button
+                                    onClick={() => { setShowGuestAuthModal(false); setPage(PAGES.BOY_REGISTER); }}
+                                    className="w-full py-3 rounded-xl font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm active:scale-95 transition"
+                                >
+                                    Create Account
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

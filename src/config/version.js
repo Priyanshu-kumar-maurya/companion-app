@@ -1,17 +1,29 @@
-export const APP_VERSION = "2.4.4";
-export const APP_VERSION_TAG = "v2.4.4";
+export const APP_VERSION = "2.4.5";
+export const APP_VERSION_TAG = "v2.4.5";
 export const APP_RELEASE_STAGE = "Latest Stable";
 export const APP_BUILD_DATE = "September 2026";
 export const IS_LATEST_VERSION = true;
 
 export const APP_CHANGELOG = [
     {
-        version: "v2.4.2 (Latest)",
+        version: "v2.4.5 (Latest)",
         date: "September 2026",
         features: [
-            "☕ Redesigned brand logo: Authentic Coffee Cup with rising Heart Steam",
-            "🚀 Fixed login server wake-up cold start messages",
-            "🛡️ Enhanced Vercel CI deployment rules and single-page routing rewrites"
+            "📱 Fixed pre-login mobile pages: no navbar squashing or overlap on login & register",
+            "✨ Added clean '← Back to Home' button on Login and Register screens",
+            "🎯 Streamlined Mobile Hero: hidden static iPhone frame on mobile so users directly see Hero actions",
+            "🎂 Native Date of Birth picker for Day/Month/Year registration on mobile",
+            "👤 Allow single-name registration and auto-clean 10-digit phone number input",
+            "✨ Sleek 'Sign In to Connect' bottom modal instead of browser alert dialogs"
+        ]
+    },
+    {
+        version: "v2.4.4",
+        date: "September 2026",
+        features: [
+            "📡 Smart Offline Mode: Top banner notification when network is lost",
+            "⚡ Instant Reconnect: Smooth auto-recovery when connection returns",
+            "🔒 Accurate Auth Feedback: Clear error messages for wrong passwords"
         ]
     },
     {

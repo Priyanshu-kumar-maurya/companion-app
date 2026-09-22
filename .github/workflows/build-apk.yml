@@ -102,22 +102,21 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v2.4.4
-          name: "Coffeely App v2.4.4 (Official APK)"
+          tag_name: v2.4.5
+          name: "Coffeely App v2.4.5 (Official APK)"
           body: |
-            ### ☕ Coffeely Android App v2.4.4
+            ### ☕ Coffeely Android App v2.4.5
             
             Official installable Android APK package for **Coffeely** - Safe & Verified Companion Booking Platform.
             
-            #### 🆕 What's New in v2.4.4:
-            - 📡 **Smart Offline Mode**: Elegant top notification banner when internet is disconnected.
-            - ⚡ **Instant Reconnect**: Back Online notification with automatic live sync when internet returns.
-            - 🔒 **Accurate Auth & Validation**: Clear error messages for wrong passwords, unverified accounts, and network timeouts (no generic "Server error").
-            - 🚀 **Session Persistence**: Users remain logged in even if opening app without an active connection.
-            - 🔑 **Permanent Keystore Signature**: Built with permanent debug.keystore for seamless updates without package conflicts.
-            - ☕ **Brand-New Official Coffeely Logo**: Replaced old cube box with authentic coffee cup with rising heart steam on app icon, splash screen, and throughout the app.
-            - ⚡ **Vercel & CI Fixes**: Cleaned build warnings, added SPA rewrites.
-            - 🚀 **Server Reconnect**: Clear server wake-up feedback for free instance spin-ups.
+            #### 🆕 What's New in v2.4.5:
+            - 📱 **Zero Navbar Squashing on Mobile**: Fixed fixed top/bottom headers compressing login & registration inputs.
+            - 🔙 **Quick Back to Home Navigation**: Added persistent '← Back to Home' button on Login and Register screens.
+            - 🎯 **Streamlined Mobile Hero**: Cleaned up mobile homepage so users see brand actions directly without a 550px static frame.
+            - 🎂 **Native Date of Birth Picker**: Clean responsive wheel controls for Day, Month, and Year on mobile registration.
+            - 👤 **Single Name Support & Phone Auto-Sanitize**: Supports single-name users (e.g. Priyanshu, Aanu) and auto-cleans country codes / spaces.
+            - ✨ **Polished Guest Modals**: Sleek native-style 'Sign In to Connect' bottom modal replacing old browser alerts.
+            - 📡 **Smart Offline Mode & Session Persistence**: Offline notifications with seamless auto-reconnect.
             - 🎨 **Official Coffeely App Icon**: Replaced default Capacitor icon with high-res dark Coffeely branding across all device resolutions.
             - 🌟 **Custom Splash Screen**: Smooth themed splash screen on app launch.
             - 📹 **Camera & Microphone Auto-Permission**: Fixed WebRTC video & voice call permissions in Android WebView.

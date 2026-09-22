@@ -269,11 +269,23 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
     };
 
     return (
-        <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 relative z-0">
+        <div className="min-h-[100dvh] bg-[#0D0D1A] flex flex-col items-center justify-center p-4 relative z-0 overflow-x-hidden w-full">
             <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-pink-600/10"></div>
             <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-purple-600/10"></div>
 
-            <div className="bg-[#16162A]/90 w-full max-w-md p-8 rounded-2xl border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.8)] backdrop-blur-md relative overflow-hidden transition-colors duration-500">
+            {/* Top Navigation Bar: Back to Home */}
+            <div className="w-full max-w-md mb-3 flex items-center justify-between z-10">
+                <button
+                    type="button"
+                    onClick={() => setPage(PAGES.HOME)}
+                    className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 backdrop-blur"
+                >
+                    <span>←</span>
+                    <span>Back to Home</span>
+                </button>
+            </div>
+
+            <div className="bg-[#16162A]/90 w-full max-w-md p-6 sm:p-8 rounded-2xl border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.8)] backdrop-blur-md relative overflow-hidden transition-colors duration-500">
                 <div className="absolute -top-12 -right-12 w-24 h-24 bg-pink-500/5 rounded-full blur-xl pointer-events-none"></div>
                 <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
 
