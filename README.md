@@ -1,313 +1,293 @@
-# Coffeely ☕
+<div align="center">
 
-> Safe, verified companion booking and real-time social interaction platform built with React, Node.js, Socket.IO, WebRTC, PostgreSQL, and Capacitor (Android Native).
+# ☕ Coffeely
+### *India's Premier Safe & Verified Companion Platform*
 
-[![Download Android APK](https://img.shields.io/badge/📥_Download-Coffeely_APK_(v2.4.2)-FF4B4B?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
-[![GitHub Releases](https://img.shields.io/badge/📦_GitHub-Releases-7952b3?style=for-the-badge&logo=github)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases)
+[![Download APK v2.4.5](https://img.shields.io/badge/📥_Download_Android_APK-v2.4.5_(Latest)-E1306C?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
+[![Live Web Demo](https://img.shields.io/badge/🌐_Live_Web_App-coffeely--app.vercel.app-833AB4?style=for-the-badge&logo=vercel&logoColor=white)](https://coffeely-app.vercel.app)
+[![GitHub Star](https://img.shields.io/github/stars/Priyanshu-kumar-maurya/companion-app?style=for-the-badge&color=F9CE3F&logo=github)](https://github.com/Priyanshu-kumar-maurya/companion-app/stargazers)
 
-[![Version](https://img.shields.io/badge/Version-v2.4.2_(Latest)-10B981?style=flat-square)](src/config/version.js)
-[![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-square&logo=vercel)](https://coffeely-app.vercel.app)
-[![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render&logoColor=white)](https://rentgf-and-bf.onrender.com)
-[![Database](https://img.shields.io/badge/Database-PostgreSQL_Neon-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://neon.tech)
-[![React](https://img.shields.io/badge/React-19.x-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
-[![Capacitor](https://img.shields.io/badge/Capacitor-Android_Native-119EFF?style=flat-square&logo=capacitor&logoColor=white)](https://capacitorjs.com)
-[![Node](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+<br/>
+
+[![Version](https://img.shields.io/badge/Version-v2.4.5-10B981?style=flat-square&logo=git)](src/config/version.js)
+[![React](https://img.shields.io/badge/Frontend-React_19_+_Tailwind-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js_+_Express_5-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
+[![Socket.IO](https://img.shields.io/badge/Realtime-Socket.IO_+_WebRTC-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL_(Neon)-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://neon.tech)
+[![Android](https://img.shields.io/badge/Mobile-Capacitor_Android-119EFF?style=flat-square&logo=android&logoColor=white)](https://capacitorjs.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
----
-
-## 📱 Android App Download (APK)
-
-Get the official **Coffeely** Android app directly on your mobile device!
-
-### 📥 Direct Download Links:
-* 🚀 **[Download coffeely.apk (Latest v2.4.2)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** *(Direct APK file for phone)*
-* 📦 **[Browse All Releases & Versions](https://github.com/Priyanshu-kumar-maurya/companion-app/releases)**
-
-### 🛠️ App Specifications:
-| Specification | Details |
-| :--- | :--- |
-| **App Name** | **Coffeely** |
-| **Package ID** | `com.coffeely.app` |
-| **File Name** | `coffeely.apk` |
-| **App Version** | `v2.4.2` |
-| **Compatible OS** | Android 7.0 (Nougat) to Android 15+ (API 24 - 35) |
-| **Permissions** | Camera, Microphone, Internet, Audio (for Video & Voice Calling) |
-
-### 📲 How to Install on Android (आसान तरीका):
-1. **Download APK**: Upar diye gaye **[Download coffeely.apk](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** link par click karein.
-2. **Open File**: Download hone ke baad notification panel ya mobile ke `Downloads` folder se `coffeely.apk` file par tap karein.
-3. **Allow Permission**: Agar phone me *"For your security, your phone is not allowed to install unknown apps from this source"* dikhe, to **Settings** me jaakar **"Allow from this source"** enable karein.
-4. **Install**: **Install** button press karein aur Coffeely app aapke phone me install ho jayega!
+<p align="center">
+  <b>Safe Outings</b> • <b>Coffee Dates</b> • <b>Movie Companions</b> • <b>100% Escrow Protection</b> • <b>Encrypted Calls & Chats</b>
+</p>
 
 ---
 
-## Overview
+</div>
 
-Coffeely connects users with verified companions for social outings, coffee meetups, movie dates, event attendance, and meaningful conversations. 
+## 🌟 What is Coffeely? (Coffeely क्या है?)
 
-The application is engineered with safety, privacy, and transparency at its foundation:
-- **100% Escrow Protection**: Booking payments are held in escrow until sessions are marked completed.
-- **Real-Time Communication**: P2P WebRTC audio/video calling and encrypted Socket.IO chat with voice notes.
-- **Privacy & Security**: PIN-locked and hidden chats, GPS-based emergency SOS alerts, and multi-tier rate limiting.
-- **Android Native & PWA Experience**: Installable as a native Android APK (`coffeely.apk`) and across desktop/mobile browsers.
+> **English:** Coffeely is a modern, transparent, and ultra-secure companion booking and social networking platform. Whether you are new in town, need a plus-one for an event, want to enjoy a movie date, or simply desire a meaningful conversation over coffee, Coffeely connects you with 100% KYC-verified companions.
+
+> **हिंदी (सरल शब्दों में):** Coffeely एक सुरक्षित और वेरिफाइड साथी (Companion) खोजने का प्लेटफॉर्म है। अगर आप किसी नए शहर में हैं, बोर हो रहे हैं, या आपको कॉफी, मूवी, डिनर या इवेंट्स के लिए एक अच्छे दोस्त या पार्टनर की जरूरत है — तो Coffeely पर आप सुरक्षित रूप से वेरिफाइड लोगों से कनेक्ट हो सकते हैं। यहाँ आपका पैसा और प्राइवेसी 100% सुरक्षित (Escrow Protected) रहती है!
 
 ---
 
-## Table of Contents
+## 🏆 Why Coffeely is Different (Coffeely क्यों खास है?)
 
-- [📱 Android App Download (APK)](#-android-app-download-apk)
-
-- [Key Features](#-key-features)
-- [Tech Stack](#-tech-stack)
-- [System Architecture](#-system-architecture)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Frontend Setup](#frontend-setup)
-  - [Backend Setup](#backend-setup)
-  - [Environment Variables](#environment-variables)
-- [Security Architecture](#-security-architecture)
-- [API Reference](#-api-reference)
-- [Database Schema](#-database-schema)
-- [License](#-license)
+| फीचर (Feature) | ❌ आम डेटिंग ऐप्स (Other Apps) | ✅ Coffeely (हमारा प्लेटफॉर्म) |
+| :--- | :--- | :--- |
+| **सुरक्षा & पहचान (KYC)** | फ़ेक प्रोफ़ाइल्स और बॉट्स की भरमार | **100% गवर्नमेंट ID & KYC वेरिफाइड** प्रोफ़ाइल्स |
+| **पेमेंट प्रोटेक्शन** | अग्रिम पैसे डूबने का ख़तरा | **100% Escrow Protection** (मीटिंग पूरी होने पर ही पेमेंट रिलीज़) |
+| **प्राइवेसी & कॉलिंग** | फ़ोन नंबर शेयर करने का रिस्क | **In-App P2P WebRTC HD कॉलिंग** (बिना नंबर शेयर किए) |
+| **सीक्रेट चैट** | कोई भी चैट पढ़ सकता है | **Ghost Mode & 4-Digit PIN Lock** सुरक्षा |
+| **इमरजेंसी सुरक्षा** | कोई तत्काल मदद नहीं | **One-Tap GPS Emergency SOS** लाइव लोकेशन शेयरिंग |
+| **मोबाइल फ्रेंडली** | भारी और क्रैश होने वाले ऐप | **सुपर-लाइटवेट APK (<10 MB)**, फास्ट और स्मूथ |
 
 ---
 
-## 🚀 Key Features
+## 📱 Download Coffeely for Android (APK)
 
-### 1. 🛡️ Escrow Booking & Wallet Ledger
-- **Payment Escrow**: Client payments are locked in an escrow holding account upon booking confirmation.
-- **Automated Settlement**: Escrow funds automatically transfer to the companion's available balance upon session completion. Cancellations or rejections initiate a 100% refund.
-- **Payouts**: Companions can request direct withdrawals to their UPI ID or Bank Account (IMPS/NEFT) with real-time ledger tracking.
-- **Digital Invoices**: Instant generation and printing of itemized transaction receipts with breakdown fees.
+अपने Android मोबाइल में Coffeely इंस्टॉल करना बहुत आसान है:
 
-### 2. 📞 WebRTC Audio & Video Calling
-- Direct peer-to-peer audio and video calls powered by WebRTC and Socket.IO signaling.
-- Native incoming/outgoing ringing popups, audio ringtones, camera toggling, mic mute, and live call timers.
+<div align="center">
+
+### 🚀 [📥 Download Latest APK (v2.4.5)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
+*File Size: ~9.4 MB • Android 7.0 to Android 15+ Support*
+
+</div>
+
+### 📲 आसान 4-स्टेप इंस्टॉलेशन गाइड:
+1. **Download:** ऊपर दिए गए **[Download APK](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** बटन पर क्लिक करें।
+2. **Open:** डाउनलोड पूरा होने पर अपने फोन के Notification या `Downloads` फोल्डर से `coffeely.apk` ओपन करें।
+3. **Allow Permission:** अगर फोन में *"Install unknown apps"* की चेतावनी आए, तो **Settings** में जाकर **"Allow from this source"** ऑन करें।
+4. **Done:** **Install** पर टैप करें और Coffeely को बेफिक्र इस्तेमाल करें! ☕✨
+
+---
+
+## ⚡ Key Highlights & Cool Features
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        ✨ COFFEELY CORE FEATURES                       │
+├──────────────────────────┬──────────────────────────┬──────────────────┤
+│ 🛡️ 100% Escrow Safety    │ 📞 In-App HD Calls       │ 🕵️ Ghost PIN Mode │
+│ No advance loss. Money   │ Audio & Video calls with │ Secret chats with│
+│ held in safe escrow.     │ zero phone # sharing.    │ 4-digit PIN lock.│
+├──────────────────────────┼──────────────────────────┼──────────────────┤
+│ 🚨 Live GPS SOS Alert    │ 🗺️ Proximity Radar       │ ⭐ Verified Reviews│
+│ 1-tap emergency dispatch │ Find verified companions │ Authentic ratings│
+│ with live coordinates.   │ nearby (5km - 50km).     │ by real clients. │
+└──────────────────────────┴──────────────────────────┴──────────────────┘
+```
+
+### 1. 🛡️ 100% Escrow Payment Guarantee
+- जब आप कोई सेशन बुक करते हैं, तो आपका पैसा सुरक्षित **Escrow Holding Ledger** में लॉक हो जाता है।
+- जब तक आपकी मीटिंग सफलतापूर्वक पूरी नहीं हो जाती, साथी को पेमेंट ट्रांसफर नहीं होता।
+- अगर साथी नहीं आता या कैंसिल करता है, तो आपको तुरंत **100% रिफंड** मिलता है।
+
+### 2. 📞 WebRTC HD Audio & Video Calling
+- बिना किसी का पर्सनल फोन नंबर मांगे ऐप के अंदर ही हाई-डेफिनिशन वीडियो और ऑडियो कॉल्स।
+- P2P एन्क्रिप्टेड सिग्नलिंग, कस्टम रिंगटोन, कैमरा टॉगल और लाइव टाइमर के साथ।
 
 ### 3. 💬 Real-Time Chat & Voice Notes
-- **Instant Messaging**: Low-latency Socket.IO messaging with live typing indicators and delivery statuses.
-- **Voice Notes**: In-browser audio recording, compression, and waveform playback directly inside chat rooms.
-- **PIN-Locked Conversations**: Lock sensitive chats with a personal 4-digit PIN.
-- **Ghost Mode (Hidden Chats)**: Conceal private chats from the main inbox list, accessible only by typing `#YOUR_PIN` into the search bar.
+- **Instant Messages**: Socket.IO पावर्ड सुपरफास्ट मैसेजिंग, टाइपिंग इंडिकेटर्स और रीड रिसीट्स।
+- **Audio Voice Notes**: अपनी आवाज़ रिकॉर्ड करें और वेवफॉर्म के साथ ऑडियो नोट्स भेजें।
+- **Ghost Mode**: संवेदनशील चैट्स को छुपाएं — सर्च बार में सिर्फ `#YOUR_PIN` टाइप करने पर ही चैट खुलेगी!
 
-### 4. 🚨 SOS Emergency System
-- One-tap emergency broadcast that transmits live GPS coordinates (latitude/longitude) to configured emergency contacts and the live Admin Console.
+### 4. 🚨 One-Tap Emergency GPS SOS
+- किसी भी इमरजेंसी में सिर्फ एक बटन दबाते ही आपकी लाइव GPS लोकेशन (Latitude/Longitude) आपके इमरजेंसी कॉन्टैक्ट्स और एडमिन पोर्टल पर ब्रॉडकास्ट हो जाती है।
 
-### 5. 🗺️ Proximity Map & Discovery
-- Interactive OpenStreetMap integration with Leaflet.
-- Search companions by distance radius (5km, 10km, 25km, 50km) with automatic distance calculation (Haversine algorithm).
+### 5. 🗺️ Radar Discovery (Nearby Companions)
+- OpenStreetMap और Haversine फॉर्मूले के साथ अपने आस-पास के 5km, 10km, 25km या 50km के दायरे में मौजूद कंपेनियंस को ढूंढें।
 
-### 6. ⭐ Verified Client Reviews & Ratings
-- Post-session rating system (1★ to 5★) with distribution statistics.
-- **Verified Client Tag**: Displayed exclusively on reviews left by users with confirmed, completed bookings.
-- Compliment badges (*Punctual*, *Great Listener*, *Super Polite*) and helpful vote tracking.
-
-### 7. 📱 PWA Native Installation & Version Engine
-- Progressive Web App support for Android, iOS, Windows, and macOS.
-- Built-in App Version & Update monitor in Settings (`v2.4.0 Latest`) that detects device platforms and validates cache updates.
+### 6. 📱 Mobile First Redesign (v2.4.5)
+- **Zero Squashing**: मोबाइल पर कीबोर्ड खुलने पर लॉगिन और रजिस्टर फॉर्म कभी नहीं दबते।
+- **Native DOB Wheel**: डेट ऑफ बर्थ सेलेक्ट करने के लिए Android का सहज नेटिव व्हील पिकर।
+- **Single-Name Friendly**: सिर्फ फर्स्ट नेम ("Priyanshu", "Aanu") से भी बिना झंझट रजिस्ट्रेशन।
 
 ---
 
-## 🛠️ Tech Stack
+## 🔄 How It Works (यह कैसे काम करता है?)
 
-### Frontend
-- **React 19** with modern functional hooks architecture
-- **Tailwind CSS** with dark glassmorphism styling
-- **Socket.IO Client** for real-time messaging, status, and notifications
-- **WebRTC (`RTCPeerConnection`)** for peer-to-peer audio and video streaming
-- **Leaflet & OpenStreetMap** for live geographic companion discovery
-- **React Icons** (Feather, FontAwesome, Bootstrap suites)
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as 👦 Client (Boy)
+    participant App as 📱 Coffeely App
+    participant Escrow as 🔒 Escrow Vault
+    actor Companion as 👧 Companion (Girl)
 
-### Backend
-- **Node.js & Express 5** RESTful API server
-- **PostgreSQL (Neon)** with connection pooling (`pg.Pool`)
-- **Socket.IO Server** with JWT handshake authentication
-- **Brevo HTTP API** for transactional email delivery and OTP verification
-- **Cloudinary & Multer** for image, voice note, and video hosting
-- **Helmet & CORS** with strict domain whitelisting
-
----
-
-## 📐 System Architecture
-
-```
-[ Web Browser / PWA Client ]
-             │
-             ├── HTTPS REST API ──> [ Express Backend Server ]
-             │                                   │
-             │                                   ├── PostgreSQL Database (Neon Pool)
-             │                                   ├── Brevo API (OTP & System Emails)
-             │                                   ├── Cloudinary (Media Storage)
-             │                                   └── Razorpay (Escrow Gateways)
-             │
-             ├── WebSocket (WSS) ──> [ Socket.IO Signaling & Rooms ]
-             │
-             └── P2P Media Stream ─> [ WebRTC Mesh Audio/Video ]
+    Client->>App: 1. Explore & Select Verified Companion
+    Client->>App: 2. Pick Date, Time Slot & Duration
+    Client->>Escrow: 3. Make Escrow Payment (Held Safely)
+    Escrow-->>Companion: 4. Instant Booking Notification
+    Companion->>App: 5. Accept Booking & Chat/Coordinate
+    Note over Client, Companion: 6. Meetup at Selected Public Place ☕
+    Companion->>App: 7. Mark Session Completed
+    Client->>App: 8. Confirm Session & Rate Companion ⭐
+    Escrow->>Companion: 9. Release Funds to Wallet Balance
 ```
 
 ---
 
-## 🔒 Security Architecture
+## 💻 Tech Stack (तकनीकी संरचना)
 
-Coffeely enforces a multi-layer defense strategy across all endpoints:
-
-1. **Insecure Direct Object Reference (IDOR) Prevention**:
-   - Strict ownership checks on wallet balances, transactions, and payout requests (`req.user.id === userId` or `admin`).
-   - Escrow release and refund operations require verified participation in the specific booking.
-
-2. **File Upload Hardening**:
-   - Multer limits file sizes to **10MB** to prevent Denial-of-Service (DoS) and memory exhaustion.
-   - Dangerous file extensions (`.exe`, `.sh`, `.php`, `.py`, `.svg`, `.html`, `.js`, etc.) are blocked immediately.
-   - Strict MIME-type checking ensures only valid images, videos, and audio notes are processed.
-
-3. **WebSocket JWT Handshake**:
-   - Socket connections require a valid JWT token signature during handshake.
-   - Message and call handlers enforce caller identity matching, preventing sender impersonation.
-   - Per-socket rate limiting prevents message flooding and bot automation.
-
-4. **Origin & CORS Validation**:
-   - CORS origin validation rejects arbitrary third-party domains and restricts access to official deployment hosts.
-
-5. **Authentication & Cryptography**:
-   - Passwords hashed with `bcryptjs` (12 salt rounds).
-   - OTP codes generated using cryptographically secure pseudorandom numbers (`crypto.randomInt`) and compared using constant-time checks (`crypto.timingSafeEqual`).
-   - Account lockout mechanism temporarily freezes logins for 15 minutes after 5 consecutive failed attempts.
-
-6. **Network & Proxy Protection**:
-   - Correct client IP extraction behind reverse proxies (`x-forwarded-for`).
-   - Rate limiting on auth (5 req/min), payment/wallet (25 req/min), and global routes (120 req/min).
-   - HTTP security headers injected via Helmet (`HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`).
+```
+Coffeely System Stack
+├── 🎨 Frontend
+│   ├── React 19 (Modern Hooks & State)
+│   ├── Tailwind CSS (Dark Glassmorphism UI)
+│   ├── WebRTC (Peer-to-Peer Media Streams)
+│   ├── Socket.IO Client (Real-time WebSockets)
+│   ├── Leaflet / OpenStreetMap (Geolocation Mapping)
+│   └── React Icons (Feather & FontAwesome suites)
+│
+├── ⚙️ Backend
+│   ├── Node.js 18+ & Express 5 REST API
+│   ├── Socket.IO Server (JWT Handshake Authentication)
+│   ├── PostgreSQL (Neon Serverless Connection Pooling)
+│   ├── Brevo HTTP API (Transactional Emails & OTP)
+│   ├── Cloudinary & Multer (Encrypted Media Storage)
+│   └── Helmet & CORS (Security Hardening)
+│
+└── 📱 Mobile & Build System
+    ├── Capacitor Android Engine
+    ├── Android SDK 35 (Target API 35, Min API 24)
+    ├── Permanent Keystore Signing
+    └── GitHub Actions CI/CD (Automated APK Build & Release)
+```
 
 ---
 
-## 💻 Getting Started
+## 🔒 Security & Privacy Architecture
 
-### Prerequisites
-- Node.js (v18.0.0 or higher)
-- npm (v9.0.0 or higher)
-- PostgreSQL database instance (Neon, Supabase, or local)
+- **IDOR Protection**: वॉलेट बैलेंस और पेआउट्स पर स्ट्रिक्ट टोकन ओनरशिप (`req.user.id`).
+- **File Upload Protection**: Multer 10MB लिमिट, एग्जीक्यूटिव फाइल्स (`.exe`, `.sh`, `.php`) सख्त ब्लॉक।
+- **Socket Authenticity**: प्रत्येक सॉकेट कनेक्शन JWT टोकन वेरिफिकेशन के बाद ही रूम्स जॉइन करता है।
+- **Brute-Force Guard**: 5 बार गलत पासवर्ड डालने पर 15 मिनट का ऑटोमैटिक अकाउंट लॉकआउट।
+- **End-to-End Hardening**: Helmet HSTS, No-Sniff, XSS प्रोटेक्शन और सख्त CORS ओरिजिन चेक।
 
-### Installation
+---
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Priyanshu-kumar-maurya/companion-app.git
-   cd companion-app
-   ```
+## 🛠️ Local Development (अपने कंप्यूटर पर कैसे चलाएं)
 
-2. **Install frontend dependencies:**
-   ```bash
-   npm install
-   ```
+### आवश्यकताएं (Prerequisites):
+- Node.js (v18.0.0+)
+- npm (v9.0.0+)
+- PostgreSQL Database (Neon.tech या Local)
 
-3. **Install backend dependencies:**
-   ```bash
-   cd backend
-   npm install
-   cd ..
-   ```
+### 1. रिपॉजिटरी क्लोन करें (Clone Repo):
+```bash
+git clone https://github.com/Priyanshu-kumar-maurya/companion-app.git
+cd companion-app
+```
 
-### Environment Configuration
+### 2. डिपेंडेंसीज इंस्टॉल करें (Install Dependencies):
+```bash
+# Frontend dependencies
+npm install
 
-Create a `.env` file in the `backend/` directory:
+# Backend dependencies
+cd backend
+npm install
+cd ..
+```
 
+### 3. एनवायरनमेंट सेट करें (Configure .env):
+`backend/.env` फ़ाइल बनाएं:
 ```env
-# Server
 PORT=5000
-
-# Database
 DATABASE_URL=postgres://user:password@ep-instance.neon.tech/neondb?sslmode=require
-
-# JWT
-JWT_SECRET=your_strong_jwt_secret_key
-
-# Email Service (Brevo HTTP API)
+JWT_SECRET=your_super_secret_jwt_key
 BREVO_API_KEY=your_brevo_api_key
 EMAIL_USER=noreply@coffeely.com
 EMAIL_FROM_NAME=Coffeely
-
-# Cloudinary Storage
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-
-# Razorpay (Optional)
-RAZORPAY_KEY_ID=your_key_id
-RAZORPAY_KEY_SECRET=your_key_secret
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_cloudinary_key
+CLOUDINARY_API_SECRET=your_cloudinary_secret
 ```
 
-### Running the Application
-
+### 4. रन करें (Start Servers):
 ```bash
-# Terminal 1: Backend Server (Port 5000)
+# Terminal 1: Backend API (Port 5000)
 cd backend
 npm start
 
 # Terminal 2: React Frontend (Port 3000)
 npm start
 ```
-
-Navigate to `http://localhost:3000` in your browser.
-
----
-
-## 📡 API Reference
-
-### Authentication (`/api`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/register` | Create account & send email OTP | No |
-| `POST` | `/login` | Authenticate credentials & return JWT | No |
-| `POST` | `/verify-otp` | Validate verification code | No |
-| `POST` | `/forgot-password` | Request password reset code | No |
-| `POST` | `/reset-password` | Reset password using valid OTP | No |
-
-### Profiles & Users (`/api`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `GET` | `/users` | Browse active companion profiles | No |
-| `GET` | `/me` | Get authenticated user profile | Yes |
-| `PUT` | `/users/:userId` | Update profile settings (Owner only) | Yes |
-| `DELETE` | `/users/:userId` | Delete account permanently | Yes |
-
-### Bookings & Payments (`/api`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/bookings` | Create new booking session | Yes |
-| `POST` | `/payment/create-order` | Generate escrow payment order | Yes |
-| `POST` | `/payment/verify` | Verify payment and lock into escrow | Yes |
-| `POST` | `/payment/release-escrow/:id`| Release escrow to companion balance | Yes |
-| `POST` | `/payment/refund-escrow/:id` | Process 100% cancellation refund | Yes |
-| `GET` | `/wallet/:userId` | View available & escrow balance | Yes |
-| `POST` | `/wallet/payout-request` | Submit UPI / Bank withdrawal | Yes |
-
-### Safety & Reviews (`/api`)
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :---: |
-| `POST` | `/sos/trigger` | Broadcast emergency SOS with GPS coordinates | Yes |
-| `GET` | `/sos/emergency-contacts` | Fetch configured emergency contacts | Yes |
-| `POST` | `/reviews` | Post companion review (Verified clients) | Yes |
-| `GET` | `/call-history/:userId` | Retrieve voice & video call history | Yes |
+अपने ब्राउज़र में `http://localhost:3000` खोलें! 🚀
 
 ---
 
-## 🗄️ Database Schema
+## 📡 Essential API Endpoints
 
-Schema migrations and table initializations run automatically on server boot (`backend/config/db.js`):
+<details>
+<summary><b>🔑 Authentication & User Endpoints</b> (क्लिक करके देखें)</summary>
 
-- **`users`**: Authentication credentials, KYC state, hourly fees, GPS coordinates, lockout counters.
-- **`bookings`**: Session details, status (`pending`, `accepted`, `completed`), payment status, platform fee breakdown.
-- **`wallet_balances`**: Available balance, pending escrow funds, total withdrawn, lifetime earnings.
-- **`wallet_transactions`**: Complete audit log for escrow deposits, releases, withdrawals, and refunds.
-- **`payout_requests`**: Bank and UPI payout queues with admin approval tracking and reference IDs.
-- **`messages`**: Real-time chat messages, media URLs, audio notes, and read receipts.
-- **`call_history`**: Voice and video call logs with duration and status.
-- **`sos_alerts`**: Emergency records with live coordinates and resolution tracking.
-- **`reviews`**: 1–5 star ratings, compliment chips, and verified client flags.
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/register` | नया अकाउंट बनाएं और OTP भेजें | No |
+| `POST` | `/api/login` | लॉगिन करें और JWT टोकन प्राप्त करें | No |
+| `POST` | `/api/verify-otp` | ईमेल सत्यापन कोड जांचें | No |
+| `POST` | `/api/forgot-password` | पासवर्ड रीसेट OTP भेजें | No |
+| `POST` | `/api/reset-password` | नया पासवर्ड सेट करें | No |
+| `GET` | `/api/users` | एक्टिव कंपेनियंस की लिस्ट देखें | No |
+| `GET` | `/api/me` | अपनी प्रोफाइल जानकारी प्राप्त करें | Yes |
+
+</details>
+
+<details>
+<summary><b>💳 Escrow Bookings & Wallet Endpoints</b> (क्लिक करके देखें)</summary>
+
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/bookings` | नई बुकिंग क्रिएट करें | Yes |
+| `POST` | `/api/payment/verify` | पेमेंट वेरिफाई करें और Escrow में लॉक करें | Yes |
+| `POST` | `/api/payment/release-escrow/:id` | सेशन पूरा होने पर कंपेनियन को फंड रिलीज़ करें | Yes |
+| `POST` | `/api/payment/refund-escrow/:id` | कैंसिलेशन पर 100% रिफंड प्रोसेस करें | Yes |
+| `GET` | `/api/wallet/:userId` | वॉलेट बैलेंस और Escrow अमाउंट देखें | Yes |
+| `POST` | `/api/wallet/payout-request` | UPI / बैंक अकाउंट में निकासी अनुरोध भेजें | Yes |
+
+</details>
+
+<details>
+<summary><b>🚨 Safety, Reviews & Communication Endpoints</b> (क्लिक करके देखें)</summary>
+
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :---: |
+| `POST` | `/api/sos/trigger` | लाइव GPS लोकेशन के साथ SOS अलर्ट भेजें | Yes |
+| `GET` | `/api/sos/emergency-contacts` | अपने सेव किए गए इमरजेंसी कॉन्टैक्ट्स देखें | Yes |
+| `POST` | `/api/reviews` | वेरिफाइड बुकिंग के बाद रेटिंग/रिव्यू दें | Yes |
+| `GET` | `/api/call-history/:userId` | ऑडियो और वीडियो कॉल हिस्ट्री देखें | Yes |
+
+</details>
 
 ---
 
-## 📄 License
+## 🤝 Contributing & Community
 
-Distributed under the [MIT License](LICENSE).
+योगदान (Contributions) का हमेशा स्वागत है! 
+
+1. रिपॉजिटरी को **Fork** करें।
+2. अपना फीचर ब्रांच बनाएं: `git checkout -b feature/AmazingFeature`
+3. बदलाव कमिट करें: `git commit -m 'feat: Add some AmazingFeature'`
+4. ब्रांच में पुश करें: `git push origin feature/AmazingFeature`
+5. एक **Pull Request** ओपन करें!
+
+---
+
+## 📄 License & Credits
+
+- 📜 **License**: This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+- 👨‍💻 **Lead Developer**: [Priyanshu Kumar Maurya](https://github.com/Priyanshu-kumar-maurya)
+- ☕ **Coffeely** — *Connecting People with Safety, Trust & Real Smiles.*
+
+<div align="center">
+
+**Made with ❤️ and ☕ for safe social connections across India.**
+
+⭐ *अगर आपको यह प्रोजेक्ट पसंद आया हो, तो GitHub पर **Star** देना न भूलें!* ⭐
+
+</div>
