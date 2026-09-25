@@ -6,6 +6,7 @@ import PaymentModal from "./PaymentModal";
 import ReviewsSection from "./ReviewsSection";
 import KYCUploadPrompt from "./KYCUploadPrompt";
 import VerifiedBadge from "./VerifiedBadge";
+import { ProfileGridSkeleton, MessageListSkeleton } from "./SkeletonLoaders";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
 const socket = io("https://rentgf-and-bf.onrender.com", {
@@ -394,6 +395,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         setShowMenu(false);
     };
 
+    const [loadingUserData, setLoadingUserData] = useState(true);
+
     useEffect(() => {
         if (!profile) return;
 
@@ -406,6 +409,9 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
             if (parsedData.reviews) setReviews(parsedData.reviews);
             if (parsedData.avgRating !== undefined) setAvgRating(parsedData.avgRating);
             if (parsedData.followStats) setFollowStats(parsedData.followStats);
+            setLoadingUserData(false);
+        } else {
+            setLoadingUserData(true);
         }
 
         const fetchUserData = async () => {
@@ -452,6 +458,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
             setReviews(fetchedReviews);
             setAvgRating(fetchedAvgRating);
             setFollowStats(fetchedFollowStats);
+            setLoadingUserData(false);
 
             sessionStorage.setItem(cacheKey, JSON.stringify({
                 posts: fetchedPosts,
@@ -1004,6 +1011,8 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                                     <p className="text-gray-400 text-sm font-medium">This account is private</p>
                                     <p className="text-gray-600 text-xs">Follow to see their photos</p>
                                 </div>
+                            ) : loadingUserData ? (
+                                <ProfileGridSkeleton count={6} />
                             ) : posts.length === 0 ? (
                                 <div className="py-16 text-center flex flex-col items-center gap-2 bg-[#16162A]/40 rounded-2xl border border-white/5">
                                     <FiGrid size={36} className="text-gray-700" />
@@ -1459,9 +1468,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                         {/* List Area */}
                         <div className="p-4 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-3">
                             {followListLoading ? (
-                                <div className="text-center py-8 text-pink-400 animate-pulse text-xs font-bold">
-                                    Loading list...
-                                </div>
+                                <MessageListSkeleton count={4} />
                             ) : followList.length === 0 ? (
                                 <div className="text-center py-8 text-gray-500 text-xs">
                                     {showFollowModal === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}

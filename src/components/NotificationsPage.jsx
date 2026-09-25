@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { PAGES } from "../App";
 import InstagramPostModal from "./shared/InstagramPostModal";
+import { NotificationListSkeleton } from "./shared/SkeletonLoaders";
 import { 
     FiRefreshCw, 
     FiInbox, 
@@ -353,9 +354,8 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
             {/* ── Activity Content Body ── */}
             <div className="bg-[#16162A] border border-white/5 rounded-3xl shadow-2xl overflow-hidden min-h-[360px] flex-1 flex flex-col">
                 {loading ? (
-                    <div className="text-gray-400 text-center py-24 flex flex-col items-center justify-center gap-3">
-                        <FiRefreshCw className="text-pink-500 text-4xl animate-spin" />
-                        <p className="text-sm font-semibold">Loading your activity...</p>
+                    <div className="p-3">
+                        <NotificationListSkeleton count={6} />
                     </div>
                 ) : filteredNotifications.length === 0 ? (
                     <div className="text-gray-400 text-center py-24 px-6 flex flex-col items-center justify-center gap-3 flex-1">

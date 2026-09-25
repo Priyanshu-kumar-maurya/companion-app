@@ -3,6 +3,7 @@ import { PAGES } from "../../App";
 import { FiMessageCircle, FiRefreshCw, FiInbox, FiPhone, FiLock, FiUnlock, FiEye, FiEyeOff, FiSearch, FiShield, FiX, FiArrowLeft } from "react-icons/fi";
 import { isChatLocked, isChatHidden, hideChat, unhideChat, lockChat, unlockChat, isLockedFolderHidden, setLockedFolderHidden, verifyChatLockPin, hasChatLockPin } from "../../utils/chatLockManager";
 import ChatLockPinModal from "./ChatLockPinModal";
+import { MessageListSkeleton } from "./SkeletonLoaders";
 
 function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [activeTab, setActiveTab] = useState("chats"); // 'chats' | 'calls'
@@ -398,9 +399,8 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
             <div className="bg-[#16162A] border border-white/5 rounded-3xl shadow-xl overflow-hidden min-h-[300px]">
                 {activeTab === 'chats' ? (
                     loading ? (
-                        <div className="text-gray-500 text-center py-16 flex flex-col items-center">
-                            <FiRefreshCw className="text-pink-500 text-4xl mb-4 animate-spin" />
-                            <p>Loading your messages...</p>
+                        <div className="p-3">
+                            <MessageListSkeleton count={5} />
                         </div>
                     ) : chatHistory.length === 0 ? (
                         <div className="text-gray-500 text-center py-16 flex flex-col items-center">
@@ -640,9 +640,8 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                 ) : (
                     /* Call History Tab Content */
                     callsLoading ? (
-                        <div className="text-gray-500 text-center py-16 flex flex-col items-center">
-                            <FiRefreshCw className="text-pink-500 text-4xl mb-4 animate-spin" />
-                            <p>Loading call history...</p>
+                        <div className="p-3">
+                            <MessageListSkeleton count={4} />
                         </div>
                     ) : callLogs.length === 0 ? (
                         <div className="text-gray-500 text-center py-16 flex flex-col items-center">

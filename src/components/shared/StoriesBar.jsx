@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { FiPlus } from "react-icons/fi";
 import StoryViewerModal from "./StoryViewerModal";
 import AddStoryModal from "./AddStoryModal";
+import { StoriesBarSkeleton } from "./SkeletonLoaders";
 
 function StoriesBar({ currentUser }) {
     const [stories, setStories] = useState([]);
@@ -42,6 +43,10 @@ function StoriesBar({ currentUser }) {
             setShowAddModal(true);
         }
     };
+
+    if (loading) {
+        return <StoriesBarSkeleton count={6} />;
+    }
 
     return (
         <div className="w-full mb-6 select-none" data-prevent-swipe="true">

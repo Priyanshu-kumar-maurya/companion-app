@@ -3,6 +3,7 @@ import { PAGES } from "../App";
 import Footer from "./Footer";
 import StoriesBar from "./shared/StoriesBar";
 import VerifiedBadge from "./shared/VerifiedBadge";
+import { FeedPostSkeleton, CompanionGridSkeleton } from "./shared/SkeletonLoaders";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
 import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
@@ -532,9 +533,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     <StoriesBar currentUser={currentUser} />
 
                     {loading ? (
-                        <div className="flex justify-center items-center h-64">
-                            <RiLoader4Line className="text-[#e1306c] text-5xl animate-spin" />
-                        </div>
+                        <FeedPostSkeleton count={3} />
                     ) : feed.length === 0 ? (
                         <div className="text-center py-20 bg-[#121212] rounded-2xl border border-[#262626]/80">
                             <FaInbox className="text-5xl text-gray-500 mx-auto mb-4" />
@@ -1012,8 +1011,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 </div>
  
                 {loading ? (
-                    <div className="flex justify-center items-center py-10">
-                        <RiLoader4Line className="text-[#0095f6] text-4xl animate-spin" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="bg-[#121212] border border-white/5 rounded-2xl p-6 text-center skeleton-shimmer">
+                                <div className="h-9 w-20 bg-white/10 rounded-lg mx-auto mb-2.5 skeleton-shimmer" />
+                                <div className="h-3 w-28 bg-white/5 rounded-md mx-auto skeleton-shimmer" />
+                            </div>
+                        ))}
                     </div>
                 ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

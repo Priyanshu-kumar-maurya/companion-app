@@ -4,6 +4,7 @@ import { FiSearch, FiUsers, FiUser, FiMapPin, FiStar, FiFilter, FiRotateCcw, FiN
 import StoriesBar from "./StoriesBar";
 import CompanionMapView from "./CompanionMapView";
 import VerifiedBadge from "./VerifiedBadge";
+import { CompanionGridSkeleton } from "./SkeletonLoaders";
 
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
@@ -480,7 +481,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20 text-pink-500 animate-pulse">Loading profiles...</div>
+                    <CompanionGridSkeleton count={6} />
                 ) : viewMode === "map" ? (
                     <CompanionMapView
                         companions={filtered}

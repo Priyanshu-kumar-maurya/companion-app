@@ -1,12 +1,23 @@
-export const APP_VERSION = "2.4.5";
-export const APP_VERSION_TAG = "v2.4.5";
+export const APP_VERSION = "2.4.6";
+export const APP_VERSION_TAG = "v2.4.6";
 export const APP_RELEASE_STAGE = "Latest Stable";
 export const APP_BUILD_DATE = "September 2026";
 export const IS_LATEST_VERSION = true;
 
 export const APP_CHANGELOG = [
     {
-        version: "v2.4.5 (Latest)",
+        version: "v2.4.6 (Latest)",
+        date: "September 2026",
+        features: [
+            "✨ YouTube & Instagram Shimmer Skeleton Loaders across all screens",
+            "🔍 Explore & Discover: YouTube card grid skeleton with thumbnails, avatars & text bars",
+            "📸 Home Feed & Profile: Instagram post & 3x3 photo grid shimmer skeletons",
+            "💬 Messages & Calls: Sleek shimmer list placeholders replacing raw loading texts",
+            "🔔 Activity: Smooth notification card shimmer waves during live fetch"
+        ]
+    },
+    {
+        version: "v2.4.5",
         date: "September 2026",
         features: [
             "📱 Fixed pre-login mobile pages: no navbar squashing or overlap on login & register",
