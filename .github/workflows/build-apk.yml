@@ -102,14 +102,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v2.4.6
-          name: "Coffeely App v2.4.6 (Official APK)"
+          tag_name: v0.0.6
+          name: "Coffeely App v0.0.6 Beta (Official APK)"
           body: |
-            ### ☕ Coffeely Android App v2.4.6
+            ### ☕ Coffeely Android App v0.0.6 (Beta)
             
             Official installable Android APK package for **Coffeely** - Safe & Verified Companion Booking Platform.
             
-            #### 🆕 What's New in v2.4.6:
+            #### 🆕 What's New in v0.0.6:
             - ✨ **YouTube & Instagram Shimmer Skeletons**: High-end animated placeholders replacing spinning loaders and raw text across all feeds.
             - 🔍 **YouTube Explore Card Grid**: Shimmer wave video-card style skeleton preview for discover companions.
             - 📸 **Instagram Post & Photo Grid Skeletons**: Smooth dark shimmer placeholders on Home feed and Profile posts.

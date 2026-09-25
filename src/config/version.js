@@ -1,12 +1,12 @@
-export const APP_VERSION = "2.4.6";
-export const APP_VERSION_TAG = "v2.4.6";
-export const APP_RELEASE_STAGE = "Latest Stable";
+export const APP_VERSION = "0.0.6";
+export const APP_VERSION_TAG = "v0.0.6";
+export const APP_RELEASE_STAGE = "Beta Early Access";
 export const APP_BUILD_DATE = "September 2026";
 export const IS_LATEST_VERSION = true;
 
 export const APP_CHANGELOG = [
     {
-        version: "v2.4.6 (Latest)",
+        version: "v0.0.6 (Beta)",
         date: "September 2026",
         features: [
             "✨ YouTube & Instagram Shimmer Skeleton Loaders across all screens",
