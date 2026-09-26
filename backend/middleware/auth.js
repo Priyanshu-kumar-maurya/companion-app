@@ -27,6 +27,9 @@ const authenticateToken = async (req, res, next) => {
             if (dbUser.is_platform_blocked && dbUser.role !== 'admin') {
                 return res.status(403).json({ error: "Your account has been suspended. Please contact support." });
             }
+            if (dbUser.role) {
+                user.role = dbUser.role; // Real-time DB sync: prevents revoked admins from using stale tokens
+            }
         } catch (dbErr) {
             // If DB check fails, still allow (don't block legit users on DB error)
             console.error("Auth DB check error:", dbErr.message);
