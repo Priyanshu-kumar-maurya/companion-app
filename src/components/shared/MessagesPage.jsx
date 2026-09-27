@@ -5,6 +5,10 @@ import { isChatLocked, isChatHidden, hideChat, unhideChat, lockChat, unlockChat,
 import ChatLockPinModal from "./ChatLockPinModal";
 import { MessageListSkeleton } from "./SkeletonLoaders";
 
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [activeTab, setActiveTab] = useState("chats"); // 'chats' | 'calls'
     const [chatHistory, setChatHistory] = useState([]);
@@ -43,13 +47,13 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
                 const headers = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
                 
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`, { headers });
+                const res = await fetch(`${API}/chats/${currentUser.id}`, { headers });
                 if (res.ok) {
                     const users = await res.json();
 
                     const chatsWithDetails = await Promise.all(users.map(async (person) => {
                         try {
-                            const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`, { headers });
+                            const msgRes = await fetch(`${API}/messages/${currentUser.id}/${person.id}`, { headers });
                             if (msgRes.ok) {
                                 const msgs = await msgRes.json();
                                 const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
@@ -97,7 +101,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
         setCallsLoading(true);
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/call-history/${currentUser.id}`, {
+            const res = await fetch(`${API}/call-history/${currentUser.id}`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             if (res.ok) {

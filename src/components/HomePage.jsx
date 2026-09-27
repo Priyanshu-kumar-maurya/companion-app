@@ -10,6 +10,10 @@ import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
 import { BsBookmarkFill, BsBookmark } from "react-icons/bs";
 import { FiWifi, FiBattery, FiMic, FiMicOff, FiPhoneOff, FiVideoOff, FiShield, FiCheckCircle, FiStar, FiClock } from "react-icons/fi";
 
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 const DEFAULT_FEATURED_COMPANIONS = [
     {
         id: "default_1",
@@ -181,7 +185,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         const fetchData = async () => {
             try {
                 if (isLoggedIn && currentUser) {
-                    const response = await fetch(`https://rentgf-and-bf.onrender.com/api/feed?currentUserId=${currentUser.id}`);
+                    const response = await fetch(`${API}/feed?currentUserId=${currentUser.id}`);
                     if (response.ok) {
                         const data = await response.json();
                         setFeed(data);
@@ -197,7 +201,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
                     // Fetch saved post IDs
                     const token = localStorage.getItem("token");
-                    const savedRes = await fetch("https://rentgf-and-bf.onrender.com/api/posts/saved", {
+                    const savedRes = await fetch(`${API}/posts/saved`, {
                         headers: { "Authorization": `Bearer ${token}` }
                     });
                     if (savedRes.ok) {
@@ -205,7 +209,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         setSavedPosts(savedData.map(p => p.id));
                     }
                 } else {
-                    const res = await fetch("https://rentgf-and-bf.onrender.com/api/users");
+                    const res = await fetch(`${API}/users`);
                     if (res.ok) {
                         const allUsers = await res.json();
                         if (allUsers && allUsers.length > 0) {
@@ -295,12 +299,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const handleLike = async (postId, isLikedByMe) => {
         if (!currentUser) return;
 
+        // Optimistically update UI
         setFeed(prevFeed => prevFeed.map(post => {
             if (post.id === postId) {
                 return {
                     ...post,
                     is_liked_by_me: !isLikedByMe,
-                    total_likes: isLikedByMe ? parseInt(post.total_likes) - 1 : parseInt(post.total_likes) + 1
+                    total_likes: isLikedByMe ? Math.max(0, parseInt(post.total_likes) - 1) : parseInt(post.total_likes) + 1
                 };
             }
             return post;
@@ -308,7 +313,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
         try {
             const token = localStorage.getItem("token");
-            await fetch("https://rentgf-and-bf.onrender.com/api/like", {
+            const res = await fetch(`${API}/like`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -316,8 +321,32 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 },
                 body: JSON.stringify({ post_id: postId })
             });
+            if (!res.ok) {
+                // Revert optimistic update on server error
+                setFeed(prevFeed => prevFeed.map(post => {
+                    if (post.id === postId) {
+                        return {
+                            ...post,
+                            is_liked_by_me: isLikedByMe,
+                            total_likes: isLikedByMe ? parseInt(post.total_likes) + 1 : Math.max(0, parseInt(post.total_likes) - 1)
+                        };
+                    }
+                    return post;
+                }));
+            }
         } catch (err) {
-            console.error(err);
+            console.error("Like error:", err);
+            // Revert optimistic update on network error
+            setFeed(prevFeed => prevFeed.map(post => {
+                if (post.id === postId) {
+                    return {
+                        ...post,
+                        is_liked_by_me: isLikedByMe,
+                        total_likes: isLikedByMe ? parseInt(post.total_likes) + 1 : Math.max(0, parseInt(post.total_likes) - 1)
+                    };
+                }
+                return post;
+            }));
         }
     };
 
@@ -340,7 +369,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
         try {
             const token = localStorage.getItem("token");
-            await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -351,12 +380,18 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     following_id: targetUserId
                 })
             });
+            if (!res.ok) {
+                setFollowingState(prev => ({
+                    ...prev,
+                    [targetUserId]: isCurrentlyFollowing
+                }));
+            }
         } catch (err) {
             setFollowingState(prev => ({
                 ...prev,
                 [targetUserId]: isCurrentlyFollowing
             }));
-            console.error(err);
+            console.error("Follow error:", err);
         }
     };
 
@@ -364,13 +399,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
         setCommentModal({ isOpen: true, postId, comments: [] });
         setLoadingComments(true);
         try {
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/comments/${postId}`);
+            const res = await fetch(`${API}/comments/${postId}`);
             if (res.ok) {
                 const data = await res.json();
                 setCommentModal({ isOpen: true, postId, comments: data });
             }
         } catch (err) {
-            console.error(err);
+            console.error("Fetch comments error:", err);
         } finally {
             setLoadingComments(false);
         }
@@ -381,12 +416,12 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
         const commentData = {
             post_id: commentModal.postId,
-            text: newComment
+            text: newComment.trim()
         };
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch("https://rentgf-and-bf.onrender.com/api/comment", {
+            const res = await fetch(`${API}/comment`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -410,7 +445,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 ));
             }
         } catch (err) {
-            console.error(err);
+            console.error("Submit comment error:", err);
         }
     };
 
@@ -424,7 +459,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
 
         try {
             const token = localStorage.getItem("token");
-            await fetch("https://rentgf-and-bf.onrender.com/api/posts/save", {
+            const res = await fetch(`${API}/posts/save`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -432,6 +467,14 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                 },
                 body: JSON.stringify({ post_id: postId })
             });
+            if (!res.ok) {
+                // Revert on error
+                if (isSaved) {
+                    setSavedPosts(prev => [...prev, postId]);
+                } else {
+                    setSavedPosts(prev => prev.filter(id => id !== postId));
+                }
+            }
         } catch (err) {
             console.error("Save toggle error:", err);
             if (isSaved) {

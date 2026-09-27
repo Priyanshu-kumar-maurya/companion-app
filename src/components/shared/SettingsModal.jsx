@@ -11,6 +11,9 @@ import { THEME_ACCENTS, CHAT_WALLPAPERS, getStoredPreferences, savePreferences }
 import ImageCropperModal from './ImageCropperModal';
 import { getFriendlyErrorMessage } from '../../utils/errorHandler';
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const [activeView, setActiveView] = useState('menu');
     const [searchQuery, setSearchQuery] = useState('');
@@ -142,7 +145,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
+            const response = await fetch(`${API}/users/${user.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -192,7 +195,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         setPasswordLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/change-password', {
+            const res = await fetch(`${API}/change-password`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -236,7 +239,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     uploadFormData.append('profile_pic', croppedFile);
                     try {
                         const token = localStorage.getItem('token');
-                        const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, {
+                        const response = await fetch(`${API}/upload/${user.id}`, {
                             method: 'POST',
                             body: uploadFormData,
                             headers: { 'Authorization': `Bearer ${token}` }
@@ -267,7 +270,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleLogout = async () => {
-        if (await window.showConfirm('Are you sure you want to logout?')) {
+        if (window.confirm('Are you sure you want to logout?')) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             sessionStorage.clear();
@@ -277,11 +280,11 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleDeleteAccount = async () => {
-        const confirmDelete = await window.showConfirm('WARNING: This will permanently delete your account, chats, and bookings.');
+        const confirmDelete = window.confirm('WARNING: This will permanently delete your account, chats, and bookings.');
         if (confirmDelete) {
             try {
                 const token = localStorage.getItem('token');
-                await fetch(`https://rentgf-and-bf.onrender.com/api/users/${user.id}`, {
+                await fetch(`${API}/users/${user.id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -302,7 +305,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         setListLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/posts/saved', {
+            const res = await fetch(`${API}/posts/saved`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) setSavedPosts(await res.json());
@@ -317,7 +320,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         setListLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/posts/liked', {
+            const res = await fetch(`${API}/posts/liked`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) setLikedPosts(await res.json());
@@ -332,7 +335,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         setListLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/blocked-users', {
+            const res = await fetch(`${API}/blocked-users`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) setBlockedUsers(await res.json());
@@ -346,7 +349,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const handleUnsave = async (postId) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/posts/save', {
+            const res = await fetch(`${API}/posts/save`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -366,7 +369,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     const handleUnlike = async (postId) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/like', {
+            const res = await fetch(`${API}/like`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -384,10 +387,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleUnblock = async (blockedId) => {
-        if (!await window.showConfirm('Are you sure you want to unblock this user?')) return;
+        if (!window.confirm('Are you sure you want to unblock this user?')) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/unblock', {
+            const res = await fetch(`${API}/unblock`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -442,7 +445,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
         setGalleryLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, {
+            const res = await fetch(`${API}/posts/${user.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) setGalleryPhotos(await res.json());
@@ -474,7 +477,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, {
+            const response = await fetch(`${API}/posts/${user.id}`, {
                 method: 'POST',
                 body: uploadData,
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -497,10 +500,10 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     };
 
     const handleDeletePhoto = async (postId) => {
-        if (!await window.showConfirm('Are you sure you want to delete this photo?')) return;
+        if (!window.confirm('Are you sure you want to delete this photo?')) return;
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, {
+            const response = await fetch(`${API}/posts/${postId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

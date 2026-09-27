@@ -9,7 +9,10 @@ import { getStoredPreferences } from "../../utils/themePreferences";
 
 const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🙏", "🔥"];
 
-const socket = io("https://rentgf-and-bf.onrender.com", {
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
+const socket = io(API_BASE, {
     autoConnect: false,
     transports: ['websocket'],
     auth: (cb) => {
@@ -169,7 +172,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         if (!currentUser || !girl || currentUser.id === girl.id) return;
         const token = localStorage.getItem('token');
         if (!token) return;
-        fetch(`https://rentgf-and-bf.onrender.com/api/block-status/${girl.id}`, {
+        fetch(`${API}/block-status/${girl.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(r => r.ok ? r.json() : null)
@@ -207,7 +210,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
         const token = localStorage.getItem('token');
         if (token) {
-            fetch(`https://rentgf-and-bf.onrender.com/api/messages/${msgId}/react`, {
+            fetch(`${API}/messages/${msgId}/react`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -256,9 +259,9 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         setBlockLoading(true);
         setShowMenu(false);
         const token = localStorage.getItem('token');
-        const endpoint = isBlocked ? '/api/unblock' : '/api/block';
+        const endpoint = isBlocked ? '/unblock' : '/block';
         try {
-            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+            const res = await fetch(`${API}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ blocked_id: girl.id })
@@ -282,7 +285,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         setReportSubmitting(true);
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/report', {
+            const res = await fetch(`${API}/report`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ reported_id: girl.id, reason: reportReason, description: reportDesc })
@@ -302,10 +305,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     // Clear Chat History
     const handleClearChat = async () => {
-        if (!await window.showConfirm("Are you sure you want to clear all messages?")) return;
+        if (!window.confirm("Are you sure you want to clear all messages?")) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/messages/clear', {
+            const res = await fetch(`${API}/messages/clear`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -324,10 +327,10 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
 
     // Delete Chat Completely
     const handleDeleteChat = async () => {
-        if (!await window.showConfirm("Are you sure you want to delete this chat? This will remove the conversation history.")) return;
+        if (!window.confirm("Are you sure you want to delete this chat? This will remove the conversation history.")) return;
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/messages/clear', {
+            const res = await fetch(`${API}/messages/clear`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -601,7 +604,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
                 const headers = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
                 
-                const response = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${girl.id}`, { headers });
+                const response = await fetch(`${API}/messages/${currentUser.id}/${girl.id}`, { headers });
                 if (response.ok) {
                     const dbMessages = await response.json();
                     const formattedMessages = dbMessages.map(msg => {
@@ -841,7 +844,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
         formData.append("image", file);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/chat-image", {
+            const response = await fetch(`${API}/chat-image`, {
                 method: "POST",
                 body: formData,
                 headers: { 'Authorization': `Bearer ${token}` }

@@ -14,6 +14,9 @@ import {
     FiCheck
 } from "react-icons/fi";
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -33,7 +36,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}`, {
+            const res = await fetch(`${API}/notifications/${currentUser.id}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
@@ -146,8 +149,8 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
 
         try {
             const token = localStorage.getItem("token");
-            const endpoint = isCurrentlyFollowing ? "/api/unfollow" : "/api/follow";
-            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+            const endpoint = isCurrentlyFollowing ? "/unfollow" : "/follow";
+            const res = await fetch(`${API}${endpoint}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -181,7 +184,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
         setNotifications(prev => prev.filter(n => n.id !== notifId));
         try {
             const token = localStorage.getItem("token");
-            await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}/item/${notifId}`, {
+            await fetch(`${API}/notifications/${currentUser.id}/item/${notifId}`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -196,7 +199,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
         setNotifications([]);
         try {
             const token = localStorage.getItem("token");
-            await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}/clear-all`, {
+            await fetch(`${API}/notifications/${currentUser.id}/clear-all`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -213,7 +216,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
             const token = localStorage.getItem("token");
             const headers = {};
             if (token) headers["Authorization"] = `Bearer ${token}`;
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/detail/${notif.post_id}`, { headers });
+            const res = await fetch(`${API}/posts/detail/${notif.post_id}`, { headers });
             if (res.ok) {
                 const postData = await res.json();
                 setActivePost(postData);

@@ -9,7 +9,11 @@ import VerifiedBadge from "./VerifiedBadge";
 import { ProfileGridSkeleton, MessageListSkeleton } from "./SkeletonLoaders";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
-const socket = io("https://rentgf-and-bf.onrender.com", {
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
+const socket = io(API_BASE, {
     autoConnect: false,
     transports: ['websocket'],
     auth: (cb) => {
@@ -71,7 +75,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
             const headers = {};
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/${type === 'followers' ? 'followers-list' : 'following-list'}/${profile.id}`, { headers });
+            const response = await fetch(`${API}/${type === 'followers' ? 'followers-list' : 'following-list'}/${profile.id}`, { headers });
             if (response.ok) {
                 const data = await response.json();
                 setFollowList(data);
@@ -112,7 +116,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        fetch(`https://rentgf-and-bf.onrender.com/api/favorites/check/${profile.id}`, {
+        fetch(`${API}/favorites/check/${profile.id}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         .then(r => r.ok ? r.json() : { isFavorited: false })
@@ -129,7 +133,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         setFavLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch("https://rentgf-and-bf.onrender.com/api/favorites/toggle", {
+            const res = await fetch(`${API}/favorites/toggle`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -195,7 +199,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
     useEffect(() => {
         if (!showBookingModal || !profile?.id || !meetingInfo.date) return;
         setLoadingSlots(true);
-        fetch(`https://rentgf-and-bf.onrender.com/api/bookings/booked-slots/${profile.id}?date=${meetingInfo.date}`)
+        fetch(`${API}/bookings/booked-slots/${profile.id}?date=${meetingInfo.date}`)
             .then(res => res.ok ? res.json() : { bookedSlots: [] })
             .then(data => {
                 setBookedSlots(data.bookedSlots || []);
@@ -296,7 +300,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { 
+            const response = await fetch(`${API}/posts/${postId}`, { 
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
@@ -323,7 +327,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         if (!currentUser || !profile || currentUser.id === profile.id) return;
         const token = localStorage.getItem('token');
         if (!token) return;
-        fetch(`https://rentgf-and-bf.onrender.com/api/block-status/${profile.id}`, {
+        fetch(`${API}/block-status/${profile.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(r => r.ok ? r.json() : null)
@@ -346,7 +350,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         const token = localStorage.getItem('token');
         const endpoint = isBlocked ? '/api/unblock' : '/api/block';
         try {
-            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ blocked_id: profile.id })
@@ -371,7 +375,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         setReportSubmitting(true);
         const token = localStorage.getItem('token');
         try {
-            const res = await fetch('https://rentgf-and-bf.onrender.com/api/report', {
+            const res = await fetch(`${API}/report`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ reported_id: profile.id, reason: reportReason, description: reportDesc })
@@ -422,7 +426,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
             try {
                 const currentUserId = currentUser ? currentUser.id : '';
-                const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${profile.id}?currentUserId=${currentUserId}`);
+                const statsRes = await fetch(`${API}/follow-stats/${profile.id}?currentUserId=${currentUserId}`);
                 if (statsRes.ok) {
                     fetchedFollowStats = await statsRes.json();
                 }
@@ -436,7 +440,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                     const token = localStorage.getItem("token");
                     const headers = {};
                     if (token) headers["Authorization"] = `Bearer ${token}`;
-                    const postRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${profile.id}`, { headers });
+                    const postRes = await fetch(`${API}/posts/${profile.id}`, { headers });
                     if (postRes.ok) fetchedPosts = await postRes.json();
                 } catch (err) {
                     console.error(err);
@@ -444,7 +448,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
             }
 
             try {
-                const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
+                const reviewRes = await fetch(`${API}/reviews/${profile.id}`);
                 if (reviewRes.ok) {
                     const data = await reviewRes.json();
                     fetchedReviews = data.reviews;
@@ -480,7 +484,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
         const token = localStorage.getItem('token');
 
         try {
-            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, {
+            const res = await fetch(`${API_BASE}${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -542,7 +546,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('https://rentgf-and-bf.onrender.com/api/bookings', {
+            const response = await fetch(`${API}/bookings`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -594,7 +598,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('https://rentgf-and-bf.onrender.com/api/reviews', {
+            const response = await fetch(`${API}/reviews`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -610,7 +614,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
             if (response.ok) {
                 setNewReviewText("");
                 setNewRating(5);
-                const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${profile.id}`);
+                const reviewRes = await fetch(`${API}/reviews/${profile.id}`);
                 const data = await reviewRes.json();
                 setReviews(data.reviews);
                 setAvgRating(data.avgRating);

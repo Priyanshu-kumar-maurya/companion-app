@@ -5,6 +5,9 @@ import { APP_VERSION_TAG } from "../config/version";
 import VerifiedBadge from "./shared/VerifiedBadge";
 import ImageCropperModal from "./shared/ImageCropperModal";
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showPostModal, setShowPostModal] = useState(false);
@@ -40,7 +43,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 const headers = { 'Authorization': `Bearer ${token}` };
 
                 // ⚡ Direct high-performance single query
-                const fastRes = await fetch(`https://rentgf-and-bf.onrender.com/api/unread-messages-count`, { headers });
+                const fastRes = await fetch(`${API}/unread-messages-count`, { headers });
                 if (fastRes.ok) {
                     const data = await fastRes.json();
                     setUnreadCount(data.count || 0);
@@ -48,13 +51,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 }
 
                 // Fallback with auth headers
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/chats/${currentUser.id}`, { headers });
+                const res = await fetch(`${API}/chats/${currentUser.id}`, { headers });
                 if (res.ok) {
                     const users = await res.json();
                     let totalUnread = 0;
 
                     await Promise.all(users.map(async (person) => {
-                        const msgRes = await fetch(`https://rentgf-and-bf.onrender.com/api/messages/${currentUser.id}/${person.id}`, { headers });
+                        const msgRes = await fetch(`${API}/messages/${currentUser.id}/${person.id}`, { headers });
                         if (msgRes.ok) {
                             const msgs = await msgRes.json();
                             const unread = msgs.filter(m => String(m.sender_id) === String(person.id) && !m.is_read).length;
@@ -69,7 +72,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         const fetchTotalUnreadNotifs = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`https://rentgf-and-bf.onrender.com/api/notifications/${currentUser.id}`, {
+                const res = await fetch(`${API}/notifications/${currentUser.id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
@@ -197,7 +200,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${currentUser.id}`, {
+            const response = await fetch(`${API}/posts/${currentUser.id}`, {
                 method: "POST",
                 body: formData,
                 headers: { 'Authorization': `Bearer ${token}` }

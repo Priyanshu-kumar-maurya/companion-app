@@ -6,6 +6,10 @@ import CompanionMapView from "./CompanionMapView";
 import VerifiedBadge from "./VerifiedBadge";
 import { CompanionGridSkeleton } from "./SkeletonLoaders";
 
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 const CITIES = ["All", "Mumbai", "Delhi", "Pune", "Bangalore", "Chennai", "Hyderabad", "Jaipur"];
 const ALL_TAGS = ["All", "Coffee Date", "Movie", "Shopping", "Study Partner", "Dinner", "Events", "Walk", "Gaming"];
 const AGE_RANGES = ["All", "18-22", "23-27", "28+"];
@@ -50,7 +54,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        fetch("https://rentgf-and-bf.onrender.com/api/favorites", {
+        fetch(`${API}/favorites`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         .then(r => r.ok ? r.json() : [])
@@ -71,7 +75,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
 
         const token = localStorage.getItem("token");
         try {
-            const res = await fetch("https://rentgf-and-bf.onrender.com/api/favorites/toggle", {
+            const res = await fetch(`${API}/favorites/toggle`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -108,7 +112,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
 
                 if (currentUser) {
                     const token = localStorage.getItem("token");
-                    fetch(`https://rentgf-and-bf.onrender.com/api/users/${currentUser.id}`, {
+                    fetch(`${API}/users/${currentUser.id}`, {
                         method: "PUT",
                         headers: {
                             "Content-Type": "application/json",
@@ -149,8 +153,8 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                     headers["Authorization"] = `Bearer ${token}`;
                 }
                 const url = genderFilter === "all" 
-                    ? `https://rentgf-and-bf.onrender.com/api/users`
-                    : `https://rentgf-and-bf.onrender.com/api/users?role=${genderFilter}`;
+                    ? `${API}/users`
+                    : `${API}/users?role=${genderFilter}`;
                 
                 const response = await fetch(url, { headers });
                 const data = await response.json();

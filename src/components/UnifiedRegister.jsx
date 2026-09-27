@@ -3,6 +3,10 @@ import { PAGES } from "../App";
 import { FiEye, FiEyeOff, FiMail, FiX, FiRefreshCw, FiCheckCircle, FiUser } from "react-icons/fi";
 import { getFriendlyErrorMessage } from "../utils/errorHandler";
 
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
     return (
         <div className="relative w-full">
@@ -36,6 +40,7 @@ function UnifiedRegister({ setPage }) {
     const [otp, setOtp] = useState("");
     const [verifying, setVerifying] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
+    const resendTimerRef = React.useRef(null);
     const [customAlert, setCustomAlert] = useState({ show: false, message: "" });
     const showAlert = (msg) => setCustomAlert({ show: true, message: msg });
 
@@ -44,6 +49,13 @@ function UnifiedRegister({ setPage }) {
     const [registeredToken, setRegisteredToken] = useState(null);
 
     const [dobParts, setDobParts] = useState({ day: "", month: "", year: "" });
+
+    // Clean up timer on unmount to prevent memory leaks
+    React.useEffect(() => {
+        return () => {
+            if (resendTimerRef.current) clearInterval(resendTimerRef.current);
+        };
+    }, []);
 
     React.useEffect(() => {
         if (dobParts.day && dobParts.month && dobParts.year) {
@@ -124,6 +136,7 @@ function UnifiedRegister({ setPage }) {
         return age;
     };
 
+    // ── REGISTER HANDLER ───────────────────────────────────────
     const handleRegister = async (e) => {
         e.preventDefault();
 
@@ -147,7 +160,7 @@ function UnifiedRegister({ setPage }) {
         setLoading(true);
         try {
             const cleanPhone = formData.phone.replace(/[^0-9]/g, '').slice(-10);
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/register", {
+            const response = await fetch(`${API}/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -181,7 +194,7 @@ function UnifiedRegister({ setPage }) {
     const cancelRegistration = async () => {
         if (registeredUserId && registeredToken) {
             try {
-                await fetch(`https://rentgf-and-bf.onrender.com/api/users/${registeredUserId}`, {
+                await fetch(`${API}/users/${registeredUserId}`, {
                     method: "DELETE",
                     headers: { "Authorization": `Bearer ${registeredToken}` }
                 });
@@ -193,12 +206,17 @@ function UnifiedRegister({ setPage }) {
         setRegisteredToken(null);
     };
 
-    // Start 30s resend cooldown
+    // Start 30s resend cooldown safely
     const startResendCooldown = () => {
+        if (resendTimerRef.current) clearInterval(resendTimerRef.current);
         setResendCooldown(30);
-        const interval = setInterval(() => {
+        resendTimerRef.current = setInterval(() => {
             setResendCooldown(prev => {
-                if (prev <= 1) { clearInterval(interval); return 0; }
+                if (prev <= 1) { 
+                    clearInterval(resendTimerRef.current); 
+                    resendTimerRef.current = null;
+                    return 0; 
+                }
                 return prev - 1;
             });
         }, 1000);
@@ -212,7 +230,7 @@ function UnifiedRegister({ setPage }) {
             return;
         }
         try {
-            const res = await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+            const res = await fetch(`${API}/send-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: formData.email })
@@ -229,7 +247,7 @@ function UnifiedRegister({ setPage }) {
         }
     };
 
-
+    // Verify OTP Handler
     const handleVerifyOtp = async (e) => {
         e.preventDefault();
         if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -243,7 +261,7 @@ function UnifiedRegister({ setPage }) {
 
         setVerifying(true);
         try {
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/verify-otp", {
+            const response = await fetch(`${API}/verify-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: formData.email, otp: otp })

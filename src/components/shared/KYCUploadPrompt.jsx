@@ -8,6 +8,9 @@ const DOC_TYPES = [
     { id: "passport", label: "Passport", hint: "First page with personal details" }
 ];
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 export default function KYCUploadPrompt({ 
     user, 
     onUploadSuccess, 
@@ -60,7 +63,7 @@ export default function KYCUploadPrompt({
             formData.append("doc_type", selectedDocType);
 
             const token = localStorage.getItem("token");
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/kyc/${user.id}`, {
+            const res = await fetch(`${API}/kyc/${user.id}`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`

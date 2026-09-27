@@ -138,13 +138,43 @@ router.delete('/users/:userId', authenticateToken, async (req, res) => {
         // Admins can delete any user; others can only delete their own
         if (req.user.role !== 'admin' && !isOwner(req, res, userId)) return;
 
-        await pool.query("DELETE FROM posts WHERE user_id = $1", [userId]);
-        await pool.query("DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1", [userId]);
-        await pool.query("DELETE FROM bookings WHERE boy_id = $1 OR girl_id = $1", [userId]);
-        await pool.query("DELETE FROM reviews WHERE reviewer_id = $1 OR companion_id = $1", [userId]);
-        await pool.query("DELETE FROM notifications WHERE user_id = $1 OR sender_id = $1", [userId]);
-        await pool.query("DELETE FROM users WHERE id = $1", [userId]);
-        res.status(200).json({ message: "Account deleted forever" });
+        // Perform safe atomic deletion within a transaction
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            await client.query("DELETE FROM likes WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM comments WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM saved_posts WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM story_views WHERE viewer_id = $1", [userId]);
+            await client.query("DELETE FROM stories WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM push_subscriptions WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM favorites WHERE user_id = $1 OR companion_id = $1", [userId]);
+            await client.query("DELETE FROM follows WHERE follower_id = $1 OR following_id = $1", [userId]);
+            await client.query("DELETE FROM call_history WHERE caller_id = $1 OR receiver_id = $1", [userId]);
+            await client.query("DELETE FROM blocked_users WHERE blocker_id = $1 OR blocked_id = $1", [userId]);
+            await client.query("DELETE FROM emergency_contacts WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM sos_alerts WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM wallet_transactions WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM payout_requests WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM wallet_balances WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM reports WHERE reporter_id = $1 OR reported_id = $1", [userId]);
+            await client.query("DELETE FROM notifications WHERE user_id = $1 OR sender_id = $1", [userId]);
+            await client.query("DELETE FROM reviews WHERE reviewer_id = $1 OR companion_id = $1", [userId]);
+            await client.query("DELETE FROM bookings WHERE boy_id = $1 OR girl_id = $1", [userId]);
+            await client.query("DELETE FROM messages WHERE sender_id = $1 OR receiver_id = $1", [userId]);
+            await client.query("DELETE FROM posts WHERE user_id = $1", [userId]);
+            await client.query("DELETE FROM users WHERE id = $1", [userId]);
+
+            await client.query('COMMIT');
+            res.status(200).json({ message: "Account deleted successfully." });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            console.error('Self-account delete error:', err);
+            res.status(500).json({ error: "Failed to delete account. Database rolled back." });
+        } finally {
+            client.release();
+        }
     } catch (err) {
         res.status(500).json({ error: "Server error" });
     }

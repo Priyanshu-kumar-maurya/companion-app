@@ -11,6 +11,9 @@ const FILTERS = [
 
 const EMOJI_CHIPS = ["🔥", "❤️", "✨", "😍", "☕", "🥂", "📸", "🌴", "💖"];
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
     const [activeTab, setActiveTab] = useState("file"); // "file" | "camera" | "url"
     const [mediaUrl, setMediaUrl] = useState("");
@@ -138,7 +141,7 @@ function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
                 formData.append("media", selectedFile);
                 if (caption.trim()) formData.append("caption", caption.trim());
 
-                res = await fetch("https://rentgf-and-bf.onrender.com/api/stories", {
+                res = await fetch(`${API}/stories`, {
                     method: "POST",
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -146,7 +149,7 @@ function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
                     body: formData
                 });
             } else {
-                res = await fetch("https://rentgf-and-bf.onrender.com/api/stories", {
+                res = await fetch(`${API}/stories`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",

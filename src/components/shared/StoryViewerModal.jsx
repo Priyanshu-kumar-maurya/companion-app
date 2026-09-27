@@ -6,6 +6,9 @@ import {
 
 const QUICK_EMOJIS = ["❤️", "🔥", "😂", "👏", "😮", "🥂"];
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function StoryViewerModal({ userStoriesList, initialUserIndex = 0, currentUser, onClose, onStoryDeleted }) {
     const [currentUserIndex, setCurrentUserIndex] = useState(initialUserIndex);
     const [currentItemIndex, setCurrentItemIndex] = useState(0);
@@ -47,7 +50,7 @@ function StoryViewerModal({ userStoriesList, initialUserIndex = 0, currentUser, 
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        fetch(`https://rentgf-and-bf.onrender.com/api/stories/${currentStoryItem.id}/view`, {
+        fetch(`${API}/stories/${currentStoryItem.id}/view`, {
             method: "POST",
             headers: { Authorization: `Bearer ${token}` }
         }).catch((err) => console.error("Story view recording error:", err));
@@ -133,7 +136,7 @@ function StoryViewerModal({ userStoriesList, initialUserIndex = 0, currentUser, 
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/stories/${currentStoryItem.id}/viewers`, {
+            const res = await fetch(`${API}/stories/${currentStoryItem.id}/viewers`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -155,7 +158,7 @@ function StoryViewerModal({ userStoriesList, initialUserIndex = 0, currentUser, 
 
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`https://rentgf-and-bf.onrender.com/api/stories/${currentStoryItem.id}`, {
+            const res = await fetch(`${API}/stories/${currentStoryItem.id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -179,7 +182,7 @@ function StoryViewerModal({ userStoriesList, initialUserIndex = 0, currentUser, 
 
         try {
             const token = localStorage.getItem("token");
-            await fetch("https://rentgf-and-bf.onrender.com/api/messages", {
+            await fetch(`${API}/messages`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -203,7 +206,7 @@ function StoryViewerModal({ userStoriesList, initialUserIndex = 0, currentUser, 
         setSendingReply(true);
         try {
             const token = localStorage.getItem("token");
-            await fetch("https://rentgf-and-bf.onrender.com/api/messages", {
+            await fetch(`${API}/messages`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

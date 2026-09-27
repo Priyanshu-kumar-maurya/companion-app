@@ -3,6 +3,10 @@ import { PAGES } from "../App";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { getFriendlyErrorMessage } from "../utils/errorHandler";
 
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole }) {
     const [step, setStep] = useState("login"); // "login" | "forgot" | "reset" | "verify"
     const [formData, setFormData] = useState({ emailOrPhone: "", password: "" });
@@ -23,7 +27,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // ── LOGIN ──────────────────────────────────────────────────
+    // ── LOGIN HANDLER ──────────────────────────────────────────
     const handleLogin = async (e) => {
         e.preventDefault();
         setError("");
@@ -44,7 +48,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
         setLoading(true);
 
         try {
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/login", {
+            const response = await fetch(`${API}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
@@ -58,7 +62,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     const targetEmail = data.user.email || formData.emailOrPhone;
                     setVerifyEmail(targetEmail);
                     setVerifyOtp("");
-                    await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                    await fetch(`${API}/send-otp`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ email: targetEmail })
@@ -86,7 +90,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 setVerifyEmail(targetEmail);
                 setVerifyOtp("");
                 try {
-                    await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                    await fetch(`${API}/send-otp`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ email: targetEmail })
@@ -122,7 +126,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
 
         setLoading(true);
         try {
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/verify-otp", {
+            const response = await fetch(`${API}/verify-otp`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: verifyEmail, otp: verifyOtp })
@@ -172,7 +176,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
             try {
-                const response = await fetch("https://rentgf-and-bf.onrender.com/api/forgot-password", {
+                const response = await fetch(`${API}/forgot-password`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: forgotEmail }),
@@ -239,7 +243,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
         setLoading(true);
 
         try {
-            const response = await fetch("https://rentgf-and-bf.onrender.com/api/reset-password", {
+            const response = await fetch(`${API}/reset-password`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -329,7 +333,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     setLoading(true);
                                     setError("");
                                     try {
-                                        const res = await fetch("https://rentgf-and-bf.onrender.com/api/send-otp", {
+                                        const res = await fetch(`${API}/send-otp`, {
                                             method: "POST",
                                             headers: { "Content-Type": "application/json" },
                                             body: JSON.stringify({ email: verifyEmail })

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { FiWifiOff, FiCheck, FiRefreshCw } from "react-icons/fi";
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+
 function OfflineBanner({ isOnline, onRetry }) {
     const [wasOffline, setWasOffline] = useState(false);
     const [showRestored, setShowRestored] = useState(false);
@@ -30,7 +32,7 @@ function OfflineBanner({ isOnline, onRetry }) {
         } else {
             // Default ping
             try {
-                await fetch("https://rentgf-and-bf.onrender.com/api/health", { cache: "no-store", method: "GET" });
+                await fetch(`${API_BASE}/api/health`, { cache: "no-store", method: "GET" });
             } catch (e) { }
         }
         setTimeout(() => setRetrying(false), 800);

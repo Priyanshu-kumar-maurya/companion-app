@@ -4,6 +4,9 @@ import StoryViewerModal from "./StoryViewerModal";
 import AddStoryModal from "./AddStoryModal";
 import { StoriesBarSkeleton } from "./SkeletonLoaders";
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function StoriesBar({ currentUser }) {
     const [stories, setStories] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -14,8 +17,8 @@ function StoriesBar({ currentUser }) {
         try {
             const token = localStorage.getItem("token");
             const url = currentUser?.id 
-                ? `https://rentgf-and-bf.onrender.com/api/stories?currentUserId=${currentUser.id}`
-                : "https://rentgf-and-bf.onrender.com/api/stories";
+                ? `${API}/stories?currentUserId=${currentUser.id}`
+                : `${API}/stories`;
             const headers = token ? { Authorization: `Bearer ${token}` } : {};
             const res = await fetch(url, { headers });
             if (res.ok) {

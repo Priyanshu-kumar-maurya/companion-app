@@ -28,6 +28,9 @@ const DEFAULT_ICE_SERVERS = {
     iceCandidatePoolSize: 2
 };
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 const extractIceCandidate = (data) => {
     if (!data) return null;
     let cand = data.candidate !== undefined && typeof data.candidate === 'object' ? data.candidate : data;
@@ -116,7 +119,7 @@ function CallOverlay({ socket, currentUser }) {
         });
 
         const token = localStorage.getItem("token");
-        fetch("https://rentgf-and-bf.onrender.com/api/call-history", {
+        fetch(`${API}/call-history`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

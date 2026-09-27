@@ -10,6 +10,8 @@ const urlBase64ToUint8Array = (base64String) => {
     return outputArray;
 };
 
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+
 export const registerPushNotifications = async (currentUser) => {
     if (!currentUser) return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -23,7 +25,7 @@ export const registerPushNotifications = async (currentUser) => {
         await navigator.serviceWorker.ready;
 
         // Fetch VAPID Public Key from backend
-        const keyRes = await fetch("https://rentgf-and-bf.onrender.com/api/push/vapid-key");
+        const keyRes = await fetch(`${API_BASE}/api/push/vapid-key`);
         if (!keyRes.ok) return;
         const { publicKey } = await keyRes.json();
         if (!publicKey) return;
@@ -54,7 +56,7 @@ export const registerPushNotifications = async (currentUser) => {
         // Send subscription to backend
         const token = localStorage.getItem("token");
         if (token && subscription) {
-            await fetch("https://rentgf-and-bf.onrender.com/api/push/subscribe", {
+            await fetch(`${API_BASE}/api/push/subscribe`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

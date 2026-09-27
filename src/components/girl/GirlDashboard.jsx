@@ -10,6 +10,10 @@ import ImageCropperModal from '../shared/ImageCropperModal';
 import imageCompression from 'browser-image-compression';
 import { FiX, FiCheckCircle, FiLink, FiSettings, FiAlertTriangle, FiTrash2, FiCreditCard, FiStar, FiCalendar, FiBell, FiClock, FiMapPin, FiHeart, FiGrid, FiDollarSign, FiShield, FiCamera } from "react-icons/fi";
 
+// Backend API Base Configuration
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
 function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) {
     const [stats, setStats] = useState({ earnings: 0, sessions: 0, rating: "No Rating" });
     const [myPosts, setMyPosts] = useState([]);
@@ -38,7 +42,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     uploadFormData.append('profile_pic', croppedFile);
                     try {
                         const token = localStorage.getItem('token');
-                        const response = await fetch(`https://rentgf-and-bf.onrender.com/api/upload/${user.id}`, {
+                        const response = await fetch(`${API}/upload/${user.id}`, {
                             method: 'POST',
                             body: uploadFormData,
                             headers: { 'Authorization': `Bearer ${token}` }
@@ -108,32 +112,32 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 let fetchedFollowStats = { followers: 0, following: 0 };
                 let fetchedReviews = [];
 
-                const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
+                const statsRes = await fetch(`${API}/girl/stats/${user.id}`);
                 if (statsRes.ok) fetchedStats = await statsRes.json();
 
                 const token = localStorage.getItem("token");
                 const postsHeaders = {};
                 if (token) postsHeaders["Authorization"] = `Bearer ${token}`;
-                const postsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${user.id}`, { headers: postsHeaders });
+                const postsRes = await fetch(`${API}/posts/${user.id}`, { headers: postsHeaders });
                 if (postsRes.ok) fetchedPosts = await postsRes.json();
 
-                const bookingsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {
+                const bookingsRes = await fetch(`${API}/bookings/${user.id}`, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 });
                 if (bookingsRes.ok) fetchedBookings = await bookingsRes.json();
 
 
-                const followRes = await fetch(`https://rentgf-and-bf.onrender.com/api/follow-stats/${user.id}`);
+                const followRes = await fetch(`${API}/follow-stats/${user.id}`);
                 if (followRes.ok) fetchedFollowStats = await followRes.json();
 
-                const reviewRes = await fetch(`https://rentgf-and-bf.onrender.com/api/reviews/${user.id}`);
+                const reviewRes = await fetch(`${API}/reviews/${user.id}`);
                 if (reviewRes.ok) {
                     const data = await reviewRes.json();
                     fetchedReviews = data.reviews;
                 }
 
                 if (token) {
-                    const favsRes = await fetch("https://rentgf-and-bf.onrender.com/api/favorites", {
+                    const favsRes = await fetch(`${API}/favorites`, {
                         headers: { Authorization: `Bearer ${token}` }
                     });
                     if (favsRes.ok) {
@@ -171,7 +175,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         const handleReceiveBooking = (data) => {
             if (!hasDocument) return;
             setNewBookingAlert(data);
-            fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${user.id}`, {
+            fetch(`${API}/bookings/${user.id}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             })
                 .then(res => res.json())
@@ -204,7 +208,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             formData.append("id_document", compressedFile);
 
             const token = localStorage.getItem('token');
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/kyc/${user.id}`, {
+            const response = await fetch(`${API}/kyc/${user.id}`, {
                 method: "POST",
                 body: formData,
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -225,7 +229,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
     const handleBookingStatus = async (bookingId, newStatus) => {
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}`, {
+            const response = await fetch(`${API}/bookings/${bookingId}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -238,7 +242,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             if (response.ok) {
                 setMyBookings(myBookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
                 if (newStatus === 'completed') {
-                    const statsRes = await fetch(`https://rentgf-and-bf.onrender.com/api/girl/stats/${user.id}`);
+                    const statsRes = await fetch(`${API}/girl/stats/${user.id}`);
                     if (statsRes.ok) setStats(await statsRes.json());
                 }
             }
@@ -252,7 +256,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         if (reason === null) return;
         
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}/cancel`, {
+            const response = await fetch(`${API}/bookings/${bookingId}/cancel`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -285,7 +289,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         if (!time) return;
 
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}/reschedule`, {
+            const response = await fetch(`${API}/bookings/${bookingId}/reschedule`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -314,7 +318,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
     const handleRespondReschedule = async (bookingId, action) => {
         try {
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/bookings/${bookingId}/reschedule/respond`, {
+            const response = await fetch(`${API}/bookings/${bookingId}/reschedule/respond`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -355,7 +359,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             const endpoint = type === 'followers'
                 ? `/api/followers-list/${user.id}`
                 : `/api/following-list/${user.id}`;
-            const res = await fetch(`https://rentgf-and-bf.onrender.com${endpoint}`, { headers });
+            const res = await fetch(`${API_BASE}${endpoint}`, { headers });
             if (res.ok) setFollowList(await res.json());
         } catch (e) { console.error(e); }
         setFollowListLoading(false);
@@ -365,7 +369,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         if (!await window.showConfirm("Are you sure you want to delete this photo?")) return;
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch(`https://rentgf-and-bf.onrender.com/api/posts/${postId}`, { 
+            const response = await fetch(`${API}/posts/${postId}`, { 
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` }
             });
