@@ -79,7 +79,10 @@ function HelpPage() {
                     <div className="text-3xl mb-3">📧</div>
                     <h4 className="text-base font-semibold mb-2">Still need help?</h4>
                     <p className="text-sm text-gray-400 mb-5">Our support team is available 24/7</p>
-                    <button className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 transition">
+                    <button 
+                        onClick={() => window.location.href = "mailto:support@rentgf.com?subject=Coffeely%20Support%20Request"}
+                        className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 active:scale-95 transition"
+                    >
                         Contact Support
                     </button>
                 </div>

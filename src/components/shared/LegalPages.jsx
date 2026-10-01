@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PAGES } from "../../App";
 import { FiArrowLeft, FiShield, FiFileText, FiAlertTriangle, FiAlertOctagon, FiMapPin, FiLock } from "react-icons/fi";
 
 function LegalPages({ setPage, initialTab = "terms" }) {
@@ -15,7 +16,7 @@ function LegalPages({ setPage, initialTab = "terms" }) {
             {/* Header */}
             <div className="sticky top-0 z-30 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 px-4 py-3">
                 <div className="max-w-3xl mx-auto flex items-center gap-3">
-                    <button onClick={() => setPage("HOME")} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
+                    <button onClick={() => setPage(PAGES.HOME)} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
                         <FiArrowLeft size={18} />
                     </button>
                     <h1 className="font-bold text-white text-lg">Legal & Safety</h1>

@@ -23,7 +23,10 @@ import OfflineBanner from "./components/shared/OfflineBanner";
 import { registerPushNotifications } from "./utils/pushManager";
 import { io } from "socket.io-client";
 
-const socket = io("https://rentgf-and-bf.onrender.com", {
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
+
+const socket = io(API_BASE, {
   transports: ['websocket'],
   auth: (cb) => {
     cb({ token: localStorage.getItem('token') });
@@ -105,7 +108,7 @@ function App() {
   useEffect(() => {
     const wakeUpServer = async () => {
       try {
-        await fetch("https://rentgf-and-bf.onrender.com/", { method: "GET" });
+        await fetch(`${API_BASE}/`, { method: "GET" });
       } catch (e) {
         // Silently ignore — just a wake-up ping
       }
@@ -148,7 +151,7 @@ function App() {
       }
 
       try {
-        const response = await fetch("https://rentgf-and-bf.onrender.com/api/me", {
+        const response = await fetch(`${API}/me`, {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`
