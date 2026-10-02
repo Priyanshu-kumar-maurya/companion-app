@@ -541,7 +541,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                         <div className="p-4 flex-1 flex flex-col justify-between">
                                             <div>
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <span className="text-base font-bold text-white leading-tight truncate group-hover:text-pink-300 transition-colors">{u.name}</span>
+                                                    <span className="text-base font-bold text-white leading-tight truncate group-hover:text-pink-300 transition-colors capitalize">{(u.name || '').trim()}</span>
                                                     {u.distanceKm !== null && (
                                                         <span className="text-[10px] font-bold text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded-full border border-pink-500/25 shrink-0">
                                                             📍 {u.distanceKm} km
@@ -549,13 +549,13 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                                     )}
                                                 </div>
                                                 <span className="text-[10px] text-gray-400 font-semibold tracking-wide block mt-0.5">
-                                                    @{u.username || u.name.toLowerCase().replace(/\s+/g, '')}
+                                                    @{u.username || (u.name || '').toLowerCase().replace(/\s+/g, '')}
                                                 </span>
 
                                                 <div className="text-xs text-gray-400 mt-2 flex items-center justify-between">
                                                     <div className="flex items-center gap-1">
                                                         <FiMapPin size={12} className="text-pink-400 shrink-0" />
-                                                        <span>{u.city || "Mumbai"} · {u.age || "N/A"} yrs</span>
+                                                        <span className="capitalize">{(u.city || "Mumbai").trim()} · {u.age || "N/A"} yrs</span>
                                                     </div>
                                                     <div className="text-xs text-yellow-400 flex items-center gap-1 font-semibold">
                                                         <FiStar size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />

@@ -747,14 +747,14 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                     <div className="hidden md:flex flex-col flex-1 space-y-4">
                         {/* Name & Handle */}
                         <div>
-                            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                                {profile.name}
+                            <h1 className="text-2xl font-bold text-white flex items-center gap-2 capitalize">
+                                {(profile.name || '').trim()}
                                 {profile.kyc_status === 'verified' && (
                                     <VerifiedBadge size="sm" />
                                 )}
                             </h1>
                             <span className="text-xs text-gray-500 mt-0.5 font-semibold block">
-                                @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
+                                @{profile.username || (profile.name || '').toLowerCase().replace(/\s+/g, '')}
                             </span>
                         </div>
 
@@ -789,7 +789,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                         {/* Bio, tags etc */}
                         <div className="space-y-2 text-sm text-gray-300">
                             <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                                <span className="flex items-center gap-0.5"><FiMapPin size={12} /> {profile.city || 'Unknown'}</span>
+                                <span className="flex items-center gap-0.5 capitalize"><FiMapPin size={12} /> {(profile.city || 'Unknown').trim()}</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
                                 <span>{profile.age || 'N/A'} yrs</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
@@ -818,7 +818,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                                 {safeTags.map((tag) => (
                                     <span 
                                         key={tag} 
-                                        className="px-2.5 py-1 text-[10px] font-bold rounded-md" 
+                                        className="px-2.5 py-1 text-[10px] font-bold rounded-md capitalize" 
                                         style={{ background: `${accentColor}12`, color: accentColor, border: `1px solid ${accentColor}25` }}
                                     >
                                         #{tag.trim()}
@@ -884,21 +884,21 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                 <div className="md:hidden space-y-4">
                     {/* Name & Handle */}
                     <div>
-                        <h1 className="text-lg font-bold text-white flex items-center gap-2">
-                            {profile.name}
+                        <h1 className="text-lg font-bold text-white flex items-center gap-2 capitalize">
+                            {(profile.name || '').trim()}
                             {profile.kyc_status === 'verified' && (
                                 <VerifiedBadge size="sm" />
                             )}
                         </h1>
                         <span className="text-[11px] text-gray-500 font-semibold block">
-                            @{profile.username || profile.name?.toLowerCase().replace(/\s+/g, '')}
+                            @{profile.username || (profile.name || '').toLowerCase().replace(/\s+/g, '')}
                         </span>
                     </div>
 
                     {/* Bio, location, tags */}
                     <div className="space-y-2 text-xs text-gray-300">
                         <div className="flex items-center gap-1.5 text-gray-400">
-                            <span className="flex items-center gap-0.5"><FiMapPin size={12} /> {profile.city || 'Unknown'}</span>
+                            <span className="flex items-center gap-0.5 capitalize"><FiMapPin size={12} /> {(profile.city || 'Unknown').trim()}</span>
                             <span className="w-1 h-1 bg-gray-600 rounded-full" />
                             <span>{profile.age || 'N/A'} yrs</span>
                             <span className="w-1 h-1 bg-gray-600 rounded-full" />
@@ -932,7 +932,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                             {safeTags.map((tag) => (
                                 <span 
                                     key={tag} 
-                                    className="px-2.5 py-1 text-[10px] font-bold rounded-md" 
+                                    className="px-2.5 py-1 text-[10px] font-bold rounded-md capitalize" 
                                     style={{ background: `${accentColor}12`, color: accentColor, border: `1px solid ${accentColor}25` }}
                                 >
                                     #{tag.trim()}

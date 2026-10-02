@@ -38,20 +38,93 @@ function Footer({ setPage }) {
                     <div>
                         <h3 className="font-semibold mb-4 text-white">Quick Links</h3>
                         <ul className="space-y-2 text-sm text-gray-400">
-                            <li><button onClick={() => setPage && setPage(PAGES.HOME)} className="hover:text-pink-400 transition">Home</button></li>
-                            <li><button onClick={() => setPage && setPage(PAGES.FIND)} className="hover:text-pink-400 transition">Browse Companions</button></li>
-                            <li><button onClick={() => setPage && setPage(PAGES.GIRL_REGISTER)} className="hover:text-pink-400 transition">Join as Companion</button></li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.HOME}`} 
+                                    onClick={(e) => { e.preventDefault(); setPage && setPage(PAGES.HOME); }} 
+                                    className="hover:text-pink-400 transition"
+                                >
+                                    Home
+                                </a>
+                            </li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.FIND}`} 
+                                    onClick={(e) => { e.preventDefault(); setPage && setPage(PAGES.FIND); }} 
+                                    className="hover:text-pink-400 transition"
+                                >
+                                    Browse Companions
+                                </a>
+                            </li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.GIRL_REGISTER}`} 
+                                    onClick={(e) => { e.preventDefault(); setPage && setPage(PAGES.GIRL_REGISTER); }} 
+                                    className="hover:text-pink-400 transition"
+                                >
+                                    Become a Companion
+                                </a>
+                            </li>
                         </ul>
                     </div>
 
-                    {/* 🚨 YAHAN ONCLICK ADD KIYA HAI 🚨 */}
                     <div>
                         <h3 className="font-semibold mb-4 text-white">Legal & Support</h3>
                         <ul className="space-y-2 text-sm text-gray-400">
-                            <li><span onClick={() => setPage && setPage(PAGES.HELP)} className="hover:text-pink-400 transition cursor-pointer">Help Center</span></li>
-                            <li><span onClick={() => setPage && setPage(PAGES.LEGAL)} className="hover:text-pink-400 transition cursor-pointer">Privacy Policy</span></li>
-                            <li><span onClick={() => setPage && setPage(PAGES.LEGAL)} className="hover:text-pink-400 transition cursor-pointer">Terms of Service</span></li>
-                            <li><span onClick={() => setPage && setPage(PAGES.LEGAL)} className="hover:text-pink-400 transition cursor-pointer">Safety Guidelines</span></li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.HELP}`} 
+                                    onClick={(e) => { 
+                                        e.preventDefault(); 
+                                        setPage && setPage(PAGES.HELP); 
+                                    }} 
+                                    className="hover:text-pink-400 transition cursor-pointer"
+                                >
+                                    Help Center
+                                </a>
+                            </li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.LEGAL}?tab=privacy`} 
+                                    onClick={(e) => { 
+                                        e.preventDefault(); 
+                                        sessionStorage.setItem("legalInitialTab", "privacy");
+                                        window.dispatchEvent(new CustomEvent("legal-tab-change", { detail: "privacy" }));
+                                        setPage && setPage(PAGES.LEGAL); 
+                                    }} 
+                                    className="hover:text-pink-400 transition cursor-pointer"
+                                >
+                                    Privacy Policy
+                                </a>
+                            </li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.LEGAL}?tab=terms`} 
+                                    onClick={(e) => { 
+                                        e.preventDefault(); 
+                                        sessionStorage.setItem("legalInitialTab", "terms");
+                                        window.dispatchEvent(new CustomEvent("legal-tab-change", { detail: "terms" }));
+                                        setPage && setPage(PAGES.LEGAL); 
+                                    }} 
+                                    className="hover:text-pink-400 transition cursor-pointer"
+                                >
+                                    Terms of Service
+                                </a>
+                            </li>
+                            <li>
+                                <a 
+                                    href={`#${PAGES.LEGAL}?tab=safety`} 
+                                    onClick={(e) => { 
+                                        e.preventDefault(); 
+                                        sessionStorage.setItem("legalInitialTab", "safety");
+                                        window.dispatchEvent(new CustomEvent("legal-tab-change", { detail: "safety" }));
+                                        setPage && setPage(PAGES.LEGAL); 
+                                    }} 
+                                    className="hover:text-pink-400 transition cursor-pointer"
+                                >
+                                    Safety Guidelines
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>

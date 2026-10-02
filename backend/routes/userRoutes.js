@@ -590,4 +590,39 @@ router.get(['/girl/stats/:userId', '/user/stats/:userId'], async (req, res) => {
     }
 });
 
+// 19. Public Platform Statistics for Homepage Community Section
+router.get('/platform-stats', async (req, res) => {
+    try {
+        const [usersRes, bookingsRes, reviewsRes] = await Promise.all([
+            pool.query("SELECT role, COUNT(*) as count FROM users GROUP BY role"),
+            pool.query("SELECT COUNT(*) as count FROM bookings WHERE status IN ('completed', 'accepted')").catch(() => ({ rows: [{ count: 0 }] })),
+            pool.query("SELECT COUNT(*) as count FROM reviews").catch(() => ({ rows: [{ count: 0 }] }))
+        ]);
+
+        let total = 0, girls = 0, boys = 0;
+        usersRes.rows.forEach(r => {
+            const cnt = parseInt(r.count) || 0;
+            total += cnt;
+            if (r.role === 'girl') girls += cnt;
+            else if (r.role === 'boy' || r.role === 'admin') boys += cnt;
+        });
+
+        const completedBookings = parseInt(bookingsRes.rows[0]?.count) || 0;
+        const totalReviews = parseInt(reviewsRes.rows[0]?.count) || 0;
+        
+        // Connections: completed bookings or reviews, or dynamic verified match count
+        const connections = Math.max(completedBookings, totalReviews);
+
+        res.status(200).json({
+            total,
+            girls,
+            boys,
+            connections
+        });
+    } catch (err) {
+        console.error("Platform stats error:", err);
+        res.status(500).json({ error: "Server error fetching stats" });
+    }
+});
+
 module.exports = router;

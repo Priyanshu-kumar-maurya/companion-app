@@ -14,6 +14,15 @@ import { FiWifi, FiBattery, FiMic, FiMicOff, FiPhoneOff, FiVideoOff, FiShield, F
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
+const formatCapitalize = (str) => {
+    if (!str || typeof str !== 'string') return '';
+    return str
+        .trim()
+        .split(/\s+/)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ');
+};
+
 const DEFAULT_FEATURED_COMPANIONS = [
     {
         id: "default_1",
@@ -209,6 +218,20 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         setSavedPosts(savedData.map(p => p.id));
                     }
                 } else {
+                    // Try fetching dynamic platform stats
+                    try {
+                        const statsRes = await fetch(`${API}/platform-stats`);
+                        if (statsRes.ok) {
+                            const pStats = await statsRes.json();
+                            if (pStats && pStats.total > 0) {
+                                setStats(pStats);
+                                sessionStorage.setItem("homeStatsCache", JSON.stringify(pStats));
+                            }
+                        }
+                    } catch (e) {
+                        // ignore and fall back to users calculation
+                    }
+
                     const res = await fetch(`${API}/users`);
                     if (res.ok) {
                         const allUsers = await res.json();
@@ -216,15 +239,20 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             const girls = allUsers.filter(u => u.role === 'girl');
                             const boys = allUsers.filter(u => u.role === 'boy' || u.role === 'admin');
 
-                            const newStats = {
-                                girls: girls.length,
-                                boys: boys.length,
-                                total: allUsers.length,
-                                connections: allUsers.length * 15 + 120
-                            };
+                            // Dynamic connections based on actual reviews / completed sessions
+                            const totalReviews = allUsers.reduce((sum, u) => sum + (parseInt(u.review_count) || 0), 0);
+                            const dynamicConnections = totalReviews > 0 ? totalReviews : Math.max(girls.length * 4, Math.min(girls.length, 1));
 
-                            setStats(newStats);
-                            sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
+                            setStats(prev => {
+                                const newStats = {
+                                    girls: girls.length,
+                                    boys: boys.length,
+                                    total: allUsers.length,
+                                    connections: prev.connections > 0 ? prev.connections : dynamicConnections
+                                };
+                                sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
+                                return newStats;
+                            });
 
                             // Prioritize verified companions
                             const sortedGirls = [...girls].sort((a, b) => (b.kyc_status === 'verified' ? 1 : 0) - (a.kyc_status === 'verified' ? 1 : 0));
@@ -252,23 +280,25 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             const mapped = selectedUsers.map((u, index) => {
                                 let tagsArray = [];
                                 if (typeof u.tags === 'string' && u.tags.trim() !== '') {
-                                    tagsArray = u.tags.split(',').map(t => t.trim());
+                                    tagsArray = u.tags.split(',').map(t => formatCapitalize(t.replace(/^#/, '')));
                                 } else if (Array.isArray(u.tags)) {
-                                    tagsArray = u.tags;
+                                    tagsArray = u.tags.map(t => formatCapitalize(String(t).replace(/^#/, '')));
                                 } else if (u.bio && u.bio.trim() !== '') {
-                                    tagsArray = [u.bio.trim()];
+                                    tagsArray = [formatCapitalize(u.bio.trim().slice(0, 20))];
                                 } else {
                                     tagsArray = ['Verified Partner', 'Coffee Date'];
                                 }
 
                                 const avgRat = parseFloat(u.avg_rating);
                                 const displayRating = avgRat > 0 ? avgRat.toFixed(1) : (u.kyc_status === 'verified' ? '4.9' : '4.7');
+                                const cleanName = formatCapitalize(u.name || u.username || 'User');
+                                const cleanCity = formatCapitalize(u.city || 'India');
 
                                 return {
                                     id: u.id,
-                                    name: u.name || u.username || 'User',
+                                    name: cleanName,
                                     age: u.age || 21,
-                                    city: u.city || 'India',
+                                    city: cleanCity,
                                     rating: displayRating,
                                     profile_pic: u.profile_pic || defaultAvatars[index % defaultAvatars.length],
                                     tags: tagsArray,
@@ -909,39 +939,46 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             </div>
  
                             {/* Short Intro */}
-                            <p className="text-gray-300 text-sm text-center mb-8 leading-relaxed px-1">
+                            <p className="text-gray-300 text-sm text-center mb-6 leading-relaxed px-1">
                                 India's Premium Companion Platform. Connect with safe &amp; verified partners for coffee dates, movies, events, and meaningful conversations.
                             </p>
- 
-                            {/* Login / Signup Buttons */}
-                            <div className="w-full flex flex-col gap-3.5">
-                                <button
-                                    onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                    className="w-full py-3.5 rounded-xl font-bold bg-[#0095f6] hover:bg-[#1877f2] text-sm text-white shadow-lg shadow-[#0095f6]/20 transition transform hover:-translate-y-0.5 active:scale-95"
-                                >
-                                    Log In
-                                </button>
-                                
-                                <button
-                                    onClick={() => setPage(PAGES.BOY_REGISTER)}
-                                    className="w-full py-3.5 bg-[#262626] hover:bg-[#363636] text-white border border-[#363636] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-sm"
-                                >
-                                    Create New Account
-                                </button>
 
-                                <button
-                                    onClick={() => setPage(PAGES.GIRL_LOGIN)}
-                                    className="w-full py-2.5 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 hover:text-pink-200 border border-pink-500/30 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-1.5 active:scale-95"
-                                >
-                                    <span>💖 Join as Female Companion</span>
-                                </button>
-
+                            {/* Action Buttons */}
+                            <div className="w-full flex flex-col gap-3">
                                 <button
                                     onClick={() => setPage(PAGES.FIND)}
-                                    className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 rounded-xl font-medium transition-all text-xs flex items-center justify-center gap-2"
+                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-lg shadow-[#e1306c]/25 hover:opacity-95 transition transform hover:-translate-y-0.5 active:scale-95 text-sm flex items-center justify-center gap-2"
                                 >
-                                    <span>🔍 Browse Companions First</span>
+                                    <span>🔍 Find a Companion</span>
                                 </button>
+
+                                <button
+                                    onClick={() => setPage(PAGES.GIRL_REGISTER)}
+                                    className="w-full py-3 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 hover:text-pink-200 border border-pink-500/30 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-1.5 active:scale-95"
+                                >
+                                    <span>💖 Become a Companion</span>
+                                </button>
+
+                                <div className="flex items-center gap-2 my-1">
+                                    <div className="h-px bg-white/10 flex-1"></div>
+                                    <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wider">or sign in</span>
+                                    <div className="h-px bg-white/10 flex-1"></div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        onClick={() => setPage(PAGES.BOY_LOGIN)}
+                                        className="py-2.5 rounded-xl font-bold bg-[#0095f6] hover:bg-[#1877f2] text-xs text-white shadow-md transition transform hover:-translate-y-0.5 active:scale-95 text-center"
+                                    >
+                                        Log In
+                                    </button>
+                                    <button
+                                        onClick={() => setPage(PAGES.BOY_REGISTER)}
+                                        className="py-2.5 bg-[#262626] hover:bg-[#363636] text-white border border-[#363636] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-xs text-center"
+                                    >
+                                        Register
+                                    </button>
+                                </div>
                             </div>
  
                             {/* Verified Trust Badge */}
@@ -1019,16 +1056,16 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 {/* Profile Meta Column */}
                                 <div className="p-4 flex-1 flex flex-col justify-between">
                                     <div className="space-y-1.5">
-                                        <h4 className="font-extrabold text-white text-sm tracking-wide">{comp.name}, {comp.age}</h4>
-                                        <p className="text-[10px] text-gray-400">{comp.city} • Companion</p>
+                                        <h4 className="font-extrabold text-white text-sm tracking-wide capitalize">{`${(comp.name || '').trim()}, ${comp.age || 21}`}</h4>
+                                        <p className="text-[10px] text-gray-400 capitalize">{comp.city} • Companion</p>
                                         
                                         <div className="flex flex-wrap gap-1.5 pt-1.5">
                                             {comp.tags.slice(0, 2).map((tag, idx) => (
                                                 <span 
                                                     key={idx} 
-                                                    className="px-2.5 py-0.5 text-[9px] font-medium rounded-full bg-[#262626] text-gray-200 border border-[#363636]"
+                                                    className="px-2.5 py-0.5 text-[9px] font-medium rounded-full bg-[#262626] text-gray-200 border border-[#363636] capitalize"
                                                 >
-                                                    #{tag}
+                                                    #{String(tag).replace(/^#/, '').trim()}
                                                 </span>
                                             ))}
                                         </div>
@@ -1081,10 +1118,10 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         </div>
                         <div className="bg-[#121212] border border-blue-500/20 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-sm">
                             <div className="text-4xl font-extrabold text-blue-400 mb-2">{stats.boys}</div>
-                            <div className="text-xs text-blue-400/80 uppercase tracking-widest">Male Companions</div>
+                            <div className="text-xs text-blue-400/80 uppercase tracking-widest">Male Members</div>
                         </div>
                         <div className="bg-[#121212] border border-purple-500/25 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300 shadow-sm">
-                            <div className="text-4xl font-extrabold text-purple-400 mb-2">{stats.connections}+</div>
+                            <div className="text-4xl font-extrabold text-purple-400 mb-2">{stats.connections > 0 ? `${stats.connections}+` : stats.connections}</div>
                             <div className="text-xs text-purple-400/80 uppercase tracking-widest">Happy Connections</div>
                         </div>
                     </div>

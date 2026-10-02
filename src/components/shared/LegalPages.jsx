@@ -1,9 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
 import { FiArrowLeft, FiShield, FiFileText, FiAlertTriangle, FiAlertOctagon, FiMapPin, FiLock } from "react-icons/fi";
 
 function LegalPages({ setPage, initialTab = "terms" }) {
-    const [activeTab, setActiveTab] = useState(initialTab);
+    const [activeTab, setActiveTab] = useState(() => {
+        return sessionStorage.getItem("legalInitialTab") || initialTab;
+    });
+
+    useEffect(() => {
+        const stored = sessionStorage.getItem("legalInitialTab");
+        if (stored) {
+            setActiveTab(stored);
+        }
+
+        const handleTabChange = (e) => {
+            if (e.detail) {
+                setActiveTab(e.detail);
+            }
+        };
+        window.addEventListener("legal-tab-change", handleTabChange);
+        return () => window.removeEventListener("legal-tab-change", handleTabChange);
+    }, []);
 
     const tabs = [
         { id: "terms", label: "Terms of Service", icon: <FiFileText size={14} /> },

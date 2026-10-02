@@ -318,8 +318,8 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-4 py-1.5 text-sm border border-[#e1306c]/60 text-[#e1306c] rounded-full hover:bg-[#e1306c] hover:text-white transition font-medium">Join as Girl</button>
-                                    <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-1.5 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-full hover:opacity-90 transition font-bold shadow-md">Find Companion</button>
+                                    <button onClick={() => handleNavClick(PAGES.GIRL_REGISTER)} className="px-4 py-1.5 text-sm border border-[#e1306c]/60 text-[#e1306c] rounded-full hover:bg-[#e1306c] hover:text-white transition font-medium">Become a Companion</button>
+                                    <button onClick={() => handleNavClick(PAGES.FIND)} className="px-4 py-1.5 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-full hover:opacity-90 transition font-bold shadow-md">Find a Companion</button>
                                 </>
                             )}
                         </div>
@@ -430,8 +430,8 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                     <button onClick={() => handleNavClick(PAGES.HELP)} className={`text-left ${getLinkStyle(PAGES.HELP)} w-fit`}>Help</button>
                     <div className="h-px bg-white/10 w-full my-1"></div>
                     <div className="grid grid-cols-2 gap-2.5">
-                        <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-3 py-2.5 text-xs border border-[#e1306c]/60 text-[#e1306c] hover:bg-[#e1306c]/10 font-bold rounded-xl text-center transition">Join as Girl</button>
-                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-3 py-2.5 text-xs bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-bold rounded-xl text-center shadow-lg hover:opacity-95 transition">Find Companion</button>
+                        <button onClick={() => handleNavClick(PAGES.GIRL_REGISTER)} className="px-3 py-2.5 text-xs border border-[#e1306c]/60 text-[#e1306c] hover:bg-[#e1306c]/10 font-bold rounded-xl text-center transition">Become a Companion</button>
+                        <button onClick={() => handleNavClick(PAGES.FIND)} className="px-3 py-2.5 text-xs bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-bold rounded-xl text-center shadow-lg hover:opacity-95 transition">Find a Companion</button>
                     </div>
                     <div className="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-white/5 mt-1">
                         <span>Coffeely App</span>
