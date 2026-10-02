@@ -7,7 +7,8 @@ import { getFriendlyErrorMessage } from "../utils/errorHandler";
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole }) {
+function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole = "boy" }) {
+    const [roleMode, setRoleMode] = useState(defaultRole || "boy");
     const [step, setStep] = useState("login"); // "login" | "forgot" | "reset" | "verify"
     const [formData, setFormData] = useState({ emailOrPhone: "", password: "" });
     const [forgotEmail, setForgotEmail] = useState("");
@@ -48,10 +49,14 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
         setLoading(true);
 
         try {
+            const cleanIdentifier = formData.emailOrPhone.trim();
             const response = await fetch(`${API}/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    emailOrPhone: cleanIdentifier,
+                    password: formData.password
+                })
             });
 
             const data = await response.json().catch(() => ({}));
@@ -379,7 +384,33 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                         </div>
 
                         <h2 className="text-2xl font-extrabold text-center text-white mb-1">Welcome Back</h2>
-                        <p className="text-gray-400 text-center text-sm mb-6">Login to your account</p>
+                        <p className="text-gray-400 text-center text-sm mb-5">Login to your account</p>
+
+                        {/* Role Selector Tabs */}
+                        <div className="flex bg-[#0D0D1A] p-1 rounded-xl border border-white/10 mb-5">
+                            <button
+                                type="button"
+                                onClick={() => setRoleMode("boy")}
+                                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                                    roleMode === "boy"
+                                        ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/20"
+                                        : "text-gray-400 hover:text-white"
+                                }`}
+                            >
+                                Member (Boy)
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setRoleMode("girl")}
+                                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                                    roleMode === "girl"
+                                        ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md shadow-pink-500/20"
+                                        : "text-gray-400 hover:text-white"
+                                }`}
+                            >
+                                Companion (Girl)
+                            </button>
+                        </div>
 
                         {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm p-3 rounded-xl mb-4 text-center">{error}</div>}
 
@@ -392,7 +423,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     required
                                     value={formData.emailOrPhone}
                                     onChange={handleChange}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
+                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                                     placeholder="example@mail.com or 9876543210"
                                 />
                             </div>
@@ -405,7 +436,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -428,7 +459,15 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                 </button>
                             </div>
 
-                            <button type="submit" disabled={loading} className="w-full py-3.5 mt-1 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition bg-gradient-to-r from-blue-500 to-purple-500 disabled:opacity-60">
+                            <button 
+                                type="submit" 
+                                disabled={loading} 
+                                className={`w-full py-3.5 mt-1 rounded-xl text-white font-bold text-sm shadow-lg hover:-translate-y-0.5 transition disabled:opacity-60 ${
+                                    roleMode === "girl"
+                                        ? "bg-gradient-to-r from-pink-500 to-purple-600 shadow-pink-500/20"
+                                        : "bg-gradient-to-r from-blue-500 to-purple-500 shadow-blue-500/20"
+                                }`}
+                            >
                                 {loading ? "Logging in..." : "Login →"}
                             </button>
                         </form>
@@ -436,7 +475,11 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                         <div className="mt-6 text-center">
                             <p className="text-gray-400 text-sm">
                                 Don't have an account?{' '}
-                                <button onClick={() => setPage(PAGES.BOY_REGISTER)} className="font-bold hover:underline text-purple-400">
+                                <button 
+                                    type="button"
+                                    onClick={() => setPage(roleMode === 'girl' ? PAGES.GIRL_REGISTER : PAGES.BOY_REGISTER)} 
+                                    className={`font-bold hover:underline ${roleMode === 'girl' ? 'text-pink-400' : 'text-blue-400'}`}
+                                >
                                     Register here
                                 </button>
                             </p>
@@ -464,7 +507,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     required
                                     value={forgotEmail}
                                     onChange={(e) => setForgotEmail(e.target.value)}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-purple-500"
+                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-purple-500"
                                     placeholder="example@mail.com"
                                 />
                             </div>
@@ -502,7 +545,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={forgotEmail}
                                         onChange={(e) => setForgotEmail(e.target.value)}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="example@mail.com"
                                     />
                                 </div>
@@ -514,8 +557,8 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                     required
                                     maxLength={6}
                                     value={resetData.otp}
-                                    onChange={(e) => setResetData({ ...resetData, otp: e.target.value })}
-                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none transition focus:border-[#0095f6] tracking-[0.5rem] text-center font-bold text-lg"
+                                    onChange={(e) => setResetData({ ...resetData, otp: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) })}
+                                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6] tracking-[0.5rem] text-center font-bold text-lg"
                                     placeholder="000000"
                                 />
                             </div>
@@ -527,7 +570,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={resetData.newPassword}
                                         onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="Create a strong password"
                                     />
                                     <button
@@ -547,7 +590,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                                         required
                                         value={resetData.confirmPassword}
                                         onChange={(e) => setResetData({ ...resetData, confirmPassword: e.target.value })}
-                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-sm text-white outline-none transition focus:border-[#0095f6]"
+                                        className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                                         placeholder="Repeat your password"
                                     />
                                     <button

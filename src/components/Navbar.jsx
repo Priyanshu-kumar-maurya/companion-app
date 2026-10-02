@@ -409,27 +409,29 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
             )}
 
             {!isHiddenScreen && !currentUser && (
-                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur border-b border-[#262626] h-14 flex items-center justify-between px-4">
-                    <h3 className="text-xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider">
-                        Coffeely
-                    </h3>
+                <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
+                    <button onClick={() => handleNavClick(PAGES.HOME)} className="flex items-center gap-2 outline-none">
+                        <h3 className="text-xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider">
+                            Coffeely
+                        </h3>
+                    </button>
 
-                    <button className="text-2xl text-white outline-none" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                    <button className="text-2xl text-white outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition active:scale-95" onClick={() => setIsMenuOpen(!isMenuOpen)}>
                         {isMenuOpen ? "✕" : "☰"}
                     </button>
                 </div>
             )}
 
             {isMenuOpen && !isHiddenScreen && !currentUser && (
-                <div className="md:hidden fixed top-14 left-0 w-full bg-[#121212] border-b border-[#262626] py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
+                <div className="md:hidden fixed top-[calc(3.5rem+env(safe-area-inset-top,0px))] left-0 w-full bg-[#121212] border-b border-[#262626] py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
                     <button onClick={() => handleNavClick(PAGES.HOME)} className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}>Home</button>
                     <button onClick={() => handleNavClick(PAGES.FIND)} className={`text-left ${getLinkStyle(PAGES.FIND)} w-fit`}>Explore Companions</button>
                     <button onClick={() => handleNavClick(PAGES.ABOUT)} className={`text-left ${getLinkStyle(PAGES.ABOUT)} w-fit`}>About</button>
                     <button onClick={() => handleNavClick(PAGES.HELP)} className={`text-left ${getLinkStyle(PAGES.HELP)} w-fit`}>Help</button>
-                    <div className="h-px bg-white/10 w-full my-2"></div>
-                    <div className="flex flex-col gap-3">
-                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-4 py-2.5 text-sm bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-semibold rounded-xl text-center shadow-lg">Log In</button>
-                        <button onClick={() => handleNavClick(PAGES.BOY_REGISTER)} className="px-4 py-2.5 text-sm border border-white/20 hover:border-white/40 text-white font-semibold rounded-xl text-center bg-white/5">Create Account</button>
+                    <div className="h-px bg-white/10 w-full my-1"></div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                        <button onClick={() => handleNavClick(PAGES.GIRL_LOGIN)} className="px-3 py-2.5 text-xs border border-[#e1306c]/60 text-[#e1306c] hover:bg-[#e1306c]/10 font-bold rounded-xl text-center transition">Join as Girl</button>
+                        <button onClick={() => handleNavClick(PAGES.BOY_LOGIN)} className="px-3 py-2.5 text-xs bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-bold rounded-xl text-center shadow-lg hover:opacity-95 transition">Find Companion</button>
                     </div>
                     <div className="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-white/5 mt-1">
                         <span>Coffeely App</span>

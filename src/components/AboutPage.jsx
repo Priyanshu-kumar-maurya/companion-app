@@ -1,10 +1,24 @@
 import React from "react";
 import { APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE } from "../config/version";
 
-function AboutPage() {
+import { PAGES } from "../App";
+
+function AboutPage({ setPage }) {
     return (
-        <div className="pt-16 min-h-[100dvh]">
-            <div className="text-center max-w-2xl mx-auto px-6 py-20">
+        <div className="pt-20 min-h-[100dvh]">
+            {setPage && (
+                <div className="max-w-5xl mx-auto px-6 pt-4">
+                    <button
+                        type="button"
+                        onClick={() => setPage(PAGES.HOME)}
+                        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5"
+                    >
+                        <span>←</span>
+                        <span>Back to Home</span>
+                    </button>
+                </div>
+            )}
+            <div className="text-center max-w-2xl mx-auto px-6 py-12 md:py-16">
                 <h1 className="text-4xl font-bold mb-4">
                     About{" "}
                     <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">

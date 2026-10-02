@@ -930,6 +930,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 </button>
 
                                 <button
+                                    onClick={() => setPage(PAGES.GIRL_LOGIN)}
+                                    className="w-full py-2.5 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 hover:text-pink-200 border border-pink-500/30 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-1.5 active:scale-95"
+                                >
+                                    <span>💖 Join as Female Companion</span>
+                                </button>
+
+                                <button
                                     onClick={() => setPage(PAGES.FIND)}
                                     className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/10 rounded-xl font-medium transition-all text-xs flex items-center justify-center gap-2"
                                 >

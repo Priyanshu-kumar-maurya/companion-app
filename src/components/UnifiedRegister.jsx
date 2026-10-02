@@ -13,7 +13,7 @@ function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
             <select
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className={`w-full bg-[#0D0D1A] border border-white/15 rounded-xl pl-3 pr-7 py-3 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue-500' : 'pink-500'} appearance-none cursor-pointer`}
+                className={`w-full bg-[#0D0D1A] border border-white/15 rounded-xl pl-3 pr-7 py-3 text-base sm:text-sm text-white outline-none transition ${isBoy ? 'focus:border-blue-500' : 'focus:border-pink-500'} appearance-none cursor-pointer`}
             >
                 <option value="" disabled className="bg-[#121224] text-gray-500">{placeholder}</option>
                 {options.map(opt => (
@@ -29,9 +29,9 @@ function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
     );
 }
 
-function UnifiedRegister({ setPage }) {
+function UnifiedRegister({ setPage, initialRole = "boy" }) {
     const [formData, setFormData] = useState({
-        name: "", email: "", phone: "", dob: "", password: "", role: "boy"
+        name: "", email: "", phone: "", dob: "", password: "", role: initialRole || "boy"
     });
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +41,7 @@ function UnifiedRegister({ setPage }) {
     const [verifying, setVerifying] = useState(false);
     const [resendCooldown, setResendCooldown] = useState(0);
     const resendTimerRef = React.useRef(null);
+    const genderTimerRef = React.useRef(null);
     const [customAlert, setCustomAlert] = useState({ show: false, message: "" });
     const showAlert = (msg) => setCustomAlert({ show: true, message: msg });
 
@@ -50,10 +51,11 @@ function UnifiedRegister({ setPage }) {
 
     const [dobParts, setDobParts] = useState({ day: "", month: "", year: "" });
 
-    // Clean up timer on unmount to prevent memory leaks
+    // Clean up timers on unmount to prevent memory leaks
     React.useEffect(() => {
         return () => {
             if (resendTimerRef.current) clearInterval(resendTimerRef.current);
+            if (genderTimerRef.current) clearTimeout(genderTimerRef.current);
         };
     }, []);
 
@@ -123,6 +125,17 @@ function UnifiedRegister({ setPage }) {
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handlePhoneChange = (e) => {
+        const raw = e.target.value.replace(/[^0-9]/g, '');
+        let clean = raw;
+        if (clean.length > 10 && clean.startsWith('91')) {
+            clean = clean.slice(2, 12);
+        } else if (clean.length > 10) {
+            clean = clean.slice(0, 10);
+        }
+        setFormData(prev => ({ ...prev, phone: clean }));
     };
 
     const calculateAge = (dobString) => {
@@ -363,7 +376,8 @@ function UnifiedRegister({ setPage }) {
                                     required 
                                     value={formData.name} 
                                     onChange={handleChange} 
-                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} 
+                                    onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? 'focus:border-blue-500' : 'focus:border-pink-500'}`} 
                                     placeholder="Enter your name" 
                                     autoFocus
                                 />
@@ -388,8 +402,8 @@ function UnifiedRegister({ setPage }) {
                                     type="button"
                                     onClick={() => {
                                         setFormData(prev => ({ ...prev, role: "boy" }));
-                                        // Auto go to next step
-                                        setTimeout(() => setCurrentStep(3), 300);
+                                        if (genderTimerRef.current) clearTimeout(genderTimerRef.current);
+                                        genderTimerRef.current = setTimeout(() => setCurrentStep(3), 250);
                                     }}
                                     className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "boy" ? 'bg-blue-500/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white' : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20'}`}
                                 >
@@ -402,8 +416,8 @@ function UnifiedRegister({ setPage }) {
                                     type="button"
                                     onClick={() => {
                                         setFormData(prev => ({ ...prev, role: "girl" }));
-                                        // Auto go to next step
-                                        setTimeout(() => setCurrentStep(3), 300);
+                                        if (genderTimerRef.current) clearTimeout(genderTimerRef.current);
+                                        genderTimerRef.current = setTimeout(() => setCurrentStep(3), 250);
                                     }}
                                     className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "girl" ? 'bg-pink-500/10 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.2)] text-white' : 'bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20'}`}
                                 >
@@ -490,7 +504,8 @@ function UnifiedRegister({ setPage }) {
                                     required 
                                     value={formData.email} 
                                     onChange={handleChange} 
-                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} 
+                                    onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? 'focus:border-blue-500' : 'focus:border-pink-500'}`} 
                                     placeholder="example@mail.com" 
                                     autoFocus
                                 />
@@ -502,10 +517,11 @@ function UnifiedRegister({ setPage }) {
                                     name="phone" 
                                     required 
                                     value={formData.phone} 
-                                    onChange={handleChange} 
-                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`} 
-                                    placeholder="Enter your 10-digit number" 
-                                    pattern="[0-9]{10}"
+                                    onChange={handlePhoneChange} 
+                                    onKeyDown={(e) => e.key === 'Enter' && handleNextStep()}
+                                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? 'focus:border-blue-500' : 'focus:border-pink-500'}`} 
+                                    placeholder="10-digit mobile number" 
+                                    maxLength={10}
                                 />
                             </div>
                             <button 
@@ -530,7 +546,8 @@ function UnifiedRegister({ setPage }) {
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 pr-12 text-sm text-white outline-none transition focus:border-${isBoy ? 'blue' : 'pink'}-500`}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleRegister(e)}
+                                        className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 pr-12 text-base sm:text-sm text-white outline-none transition ${isBoy ? 'focus:border-blue-500' : 'focus:border-pink-500'}`}
                                         placeholder="Min. 6 characters"
                                         autoFocus
                                     />
@@ -569,7 +586,7 @@ function UnifiedRegister({ setPage }) {
             {/* ─── OTP VERIFICATION MODAL ─── */}
             {showOtpModal && (
                 <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-[#16162A] w-full max-w-sm p-8 rounded-3xl border border-white/10 shadow-2xl text-center relative">
+                    <div className="bg-[#16162A] w-full max-w-sm p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl text-center relative max-h-[92vh] overflow-y-auto overscroll-contain">
 
                         {/* Close/Cancel button */}
                         <button

@@ -311,9 +311,9 @@ function App() {
       case PAGES.HOME:
         return <HomePage setPage={setPage} currentUser={currentUser} setSelectedGirl={setSelectedGirl} />;
       case PAGES.ABOUT:
-        return <AboutPage />;
+        return <AboutPage setPage={setPage} />;
       case PAGES.HELP:
-        return <HelpPage />;
+        return <HelpPage setPage={setPage} />;
       case PAGES.MESSAGES:
         return currentUser ? <MessagesPage currentUser={currentUser} setPage={setPage} setSelectedGirl={setSelectedGirl} socket={socket} /> : <UnifiedLogin setPage={setPage} />;
       case PAGES.NOTIFICATIONS:
@@ -323,8 +323,9 @@ function App() {
       case PAGES.BOY_LOGIN:
         return <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} setAdminUser={setAdminUser} defaultRole="boy" />;
       case PAGES.GIRL_REGISTER:
+        return <UnifiedRegister setPage={setPage} initialRole="girl" />;
       case PAGES.BOY_REGISTER:
-        return <UnifiedRegister setPage={setPage} />;
+        return <UnifiedRegister setPage={setPage} initialRole="boy" />;
       case PAGES.GIRL_DASHBOARD:
         return girlUser ? <GirlDashboard user={girlUser} setGirlUser={setGirlUser} setPage={setPage} socket={socket} setSelectedGirl={setSelectedGirl} /> : <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} defaultRole="girl" />;
       case PAGES.BOY_DASHBOARD:

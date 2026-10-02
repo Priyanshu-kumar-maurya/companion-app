@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { PAGES } from "../App";
 
 const faqs = [
     ["How do I rent a companion?", "Register as a Boy user, browse the Find page, select a companion, view their details, and click Rent Now. You pay per hour securely within the app."],
@@ -11,12 +12,24 @@ const faqs = [
     ["How do payments work?", "You pay per hour, in advance, via the app. If a session is cancelled more than 2 hours in advance, you get a full refund."],
 ];
 
-function HelpPage() {
+function HelpPage({ setPage }) {
     const [openIndex, setOpenIndex] = useState(null);
 
     return (
-        <div className="pt-16 min-h-[100dvh]">
-            <div className="max-w-3xl mx-auto px-6 py-16">
+        <div className="pt-20 min-h-[100dvh]">
+            {setPage && (
+                <div className="max-w-3xl mx-auto px-6 pt-4">
+                    <button
+                        type="button"
+                        onClick={() => setPage(PAGES.HOME)}
+                        className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5"
+                    >
+                        <span>←</span>
+                        <span>Back to Home</span>
+                    </button>
+                </div>
+            )}
+            <div className="max-w-3xl mx-auto px-6 py-12 md:py-16">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold mb-3">
                         Help{" "}

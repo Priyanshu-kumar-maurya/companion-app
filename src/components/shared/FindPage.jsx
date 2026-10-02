@@ -237,11 +237,6 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
     });
 
     const handleProfileClick = (profile) => {
-        if (!currentUser) {
-            alert("Please Login or Register first to view profiles or chat!");
-            setPage(PAGES.BOY_REGISTER);
-            return;
-        }
         setSelectedGirl(profile);
         setPage(PAGES.DETAILS);
     };
