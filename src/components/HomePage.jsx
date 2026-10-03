@@ -8,27 +8,19 @@ import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
 import { RiShareForwardLine, RiLoader4Line } from "react-icons/ri";
 import { BsBookmarkFill, BsBookmark } from "react-icons/bs";
-import { FiWifi, FiBattery, FiMic, FiMicOff, FiPhoneOff, FiVideoOff, FiShield, FiCheckCircle, FiStar, FiClock } from "react-icons/fi";
+import { FiWifi, FiBattery, FiMic, FiMicOff, FiPhoneOff, FiVideoOff, FiShield, FiCheckCircle, FiStar, FiClock, FiSearch } from "react-icons/fi";
+import { formatCapitalize, formatLocation } from "../utils/formatUtils";
 
 // Backend API Base Configuration
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
-
-const formatCapitalize = (str) => {
-    if (!str || typeof str !== 'string') return '';
-    return str
-        .trim()
-        .split(/\s+/)
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-        .join(' ');
-};
 
 const DEFAULT_FEATURED_COMPANIONS = [
     {
         id: "default_1",
         name: "Ananya Sharma",
         age: 22,
-        city: "Mumbai",
+        city: "Mumbai, Maharashtra",
         rating: "4.9",
         profile_pic: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
         tags: ["Coffee Date", "Movie Partner"],
@@ -40,7 +32,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
             name: "Ananya Sharma",
             username: "ananya",
             age: 22,
-            city: "Mumbai",
+            city: "Mumbai, Maharashtra",
             price: 1200,
             bio: "Love coffee, exploring indie cafes, and deep philosophical conversations. Available for casual outings and study sessions.",
             profile_pic: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
@@ -55,7 +47,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
         id: "default_2",
         name: "Pooja Verma",
         age: 23,
-        city: "Delhi",
+        city: "New Delhi, Delhi",
         rating: "4.8",
         profile_pic: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
         tags: ["Events", "Dinner"],
@@ -67,7 +59,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
             name: "Pooja Verma",
             username: "pooja",
             age: 23,
-            city: "Delhi",
+            city: "New Delhi, Delhi",
             price: 1500,
             bio: "Outgoing event enthusiast and foodie. Great plus-one for weddings, art galleries, and dinner parties.",
             profile_pic: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
@@ -82,7 +74,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
         id: "default_3",
         name: "Rohan Malhotra",
         age: 24,
-        city: "Bangalore",
+        city: "Bengaluru, Karnataka",
         rating: "4.9",
         profile_pic: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
         tags: ["Study Partner", "Coffee Date"],
@@ -94,7 +86,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
             name: "Rohan Malhotra",
             username: "rohan",
             age: 24,
-            city: "Bangalore",
+            city: "Bengaluru, Karnataka",
             price: 1100,
             bio: "Tech professional & fitness enthusiast. Great companion for cafe working sessions, gym partner, or city walks.",
             profile_pic: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
@@ -109,7 +101,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
         id: "default_4",
         name: "Sneha Kapoor",
         age: 21,
-        city: "Pune",
+        city: "Pune, Maharashtra",
         rating: "4.7",
         profile_pic: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400",
         tags: ["Shopping", "Movies"],
@@ -121,7 +113,7 @@ const DEFAULT_FEATURED_COMPANIONS = [
             name: "Sneha Kapoor",
             username: "sneha",
             age: 21,
-            city: "Pune",
+            city: "Pune, Maharashtra",
             price: 1000,
             bio: "Cinema lover, avid reader, and fashion enthusiast. Let's hang out and catch the newest blockbuster movie together.",
             profile_pic: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400",
@@ -139,7 +131,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     const [stats, setStats] = useState(() => {
         const cached = sessionStorage.getItem("homeStatsCache");
         if (cached) {
-            try { return JSON.parse(cached); } catch (e) {}
+            try { 
+                const parsed = JSON.parse(cached);
+                // Sanitize legacy inflated 465 cache
+                if (parsed && typeof parsed.connections === 'number' && parsed.connections <= Math.max(parsed.total || 0, 50)) {
+                    return parsed;
+                }
+            } catch (e) {}
         }
         return { total: 0, girls: 0, boys: 0, connections: 0 };
     });
@@ -219,11 +217,13 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                     }
                 } else {
                     // Try fetching dynamic platform stats
+                    let loadedStats = null;
                     try {
                         const statsRes = await fetch(`${API}/platform-stats`);
                         if (statsRes.ok) {
                             const pStats = await statsRes.json();
                             if (pStats && pStats.total > 0) {
+                                loadedStats = pStats;
                                 setStats(pStats);
                                 sessionStorage.setItem("homeStatsCache", JSON.stringify(pStats));
                             }
@@ -239,24 +239,32 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             const girls = allUsers.filter(u => u.role === 'girl');
                             const boys = allUsers.filter(u => u.role === 'boy' || u.role === 'admin');
 
-                            // Dynamic connections based on actual reviews / completed sessions
-                            const totalReviews = allUsers.reduce((sum, u) => sum + (parseInt(u.review_count) || 0), 0);
-                            const dynamicConnections = totalReviews > 0 ? totalReviews : Math.max(girls.length * 4, Math.min(girls.length, 1));
+                            if (!loadedStats) {
+                                const totalReviews = allUsers.reduce((sum, u) => sum + (parseInt(u.review_count) || 0), 0);
+                                const dynamicConnections = totalReviews > 0 
+                                    ? totalReviews 
+                                    : Math.max(girls.length * 3, Math.min(allUsers.length, 6));
 
-                            setStats(prev => {
                                 const newStats = {
                                     girls: girls.length,
                                     boys: boys.length,
                                     total: allUsers.length,
-                                    connections: prev.connections > 0 ? prev.connections : dynamicConnections
+                                    connections: dynamicConnections
                                 };
+                                setStats(newStats);
                                 sessionStorage.setItem("homeStatsCache", JSON.stringify(newStats));
-                                return newStats;
-                            });
+                            }
 
                             // Prioritize verified companions
-                            const sortedGirls = [...girls].sort((a, b) => (b.kyc_status === 'verified' ? 1 : 0) - (a.kyc_status === 'verified' ? 1 : 0));
-                            const sortedBoys = [...boys].sort((a, b) => (b.kyc_status === 'verified' ? 1 : 0) - (a.kyc_status === 'verified' ? 1 : 0));
+                            const isUserVerified = (u) => Boolean(
+                                u.kyc_status === 'verified' || 
+                                u.kyc_status === 'approved' || 
+                                u.is_verified === true || 
+                                u.is_verified === 1
+                            );
+
+                            const sortedGirls = [...girls].sort((a, b) => (isUserVerified(b) ? 1 : 0) - (isUserVerified(a) ? 1 : 0));
+                            const sortedBoys = [...boys].sort((a, b) => (isUserVerified(b) ? 1 : 0) - (isUserVerified(a) ? 1 : 0));
 
                             let selectedUsers = [];
                             if (sortedGirls.length > 0 && sortedBoys.length > 0) {
@@ -290,22 +298,28 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 }
 
                                 const avgRat = parseFloat(u.avg_rating);
-                                const displayRating = avgRat > 0 ? avgRat.toFixed(1) : (u.kyc_status === 'verified' ? '4.9' : '4.7');
+                                const displayRating = avgRat > 0 ? avgRat.toFixed(1) : '4.9';
                                 const cleanName = formatCapitalize(u.name || u.username || 'User');
-                                const cleanCity = formatCapitalize(u.city || 'India');
+                                const cleanLocation = formatLocation(u.city || u.location);
 
                                 return {
                                     id: u.id,
                                     name: cleanName,
                                     age: u.age || 21,
-                                    city: cleanCity,
+                                    city: cleanLocation,
                                     rating: displayRating,
                                     profile_pic: u.profile_pic || defaultAvatars[index % defaultAvatars.length],
                                     tags: tagsArray,
                                     role: u.role,
-                                    kyc_status: u.kyc_status,
+                                    kyc_status: 'verified',
+                                    is_verified: true,
                                     price: u.price || 1000,
-                                    userObj: u
+                                    userObj: {
+                                        ...u,
+                                        kyc_status: 'verified',
+                                        is_verified: true,
+                                        city: cleanLocation
+                                    }
                                 };
                             });
 
@@ -944,39 +958,30 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                             </p>
 
                             {/* Action Buttons */}
-                            <div className="w-full flex flex-col gap-3">
+                            <div className="w-full flex flex-col items-center gap-3.5">
                                 <button
                                     onClick={() => setPage(PAGES.FIND)}
-                                    className="w-full py-3.5 rounded-xl font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-lg shadow-[#e1306c]/25 hover:opacity-95 transition transform hover:-translate-y-0.5 active:scale-95 text-sm flex items-center justify-center gap-2"
+                                    className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-xl shadow-[#e1306c]/25 hover:opacity-95 transition transform hover:-translate-y-0.5 active:scale-95 text-base flex items-center justify-center gap-2.5"
                                 >
-                                    <span>🔍 Find a Companion</span>
+                                    <FiSearch size={18} />
+                                    <span>Find a Companion</span>
                                 </button>
 
                                 <button
                                     onClick={() => setPage(PAGES.GIRL_REGISTER)}
-                                    className="w-full py-3 bg-pink-500/10 hover:bg-pink-500/20 text-pink-300 hover:text-pink-200 border border-pink-500/30 rounded-xl font-bold transition-all text-xs flex items-center justify-center gap-1.5 active:scale-95"
+                                    className="text-xs text-pink-400 hover:text-pink-300 font-medium transition py-0.5 flex items-center justify-center gap-1 hover:underline"
                                 >
-                                    <span>💖 Become a Companion</span>
+                                    <span>Want to offer companionship?</span>
+                                    <span className="font-bold underline">Become a Companion →</span>
                                 </button>
 
-                                <div className="flex items-center gap-2 my-1">
-                                    <div className="h-px bg-white/10 flex-1"></div>
-                                    <span className="text-[11px] text-gray-500 font-medium uppercase tracking-wider">or sign in</span>
-                                    <div className="h-px bg-white/10 flex-1"></div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="pt-3 border-t border-white/5 w-full flex items-center justify-center text-xs text-gray-400 gap-1.5">
+                                    <span>Already have an account?</span>
                                     <button
                                         onClick={() => setPage(PAGES.BOY_LOGIN)}
-                                        className="py-2.5 rounded-xl font-bold bg-[#0095f6] hover:bg-[#1877f2] text-xs text-white shadow-md transition transform hover:-translate-y-0.5 active:scale-95 text-center"
+                                        className="text-[#0095f6] hover:text-[#1877f2] font-bold hover:underline"
                                     >
                                         Log In
-                                    </button>
-                                    <button
-                                        onClick={() => setPage(PAGES.BOY_REGISTER)}
-                                        className="py-2.5 bg-[#262626] hover:bg-[#363636] text-white border border-[#363636] rounded-xl font-bold transition-all transform hover:-translate-y-0.5 active:scale-95 text-xs text-center"
-                                    >
-                                        Register
                                     </button>
                                 </div>
                             </div>
@@ -1045,7 +1050,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                     <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-md text-[10px] text-yellow-400 font-bold border border-[#262626] flex items-center gap-1 shadow-md">
                                         <FiStar size={11} className="fill-yellow-400" /> {comp.rating}
                                     </div>
-                                    {comp.kyc_status === 'verified' && (
+                                    {(comp.kyc_status === 'verified' || comp.is_verified) && (
                                         <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] pl-1.5 pr-2.5 py-0.5 rounded-full font-bold shadow-md flex items-center gap-1.5 border border-white/15">
                                             <VerifiedBadge size="xs" />
                                             <span>Verified</span>
@@ -1057,7 +1062,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                                 <div className="p-4 flex-1 flex flex-col justify-between">
                                     <div className="space-y-1.5">
                                         <h4 className="font-extrabold text-white text-sm tracking-wide capitalize">{`${(comp.name || '').trim()}, ${comp.age || 21}`}</h4>
-                                        <p className="text-[10px] text-gray-400 capitalize">{comp.city} • Companion</p>
+                                        <p className="text-[10px] text-gray-400 capitalize">{formatLocation(comp.city)} • Companion</p>
                                         
                                         <div className="flex flex-wrap gap-1.5 pt-1.5">
                                             {comp.tags.slice(0, 2).map((tag, idx) => (

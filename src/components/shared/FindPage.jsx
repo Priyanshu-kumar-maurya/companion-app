@@ -5,6 +5,7 @@ import StoriesBar from "./StoriesBar";
 import CompanionMapView from "./CompanionMapView";
 import VerifiedBadge from "./VerifiedBadge";
 import { CompanionGridSkeleton } from "./SkeletonLoaders";
+import { formatLocation } from "../../utils/formatUtils";
 
 // Backend API Base Configuration
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
@@ -555,7 +556,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser }) {
                                                 <div className="text-xs text-gray-400 mt-2 flex items-center justify-between">
                                                     <div className="flex items-center gap-1">
                                                         <FiMapPin size={12} className="text-pink-400 shrink-0" />
-                                                        <span className="capitalize">{(u.city || "Mumbai").trim()} · {u.age || "N/A"} yrs</span>
+                                                        <span className="capitalize">{formatLocation(u.city)} · {u.age || "N/A"} yrs</span>
                                                     </div>
                                                     <div className="text-xs text-yellow-400 flex items-center gap-1 font-semibold">
                                                         <FiStar size={12} className="text-yellow-400 fill-yellow-400 shrink-0" />

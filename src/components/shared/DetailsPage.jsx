@@ -7,6 +7,7 @@ import ReviewsSection from "./ReviewsSection";
 import KYCUploadPrompt from "./KYCUploadPrompt";
 import VerifiedBadge from "./VerifiedBadge";
 import { ProfileGridSkeleton, MessageListSkeleton } from "./SkeletonLoaders";
+import { formatLocation } from "../../utils/formatUtils";
 import { FiArrowLeft, FiMapPin, FiMessageCircle, FiStar, FiGrid, FiLock, FiShield, FiX, FiCalendar, FiClock, FiMoreVertical, FiFlag, FiSlash, FiShare2, FiAlertTriangle, FiCheckCircle, FiTrash2, FiVideo, FiPhone, FiHeart } from "react-icons/fi";
 
 // Backend API Base Configuration
@@ -789,7 +790,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                         {/* Bio, tags etc */}
                         <div className="space-y-2 text-sm text-gray-300">
                             <div className="flex items-center gap-1.5 text-gray-400 text-xs">
-                                <span className="flex items-center gap-0.5 capitalize"><FiMapPin size={12} /> {(profile.city || 'Unknown').trim()}</span>
+                                <span className="flex items-center gap-0.5 capitalize"><FiMapPin size={12} /> {formatLocation(profile.city)}</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
                                 <span>{profile.age || 'N/A'} yrs</span>
                                 <span className="w-1 h-1 bg-gray-600 rounded-full" />
@@ -898,7 +899,7 @@ function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onU
                     {/* Bio, location, tags */}
                     <div className="space-y-2 text-xs text-gray-300">
                         <div className="flex items-center gap-1.5 text-gray-400">
-                            <span className="flex items-center gap-0.5 capitalize"><FiMapPin size={12} /> {(profile.city || 'Unknown').trim()}</span>
+                            <span className="flex items-center gap-0.5 capitalize"><FiMapPin size={12} /> {formatLocation(profile.city)}</span>
                             <span className="w-1 h-1 bg-gray-600 rounded-full" />
                             <span>{profile.age || 'N/A'} yrs</span>
                             <span className="w-1 h-1 bg-gray-600 rounded-full" />
