@@ -1,0 +1,9 @@
+node_modules/
+build/
+dist/
+.git/
+package-lock.json
+android/
+capacitor.config.json
+*.min.js
+*.min.css

@@ -81,7 +81,8 @@
 }
 
 @keyframes pulseGlow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -97,7 +98,14 @@
 
 /* ─── Instagram Signature Button Styles ─── */
 .insta-btn-primary {
-  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+  background: linear-gradient(
+    45deg,
+    #f09433 0%,
+    #e6683c 25%,
+    #dc2743 50%,
+    #cc2366 75%,
+    #bc1888 100%
+  );
   color: #ffffff;
   font-weight: 600;
   border-radius: 8px;
@@ -155,7 +163,7 @@
     rgba(255, 255, 255, 0) 100%
   );
   animation: shimmerWave 1.6s infinite ease-in-out;
-  content: '';
+  content: "";
   pointer-events: none;
 }
 
