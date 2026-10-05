@@ -187,6 +187,23 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
   }, [isLoggedIn]);
 
   useEffect(() => {
+    const handlePostCreated = (e) => {
+      const newPost = e.detail;
+      if (newPost) {
+        setFeed((prevFeed) => {
+          const updated = [newPost, ...prevFeed.filter((p) => p.id !== newPost.id)];
+          try {
+            sessionStorage.setItem("homeFeedCache", JSON.stringify(updated));
+          } catch (err) {}
+          return updated;
+        });
+      }
+    };
+    window.addEventListener("post-created", handlePostCreated);
+    return () => window.removeEventListener("post-created", handlePostCreated);
+  }, []);
+
+  useEffect(() => {
     if (isLoggedIn && currentUser) {
       const cachedFeed = sessionStorage.getItem("homeFeedCache");
       const cachedFollowing = sessionStorage.getItem("followingStateCache");
@@ -696,9 +713,16 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                           • {formatTime(post.created_at)}
                         </span>
                       </div>
-                      <span className="text-[10px] text-gray-400 uppercase tracking-widest">
-                        {post.user_role}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] text-gray-400 uppercase tracking-widest">
+                          {post.user_role}
+                        </span>
+                        {(post.location || post.user_city) && (
+                          <span className="text-[10px] text-gray-400 flex items-center gap-0.5 truncate max-w-[150px]">
+                            • 📍 {post.location || post.user_city}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 

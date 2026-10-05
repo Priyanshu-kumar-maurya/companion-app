@@ -21,7 +21,7 @@ import {
 } from "react-icons/fi";
 import { APP_VERSION_TAG } from "../config/version";
 import VerifiedBadge from "./shared/VerifiedBadge";
-import ImageCropperModal from "./shared/ImageCropperModal";
+import CreatePostModal from "./shared/CreatePostModal";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
@@ -29,21 +29,8 @@ const API = `${API_BASE}/api`;
 function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setBoyUser, socket }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
-  const [postFile, setPostFile] = useState(null);
-  const [postPreview, setPostPreview] = useState(null);
-  const [rawPostImageSrc, setRawPostImageSrc] = useState(null);
-  const [cropModalData, setCropModalData] = useState(null);
-  const [postCaption, setPostCaption] = useState("");
-  const [isPosting, setIsPosting] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);
-
-  // Instagram style post destinations & settings
-  const [showOnFeed, setShowOnFeed] = useState(true);
-  const [showOnProfile, setShowOnProfile] = useState(true);
-  const [followersOnly, setFollowersOnly] = useState(false);
-  const [disableComments, setDisableComments] = useState(false);
-  const [hideLikes, setHideLikes] = useState(false);
 
   const currentUser = boyUser || girlUser || adminUser;
   const isBoy = boyUser !== null;
@@ -164,93 +151,13 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
     setIsMenuOpen(false);
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setRawPostImageSrc(reader.result);
-        setCropModalData({
-          imageSrc: reader.result,
-          isCircular: false,
-          allowAspectChange: true,
-          initialAspect: "1:1",
-          title: "Crop & Adjust Photo",
-          onComplete: ({ file: croppedFile, dataUrl }) => {
-            setPostFile(croppedFile);
-            setPostPreview(dataUrl);
-            setCropModalData(null);
-          },
-        });
-      };
-      reader.readAsDataURL(file);
-      e.target.value = "";
-    }
-  };
-
-  const handleReCrop = () => {
-    const source = rawPostImageSrc || postPreview;
-    if (!source) return;
-    setCropModalData({
-      imageSrc: source,
-      isCircular: false,
-      allowAspectChange: true,
-      initialAspect: "1:1",
-      title: "Crop & Adjust Photo",
-      onComplete: ({ file: croppedFile, dataUrl }) => {
-        setPostFile(croppedFile);
-        setPostPreview(dataUrl);
-        setCropModalData(null);
-      },
-    });
-  };
-
-  const closePostModal = () => {
-    setShowPostModal(false);
-    setPostFile(null);
-    setPostPreview(null);
-    setRawPostImageSrc(null);
-    setCropModalData(null);
-    setPostCaption("");
-    setShowOnFeed(true);
-    setShowOnProfile(true);
-    setFollowersOnly(false);
-    setDisableComments(false);
-    setHideLikes(false);
-  };
-
-  const handlePostSubmit = async () => {
-    if (!postFile || !currentUser) return;
-    setIsPosting(true);
-    const formData = new FormData();
-    formData.append("post_image", postFile);
-    formData.append("caption", postCaption);
-    formData.append("show_on_feed", showOnFeed);
-    formData.append("show_on_profile", showOnProfile);
-    formData.append("followers_only", followersOnly);
-    formData.append("disable_comments", disableComments);
-    formData.append("hide_likes", hideLikes);
-
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API}/posts/${currentUser.id}`, {
-        method: "POST",
-        body: formData,
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        alert("Post shared successfully!");
-        closePostModal();
-      } else {
-        const data = await response.json();
-        alert(data.error || "Upload failed.");
-      }
-    } catch (err) {
-      alert("Upload failed. Please try again.");
-    } finally {
-      setIsPosting(false);
-    }
-  };
+  useEffect(() => {
+    const handleOpenCreatePost = () => {
+      setShowPostModal(true);
+    };
+    window.addEventListener("open-create-post", handleOpenCreatePost);
+    return () => window.removeEventListener("open-create-post", handleOpenCreatePost);
+  }, []);
 
   const activeColor = "text-[#e1306c] drop-shadow-[0_0_8px_rgba(225,48,108,0.5)]";
   const inactiveColor = "text-gray-500 hover:text-gray-300";
@@ -742,211 +649,11 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         </div>
       )}
 
-      {showPostModal && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 sm:p-0">
-          <div className="bg-[#121212] sm:border border-[#262626] sm:rounded-2xl w-full max-w-md h-full sm:h-auto overflow-hidden flex flex-col animate-slide-up sm:animate-none">
-            <div className="flex justify-between items-center px-4 py-3 border-b border-[#262626] bg-black">
-              <button
-                onClick={closePostModal}
-                className="text-white text-2xl hover:text-red-400 transition"
-              >
-                ✕
-              </button>
-              <h3 className="font-bold text-white text-lg">New Post</h3>
-              <button
-                onClick={handlePostSubmit}
-                disabled={!postFile || isPosting}
-                className="font-bold text-lg transition text-pink-500 hover:text-pink-400"
-              >
-                {isPosting ? "Posting..." : "Share"}
-              </button>
-            </div>
-
-            <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
-              {!postPreview ? (
-                <label className="w-full aspect-square border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition hover:border-pink-500 hover:bg-pink-500/5">
-                  <FiCamera size={48} className="text-pink-400 mb-3" />
-                  <span className="text-white font-bold text-lg">Select Photo</span>
-                  <span className="text-gray-500 text-sm mt-1">Tap to browse files</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileSelect}
-                  />
-                </label>
-              ) : (
-                <div className="flex flex-col gap-4 animate-fade-in">
-                  <div className="relative">
-                    <img
-                      src={postPreview}
-                      alt="Preview"
-                      className="w-full aspect-square object-cover rounded-xl border border-white/10 shadow-lg"
-                    />
-                    <div className="absolute top-3 right-3 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleReCrop}
-                        className="bg-black/60 text-white px-2.5 py-1.5 rounded-full backdrop-blur-md hover:bg-white/20 transition flex items-center gap-1 text-xs"
-                      >
-                        <FiCrop size={13} className="text-pink-400" /> Adjust
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPostFile(null);
-                          setPostPreview(null);
-                          setRawPostImageSrc(null);
-                        }}
-                        className="bg-black/60 text-white p-1.5 rounded-full backdrop-blur-md hover:bg-red-500 transition flex items-center gap-1 text-xs"
-                      >
-                        <FiTrash2 size={13} />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <img
-                      src={
-                        currentUser?.profile_pic ||
-                        (isBoy
-                          ? "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
-                          : "https://cdn-icons-png.flaticon.com/512/3135/3135768.png")
-                      }
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover border border-white/10"
-                    />
-                    <textarea
-                      placeholder="Write a caption..."
-                      value={postCaption}
-                      onChange={(e) => setPostCaption(e.target.value)}
-                      className={`flex-1 bg-transparent border-b border-white/10 p-2 text-sm text-white resize-none h-20 outline-none transition ${currentUser?.role === "girl" ? "focus:border-pink-500" : "focus:border-blue-500"}`}
-                    />
-                  </div>
-
-                  {/* Instagram style options block */}
-                  <div className="mt-4 border-t border-white/10 pt-4 flex flex-col gap-3.5 pb-2">
-                    <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                      Post Settings & Options
-                    </h4>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-semibold text-white">Show on Explore Feed</div>
-                        <div className="text-[11px] text-gray-500">
-                          Make visible in the global Explore / Find feed.
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={showOnFeed}
-                          onChange={(e) => setShowOnFeed(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === "girl" ? "peer-checked:bg-pink-500" : "peer-checked:bg-blue-500"}`}
-                        ></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-semibold text-white">Show on Profile Grid</div>
-                        <div className="text-[11px] text-gray-500">
-                          Show this photo in your profile gallery grid.
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={showOnProfile}
-                          onChange={(e) => setShowOnProfile(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === "girl" ? "peer-checked:bg-pink-500" : "peer-checked:bg-blue-500"}`}
-                        ></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-semibold text-white">Followers Only</div>
-                        <div className="text-[11px] text-gray-500">
-                          Only people who follow you can view this post.
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={followersOnly}
-                          onChange={(e) => setFollowersOnly(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === "girl" ? "peer-checked:bg-pink-500" : "peer-checked:bg-blue-500"}`}
-                        ></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-semibold text-white">Turn off Commenting</div>
-                        <div className="text-[11px] text-gray-500">
-                          Disable leaving comments on this specific post.
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={disableComments}
-                          onChange={(e) => setDisableComments(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === "girl" ? "peer-checked:bg-pink-500" : "peer-checked:bg-blue-500"}`}
-                        ></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <div className="text-sm font-semibold text-white">Hide Likes count</div>
-                        <div className="text-[11px] text-gray-500">
-                          Only you can view the likes count of this post.
-                        </div>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                        <input
-                          type="checkbox"
-                          checked={hideLikes}
-                          onChange={(e) => setHideLikes(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-9 h-5 bg-white/10 rounded-full peer peer-focus:ring-0 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all ${currentUser?.role === "girl" ? "peer-checked:bg-pink-500" : "peer-checked:bg-blue-500"}`}
-                        ></div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {cropModalData && (
-        <ImageCropperModal
-          imageSrc={cropModalData.imageSrc}
-          isCircular={cropModalData.isCircular}
-          allowAspectChange={cropModalData.allowAspectChange}
-          initialAspect={cropModalData.initialAspect}
-          title={cropModalData.title}
-          onCropComplete={cropModalData.onComplete}
-          onClose={() => setCropModalData(null)}
-        />
-      )}
+      <CreatePostModal
+        isOpen={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        currentUser={currentUser}
+      />
     </>
   );
 }

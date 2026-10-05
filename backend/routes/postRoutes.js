@@ -74,8 +74,15 @@ router.post("/posts/:userId", authenticateToken, upload.single("post_image"), as
 
     if (!req.file) return res.status(400).json({ error: "Selecting a photo is required!" });
 
-    const { caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes } =
-      req.body;
+    const {
+      caption,
+      location,
+      show_on_feed,
+      show_on_profile,
+      followers_only,
+      disable_comments,
+      hide_likes,
+    } = req.body;
 
     // Sanitize caption — strip HTML
     let safeCaption = (caption || "").replace(/<[^>]*>/g, "").slice(0, 500);
@@ -94,22 +101,44 @@ router.post("/posts/:userId", authenticateToken, upload.single("post_image"), as
     }
 
     const mediaUrl = req.file.path;
-    const newPost = await pool.query(
-      `INSERT INTO posts 
-             (user_id, image_url, caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-             RETURNING *`,
-      [
-        userId,
-        mediaUrl,
-        safeCaption,
-        show_on_feed !== "false",
-        show_on_profile !== "false",
-        followers_only === "true",
-        disable_comments === "true",
-        hide_likes === "true",
-      ]
-    );
+    let newPost;
+    try {
+      newPost = await pool.query(
+        `INSERT INTO posts 
+               (user_id, image_url, caption, location, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+               RETURNING *`,
+        [
+          userId,
+          mediaUrl,
+          safeCaption,
+          location ? String(location).slice(0, 150) : null,
+          show_on_feed !== "false",
+          show_on_profile !== "false",
+          followers_only === "true",
+          disable_comments === "true",
+          hide_likes === "true",
+        ]
+      );
+    } catch (insertErr) {
+      // Fallback if location column is not yet migrated
+      newPost = await pool.query(
+        `INSERT INTO posts 
+               (user_id, image_url, caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+               RETURNING *`,
+        [
+          userId,
+          mediaUrl,
+          safeCaption,
+          show_on_feed !== "false",
+          show_on_profile !== "false",
+          followers_only === "true",
+          disable_comments === "true",
+          hide_likes === "true",
+        ]
+      );
+    }
     res.status(201).json({ message: "Post published successfully!", post: newPost.rows[0] });
   } catch (err) {
     console.error("Create post error:", err);
@@ -280,7 +309,7 @@ router.get("/feed", async (req, res) => {
     const feedQuery = `
             SELECT 
                 p.id, p.image_url, p.caption, p.created_at, p.disable_comments, p.hide_likes,
-                u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
+                u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role, u.city as user_city,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
                 EXISTS(SELECT 1 FROM likes WHERE post_id = p.id AND user_id = $1) as is_liked_by_me,
