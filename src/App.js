@@ -361,7 +361,12 @@ function App() {
     switch (page) {
       case PAGES.HOME:
         return (
-          <HomePage setPage={setPage} currentUser={currentUser} setSelectedGirl={setSelectedGirl} />
+          <HomePage
+            setPage={setPage}
+            currentUser={currentUser}
+            setSelectedGirl={setSelectedGirl}
+            socket={socket}
+          />
         );
       case PAGES.ABOUT:
         return <AboutPage setPage={setPage} />;
@@ -522,7 +527,12 @@ function App() {
         return <LegalPages setPage={setPage} />;
       default:
         return (
-          <HomePage setPage={setPage} currentUser={currentUser} setSelectedGirl={setSelectedGirl} />
+          <HomePage
+            setPage={setPage}
+            currentUser={currentUser}
+            setSelectedGirl={setSelectedGirl}
+            socket={socket}
+          />
         );
     }
   };

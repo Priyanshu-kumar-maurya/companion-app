@@ -13,6 +13,7 @@ import {
   FiMapPin,
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
+import SharePostModal from "./SharePostModal";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
@@ -27,6 +28,7 @@ function InstagramPostModal({
 }) {
   // Current active post ID (used for Desktop navigation)
   const [activePostId, setActivePostId] = useState(initialPostId);
+  const [sharingPost, setSharingPost] = useState(null);
 
   // Cache for comments & like details per post ID
   const [postsDetails, setPostsDetails] = useState({});
@@ -379,6 +381,13 @@ function InstagramPostModal({
                     <FiMessageCircle size={20} />
                   </button>
                 )}
+                <button
+                  onClick={() => setSharingPost(activePost)}
+                  className="text-white hover:text-gray-400 transition"
+                  title="Share post"
+                >
+                  <FiShare2 size={20} />
+                </button>
               </div>
             </div>
 
@@ -509,6 +518,13 @@ function InstagramPostModal({
                         <FiMessageCircle size={22} />
                       </button>
                     )}
+                    <button
+                      onClick={() => setSharingPost(p)}
+                      className="text-white hover:text-gray-400"
+                      title="Share post"
+                    >
+                      <FiShare2 size={22} />
+                    </button>
                   </div>
 
                   {/* Likes count */}
@@ -582,10 +598,13 @@ function InstagramPostModal({
             </button>
 
             <button
-              onClick={() => handleSharePost(optionsPost.id)}
+              onClick={() => {
+                setSharingPost(optionsPost);
+                setOptionsPost(null);
+              }}
               className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center gap-1.5"
             >
-              <FiShare2 size={14} /> Copy Link
+              <FiShare2 size={14} /> Share post...
             </button>
 
             <button
@@ -741,6 +760,16 @@ function InstagramPostModal({
             </div>
           </div>
         </div>
+      )}
+
+      {/* ─── Share Post Modal ─── */}
+      {sharingPost && (
+        <SharePostModal
+          isOpen={Boolean(sharingPost)}
+          post={sharingPost}
+          currentUser={currentUser}
+          onClose={() => setSharingPost(null)}
+        />
       )}
     </div>
   );

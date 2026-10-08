@@ -3,6 +3,7 @@ import { PAGES } from "../App";
 import Footer from "./Footer";
 import StoriesBar from "./shared/StoriesBar";
 import VerifiedBadge from "./shared/VerifiedBadge";
+import SharePostModal from "./shared/SharePostModal";
 import { FeedPostSkeleton, CompanionGridSkeleton } from "./shared/SkeletonLoaders";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
@@ -138,8 +139,9 @@ const DEFAULT_FEATURED_COMPANIONS = [
   },
 ];
 
-function HomePage({ setPage, currentUser, setSelectedGirl }) {
+function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
   const [feed, setFeed] = useState([]);
+  const [sharingPost, setSharingPost] = useState(null);
   const [stats, setStats] = useState(() => {
     const cached = sessionStorage.getItem("homeStatsCache");
     if (cached) {
@@ -588,21 +590,8 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
     }
   };
 
-  const handleShare = async (postId) => {
-    const shareUrl = `${window.location.origin}/#post_${postId}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Check out this post on RentGF",
-          url: shareUrl,
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      alert("Link copied to clipboard!");
-    }
+  const handleShare = (post) => {
+    setSharingPost(post);
   };
 
   const handleProfileClick = (post) => {
@@ -765,8 +754,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
                         </button>
                       )}
                       <button
-                        onClick={() => handleShare(post.id)}
+                        onClick={() => handleShare(post)}
                         className="hover:scale-110 transition active:scale-90 opacity-90"
+                        title="Share post"
                       >
                         <RiShareForwardLine className="text-white text-2xl" />
                       </button>
@@ -886,6 +876,17 @@ function HomePage({ setPage, currentUser, setSelectedGirl }) {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ─── Authentic Instagram Share Sheet Modal ─── */}
+        {sharingPost && (
+          <SharePostModal
+            isOpen={Boolean(sharingPost)}
+            post={sharingPost}
+            currentUser={currentUser}
+            socket={socket}
+            onClose={() => setSharingPost(null)}
+          />
         )}
       </div>
     );
