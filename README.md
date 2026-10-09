@@ -3,22 +3,22 @@
 # ☕ Coffeely
 ### *India's Premier Safe & Verified Companion Booking Platform*
 
-[![Download APK v2.4.5](https://img.shields.io/badge/📥_Download_Android_APK-v2.4.5_(Latest)-E1306C?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
+[![Download APK](https://img.shields.io/badge/📥_Download_Android_APK-v0.0.6_(Beta)-E1306C?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
 [![Live Web Demo](https://img.shields.io/badge/🌐_Live_Web_App-coffeely--app.vercel.app-833AB4?style=for-the-badge&logo=vercel&logoColor=white)](https://coffeely-app.vercel.app)
 [![GitHub Star](https://img.shields.io/github/stars/Priyanshu-kumar-maurya/companion-app?style=for-the-badge&color=F9CE3F&logo=github)](https://github.com/Priyanshu-kumar-maurya/companion-app/stargazers)
 
 <br/>
 
-[![Version](https://img.shields.io/badge/Version-v2.4.5-10B981?style=flat-square&logo=git)](src/config/version.js)
-[![React](https://img.shields.io/badge/Frontend-React_19_+_Tailwind-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Version](https://img.shields.io/badge/Version-v0.0.6--Beta-10B981?style=flat-square&logo=git)](src/config/version.js)
+[![React](https://img.shields.io/badge/Frontend-React_19_+_Tailwind_3.4-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js_+_Express_5-339933?style=flat-square&logo=node.js&logoColor=white)](https://nodejs.org)
 [![Socket.IO](https://img.shields.io/badge/Realtime-Socket.IO_+_WebRTC-010101?style=flat-square&logo=socketdotio&logoColor=white)](https://socket.io)
 [![Database](https://img.shields.io/badge/Database-PostgreSQL_(Neon)-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://neon.tech)
-[![Android](https://img.shields.io/badge/Mobile-Capacitor_Android-119EFF?style=flat-square&logo=android&logoColor=white)](https://capacitorjs.com)
+[![Mobile](https://img.shields.io/badge/Mobile-Capacitor_Android_SDK_35-119EFF?style=flat-square&logo=android&logoColor=white)](https://capacitorjs.com)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 <p align="center">
-  <b>Social Outings</b> • <b>Coffee Dates</b> • <b>Movie Companions</b> • <b>100% Escrow Protection</b> • <b>Encrypted Calls & Chats</b>
+  <b>Social Outings</b> • <b>Coffee Dates</b> • <b>Movie Companions</b> • <b>Instagram-Style Media Feed</b> • <b>100% Escrow Protection</b> • <b>Private Encrypted Calls</b>
 </p>
 
 ---
@@ -29,11 +29,12 @@
 
 > **In a nutshell:** Coffeely is an authentic, transparent, and ultra-secure social companion platform. Whether you are new in a city, looking for a plus-one for a movie date or wedding, attending a social event, or simply want to share a heartfelt conversation over coffee — Coffeely connects you with 100% government ID & KYC-verified companions.
 
-Your safety and privacy are baked right into the core architecture:
+Your safety, privacy, and social experience are baked right into the core architecture:
 - 🔒 **Zero Advance Risk**: Payments remain protected in automated Escrow until meetups finish.
+- 📸 **Instagram-Style Creative Experience**: Authentic multi-step post creation with 14 live filters, canvas rasterization, and chat-first post sharing.
 - 📞 **Private P2P Calling**: WebRTC-powered voice & video calls without sharing personal phone numbers.
 - 🚨 **Emergency GPS Dispatch**: 1-tap SOS broadcast for immediate peace of mind.
-- 📱 **Native Android Experience**: Smooth, lightweight (<10 MB) Android APK built for modern devices.
+- 📱 **Native Android Experience**: Smooth, lightweight (<10 MB) Android APK built with modern Capacitor tools.
 
 ---
 
@@ -42,7 +43,8 @@ Your safety and privacy are baked right into the core architecture:
 | Feature | ❌ Traditional Dating / Social Apps | ✅ Coffeely |
 | :--- | :--- | :--- |
 | **Trust & Identity (KYC)** | Full of catfishes, bots, and unverified profiles | **100% Government ID & KYC-Verified** genuine profiles |
-| **Payment Safety** | High risk of scams and non-refundable advances | **100% Automated Escrow Protection** (Released only after session) |
+| **Payment Safety** | High risk of scams and non-refundable advances | **100% Automated Escrow Protection** (Disbursed only after completion) |
+| **Post Creation & Sharing** | Clunky file pickers, external redirects | **Instagram-Grade Flow**: 14 live filters, crop tools & chat-first sharing |
 | **Call Privacy** | Forces users to exchange private phone numbers | **Built-in WebRTC HD Video & Voice Calling** (Zero number exposure) |
 | **Chat Discretion** | Anyone glancing at your phone can read your chats | **Ghost Mode & 4-Digit PIN Lock** for private conversations |
 | **Emergency Safety** | No real-time panic or emergency support | **One-Tap GPS Emergency SOS** with live coordinate broadcast |
@@ -50,70 +52,68 @@ Your safety and privacy are baked right into the core architecture:
 
 ---
 
-## 📱 Download Coffeely for Android (APK)
-
-Install the official **Coffeely** Android app directly on your smartphone in seconds:
-
-<div align="center">
-
-### 🚀 [📥 Download Latest Android APK (v2.4.5)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)
-*Version: v2.4.5 • File Size: ~9.4 MB • Android 7.0 to Android 15+*
-
-</div>
-
-### 📲 Quick 4-Step Installation:
-1. **Download:** Tap the **[Download APK](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)** button above.
-2. **Open File:** Once downloaded, tap `coffeely.apk` from your notification bar or `Downloads` folder.
-3. **Allow Permission:** If Android prompts *"Install unknown apps"*, tap **Settings** and toggle **"Allow from this source"**.
-4. **Launch:** Tap **Install**, open **Coffeely**, and enjoy genuine social connections! ☕✨
-
----
-
-## ⚡ Key Highlights & Cool Features
+## ⚡ Key Highlights & Core Features
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        ✨ COFFEELY CORE FEATURES                       │
+│                        ✨ COFFEELY CORE MODULES                        │
 ├──────────────────────────┬──────────────────────────┬──────────────────┤
-│ 🛡️ 100% Escrow Safety    │ 📞 In-App HD Calls       │ 🕵️ Ghost PIN Mode │
-│ Zero advance loss. Money │ Peer-to-peer audio/video │ Secret chats with│
-│ held safely in escrow.   │ with zero phone # share. │ 4-digit PIN lock.│
+│ 📸 Instagram Studio      │ ✈️ Chat-First Sharing    │ 🛡️ 100% Escrow   │
+│ 14 filters, crop/aspect  │ Share posts directly to  │ Zero advance loss│
+│ & canvas rasterization.  │ chats + quick copy link. │ locked in ledger.│
 ├──────────────────────────┼──────────────────────────┼──────────────────┤
-│ 🚨 Live GPS SOS Alert    │ 🗺️ Proximity Radar       │ ⭐ Verified Reviews│
-│ 1-tap emergency dispatch │ Find verified companions │ Authentic feedback│
-│ with live coordinates.   │ nearby (5km - 50km).     │ by real clients. │
+│ 📞 WebRTC HD Calls       │ 💬 Real-Time Chats       │ 🚨 GPS SOS Alert │
+│ Private audio & video    │ Audio notes, reactions,  │ 1-tap emergency  │
+│ without sharing numbers. │ ghost PIN lock mode.     │ coordinate push. │
+├──────────────────────────┼──────────────────────────┼──────────────────┤
+│ 🗺️ Proximity Radar       │ 🕒 24-Hour Stories       │ ⭐ Real Reviews  │
+│ Find companions nearby   │ Ephemeral stories bar    │ Verified client  │
+│ with radius filtering.   │ for daily highlights.    │ feedback only.   │
 └──────────────────────────┴──────────────────────────┴──────────────────┘
 ```
 
-### 1. 🛡️ 100% Escrow Payment Guarantee
-- Client booking payments are locked inside an automated **Escrow Holding Ledger**.
-- Funds are only disbursed to the companion once the session is successfully marked completed.
-- If a companion cancels or does not arrive, clients receive an immediate **100% refund**.
+### 1. 📸 Instagram-Style Creative Studio (Post Creation)
+- **Step 1: Media Dropzone**: Drag-and-drop support with signature blue *"Select from computer"* button.
+- **Step 2: Crop & Adjustments**: Interactive zoom (1x to 3x), aspect ratios (**Original**, **1:1 Square**, **4:5 Portrait**, **16:9 Landscape**), 90° rotation, and live 3x3 Rule-of-Thirds grid.
+- **Step 3: 14 Photo Filters & Adjustments**:
+  - Filters: *Normal, Clarendon, Gingham, Moon, Lark, Reyes, Juno, Slumber, Crema, Ludwig, Aden, Perpetua, Valencia, X-Pro II*.
+  - Manual sliders for *Brightness, Contrast, Saturation*, and *Warmth*.
+- **Step 4: Details & Caption**: Author header, live `0/500` character counter, quick emoji bar (`😀 ❤️ 🔥 ✨ ☕ 😍 👏 📸 🌸 🎉 💯 🙌 💕`), location tagging, and privacy controls (*Explore Feed*, *Profile Grid*, *Followers Only*, *Turn off Comments*, *Hide Likes*).
+- **Canvas Rasterizer**: Filters are baked directly onto an off-screen `<canvas>` at 1080px resolution (`ctx.filter`) before uploading to Cloudinary, ensuring all users see the exact filtered photograph.
+- **Discard Confirmation**: Authentic Instagram modal (*"Discard post? If you leave, your edits won't be saved."*).
 
-### 2. 📞 WebRTC HD Audio & Video Calling
-- High-definition P2P audio and video calls directly within the app without exchanging numbers.
-- Built-in calling screens, custom ringtones, camera switching, microphone muting, and duration timers.
+### 2. ✈️ Chat-First In-App Post Sharing
+- **Direct Chat Sharing**: Clicking the paper airplane/share icon opens an Instagram-style share sheet showing your recent chat partners and platform companions.
+- **1-Click Send**: Send posts directly into DMs with a live state transition (`Send` → `✓ Sent`).
+- **Personalized Note**: Add an optional message (e.g., *"Dekh ye post!"* or *"Coffee pe chalen?"*) that is delivered alongside the post card.
+- **Quick Action Tray**:
+  - 🔗 **Copy Link**: Copies `#post_{id}` direct URL with toast feedback.
+  - 📲 **Share via...**: Triggers native device share sheet (`navigator.share`) for external apps.
+  - 💬 **WhatsApp & SMS Shortcuts**: Instantly opens WhatsApp or SMS with prefilled post details.
 
-### 3. 💬 Real-Time Chat & Voice Notes
-- **Instant Messaging**: Low-latency Socket.IO communication with live typing indicators and delivery receipts.
-- **Audio Voice Notes**: Record and preview real-time voice notes with dynamic waveform playback.
+### 3. 🛡️ 100% Automated Escrow Holding Ledger
+- Client booking payments are locked inside an automated **Escrow Holding Vault**.
+- Funds are disbursed to the companion's wallet only after the session is marked completed.
+- If a companion cancels or fails to arrive, clients receive an immediate **100% refund**.
+
+### 4. 📞 WebRTC HD Audio & Video Calling
+- High-definition P2P audio and video calls directly within the app without exchanging personal contact details.
+- Features include custom incoming/outgoing ringtones, camera switching, microphone muting, and duration timers.
+
+### 5. 💬 Real-Time Chat & Voice Notes
+- **Instant Messaging**: Low-latency Socket.IO communication with live typing indicators and seen receipts.
+- **Voice Notes**: Record, preview, and play voice messages with dynamic waveform playback.
 - **Ghost Mode**: Hide sensitive chats from your inbox. Type `#YOUR_PIN` into the search bar to reveal them.
 
-### 4. 🚨 One-Tap Emergency GPS SOS
-- In any emergency, tapping the SOS button immediately broadcasts your live GPS coordinates (latitude/longitude) to your designated emergency contacts and the live Admin Console.
+### 6. 🚨 One-Tap Emergency GPS SOS
+- In any emergency, tapping the SOS button immediately broadcasts live GPS coordinates (latitude/longitude) to configured emergency contacts and the live Admin Console.
 
-### 5. 🗺️ Radar Discovery (Nearby Companions)
-- Powered by OpenStreetMap and Haversine distance calculations. Find verified companions within 5km, 10km, 25km, or 50km radius.
-
-### 6. 📱 Polished Mobile Experience (v2.4.5)
-- **Zero Squashing**: Fixed top/bottom navbar overlap on mobile devices when virtual keyboards open.
-- **Native DOB Wheel**: Responsive native date wheel picker for Day, Month, and Year inputs.
-- **Flexible Registration**: Single-name support ("Priyanshu", "Aanu") and auto-sanitized 10-digit phone parsing.
-- **Smart Offline Detection**: Offline top notification banner with automatic live reconnection sync.
+### 7. 🗺️ Radar Discovery (Nearby Companions)
+- OpenStreetMap and Haversine distance calculations let clients locate companions within 5km, 10km, 25km, or 50km radius.
 
 ---
 
-## 🔄 How It Works (The Complete Journey)
+## 🔄 How Booking & Escrow Works
 
 ```mermaid
 sequenceDiagram
@@ -142,11 +142,11 @@ sequenceDiagram
 Coffeely Full-Stack Architecture
 ├── 🎨 Frontend
 │   ├── React 19 (Functional Hooks & Context State)
-│   ├── Tailwind CSS (Dark Glassmorphic UI Design)
-│   ├── WebRTC (Peer-to-Peer Media Streams)
+│   ├── Tailwind CSS 3.4 (Dark Glassmorphic UI Design)
+│   ├── WebRTC (Peer-to-Peer Audio/Video Media Streams)
 │   ├── Socket.IO Client (Real-time Bidirectional WebSockets)
-│   ├── Leaflet / OpenStreetMap (Geolocation Mapping)
-│   └── React Icons (Feather & FontAwesome Icon Suites)
+│   ├── Leaflet / OpenStreetMap (Geolocation & Distance Radar)
+│   └── React Icons (Feather, FontAwesome, Remix & Bootstrap Suites)
 │
 ├── ⚙️ Backend
 │   ├── Node.js 18+ & Express 5 REST API
@@ -167,8 +167,8 @@ Coffeely Full-Stack Architecture
 
 ## 🔒 Security & Privacy Architecture
 
-- **IDOR Protection**: Strict token ownership verification on wallet balances and payouts (`req.user.id`).
-- **File Upload Hardening**: Multer 10MB limits, with executable file extensions (`.exe`, `.sh`, `.php`) blocked.
+- **IDOR Protection**: Strict token ownership verification on wallet balances, posts, and payouts (`req.user.id`).
+- **File Upload Hardening**: Multer size limits with non-image file extensions blocked.
 - **Socket Authenticity**: Socket connections validate JWT token signatures before admitting users to rooms.
 - **Brute-Force Guard**: Automatic 15-minute account lockout after 5 consecutive failed login attempts.
 - **Security Headers**: Injected via Helmet (`HSTS`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`).
@@ -222,6 +222,7 @@ npm start
 # Terminal 2: React Frontend (Port 3000)
 npm start
 ```
+
 Open `http://localhost:3000` in your web browser! 🚀
 
 ---
@@ -240,6 +241,35 @@ Open `http://localhost:3000` in your web browser! 🚀
 | `POST` | `/api/reset-password` | Set new password using verified OTP | No |
 | `GET` | `/api/users` | List active companion profiles | No |
 | `GET` | `/api/me` | Fetch authenticated user profile | Yes |
+
+</details>
+
+<details>
+<summary><b>📸 Posts & Feed Endpoints</b> (Click to expand)</summary>
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/feed` | Fetch global explore post feed (with likes & save state) | Optional |
+| `POST` | `/api/posts/:userId` | Create new post with image, caption & location | Yes |
+| `GET` | `/api/posts/:userId` | Fetch posts by user ID (respects private visibility) | Optional |
+| `GET` | `/api/posts/detail/:postId` | Fetch post detail with author metadata | Optional |
+| `DELETE` | `/api/posts/:postId` | Delete post (Owner or Admin only) | Yes |
+| `POST` | `/api/like` | Like or unlike a post | Yes |
+| `GET` | `/api/posts/liked` | Fetch all posts liked by current user | Yes |
+| `POST` | `/api/posts/save` | Bookmark/save a post to private collection | Yes |
+| `GET` | `/api/posts/saved` | Fetch all bookmarked posts | Yes |
+
+</details>
+
+<details>
+<summary><b>💬 Chats & Messaging Endpoints</b> (Click to expand)</summary>
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :---: |
+| `GET` | `/api/chats/:userId` | Fetch recent chat conversations | Yes |
+| `GET` | `/api/messages/:user1/:user2` | Fetch message history between two users | Yes |
+| `POST` | `/api/messages` | Send direct message (text, post card, or media) | Yes |
+| `GET` | `/api/unread-messages-count` | Fetch total unread messages counter | Yes |
 
 </details>
 
@@ -264,6 +294,8 @@ Open `http://localhost:3000` in your web browser! 🚀
 | :--- | :--- | :--- | :---: |
 | `POST` | `/api/sos/trigger` | Broadcast emergency SOS with live GPS coordinates | Yes |
 | `GET` | `/api/sos/emergency-contacts` | Retrieve configured emergency contacts | Yes |
+| `POST` | `/api/sos/emergency-contacts` | Add emergency contact (Max 3 contacts) | Yes |
+| `DELETE` | `/api/sos/emergency-contacts/:id` | Delete emergency contact | Yes |
 | `POST` | `/api/reviews` | Submit companion review (Verified clients only) | Yes |
 | `GET` | `/api/call-history/:userId` | Retrieve WebRTC audio and video call history | Yes |
 
