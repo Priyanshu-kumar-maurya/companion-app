@@ -310,8 +310,8 @@ router.get("/follow-stats/:profileId", async (req, res) => {
   }
 });
 
-// 8. Get Companion (Girl) Earnings Stats — AUTH REQUIRED + OWNERSHIP CHECK
-router.get("/girl/stats/:userId", authenticateToken, async (req, res) => {
+// 8. Get Companion (Girl) Detailed Earnings — AUTH REQUIRED + OWNERSHIP CHECK
+router.get("/girl/detailed-stats/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
 

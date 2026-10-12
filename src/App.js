@@ -469,6 +469,7 @@ function App() {
             setPage={setPage}
             currentUser={currentUser}
             setSelectedGirl={setSelectedGirl}
+            socket={socket}
             onUpdateUser={(updated) => {
               if (currentUser?.role === "girl") setGirlUser(updated);
               else setBoyUser(updated);
@@ -484,6 +485,7 @@ function App() {
             currentUser={currentUser}
             setPage={setPage}
             setSelectedGirl={setSelectedGirl}
+            socket={socket}
           />
         ) : (
           <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />

@@ -35,7 +35,40 @@ const connectDB = async () => {
     await pool.connect();
     console.log("✅ PostgreSQL Connected Successfully");
 
-    // Auto-fix tables
+    // Core Foundation Tables (Ensures cold-start / new database initialization)
+    await pool.query(`CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        username VARCHAR(50) UNIQUE,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'boy',
+        age INTEGER,
+        city VARCHAR(100),
+        bio TEXT,
+        price INTEGER DEFAULT 1000,
+        profile_pic TEXT,
+        tags TEXT DEFAULT 'Coffee Date, Movie',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`);
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS posts (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        image_url TEXT NOT NULL,
+        caption TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`);
+
+    await pool.query(`CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        sender_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        receiver_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        text TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );`);
+
+    // Auto-fix tables & add incremental columns
     await pool.query(
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;"
     );

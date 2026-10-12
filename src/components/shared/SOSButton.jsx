@@ -10,7 +10,8 @@ import {
   FiLoader,
 } from "react-icons/fi";
 
-const API = "https://rentgf-and-bf.onrender.com/api";
+const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+const API = `${API_BASE}/api`;
 
 function SOSButton({ user, socket }) {
   const [showPanel, setShowPanel] = useState(false);

@@ -132,17 +132,19 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
         let fetchedFollowStats = { followers: 0, following: 0 };
         let fetchedReviews = [];
 
-        const statsRes = await fetch(`${API}/girl/stats/${user.id}`);
+        const token = localStorage.getItem("token");
+        const authHeaders = {};
+        if (token) authHeaders["Authorization"] = `Bearer ${token}`;
+
+        const statsRes = await fetch(`${API}/girl/stats/${user.id}`, { headers: authHeaders });
         if (statsRes.ok) fetchedStats = await statsRes.json();
 
-        const token = localStorage.getItem("token");
-        const postsHeaders = {};
-        if (token) postsHeaders["Authorization"] = `Bearer ${token}`;
+        const postsHeaders = { ...authHeaders };
         const postsRes = await fetch(`${API}/posts/${user.id}`, { headers: postsHeaders });
         if (postsRes.ok) fetchedPosts = await postsRes.json();
 
         const bookingsRes = await fetch(`${API}/bookings/${user.id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: authHeaders,
         });
         if (bookingsRes.ok) fetchedBookings = await bookingsRes.json();
 
@@ -264,7 +266,10 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           myBookings.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
         );
         if (newStatus === "completed") {
-          const statsRes = await fetch(`${API}/girl/stats/${user.id}`);
+          const token = localStorage.getItem("token");
+          const statsRes = await fetch(`${API}/girl/stats/${user.id}`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
           if (statsRes.ok) setStats(await statsRes.json());
         }
       }

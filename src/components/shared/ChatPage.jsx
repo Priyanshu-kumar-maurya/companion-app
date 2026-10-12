@@ -53,7 +53,7 @@ const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🙏", "🔥"];
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-const socket = io(API_BASE, {
+const defaultSocket = io(API_BASE, {
   autoConnect: false,
   transports: ["websocket"],
   auth: (cb) => {
@@ -61,7 +61,8 @@ const socket = io(API_BASE, {
   },
 });
 
-function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
+function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSocket }) {
+  const socket = propSocket || defaultSocket;
   const userPrefs = getStoredPreferences();
   const wallpaperBackgrounds = {
     dark: "#0D0D1A",
@@ -835,9 +836,14 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl }) {
     isCallerRef.current = true;
     callStartTimeRef.current = null;
     updateCallStatus("calling");
-    // Start camera/mic preview immediately!
-    setupWebRTC(type, false);
-    socket.emit("initiate_call", { room: roomId, receiver_id: girl.id, type: type });
+    socket.emit("initiate_call", {
+      room: roomId,
+      receiver_id: girl.id,
+      type: type,
+      caller_name: currentUser?.name || "Caller",
+      caller_pic: currentUser?.profile_pic || "",
+      caller_user_id: currentUser?.id,
+    });
   };
 
   const acceptCall = () => {

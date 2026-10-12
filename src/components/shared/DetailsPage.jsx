@@ -35,7 +35,7 @@ import {
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-const socket = io(API_BASE, {
+const defaultSocket = io(API_BASE, {
   autoConnect: false,
   transports: ["websocket"],
   auth: (cb) => {
@@ -51,7 +51,15 @@ const TIME_SLOTS = [
   { id: "late_night", label: "Late Night", timeRange: "09:00 PM - 11:00 PM", icon: "✨" },
 ];
 
-function DetailsPage({ girl: profile, currentUser, setPage, setSelectedGirl, onUpdateUser }) {
+function DetailsPage({
+  girl: profile,
+  currentUser,
+  setPage,
+  setSelectedGirl,
+  onUpdateUser,
+  socket: propSocket,
+}) {
+  const socket = propSocket || defaultSocket;
   const [hours, setHours] = useState(2);
   const [posts, setPosts] = useState([]);
   const [expandedPost, setExpandedPost] = useState(null);
