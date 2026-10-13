@@ -34,6 +34,16 @@ import {
   FiClock,
   FiKey,
   FiSmile,
+  FiSearch,
+  FiChevronUp,
+  FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+  FiZoomIn,
+  FiZoomOut,
+  FiRotateCcw,
+  FiDownload,
+  FiShare2,
 } from "react-icons/fi";
 import {
   isChatLocked,
@@ -49,6 +59,26 @@ import VoiceNotePlayer from "./VoiceNotePlayer";
 import { getStoredPreferences } from "../../utils/themePreferences";
 
 const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "🙏", "🔥"];
+
+const renderHighlightedText = (text, query) => {
+  if (!text || typeof text !== "string" || !query || !query.trim()) return text;
+  const q = query.trim();
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    part.toLowerCase() === q.toLowerCase() ? (
+      <mark
+        key={i}
+        className="bg-yellow-400 text-black font-semibold rounded-[3px] px-0.5 shadow-sm inline-block"
+      >
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+};
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
@@ -85,7 +115,13 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
   const [editingMsgId, setEditingMsgId] = useState(null);
   const [hoveredMsgId, setHoveredMsgId] = useState(null);
   const [messageToDelete, setMessageToDelete] = useState(null);
-  const [lightboxImg, setLightboxImg] = useState(null); // fullscreen image viewer
+  const [lightboxImg, setLightboxImg] = useState(null); // fallback fullscreen image viewer
+  const [lightboxState, setLightboxState] = useState(null); // { isOpen, activeUrl, currentIndex, zoom, rotation, msg }
+  const [downloadingImg, setDownloadingImg] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchIndex, setSearchIndex] = useState(0);
+  const [highlightedMsgId, setHighlightedMsgId] = useState(null);
   const [activeReactionPickerId, setActiveReactionPickerId] = useState(null);
   const longPressTimerRef = useRef(null);
 
@@ -1048,6 +1084,168 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
   const mediaList = messages.filter((m) => m.imageUrl);
   const filteredMessagesToShow = getFilteredMessages();
 
+  // --- IN-CHAT MESSAGE SEARCH LOGIC ---
+  const searchResults = React.useMemo(() => {
+    if (!searchQuery || !searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return filteredMessagesToShow.filter(
+      (m) => m.text && m.text.toLowerCase().includes(q)
+    );
+  }, [searchQuery, filteredMessagesToShow]);
+
+  // Scroll to focused search match
+  useEffect(() => {
+    if (searchResults.length > 0) {
+      const idx = Math.min(searchIndex, searchResults.length - 1);
+      const matchMsg = searchResults[idx];
+      if (matchMsg) {
+        setHighlightedMsgId(matchMsg.id);
+        const el = document.getElementById(`msg-${matchMsg.id}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    } else {
+      setHighlightedMsgId(null);
+    }
+  }, [searchResults, searchIndex]);
+
+  const handleNextSearchMatch = () => {
+    if (searchResults.length === 0) return;
+    setSearchIndex((prev) => (prev + 1) % searchResults.length);
+  };
+
+  const handlePrevSearchMatch = () => {
+    if (searchResults.length === 0) return;
+    setSearchIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+  };
+
+  // --- FULLSCREEN IMAGE LIGHTBOX & ZOOM LOGIC ---
+  const openLightbox = (url, msg) => {
+    const list = messages.filter((m) => m.imageUrl);
+    const idx = list.findIndex((m) => m.imageUrl === url);
+    setLightboxState({
+      isOpen: true,
+      activeUrl: url,
+      currentIndex: idx >= 0 ? idx : 0,
+      zoom: 1,
+      rotation: 0,
+      msg: msg || (idx >= 0 ? list[idx] : null),
+    });
+  };
+
+  const closeLightbox = () => {
+    setLightboxState(null);
+  };
+
+  const handleNextLightboxImg = () => {
+    if (!lightboxState) return;
+    const list = messages.filter((m) => m.imageUrl);
+    if (list.length === 0) return;
+    const nextIdx = (lightboxState.currentIndex + 1) % list.length;
+    setLightboxState((prev) => ({
+      ...prev,
+      currentIndex: nextIdx,
+      activeUrl: list[nextIdx].imageUrl,
+      msg: list[nextIdx],
+      zoom: 1,
+      rotation: 0,
+    }));
+  };
+
+  const handlePrevLightboxImg = () => {
+    if (!lightboxState) return;
+    const list = messages.filter((m) => m.imageUrl);
+    if (list.length === 0) return;
+    const prevIdx = (lightboxState.currentIndex - 1 + list.length) % list.length;
+    setLightboxState((prev) => ({
+      ...prev,
+      currentIndex: prevIdx,
+      activeUrl: list[prevIdx].imageUrl,
+      msg: list[prevIdx],
+      zoom: 1,
+      rotation: 0,
+    }));
+  };
+
+  const handleZoomIn = () => {
+    setLightboxState((prev) => ({
+      ...prev,
+      zoom: Math.min(3, ((prev && prev.zoom) || 1) + 0.5),
+    }));
+  };
+
+  const handleZoomOut = () => {
+    setLightboxState((prev) => ({
+      ...prev,
+      zoom: Math.max(1, ((prev && prev.zoom) || 1) - 0.5),
+    }));
+  };
+
+  const handleResetZoom = () => {
+    setLightboxState((prev) => ({
+      ...prev,
+      zoom: 1,
+      rotation: 0,
+    }));
+  };
+
+  const handleRotate = () => {
+    setLightboxState((prev) => ({
+      ...prev,
+      rotation: (((prev && prev.rotation) || 0) + 90) % 360,
+    }));
+  };
+
+  const handleDownloadImage = async (url) => {
+    if (!url || downloadingImg) return;
+    setDownloadingImg(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `coffeely_${Date.now()}.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch (err) {
+      window.open(url, "_blank");
+    } finally {
+      setDownloadingImg(false);
+    }
+  };
+
+  const handleShareImage = async (url) => {
+    if (!url) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Coffeely Photo",
+          url: url,
+        });
+      } catch (err) {}
+    } else {
+      navigator.clipboard?.writeText(url);
+      alert("Image link copied to clipboard!");
+    }
+  };
+
+  useEffect(() => {
+    if (!lightboxState?.isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") closeLightbox();
+      else if (e.key === "ArrowRight") handleNextLightboxImg();
+      else if (e.key === "ArrowLeft") handlePrevLightboxImg();
+      else if (e.key === "+" || e.key === "=") handleZoomIn();
+      else if (e.key === "-") handleZoomOut();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxState]);
+
   return (
     <div className="fixed inset-0 flex z-50" style={{ background: "#0D0D1A" }}>
       {/* ─── MAIN CHAT AREA ─── */}
@@ -1093,6 +1291,23 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
           <div className="flex gap-1 relative shrink-0" ref={menuRef}>
             <button
+              onClick={() => {
+                setShowSearch((prev) => !prev);
+                if (showSearch) {
+                  setSearchQuery("");
+                  setHighlightedMsgId(null);
+                }
+              }}
+              className={`w-10 h-10 flex items-center justify-center transition rounded-full hover:bg-white/10 ${
+                showSearch
+                  ? "text-pink-400 bg-pink-500/20 shadow-[0_0_10px_rgba(236,72,153,0.3)]"
+                  : "text-gray-300 hover:text-white"
+              }`}
+              title="Search conversation"
+            >
+              <FiSearch size={19} />
+            </button>
+            <button
               onClick={() =>
                 window.dispatchEvent(
                   new CustomEvent("rentgf_start_call", {
@@ -1101,6 +1316,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                 )
               }
               className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-[#0095f6] transition rounded-full hover:bg-white/10"
+              title="Video Call"
             >
               <FiVideo size={20} />
             </button>
@@ -1113,19 +1329,31 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                 )
               }
               className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-[#0095f6] transition rounded-full hover:bg-white/10"
+              title="Audio Call"
             >
               <FiPhone size={20} />
             </button>
             <button
               onClick={() => setShowMenu(!showMenu)}
               className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
+              title="More options"
             >
               <FiMoreVertical size={20} />
             </button>
 
             {/* Dropdown Menu */}
             {showMenu && (
-              <div className="absolute right-0 top-12 bg-[#16162A] border border-white/10 rounded-xl shadow-2xl py-1.5 w-44 z-50 animate-fade-in text-left">
+              <div className="absolute right-0 top-12 bg-[#16162A] border border-white/10 rounded-xl shadow-2xl py-1.5 w-48 z-50 animate-fade-in text-left">
+                <button
+                  onClick={() => {
+                    setShowSearch(true);
+                    setShowMenu(false);
+                  }}
+                  className="w-full px-4 py-2.5 text-left text-xs font-semibold text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition"
+                >
+                  <FiSearch size={14} className="text-pink-400" />
+                  Search Conversation
+                </button>
                 <button
                   onClick={() => {
                     setShowContactInfo(true);
@@ -1237,6 +1465,66 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             )}
           </div>
         </div>
+
+        {/* ─── EXPANDABLE IN-CHAT SEARCH BAR ─── */}
+        {showSearch && (
+          <div
+            className="flex items-center gap-2 px-3 py-2 border-b animate-fade-in z-30 shrink-0 shadow-lg"
+            style={{ background: "#121226", borderColor: "rgba(255,255,255,0.08)" }}
+          >
+            <FiSearch size={16} className="text-pink-400 shrink-0 ml-1" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search in conversation..."
+              className="flex-1 bg-transparent text-xs sm:text-sm text-white placeholder-gray-500 outline-none"
+              autoFocus
+            />
+            {searchQuery && (
+              <div className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
+                <span className="text-[10px] sm:text-[11px] font-semibold text-pink-300 bg-pink-500/15 px-2 py-0.5 rounded-full border border-pink-500/20">
+                  {searchResults.length > 0
+                    ? `${searchIndex + 1} of ${searchResults.length}`
+                    : "No matches"}
+                </span>
+                <button
+                  onClick={handlePrevSearchMatch}
+                  disabled={searchResults.length === 0}
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-300 hover:text-white disabled:opacity-25 transition"
+                  title="Previous match (↑)"
+                >
+                  <FiChevronUp size={16} />
+                </button>
+                <button
+                  onClick={handleNextSearchMatch}
+                  disabled={searchResults.length === 0}
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-300 hover:text-white disabled:opacity-25 transition"
+                  title="Next match (↓)"
+                >
+                  <FiChevronDown size={16} />
+                </button>
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition"
+                  title="Clear search"
+                >
+                  <FiX size={15} />
+                </button>
+              </div>
+            )}
+            <button
+              onClick={() => {
+                setShowSearch(false);
+                setSearchQuery("");
+                setHighlightedMsgId(null);
+              }}
+              className="text-xs font-semibold text-gray-400 hover:text-white px-2.5 py-1 rounded-md hover:bg-white/10 transition shrink-0"
+            >
+              Done
+            </button>
+          </div>
+        )}
 
         {/* ─── Encryption notice ─── */}
         <div
@@ -1379,7 +1667,14 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col mb-1">
+                      <div
+                        id={`msg-${msg.id}`}
+                        className={`flex flex-col mb-1 transition-all duration-300 rounded-xl ${
+                          highlightedMsgId === msg.id
+                            ? "ring-2 ring-pink-500/80 bg-pink-500/10 p-1"
+                            : ""
+                        }`}
+                      >
                         <div
                           className={`flex ${msg.sent ? "justify-end" : "justify-start"} group relative`}
                           onMouseEnter={() => setHoveredMsgId(msg.id)}
@@ -1514,7 +1809,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                                         ? "10px 10px 2px 10px"
                                         : "10px 10px 10px 2px",
                                     }}
-                                    onClick={() => setLightboxImg(msg.imageUrl)}
+                                    onClick={() => openLightbox(msg.imageUrl, msg)}
                                   />
                                   {/* Timestamp overlay on image */}
                                   <div className="absolute bottom-1.5 right-1.5 flex items-center gap-1 bg-black/50 px-1.5 py-0.5 rounded-md backdrop-blur-[1px] text-[9px] text-white/90 select-none pointer-events-none">
@@ -1556,10 +1851,12 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                                         ? "10px 10px 2px 10px"
                                         : "10px 10px 10px 2px",
                                     }}
-                                    onClick={() => setLightboxImg(msg.imageUrl)}
+                                    onClick={() => openLightbox(msg.imageUrl, msg)}
                                   />
                                   <div className="px-1.5 pb-1">
-                                    <span className="break-words text-gray-200">{msg.text}</span>
+                                    <span className="break-words text-gray-200">
+                                      {renderHighlightedText(msg.text, searchQuery)}
+                                    </span>
                                     <div className="flex items-center justify-end gap-1 mt-1 -mb-0.5 ml-3">
                                       {starredMessages.includes(msg.id) && (
                                         <span className="text-yellow-400 text-[10px] mr-1">★</span>
@@ -1604,7 +1901,11 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                                       sent={msg.sent}
                                     />
                                   ) : (
-                                    msg.text && <span className="break-words">{msg.text}</span>
+                                    msg.text && (
+                                      <span className="break-words">
+                                        {renderHighlightedText(msg.text, searchQuery)}
+                                      </span>
+                                    )
                                   )}
                                   <div className="flex items-center justify-end gap-1 mt-0.5 -mb-0.5 ml-3">
                                     {starredMessages.includes(msg.id) && (
@@ -1914,7 +2215,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                   {mediaList.slice(0, 4).map((m) => (
                     <div
                       key={m.id}
-                      onClick={() => setLightboxImg(m.imageUrl)}
+                      onClick={() => openLightbox(m.imageUrl, m)}
                       className="aspect-square rounded-md overflow-hidden cursor-pointer border border-white/5"
                     >
                       <img
@@ -2147,33 +2448,207 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
         </div>
       )}
 
-      {/* ─── FULLSCREEN IMAGE LIGHTBOX ─── */}
-      {lightboxImg && (
+      {/* ─── ADVANCED FULLSCREEN IMAGE VIEWER & ZOOM GALLERY ─── */}
+      {(lightboxState?.isOpen || lightboxImg) && (
         <div
-          className="fixed inset-0 z-[150] bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setLightboxImg(null)}
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-fade-in"
+          onClick={() => {
+            closeLightbox();
+            setLightboxImg(null);
+          }}
         >
-          <button
-            onClick={() => setLightboxImg(null)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition z-10"
-          >
-            <FiX size={20} />
-          </button>
-          <img
-            src={lightboxImg}
-            alt="Full view"
-            className="max-w-full max-h-full object-contain rounded-lg select-none"
+          {/* TOP TOOLBAR */}
+          <div
+            className="flex items-center justify-between px-3 sm:px-5 py-3 bg-black/60 border-b border-white/10 z-20 backdrop-blur-md"
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: "95vw", maxHeight: "90vh" }}
-          />
-          <a
-            href={lightboxImg}
-            download
-            onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2 rounded-full text-xs font-semibold text-white bg-white/10 border border-white/20 hover:bg-white/20 transition"
           >
-            <FiPaperclip size={13} /> Save Image
-          </a>
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                onClick={() => {
+                  closeLightbox();
+                  setLightboxImg(null);
+                }}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                title="Close (Esc)"
+              >
+                <FiArrowLeft size={18} />
+              </button>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-white truncate">
+                  {lightboxState?.msg?.sent ? "You" : girl?.name || "Companion"}
+                </p>
+                <p className="text-[11px] text-gray-400">
+                  {lightboxState?.msg?.time || "Photo"}
+                  {mediaList.length > 1 && (
+                    <span className="ml-2 font-semibold text-pink-400">
+                      ({((lightboxState?.currentIndex ?? 0) + 1)} of {mediaList.length})
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {/* Control Actions */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              <button
+                onClick={handleZoomIn}
+                disabled={(lightboxState?.zoom || 1) >= 3}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white flex items-center justify-center transition"
+                title="Zoom In (+)"
+              >
+                <FiZoomIn size={16} />
+              </button>
+              <button
+                onClick={handleZoomOut}
+                disabled={(lightboxState?.zoom || 1) <= 1}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-30 text-white flex items-center justify-center transition"
+                title="Zoom Out (-)"
+              >
+                <FiZoomOut size={16} />
+              </button>
+              <button
+                onClick={handleRotate}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                title="Rotate 90°"
+              >
+                <FiRefreshCw size={15} />
+              </button>
+              <button
+                onClick={handleResetZoom}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                title="Reset Zoom"
+              >
+                <FiRotateCcw size={15} />
+              </button>
+              <button
+                onClick={() => handleShareImage(lightboxState?.activeUrl || lightboxImg)}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+                title="Share Image"
+              >
+                <FiShare2 size={16} />
+              </button>
+              <button
+                onClick={() => handleDownloadImage(lightboxState?.activeUrl || lightboxImg)}
+                disabled={downloadingImg}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 text-white text-xs font-bold transition shadow-lg shrink-0 ml-1"
+                title="Save to Device"
+              >
+                <FiDownload size={14} className={downloadingImg ? "animate-bounce" : ""} />
+                <span className="hidden sm:inline">{downloadingImg ? "Saving..." : "Save"}</span>
+              </button>
+              <button
+                onClick={() => {
+                  closeLightbox();
+                  setLightboxImg(null);
+                }}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition ml-1"
+                title="Close"
+              >
+                <FiX size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* CENTER IMAGE DISPLAY */}
+          <div
+            className="flex-1 relative flex items-center justify-center overflow-hidden p-2 sm:p-4"
+            onClick={() => {
+              closeLightbox();
+              setLightboxImg(null);
+            }}
+          >
+            {/* Prev arrow */}
+            {mediaList.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePrevLightboxImg();
+                }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 border border-white/20 text-white flex items-center justify-center transition shadow-2xl active:scale-95"
+                title="Previous Image (←)"
+              >
+                <FiChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* Image with zoom and rotation */}
+            <div
+              className="max-w-full max-h-full flex items-center justify-center transition-transform duration-200"
+              style={{
+                transform: `scale(${lightboxState?.zoom || 1}) rotate(${lightboxState?.rotation || 0}deg)`,
+                cursor: (lightboxState?.zoom || 1) > 1 ? "grab" : "zoom-in",
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                setLightboxState((prev) => ({
+                  ...prev,
+                  zoom: (prev?.zoom || 1) > 1 ? 1 : 2,
+                }));
+              }}
+            >
+              <img
+                src={lightboxState?.activeUrl || lightboxImg}
+                alt="Full view"
+                className="max-w-[95vw] max-h-[75vh] object-contain rounded-lg shadow-2xl select-none"
+                draggable={false}
+              />
+            </div>
+
+            {/* Next arrow */}
+            {mediaList.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNextLightboxImg();
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-black/60 hover:bg-black/90 border border-white/20 text-white flex items-center justify-center transition shadow-2xl active:scale-95"
+                title="Next Image (→)"
+              >
+                <FiChevronRight size={24} />
+              </button>
+            )}
+          </div>
+
+          {/* BOTTOM BAR: Caption & Thumbnail strip */}
+          <div
+            className="px-4 py-3 bg-black/70 border-t border-white/10 z-20 backdrop-blur-md flex flex-col gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {lightboxState?.msg?.text && (
+              <p className="text-center text-xs text-gray-200 max-w-xl mx-auto break-words px-2 font-medium">
+                {lightboxState.msg.text}
+              </p>
+            )}
+
+            {/* Thumbnails row if more than 1 image */}
+            {mediaList.length > 1 && (
+              <div className="flex items-center justify-center gap-2 overflow-x-auto py-1 max-w-2xl mx-auto">
+                {mediaList.map((m, idx) => (
+                  <button
+                    key={m.id || idx}
+                    onClick={() =>
+                      setLightboxState((prev) => ({
+                        ...prev,
+                        currentIndex: idx,
+                        activeUrl: m.imageUrl,
+                        msg: m,
+                        zoom: 1,
+                        rotation: 0,
+                      }))
+                    }
+                    className={`w-12 h-12 rounded-lg overflow-hidden border-2 shrink-0 transition-all ${
+                      idx === (lightboxState?.currentIndex ?? -1)
+                        ? "border-pink-500 scale-105 shadow-[0_0_10px_rgba(236,72,153,0.6)]"
+                        : "border-transparent opacity-50 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={m.imageUrl} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
