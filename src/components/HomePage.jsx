@@ -4,6 +4,7 @@ import Footer from "./Footer";
 import StoriesBar from "./shared/StoriesBar";
 import VerifiedBadge from "./shared/VerifiedBadge";
 import SharePostModal from "./shared/SharePostModal";
+import PostMediaCarousel from "./shared/PostMediaCarousel";
 import { FeedPostSkeleton, CompanionGridSkeleton } from "./shared/SkeletonLoaders";
 import { AiFillHeart, AiOutlineHeart } from "react-icons/ai";
 import { FaRegComment, FaInbox } from "react-icons/fa";
@@ -725,12 +726,12 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
                   )}
                 </div>
 
-                <div
-                  className="relative w-full bg-black aspect-square cursor-pointer flex items-center justify-center"
-                  onDoubleClick={(e) => handleDoubleTap(e, post.id, post.is_liked_by_me)}
-                >
-                  <img src={post.image_url} alt="Post" className="w-full h-full object-contain" />
-                </div>
+                <PostMediaCarousel
+                  post={post}
+                  onDoubleTap={handleDoubleTap}
+                  aspectRatio="aspect-square"
+                  objectFit="object-contain"
+                />
 
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-3">

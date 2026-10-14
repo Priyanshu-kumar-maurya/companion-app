@@ -14,6 +14,7 @@ import {
 } from "react-icons/fi";
 import { FaHeart } from "react-icons/fa";
 import SharePostModal from "./SharePostModal";
+import PostMediaCarousel from "./PostMediaCarousel";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
@@ -258,13 +259,13 @@ function InstagramPostModal({
           </button>
         )}
 
-        {/* Left Column: Image */}
+        {/* Left Column: Carousel */}
         <div className="flex-1 bg-black flex items-center justify-center aspect-square overflow-hidden max-h-[75vh]">
-          <img
-            src={activePost.image_url}
-            alt=""
-            className="w-full h-full object-contain"
-            onDoubleClick={() => handleLikeToggle(activePost.id)}
+          <PostMediaCarousel
+            post={activePost}
+            onDoubleTap={() => handleLikeToggle(activePost.id)}
+            aspectRatio="aspect-square"
+            objectFit="object-contain"
           />
         </div>
 
@@ -487,13 +488,13 @@ function InstagramPostModal({
                   </button>
                 </div>
 
-                {/* Post Image */}
+                {/* Post Carousel */}
                 <div className="bg-black/50 aspect-square w-full flex items-center justify-center overflow-hidden">
-                  <img
-                    src={p.image_url}
-                    alt=""
-                    className="w-full h-full object-cover"
-                    onDoubleClick={() => handleLikeToggle(p.id)}
+                  <PostMediaCarousel
+                    post={p}
+                    onDoubleTap={() => handleLikeToggle(p.id)}
+                    aspectRatio="aspect-square"
+                    objectFit="object-cover"
                   />
                 </div>
 

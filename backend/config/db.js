@@ -123,6 +123,9 @@ const connectDB = async () => {
       "ALTER TABLE posts ADD COLUMN IF NOT EXISTS hide_likes BOOLEAN DEFAULT false;"
     );
     await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS location VARCHAR(150);");
+    await pool.query(
+      "ALTER TABLE posts ADD COLUMN IF NOT EXISTS media_urls TEXT[] DEFAULT '{}';"
+    );
     await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;");
     await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS canceled_by VARCHAR(10);");
     await pool.query("ALTER TABLE bookings ADD COLUMN IF NOT EXISTS proposed_date DATE;");

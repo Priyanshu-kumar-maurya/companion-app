@@ -12,9 +12,12 @@ import {
   FiChevronDown,
   FiChevronUp,
   FiSliders,
+  FiPlus,
+  FiTrash2,
 } from "react-icons/fi";
 import { BsGrid3X3, BsImages } from "react-icons/bs";
 import VerifiedBadge from "./VerifiedBadge";
+import PostMediaCarousel from "./PostMediaCarousel";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
@@ -92,7 +95,10 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
   const [step, setStep] = useState("upload");
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
-  // Uploaded media state
+  // Uploaded media state (supports 1 to 5 photos)
+  const [mediaItems, setMediaItems] = useState([]); // [{ id, rawSrc, width, height, zoom, rotation, offset, selectedFilter, adjustments }]
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [showGalleryTray, setShowGalleryTray] = useState(false);
   const [rawImageSrc, setRawImageSrc] = useState(null);
   const [imageMeta, setImageMeta] = useState({ width: 0, height: 0 });
   const [isDragOver, setIsDragOver] = useState(false);
@@ -138,6 +144,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
 
   // Refs
   const fileInputRef = useRef(null);
+  const extraFileInputRef = useRef(null);
   const containerRef = useRef(null);
   const imageRef = useRef(null);
   const captionRef = useRef(null);
@@ -150,6 +157,9 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
   const handleFullReset = useCallback(() => {
     setStep("upload");
     setShowDiscardConfirm(false);
+    setMediaItems([]);
+    setActiveMediaIndex(0);
+    setShowGalleryTray(false);
     setRawImageSrc(null);
     setImageMeta({ width: 0, height: 0 });
     setAspectRatio("1:1");
@@ -181,7 +191,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
   // Handle Close with Discard Warning
   const handleRequestClose = () => {
     if (step === "sharing") return; // cannot cancel during upload
-    if (step === "success" || step === "upload" || !rawImageSrc) {
+    if (step === "success" || step === "upload" || (!rawImageSrc && mediaItems.length === 0)) {
       handleFullReset();
       onClose();
     } else {
@@ -194,49 +204,197 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
     onClose();
   };
 
-  // Flash 3x3 grid when user touches or drags crop area
-  const triggerGrid = () => {
-    setShowGrid(true);
-    if (gridTimeoutRef.current) clearTimeout(gridTimeoutRef.current);
-    gridTimeoutRef.current = setTimeout(() => {
-      setShowGrid(false);
-    }, 1000);
+  // Helper to sync changes on active item
+  const updateActiveMediaItem = useCallback(
+    (updates) => {
+      setMediaItems((prev) => {
+        if (!prev || !prev[activeMediaIndex]) return prev;
+        const copy = [...prev];
+        copy[activeMediaIndex] = {
+          ...copy[activeMediaIndex],
+          ...updates,
+        };
+        return copy;
+      });
+    },
+    [activeMediaIndex]
+  );
+
+  // Switch active photo in the carousel
+  const switchActiveMedia = (targetIdx) => {
+    if (targetIdx === activeMediaIndex || !mediaItems[targetIdx]) return;
+
+    // Save current active media transformations
+    setMediaItems((prev) => {
+      const copy = [...prev];
+      if (copy[activeMediaIndex]) {
+        copy[activeMediaIndex] = {
+          ...copy[activeMediaIndex],
+          zoom,
+          rotation,
+          offset,
+          selectedFilter,
+          adjustments,
+        };
+      }
+      return copy;
+    });
+
+    const target = mediaItems[targetIdx];
+    setActiveMediaIndex(targetIdx);
+    setRawImageSrc(target.rawSrc);
+    setImageMeta({ width: target.width, height: target.height });
+    setZoom(target.zoom ?? 1);
+    setRotation(target.rotation ?? 0);
+    setOffset(target.offset ?? { x: 0, y: 0 });
+    setSelectedFilter(target.selectedFilter ?? "normal");
+    setAdjustments(
+      target.adjustments ?? { brightness: 0, contrast: 0, saturation: 0, sepia: 0 }
+    );
   };
 
-  // File loading
-  const processFile = (file) => {
-    if (!file || !file.type.startsWith("image/")) {
-      alert("Please select a valid image file.");
+  // File loading (supports 1 to 5 images)
+  const processFiles = (files) => {
+    const validFiles = Array.from(files).filter(
+      (f) => f && f.type && f.type.startsWith("image/")
+    );
+    if (validFiles.length === 0) {
+      alert("Please select valid image files (JPG, PNG, WEBP).");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      const img = new Image();
-      img.onload = () => {
-        setImageMeta({ width: img.naturalWidth, height: img.naturalHeight });
-        setRawImageSrc(dataUrl);
-        setStep("crop");
+
+    const filesToLoad = validFiles.slice(0, 5);
+
+    Promise.all(
+      filesToLoad.map((file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            const img = new Image();
+            img.onload = () => {
+              resolve({
+                id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
+                rawSrc: dataUrl,
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+                zoom: 1,
+                rotation: 0,
+                offset: { x: 0, y: 0 },
+                selectedFilter: "normal",
+                adjustments: { brightness: 0, contrast: 0, saturation: 0, sepia: 0 },
+              });
+            };
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then((items) => {
+      if (items.length > 0) {
+        setMediaItems(items);
+        setActiveMediaIndex(0);
+        setRawImageSrc(items[0].rawSrc);
+        setImageMeta({ width: items[0].width, height: items[0].height });
         setZoom(1);
         setRotation(0);
         setOffset({ x: 0, y: 0 });
-      };
-      img.src = dataUrl;
-    };
-    reader.readAsDataURL(file);
+        setSelectedFilter("normal");
+        setAdjustments({ brightness: 0, contrast: 0, saturation: 0, sepia: 0 });
+        setStep("crop");
+      }
+    });
+  };
+
+  // Add more files to existing carousel (max 5)
+  const handleAddMoreFiles = (e) => {
+    const files = Array.from(e.target.files || []).filter(
+      (f) => f && f.type && f.type.startsWith("image/")
+    );
+    e.target.value = "";
+    if (files.length === 0) return;
+
+    const availableSlots = 5 - mediaItems.length;
+    if (availableSlots <= 0) {
+      alert("Maximum 5 photos allowed per post.");
+      return;
+    }
+
+    const filesToAdd = files.slice(0, availableSlots);
+
+    Promise.all(
+      filesToAdd.map((file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            const img = new Image();
+            img.onload = () => {
+              resolve({
+                id: `media_${Date.now()}_${Math.random().toString(36).substr(2, 7)}`,
+                rawSrc: dataUrl,
+                width: img.naturalWidth,
+                height: img.naturalHeight,
+                zoom: 1,
+                rotation: 0,
+                offset: { x: 0, y: 0 },
+                selectedFilter: "normal",
+                adjustments: { brightness: 0, contrast: 0, saturation: 0, sepia: 0 },
+              });
+            };
+            img.src = dataUrl;
+          };
+          reader.readAsDataURL(file);
+        });
+      })
+    ).then((newItems) => {
+      setMediaItems((prev) => [...prev, ...newItems]);
+    });
+  };
+
+  // Remove a photo from carousel
+  const handleRemoveMediaItem = (e, indexToRemove) => {
+    e.stopPropagation();
+    if (mediaItems.length <= 1) {
+      alert("Post must contain at least 1 photo.");
+      return;
+    }
+
+    const updated = mediaItems.filter((_, idx) => idx !== indexToRemove);
+    let nextIdx = activeMediaIndex;
+    if (indexToRemove === activeMediaIndex) {
+      nextIdx = Math.max(0, indexToRemove - 1);
+    } else if (indexToRemove < activeMediaIndex) {
+      nextIdx = activeMediaIndex - 1;
+    }
+
+    setMediaItems(updated);
+    setActiveMediaIndex(nextIdx);
+    const target = updated[nextIdx];
+    if (target) {
+      setRawImageSrc(target.rawSrc);
+      setImageMeta({ width: target.width, height: target.height });
+      setZoom(target.zoom ?? 1);
+      setRotation(target.rotation ?? 0);
+      setOffset(target.offset ?? { x: 0, y: 0 });
+      setSelectedFilter(target.selectedFilter ?? "normal");
+      setAdjustments(
+        target.adjustments ?? { brightness: 0, contrast: 0, saturation: 0, sepia: 0 }
+      );
+    }
   };
 
   const handleFileInputChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
+    const files = e.target.files;
+    if (files && files.length > 0) processFiles(files);
     e.target.value = "";
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) processFiles(files);
   };
 
   // Offset Clamping to prevent black gaps
@@ -365,7 +523,11 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
 
   // Rotation
   const handleRotate = () => {
-    setRotation((prev) => (prev + 90) % 360);
+    setRotation((prev) => {
+      const next = (prev + 90) % 360;
+      updateActiveMediaItem({ rotation: next, offset: { x: 0, y: 0 } });
+      return next;
+    });
     setOffset({ x: 0, y: 0 });
     triggerGrid();
   };
@@ -375,7 +537,25 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
     setZoom(1);
     setRotation(0);
     setOffset({ x: 0, y: 0 });
+    updateActiveMediaItem({ zoom: 1, rotation: 0, offset: { x: 0, y: 0 } });
     setShowGrid(false);
+  };
+
+  // Sync current active transformation state into items array
+  const saveCurrentActiveState = () => {
+    setMediaItems((prev) => {
+      if (!prev || !prev[activeMediaIndex]) return prev;
+      const copy = [...prev];
+      copy[activeMediaIndex] = {
+        ...copy[activeMediaIndex],
+        zoom,
+        rotation,
+        offset,
+        selectedFilter,
+        adjustments,
+      };
+      return copy;
+    });
   };
 
   // Compute aspect ratio CSS style for preview box
@@ -399,111 +579,121 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
     }
   };
 
-  // Rasterize image with Crop, Rotation & CSS Filters onto Canvas
-  const rasterizeFinalImage = async () => {
+  // Rasterize an individual media item with Crop, Rotation & CSS Filters onto Canvas
+  const rasterizeSingleItem = async (item) => {
     return new Promise((resolve, reject) => {
       try {
-        const img = imageRef.current;
-        const container = containerRef.current?.getBoundingClientRect();
-        if (!img || !container) {
-          return reject(new Error("Image element not ready"));
-        }
+        const img = new Image();
+        img.onload = () => {
+          const naturalW = img.naturalWidth;
+          const naturalH = img.naturalHeight;
 
-        const naturalW = img.naturalWidth;
-        const naturalH = img.naturalHeight;
-
-        let targetW = 1080;
-        let targetH = 1080;
-        if (aspectRatio === "4:5") {
-          targetW = 1080;
-          targetH = 1350;
-        } else if (aspectRatio === "16:9") {
-          targetW = 1080;
-          targetH = 608;
-        } else if (aspectRatio === "original") {
-          const isSideways = rotation % 180 !== 0;
-          const srcW = isSideways ? naturalH : naturalW;
-          const srcH = isSideways ? naturalW : naturalH;
-          const r = srcW / srcH;
-          if (r >= 1) {
+          let targetW = 1080;
+          let targetH = 1080;
+          if (aspectRatio === "4:5") {
             targetW = 1080;
-            targetH = Math.round(1080 / r);
-          } else {
-            targetH = 1080;
-            targetW = Math.round(1080 * r);
+            targetH = 1350;
+          } else if (aspectRatio === "16:9") {
+            targetW = 1080;
+            targetH = 608;
+          } else if (aspectRatio === "original") {
+            const isSideways = (item.rotation || 0) % 180 !== 0;
+            const srcW = isSideways ? naturalH : naturalW;
+            const srcH = isSideways ? naturalW : naturalH;
+            const r = srcW / srcH;
+            if (r >= 1) {
+              targetW = 1080;
+              targetH = Math.round(1080 / r);
+            } else {
+              targetH = 1080;
+              targetW = Math.round(1080 * r);
+            }
           }
-        }
 
-        const canvas = document.createElement("canvas");
-        canvas.width = targetW;
-        canvas.height = targetH;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Unable to create canvas context"));
+          const canvas = document.createElement("canvas");
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return reject(new Error("Unable to create canvas context"));
 
-        // Fill background
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, targetW, targetH);
+          // Fill background black
+          ctx.fillStyle = "#000000";
+          ctx.fillRect(0, 0, targetW, targetH);
 
-        // Apply CSS Filter
-        const filterStr = computeCombinedFilter(selectedFilter, adjustments);
-        if (filterStr && filterStr !== "none") {
-          ctx.filter = filterStr;
-        }
+          // Apply CSS Filter
+          const filterStr = computeCombinedFilter(
+            item.selectedFilter || "normal",
+            item.adjustments || { brightness: 0, contrast: 0, saturation: 0, sepia: 0 }
+          );
+          if (filterStr && filterStr !== "none") {
+            ctx.filter = filterStr;
+          }
 
-        ctx.save();
-        ctx.translate(targetW / 2, targetH / 2);
-        ctx.rotate((rotation * Math.PI) / 180);
+          ctx.save();
+          ctx.translate(targetW / 2, targetH / 2);
+          ctx.rotate(((item.rotation || 0) * Math.PI) / 180);
 
-        const containerScale = targetW / container.width;
-        const isSideways = rotation % 180 !== 0;
-        const effectiveSrcW = isSideways ? naturalH : naturalW;
-        const effectiveSrcH = isSideways ? naturalW : naturalH;
+          const containerW = containerRef.current?.getBoundingClientRect()?.width || targetW;
+          const containerH = containerRef.current?.getBoundingClientRect()?.height || targetH;
+          const containerScale = targetW / containerW;
 
-        const scaleToCover =
-          Math.max(container.width / effectiveSrcW, container.height / effectiveSrcH) * zoom;
-        const totalScale = scaleToCover * containerScale;
+          const isSideways = (item.rotation || 0) % 180 !== 0;
+          const effectiveSrcW = isSideways ? naturalH : naturalW;
+          const effectiveSrcH = isSideways ? naturalW : naturalH;
 
-        const drawW = naturalW * totalScale;
-        const drawH = naturalH * totalScale;
+          const scaleToCover =
+            Math.max(containerW / effectiveSrcW, containerH / effectiveSrcH) * (item.zoom || 1);
+          const totalScale = scaleToCover * containerScale;
 
-        const offX = offset.x * containerScale;
-        const offY = offset.y * containerScale;
+          const drawW = naturalW * totalScale;
+          const drawH = naturalH * totalScale;
 
-        let finalOffX = offX;
-        let finalOffY = offY;
-        if (rotation === 90) {
-          finalOffX = offY;
-          finalOffY = -offX;
-        } else if (rotation === 180) {
-          finalOffX = -offX;
-          finalOffY = -offY;
-        } else if (rotation === 270) {
-          finalOffX = -offY;
-          finalOffY = offX;
-        }
+          const offX = (item.offset?.x || 0) * containerScale;
+          const offY = (item.offset?.y || 0) * containerScale;
 
-        ctx.drawImage(img, -drawW / 2 + finalOffX, -drawH / 2 + finalOffY, drawW, drawH);
-        ctx.restore();
+          let finalOffX = offX;
+          let finalOffY = offY;
+          const rot = (((item.rotation || 0) % 360) + 360) % 360;
+          if (rot === 90) {
+            finalOffX = offY;
+            finalOffY = -offX;
+          } else if (rot === 180) {
+            finalOffX = -offX;
+            finalOffY = -offY;
+          } else if (rot === 270) {
+            finalOffX = -offY;
+            finalOffY = offX;
+          }
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) return reject(new Error("Canvas export failed"));
-            const file = new File([blob], `insta_post_${Date.now()}.jpg`, {
-              type: "image/jpeg",
-              lastModified: Date.now(),
-            });
-            resolve(file);
-          },
-          "image/jpeg",
-          0.92
-        );
+          ctx.drawImage(img, -drawW / 2 + finalOffX, -drawH / 2 + finalOffY, drawW, drawH);
+          ctx.restore();
+
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) return reject(new Error("Canvas export failed"));
+              const file = new File(
+                [blob],
+                `insta_post_${Date.now()}_${Math.random().toString(36).substr(2, 5)}.jpg`,
+                {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                }
+              );
+              resolve(file);
+            },
+            "image/jpeg",
+            0.92
+          );
+        };
+        img.onerror = () => reject(new Error("Failed to load image for canvas export"));
+        img.src = item.rawSrc;
       } catch (err) {
         reject(err);
       }
     });
   };
 
-  // Final Submit / Share
+  // Final Submit / Share (Supports Multi-photo Carousel)
   const handlePostSubmit = async () => {
     if (!currentUser) return;
     setStep("sharing");
@@ -511,11 +701,52 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
     setUploadProgress(15);
 
     try {
-      const finalImageFile = await rasterizeFinalImage();
-      setUploadProgress(45);
+      // Sync active state into items list
+      const itemsToProcess =
+        mediaItems.length > 0
+          ? mediaItems.map((item, idx) => {
+              if (idx === activeMediaIndex) {
+                return {
+                  ...item,
+                  zoom,
+                  rotation,
+                  offset,
+                  selectedFilter,
+                  adjustments,
+                };
+              }
+              return item;
+            })
+          : [
+              {
+                id: "single_0",
+                rawSrc: rawImageSrc,
+                width: imageMeta.width,
+                height: imageMeta.height,
+                zoom,
+                rotation,
+                offset,
+                selectedFilter,
+                adjustments,
+              },
+            ];
+
+      setUploadProgress(25);
+      const rasterizedFiles = [];
+      for (let i = 0; i < itemsToProcess.length; i++) {
+        const file = await rasterizeSingleItem(itemsToProcess[i]);
+        rasterizedFiles.push(file);
+        setUploadProgress(25 + Math.round(((i + 1) / itemsToProcess.length) * 35));
+      }
 
       const formData = new FormData();
-      formData.append("post_image", finalImageFile);
+      // Primary image for backward compatibility
+      formData.append("post_image", rasterizedFiles[0]);
+      // Multi-images array for carousel
+      rasterizedFiles.forEach((file) => {
+        formData.append("post_images", file);
+      });
+
       formData.append("caption", caption.trim());
       formData.append("location", location.trim());
       formData.append("show_on_feed", showOnFeed);
@@ -524,7 +755,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
       formData.append("disable_comments", disableComments);
       formData.append("hide_likes", hideLikes);
 
-      setUploadProgress(70);
+      setUploadProgress(75);
 
       const token = localStorage.getItem("token");
       const response = await fetch(`${API}/posts/${currentUser.id}`, {
@@ -678,7 +909,10 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
           <div className="w-16 flex items-center justify-end">
             {step === "crop" && (
               <button
-                onClick={() => setStep("filter")}
+                onClick={() => {
+                  saveCurrentActiveState();
+                  setStep("filter");
+                }}
                 className="text-[#0095f6] hover:text-[#1877f2] font-semibold text-sm transition"
               >
                 Next
@@ -686,7 +920,10 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
             )}
             {step === "filter" && (
               <button
-                onClick={() => setStep("details")}
+                onClick={() => {
+                  saveCurrentActiveState();
+                  setStep("details");
+                }}
                 className="text-[#0095f6] hover:text-[#1877f2] font-semibold text-sm transition"
               >
                 Next
@@ -739,7 +976,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
             </div>
 
             <p className="text-xl text-white font-light mb-2">Drag photos and videos here</p>
-            <p className="text-xs text-gray-400 mb-6">Supports High Quality JPG, PNG, WEBP</p>
+            <p className="text-xs text-gray-400 mb-6">Upload 1 to 5 photos (JPG, PNG, WEBP)</p>
 
             <button
               onClick={() => fileInputRef.current?.click()}
@@ -752,6 +989,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
             <input
               ref={fileInputRef}
               type="file"
+              multiple
               accept="image/*"
               className="hidden"
               onChange={handleFileInputChange}
@@ -805,6 +1043,13 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
               )}
             </div>
 
+            {/* Top-Right Multi-Photo Counter Badge */}
+            {mediaItems.length > 1 && (
+              <div className="absolute top-4 right-4 bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full z-20 pointer-events-none border border-white/10 shadow-lg">
+                {activeMediaIndex + 1} / {mediaItems.length}
+              </div>
+            )}
+
             {/* Bottom-Left Controls Bar */}
             <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3">
               {/* Aspect Ratio Selector Button */}
@@ -813,6 +1058,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                   onClick={() => {
                     setShowAspectMenu((prev) => !prev);
                     setShowZoomSlider(false);
+                    setShowGalleryTray(false);
                   }}
                   className={`w-9 h-9 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition shadow-lg ${
                     showAspectMenu ? "bg-white text-black" : ""
@@ -837,6 +1083,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                           setAspectRatio(opt.id);
                           setShowAspectMenu(false);
                           setOffset({ x: 0, y: 0 });
+                          updateActiveMediaItem({ offset: { x: 0, y: 0 } });
                           triggerGrid();
                         }}
                         className={`text-left px-3 py-1.5 rounded-lg text-xs font-medium transition ${
@@ -858,6 +1105,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                   onClick={() => {
                     setShowZoomSlider((prev) => !prev);
                     setShowAspectMenu(false);
+                    setShowGalleryTray(false);
                   }}
                   className={`w-9 h-9 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center backdrop-blur-md border border-white/10 transition shadow-lg ${
                     showZoomSlider ? "bg-white text-black" : ""
@@ -879,7 +1127,9 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       onChange={(e) => {
                         const val = parseFloat(e.target.value);
                         setZoom(val);
-                        setOffset((prevOff) => clampOffset(prevOff.x, prevOff.y, val));
+                        const clamped = clampOffset(offset.x, offset.y, val);
+                        setOffset(clamped);
+                        updateActiveMediaItem({ zoom: val, offset: clamped });
                         triggerGrid();
                       }}
                       className="w-full accent-white h-1 bg-white/20 rounded-lg cursor-pointer"
@@ -891,6 +1141,51 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                 )}
               </div>
             </div>
+
+            {/* Floating Multi-Photo Gallery Tray Popup */}
+            {showGalleryTray && (
+              <div className="absolute bottom-16 right-4 sm:right-6 bg-[#1a1a1a]/95 backdrop-blur-md rounded-2xl p-2.5 shadow-2xl border border-white/15 flex items-center gap-2 z-30 animate-fade-in max-w-[85vw] overflow-x-auto custom-scrollbar">
+                {mediaItems.map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    onClick={() => switchActiveMedia(idx)}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg overflow-hidden relative cursor-pointer border-2 shrink-0 transition ${
+                      idx === activeMediaIndex
+                        ? "border-[#0095f6] ring-2 ring-[#0095f6]/50 scale-105"
+                        : "border-transparent hover:border-white/50 opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={item.rawSrc}
+                      alt=""
+                      className="w-full h-full object-cover pointer-events-none"
+                    />
+                    {mediaItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleRemoveMediaItem(e, idx)}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-black/85 hover:bg-red-600 text-white flex items-center justify-center transition text-[10px]"
+                        title="Remove photo"
+                      >
+                        <FiX size={10} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {mediaItems.length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() => extraFileInputRef.current?.click()}
+                    className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg border border-dashed border-white/30 hover:border-white text-gray-300 hover:text-white flex flex-col items-center justify-center gap-0.5 shrink-0 transition active:scale-95 bg-white/5 hover:bg-white/10"
+                    title="Add another photo (max 5)"
+                  >
+                    <FiPlus size={20} />
+                    <span className="text-[9px] font-medium">{mediaItems.length}/5</span>
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Bottom-Right Controls Bar */}
             <div className="absolute bottom-4 right-4 z-20 flex items-center gap-2">
@@ -908,6 +1203,37 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
               >
                 <FiRefreshCw size={14} />
               </button>
+
+              {/* Instagram Multi-Photo Selector Button */}
+              <button
+                onClick={() => {
+                  setShowGalleryTray((prev) => !prev);
+                  setShowAspectMenu(false);
+                  setShowZoomSlider(false);
+                }}
+                className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 transition shadow-lg relative ${
+                  showGalleryTray || mediaItems.length > 1
+                    ? "bg-[#0095f6] text-white hover:bg-[#1877f2]"
+                    : "bg-black/75 hover:bg-black text-white"
+                }`}
+                title="Select multiple photos (up to 5)"
+              >
+                <BsImages size={15} />
+                {mediaItems.length > 1 && (
+                  <span className="absolute -top-1 -right-1 bg-white text-black font-bold text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow">
+                    {mediaItems.length}
+                  </span>
+                )}
+              </button>
+
+              <input
+                ref={extraFileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleAddMoreFiles}
+              />
             </div>
           </div>
         )}
@@ -916,10 +1242,10 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
         {step === "filter" && (
           <div className="flex-1 flex flex-col sm:flex-row overflow-hidden bg-[#121212]">
             {/* Left: Filtered Image Live Preview */}
-            <div className="flex-1 bg-black flex items-center justify-center overflow-hidden p-2 sm:p-4">
+            <div className="flex-1 bg-black flex items-center justify-center overflow-hidden p-2 sm:p-4 relative">
               <div
                 style={getAspectRatioStyle()}
-                className="relative max-h-full max-w-full w-full h-full flex items-center justify-center overflow-hidden"
+                className="relative max-h-full max-w-full w-full h-full flex items-center justify-center overflow-hidden rounded-lg"
               >
                 {rawImageSrc && (
                   <img
@@ -933,6 +1259,34 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       filter: combinedFilter,
                     }}
                   />
+                )}
+
+                {/* Top-Right Multi-Photo Counter Badge */}
+                {mediaItems.length > 1 && (
+                  <div className="absolute top-4 right-4 bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full z-20 pointer-events-none border border-white/10 shadow-lg">
+                    {activeMediaIndex + 1} / {mediaItems.length}
+                  </div>
+                )}
+
+                {/* Bottom Photo Switcher Pill Strip */}
+                {mediaItems.length > 1 && (
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+                    {mediaItems.map((item, idx) => (
+                      <button
+                        key={item.id || idx}
+                        type="button"
+                        onClick={() => switchActiveMedia(idx)}
+                        className={`w-7 h-7 rounded-md overflow-hidden border transition active:scale-95 ${
+                          idx === activeMediaIndex
+                            ? "border-[#0095f6] ring-2 ring-[#0095f6] scale-110"
+                            : "border-white/20 opacity-60 hover:opacity-100"
+                        }`}
+                        title={`Edit photo ${idx + 1}`}
+                      >
+                        <img src={item.rawSrc} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -970,7 +1324,10 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                     {INSTAGRAM_FILTERS.map((f) => (
                       <button
                         key={f.id}
-                        onClick={() => setSelectedFilter(f.id)}
+                        onClick={() => {
+                          setSelectedFilter(f.id);
+                          updateActiveMediaItem({ selectedFilter: f.id });
+                        }}
                         className="flex flex-col items-center group focus:outline-none"
                       >
                         <div
@@ -1018,12 +1375,14 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       min="-50"
                       max="50"
                       value={adjustments.brightness}
-                      onChange={(e) =>
-                        setAdjustments((prev) => ({
-                          ...prev,
-                          brightness: parseInt(e.target.value),
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setAdjustments((prev) => {
+                          const next = { ...prev, brightness: val };
+                          updateActiveMediaItem({ adjustments: next });
+                          return next;
+                        });
+                      }}
                       className="w-full accent-[#0095f6] h-1 bg-white/10 rounded-lg cursor-pointer"
                     />
                   </div>
@@ -1043,12 +1402,14 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       min="-50"
                       max="50"
                       value={adjustments.contrast}
-                      onChange={(e) =>
-                        setAdjustments((prev) => ({
-                          ...prev,
-                          contrast: parseInt(e.target.value),
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setAdjustments((prev) => {
+                          const next = { ...prev, contrast: val };
+                          updateActiveMediaItem({ adjustments: next });
+                          return next;
+                        });
+                      }}
                       className="w-full accent-[#0095f6] h-1 bg-white/10 rounded-lg cursor-pointer"
                     />
                   </div>
@@ -1068,12 +1429,14 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       min="-50"
                       max="50"
                       value={adjustments.saturation}
-                      onChange={(e) =>
-                        setAdjustments((prev) => ({
-                          ...prev,
-                          saturation: parseInt(e.target.value),
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setAdjustments((prev) => {
+                          const next = { ...prev, saturation: val };
+                          updateActiveMediaItem({ adjustments: next });
+                          return next;
+                        });
+                      }}
                       className="w-full accent-[#0095f6] h-1 bg-white/10 rounded-lg cursor-pointer"
                     />
                   </div>
@@ -1089,12 +1452,14 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       min="0"
                       max="50"
                       value={adjustments.sepia}
-                      onChange={(e) =>
-                        setAdjustments((prev) => ({
-                          ...prev,
-                          sepia: parseInt(e.target.value),
-                        }))
-                      }
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setAdjustments((prev) => {
+                          const next = { ...prev, sepia: val };
+                          updateActiveMediaItem({ adjustments: next });
+                          return next;
+                        });
+                      }}
                       className="w-full accent-[#0095f6] h-1 bg-white/10 rounded-lg cursor-pointer"
                     />
                   </div>
@@ -1102,14 +1467,16 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                   {/* Reset Adjustments button */}
                   <div className="pt-2 text-center">
                     <button
-                      onClick={() =>
-                        setAdjustments({
+                      onClick={() => {
+                        const reset = {
                           brightness: 0,
                           contrast: 0,
                           saturation: 0,
                           sepia: 0,
-                        })
-                      }
+                        };
+                        setAdjustments(reset);
+                        updateActiveMediaItem({ adjustments: reset });
+                      }}
                       className="text-xs text-[#0095f6] hover:text-[#1877f2] font-semibold"
                     >
                       Reset Adjustments
@@ -1124,13 +1491,81 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
         {/* ─── STEP 4: DETAILS, CAPTION, LOCATION & SETTINGS ─── */}
         {step === "details" && (
           <div className="flex-1 flex flex-col sm:flex-row overflow-hidden bg-[#121212]">
-            {/* Left: Final Photo Preview */}
-            <div className="hidden sm:flex flex-1 bg-black items-center justify-center p-4 overflow-hidden">
+            {/* Left: Final Photo Preview (With Carousel navigation for multi-photo) */}
+            <div className="hidden sm:flex flex-1 bg-black items-center justify-center p-4 overflow-hidden relative">
               <div
                 style={getAspectRatioStyle()}
-                className="relative max-h-full max-w-full w-full h-full flex items-center justify-center overflow-hidden rounded-lg shadow-inner"
+                className="relative max-h-full max-w-full w-full h-full flex items-center justify-center overflow-hidden rounded-lg shadow-inner bg-black"
               >
-                {rawImageSrc && (
+                {mediaItems.length > 0 ? (
+                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                    <img
+                      src={mediaItems[activeMediaIndex]?.rawSrc || rawImageSrc}
+                      alt="Final preview"
+                      className="max-w-none pointer-events-none select-none transition-all duration-200"
+                      style={{
+                        transform: `translate(${mediaItems[activeMediaIndex]?.offset?.x || 0}px, ${
+                          mediaItems[activeMediaIndex]?.offset?.y || 0
+                        }px) rotate(${mediaItems[activeMediaIndex]?.rotation || 0}deg) scale(${
+                          mediaItems[activeMediaIndex]?.zoom || 1
+                        })`,
+                        transformOrigin: "center center",
+                        filter: computeCombinedFilter(
+                          mediaItems[activeMediaIndex]?.selectedFilter || "normal",
+                          mediaItems[activeMediaIndex]?.adjustments || {
+                            brightness: 0,
+                            contrast: 0,
+                            saturation: 0,
+                            sepia: 0,
+                          }
+                        ),
+                      }}
+                    />
+
+                    {/* Counter Badge if multiple */}
+                    {mediaItems.length > 1 && (
+                      <div className="absolute top-3 right-3 bg-black/75 backdrop-blur-md text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full z-10 border border-white/10 shadow-lg">
+                        {activeMediaIndex + 1} / {mediaItems.length}
+                      </div>
+                    )}
+
+                    {/* Prev / Next buttons if multiple */}
+                    {mediaItems.length > 1 && (
+                      <>
+                        {activeMediaIndex > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => switchActiveMedia(activeMediaIndex - 1)}
+                            className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition shadow-lg z-10 font-bold"
+                          >
+                            ‹
+                          </button>
+                        )}
+                        {activeMediaIndex < mediaItems.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => switchActiveMedia(activeMediaIndex + 1)}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition shadow-lg z-10 font-bold"
+                          >
+                            ›
+                          </button>
+                        )}
+
+                        {/* Bottom Dots */}
+                        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-10 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full">
+                          {mediaItems.map((_, i) => (
+                            <div
+                              key={i}
+                              className={`w-1.5 h-1.5 rounded-full transition-all ${
+                                i === activeMediaIndex ? "bg-[#0095f6] scale-125" : "bg-white/50"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : rawImageSrc ? (
                   <img
                     src={rawImageSrc}
                     alt="Final preview"
@@ -1141,7 +1576,7 @@ export default function CreatePostModal({ isOpen, onClose, currentUser, onPostCr
                       filter: combinedFilter,
                     }}
                   />
-                )}
+                ) : null}
               </div>
             </div>
 

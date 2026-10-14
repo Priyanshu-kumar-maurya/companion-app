@@ -64,87 +64,118 @@ router.post(
 );
 
 // ─── CREATE POST — AUTH REQUIRED + OWNERSHIP ─────────────────
-router.post("/posts/:userId", authenticateToken, upload.single("post_image"), async (req, res) => {
-  try {
-    const { userId } = req.params;
-
-    if (parseInt(req.user.id) !== parseInt(userId)) {
-      return res.status(403).json({ error: "Forbidden: You can only create your own posts." });
-    }
-
-    if (!req.file) return res.status(400).json({ error: "Selecting a photo is required!" });
-
-    const {
-      caption,
-      location,
-      show_on_feed,
-      show_on_profile,
-      followers_only,
-      disable_comments,
-      hide_likes,
-    } = req.body;
-
-    // Sanitize caption — strip HTML
-    let safeCaption = (caption || "").replace(/<[^>]*>/g, "").slice(0, 500);
-
-    // Profanity check (non-blocking — if it fails, just use original caption)
+router.post(
+  "/posts/:userId",
+  authenticateToken,
+  upload.fields([
+    { name: "post_images", maxCount: 5 },
+    { name: "post_image", maxCount: 1 },
+  ]),
+  async (req, res) => {
     try {
-      const profCheck = checkProfanity(safeCaption);
-      if (profCheck.severity === "high") {
-        return res.status(400).json({
-          error: "⚠️ Caption contains inappropriate language. Please write a clean caption.",
-        });
+      const { userId } = req.params;
+
+      if (parseInt(req.user.id) !== parseInt(userId)) {
+        return res.status(403).json({ error: "Forbidden: You can only create your own posts." });
       }
-      if (!profCheck.isClean) safeCaption = cleanText(safeCaption);
-    } catch (modErr) {
-      console.error("Post moderation error (non-blocking):", modErr.message);
-    }
 
-    const mediaUrl = req.file.path;
-    let newPost;
-    try {
-      newPost = await pool.query(
-        `INSERT INTO posts 
-               (user_id, image_url, caption, location, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-               RETURNING *`,
-        [
-          userId,
-          mediaUrl,
-          safeCaption,
-          location ? String(location).slice(0, 150) : null,
-          show_on_feed !== "false",
-          show_on_profile !== "false",
-          followers_only === "true",
-          disable_comments === "true",
-          hide_likes === "true",
-        ]
-      );
-    } catch (insertErr) {
-      // Fallback if location column is not yet migrated
-      newPost = await pool.query(
-        `INSERT INTO posts 
-               (user_id, image_url, caption, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-               RETURNING *`,
-        [
-          userId,
-          mediaUrl,
-          safeCaption,
-          show_on_feed !== "false",
-          show_on_profile !== "false",
-          followers_only === "true",
-          disable_comments === "true",
-          hide_likes === "true",
-        ]
-      );
+      let files = [];
+      if (
+        req.files &&
+        Array.isArray(req.files["post_images"]) &&
+        req.files["post_images"].length > 0
+      ) {
+        files = req.files["post_images"];
+      } else if (
+        req.files &&
+        Array.isArray(req.files["post_image"]) &&
+        req.files["post_image"].length > 0
+      ) {
+        files = req.files["post_image"];
+      } else if (req.file) {
+        files = [req.file];
+      }
+
+      if (files.length === 0) {
+        return res.status(400).json({ error: "Selecting at least one photo is required!" });
+      }
+
+      const mediaUrls = files.map((f) => f.path);
+      const primaryMediaUrl = mediaUrls[0];
+
+      const {
+        caption,
+        location,
+        show_on_feed,
+        show_on_profile,
+        followers_only,
+        disable_comments,
+        hide_likes,
+      } = req.body;
+
+      // Sanitize caption — strip HTML
+      let safeCaption = (caption || "").replace(/<[^>]*>/g, "").slice(0, 500);
+
+      // Profanity check (non-blocking)
+      try {
+        const profCheck = checkProfanity(safeCaption);
+        if (profCheck.severity === "high") {
+          return res.status(400).json({
+            error: "⚠️ Caption contains inappropriate language. Please write a clean caption.",
+          });
+        }
+        if (!profCheck.isClean) safeCaption = cleanText(safeCaption);
+      } catch (modErr) {
+        console.error("Post moderation error (non-blocking):", modErr.message);
+      }
+
+      let newPost;
+      try {
+        newPost = await pool.query(
+          `INSERT INTO posts 
+                 (user_id, image_url, media_urls, caption, location, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+                 RETURNING *`,
+          [
+            userId,
+            primaryMediaUrl,
+            mediaUrls,
+            safeCaption,
+            location ? String(location).slice(0, 150) : null,
+            show_on_feed !== "false",
+            show_on_profile !== "false",
+            followers_only === "true",
+            disable_comments === "true",
+            hide_likes === "true",
+          ]
+        );
+      } catch (insertErr) {
+        // Fallback without media_urls if column not yet added
+        newPost = await pool.query(
+          `INSERT INTO posts 
+                 (user_id, image_url, caption, location, show_on_feed, show_on_profile, followers_only, disable_comments, hide_likes) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+                 RETURNING *`,
+          [
+            userId,
+            primaryMediaUrl,
+            safeCaption,
+            location ? String(location).slice(0, 150) : null,
+            show_on_feed !== "false",
+            show_on_profile !== "false",
+            followers_only === "true",
+            disable_comments === "true",
+            hide_likes === "true",
+          ]
+        );
+      }
+      res.status(201).json({ message: "Post published successfully!", post: newPost.rows[0] });
+    } catch (err) {
+      console.error("Create post error:", err);
+      res.status(500).json({ error: "Server error" });
     }
-    res.status(201).json({ message: "Post published successfully!", post: newPost.rows[0] });
-  } catch (err) {
-    console.error("Create post error:", err);
-    res.status(500).json({ error: "Server error" });
   }
-});
+);
 
 // ─── CHAT IMAGE UPLOAD — AUTH REQUIRED ───────────────────────
 router.post("/chat-image", authenticateToken, upload.single("image"), (req, res) => {
@@ -162,7 +193,7 @@ router.get("/posts/saved", authenticateToken, async (req, res) => {
     const user_id = req.user.id;
     const savedPostsQuery = `
             SELECT 
-                p.id, p.image_url, p.caption, p.created_at,
+                p.id, p.image_url, p.media_urls, p.caption, p.location, p.created_at,
                 u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
@@ -188,7 +219,7 @@ router.get("/posts/liked", authenticateToken, async (req, res) => {
     const user_id = req.user.id;
     const likedPostsQuery = `
             SELECT 
-                p.id, p.image_url, p.caption, p.created_at,
+                p.id, p.image_url, p.media_urls, p.caption, p.location, p.created_at,
                 u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
@@ -308,7 +339,7 @@ router.get("/feed", async (req, res) => {
     const { currentUserId } = req.query;
     const feedQuery = `
             SELECT 
-                p.id, p.image_url, p.caption, p.created_at, p.disable_comments, p.hide_likes,
+                p.id, p.image_url, p.media_urls, p.caption, p.location, p.created_at, p.disable_comments, p.hide_likes,
                 u.id as user_id, u.name as user_name, u.profile_pic as user_pic, u.role as user_role, u.city as user_city,
                 (SELECT COUNT(*) FROM likes WHERE post_id = p.id) as total_likes,
                 (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as total_comments,
