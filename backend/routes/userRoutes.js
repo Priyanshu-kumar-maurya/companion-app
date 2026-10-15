@@ -55,7 +55,7 @@ router.get("/users", async (req, res) => {
 
     let paramIndex = params.length + 1;
     let query = `
-            SELECT u.id, u.name, u.username, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status, u.latitude, u.longitude,
+            SELECT u.id, u.name, u.username, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status, u.is_verified, u.latitude, u.longitude,
                    COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
                    COUNT(r.id) as review_count
             FROM users u

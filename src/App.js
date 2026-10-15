@@ -460,7 +460,12 @@ function App() {
         );
       case PAGES.FIND:
         return (
-          <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />
+          <FindPage
+            setPage={setPage}
+            setSelectedGirl={setSelectedGirl}
+            currentUser={currentUser}
+            socket={socket}
+          />
         );
       case PAGES.DETAILS:
         return selectedGirl ? (
@@ -476,7 +481,12 @@ function App() {
             }}
           />
         ) : (
-          <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />
+          <FindPage
+            setPage={setPage}
+            setSelectedGirl={setSelectedGirl}
+            currentUser={currentUser}
+            socket={socket}
+          />
         );
       case PAGES.CHAT:
         return selectedGirl ? (
@@ -488,7 +498,12 @@ function App() {
             socket={socket}
           />
         ) : (
-          <FindPage setPage={setPage} setSelectedGirl={setSelectedGirl} currentUser={currentUser} />
+          <FindPage
+            setPage={setPage}
+            setSelectedGirl={setSelectedGirl}
+            currentUser={currentUser}
+            socket={socket}
+          />
         );
       case PAGES.WALLET: {
         const hasDoc = Boolean(
