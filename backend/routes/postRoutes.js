@@ -8,32 +8,65 @@ const { checkProfanity, cleanText, moderateContent } = require("../middleware/co
 const router = express.Router();
 
 // ─── KYC UPLOAD — AUTH REQUIRED + OWNERSHIP ─────────────────
-router.post("/kyc/:userId", authenticateToken, upload.single("id_document"), async (req, res) => {
-  try {
-    const { userId } = req.params;
+router.post(
+  "/kyc/:userId",
+  authenticateToken,
+  upload.fields([
+    { name: "id_document", maxCount: 1 },
+    { name: "live_selfie", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    try {
+      const { userId } = req.params;
 
-    // Only the user themselves can upload their own KYC
-    if (parseInt(req.user.id) !== parseInt(userId)) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: You can only upload your own KYC document." });
+      // Only the user themselves can upload their own KYC
+      if (parseInt(req.user.id) !== parseInt(userId)) {
+        return res
+          .status(403)
+          .json({ error: "Forbidden: You can only upload your own KYC document." });
+      }
+
+      const documentUrl = req.files?.["id_document"]?.[0]?.path || req.file?.path || null;
+      let selfieUrl = req.files?.["live_selfie"]?.[0]?.path || null;
+
+      if (!selfieUrl && req.body?.live_selfie_base64) {
+        try {
+          const cloudinary = require("cloudinary").v2;
+          const uploadResult = await cloudinary.uploader.upload(req.body.live_selfie_base64, {
+            folder: "rentgf_uploads",
+          });
+          selfieUrl = uploadResult.secure_url;
+        } catch (cErr) {
+          console.error("Cloudinary selfie base64 upload failed:", cErr);
+        }
+      }
+
+      if (!documentUrl && !selfieUrl) {
+        return res.status(400).json({ error: "No document or selfie provided!" });
+      }
+
+      const updatedUser = await pool.query(
+        `UPDATE users 
+         SET id_proof_url = COALESCE($1, id_proof_url),
+             live_selfie_url = COALESCE($2, live_selfie_url),
+             kyc_status = 'pending' 
+         WHERE id = $3 
+         RETURNING kyc_status, id_proof_url, live_selfie_url`,
+        [documentUrl, selfieUrl, userId]
+      );
+
+      res.status(200).json({
+        message: "KYC Document & Live Selfie uploaded for verification! ⏳",
+        kyc_status: updatedUser.rows[0].kyc_status,
+        id_proof_url: updatedUser.rows[0].id_proof_url,
+        live_selfie_url: updatedUser.rows[0].live_selfie_url,
+      });
+    } catch (err) {
+      console.error("KYC upload error:", err);
+      res.status(500).json({ error: "Server error" });
     }
-
-    if (!req.file) return res.status(400).json({ error: "No document uploaded!" });
-
-    const documentUrl = req.file.path;
-    const updatedUser = await pool.query(
-      "UPDATE users SET id_proof_url = $1, kyc_status = 'pending' WHERE id = $2 RETURNING kyc_status, id_proof_url",
-      [documentUrl, userId]
-    );
-    res.status(200).json({
-      message: "KYC Document uploaded for verification! ⏳",
-      kyc_status: updatedUser.rows[0].kyc_status,
-    });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
   }
-});
+);
 
 // ─── PROFILE PIC UPLOAD — AUTH REQUIRED + OWNERSHIP ─────────
 router.post(

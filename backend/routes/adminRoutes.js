@@ -16,7 +16,7 @@ const requireAdmin = (req, res, next) => {
 router.get("/admin/users", authenticateToken, requireAdmin, async (req, res) => {
   try {
     const users = await pool.query(`
-            SELECT u.id, u.name, u.email, u.phone, u.role, u.kyc_status, u.id_proof_url,
+            SELECT u.id, u.name, u.email, u.phone, u.role, u.kyc_status, u.id_proof_url, u.live_selfie_url,
                    u.is_verified, u.is_frozen, u.is_platform_blocked,
                    u.profile_pic, u.city, u.created_at, u.bio, u.price, u.tags, u.dob, u.age,
                    COALESCE((SELECT COUNT(*) FROM reports WHERE reported_id = u.id), 0) as report_count
@@ -39,8 +39,12 @@ router.put("/admin/kyc/:userId", authenticateToken, requireAdmin, async (req, re
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: "Invalid KYC status value." });
     }
-    await pool.query("UPDATE users SET kyc_status = $1 WHERE id = $2", [status, req.params.userId]);
-    res.status(200).json({ message: `KYC marked as ${status}` });
+    const isVerified = status === "verified";
+    await pool.query(
+      "UPDATE users SET kyc_status = $1, is_verified = $2 WHERE id = $3",
+      [status, isVerified, req.params.userId]
+    );
+    res.status(200).json({ message: `KYC marked as ${status}`, is_verified: isVerified });
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }

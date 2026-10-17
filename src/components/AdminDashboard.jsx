@@ -1822,10 +1822,13 @@ function AdminDashboard({ user, setPage }) {
                     </div>
                   </div>
 
-                  {/* KYC ID Document Verification */}
+                  {/* KYC Document & Live Selfie Verification */}
                   <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
                     <h4 className="text-xs font-bold text-white flex justify-between items-center">
-                      <span>KYC Status:</span>
+                      <span className="flex items-center gap-1.5">
+                        <FiShield className="text-pink-400" size={13} />
+                        <span>Biometric KYC Verification:</span>
+                      </span>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                           u.kyc_status === "verified"
@@ -1839,26 +1842,60 @@ function AdminDashboard({ user, setPage }) {
                       </span>
                     </h4>
 
-                    {u.id_proof_url ? (
-                      <div className="space-y-2">
-                        <span className="text-[10px] text-gray-500 block">
-                          Uploaded ID Document:
-                        </span>
-                        <div className="relative group overflow-hidden rounded-xl border border-white/10 max-h-[200px]">
-                          <img
-                            src={u.id_proof_url}
-                            alt="KYC proof"
-                            className="w-full h-full object-contain bg-black/60"
-                          />
-                          <a
-                            href={u.id_proof_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-all"
-                          >
-                            🔍 View Full Size Image
-                          </a>
+                    {u.id_proof_url || u.live_selfie_url ? (
+                      <div className="space-y-3">
+                        <div
+                          className={`grid ${u.id_proof_url && u.live_selfie_url ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"} gap-3`}
+                        >
+                          {/* ID Document Proof */}
+                          {u.id_proof_url && (
+                            <div className="space-y-1">
+                              <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
+                                📄 Government ID Proof:
+                              </span>
+                              <div className="relative group overflow-hidden rounded-xl border border-white/10 max-h-[180px] bg-black/60">
+                                <img
+                                  src={u.id_proof_url}
+                                  alt="KYC proof"
+                                  className="w-full h-full object-contain p-1"
+                                />
+                                <a
+                                  href={u.id_proof_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-all"
+                                >
+                                  🔍 Full Size
+                                </a>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Live Camera Selfie */}
+                          {u.live_selfie_url && (
+                            <div className="space-y-1">
+                              <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                🤳 Live Camera Selfie (Liveness):
+                              </span>
+                              <div className="relative group overflow-hidden rounded-xl border border-emerald-500/30 max-h-[180px] bg-black/60">
+                                <img
+                                  src={u.live_selfie_url}
+                                  alt="Live Selfie"
+                                  className="w-full h-full object-contain p-1"
+                                />
+                                <a
+                                  href={u.live_selfie_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-all"
+                                >
+                                  🔍 Full Size
+                                </a>
+                              </div>
+                            </div>
+                          )}
                         </div>
+
                         <div className="flex gap-2 pt-2">
                           <button
                             onClick={() => handleKycUpdate(u.id, "verified")}
@@ -1878,7 +1915,7 @@ function AdminDashboard({ user, setPage }) {
                       </div>
                     ) : (
                       <div className="text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/10 text-xs text-gray-500">
-                        No ID proof uploaded yet.
+                        No ID proof or live selfie uploaded yet.
                       </div>
                     )}
                   </div>
