@@ -21,6 +21,11 @@ import GirlWalletTab from "./components/girl/GirlWalletTab";
 import KYCUploadPrompt from "./components/shared/KYCUploadPrompt";
 import OfflineBanner from "./components/shared/OfflineBanner";
 import { registerPushNotifications } from "./utils/pushManager";
+import {
+  configureNativeStatusBar,
+  setupNativeBackButton,
+  triggerHaptic,
+} from "./utils/nativeMobile";
 import { io } from "socket.io-client";
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
@@ -55,6 +60,8 @@ export const PAGES = {
 
 function App() {
   const [page, setPage] = useState(PAGES.HOME);
+  const [pageHistory, setPageHistory] = useState([]);
+  const [backToast, setBackToast] = useState(null);
   const [selectedGirl, setSelectedGirl] = useState(null);
   const [girlUser, setGirlUser] = useState(null);
   const [boyUser, setBoyUser] = useState(null);
@@ -65,6 +72,100 @@ function App() {
   const [isOnline, setIsOnline] = useState(() =>
     typeof navigator !== "undefined" ? navigator.onLine : true
   );
+
+  const handleNavigate = (newPage) => {
+    if (typeof newPage === "function") {
+      setPage((current) => {
+        const next = newPage(current);
+        if (next !== current) {
+          setPageHistory((prev) => [...prev, current]);
+          triggerHaptic("selection");
+        }
+        return next;
+      });
+    } else {
+      if (newPage !== page) {
+        setPageHistory((prev) => [...prev, page]);
+        triggerHaptic("selection");
+        setPage(newPage);
+      }
+    }
+  };
+
+  const goBack = () => {
+    if (pageHistory.length > 0) {
+      const prevHistory = [...pageHistory];
+      const prev = prevHistory.pop();
+      setPageHistory(prevHistory);
+      triggerHaptic("light");
+      setPage(prev);
+      return true;
+    }
+    // Smart contextual fallback when stack is empty
+    if (page === PAGES.CHAT) {
+      setPage(selectedGirl ? PAGES.DETAILS : PAGES.MESSAGES);
+      return true;
+    }
+    if (page === PAGES.DETAILS) {
+      setPage(PAGES.FIND);
+      return true;
+    }
+    const defaultHome = girlUser
+      ? PAGES.GIRL_DASHBOARD
+      : boyUser
+        ? PAGES.BOY_DASHBOARD
+        : adminUser
+          ? PAGES.ADMIN_DASHBOARD
+          : PAGES.HOME;
+    if (page !== defaultHome) {
+      setPage(defaultHome);
+      return true;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    configureNativeStatusBar("#0D0D1A");
+  }, []);
+
+  useEffect(() => {
+    const cleanup = setupNativeBackButton(() => {
+      // 1. If global alert modal is open
+      if (globalAlert) {
+        return {
+          isModalOpen: true,
+          closeModal: () => setGlobalAlert(null),
+        };
+      }
+
+      // 2. If any custom modal is active on window
+      if (window.__isModalOpen && typeof window.__closeActiveModal === "function") {
+        return {
+          isModalOpen: true,
+          closeModal: window.__closeActiveModal,
+        };
+      }
+
+      // 3. Determine if on root home/dashboard screen
+      const isRoot =
+        page === PAGES.HOME ||
+        (girlUser && page === PAGES.GIRL_DASHBOARD) ||
+        (boyUser && page === PAGES.BOY_DASHBOARD) ||
+        (adminUser && page === PAGES.ADMIN_DASHBOARD);
+
+      return {
+        isModalOpen: false,
+        canGoBack: !isRoot,
+        goBack,
+        showExitToast: (msg) => {
+          setBackToast(msg);
+          setTimeout(() => setBackToast(null), 2000);
+        },
+      };
+    });
+
+    return cleanup;
+  }, [page, pageHistory, globalAlert, girlUser, boyUser, adminUser]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -358,46 +459,47 @@ function App() {
   }
 
   const renderPage = () => {
+    const navSetPage = handleNavigate;
     switch (page) {
       case PAGES.HOME:
         return (
           <HomePage
-            setPage={setPage}
+            setPage={navSetPage}
             currentUser={currentUser}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
           />
         );
       case PAGES.ABOUT:
-        return <AboutPage setPage={setPage} />;
+        return <AboutPage setPage={navSetPage} />;
       case PAGES.HELP:
-        return <HelpPage setPage={setPage} />;
+        return <HelpPage setPage={navSetPage} />;
       case PAGES.MESSAGES:
         return currentUser ? (
           <MessagesPage
             currentUser={currentUser}
-            setPage={setPage}
+            setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
           />
         ) : (
-          <UnifiedLogin setPage={setPage} />
+          <UnifiedLogin setPage={navSetPage} />
         );
       case PAGES.NOTIFICATIONS:
         return currentUser ? (
           <NotificationsPage
             currentUser={currentUser}
-            setPage={setPage}
+            setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
           />
         ) : (
-          <UnifiedLogin setPage={setPage} />
+          <UnifiedLogin setPage={navSetPage} />
         );
       case PAGES.GIRL_LOGIN:
         return (
           <UnifiedLogin
-            setPage={setPage}
+            setPage={navSetPage}
             setGirlUser={setGirlUser}
             setBoyUser={setBoyUser}
             setAdminUser={setAdminUser}
@@ -407,7 +509,7 @@ function App() {
       case PAGES.BOY_LOGIN:
         return (
           <UnifiedLogin
-            setPage={setPage}
+            setPage={navSetPage}
             setGirlUser={setGirlUser}
             setBoyUser={setBoyUser}
             setAdminUser={setAdminUser}
@@ -415,21 +517,21 @@ function App() {
           />
         );
       case PAGES.GIRL_REGISTER:
-        return <UnifiedRegister setPage={setPage} initialRole="girl" />;
+        return <UnifiedRegister setPage={navSetPage} initialRole="girl" />;
       case PAGES.BOY_REGISTER:
-        return <UnifiedRegister setPage={setPage} initialRole="boy" />;
+        return <UnifiedRegister setPage={navSetPage} initialRole="boy" />;
       case PAGES.GIRL_DASHBOARD:
         return girlUser ? (
           <GirlDashboard
             user={girlUser}
             setGirlUser={setGirlUser}
-            setPage={setPage}
+            setPage={navSetPage}
             socket={socket}
             setSelectedGirl={setSelectedGirl}
           />
         ) : (
           <UnifiedLogin
-            setPage={setPage}
+            setPage={navSetPage}
             setGirlUser={setGirlUser}
             setBoyUser={setBoyUser}
             defaultRole="girl"
@@ -440,13 +542,13 @@ function App() {
           <BoyDashboard
             user={boyUser || adminUser}
             setBoyUser={setBoyUser}
-            setPage={setPage}
+            setPage={navSetPage}
             socket={socket}
             setSelectedGirl={setSelectedGirl}
           />
         ) : (
           <UnifiedLogin
-            setPage={setPage}
+            setPage={navSetPage}
             setGirlUser={setGirlUser}
             setBoyUser={setBoyUser}
             defaultRole="boy"
@@ -454,14 +556,14 @@ function App() {
         );
       case PAGES.ADMIN_DASHBOARD:
         return adminUser ? (
-          <AdminDashboard user={adminUser} setPage={setPage} />
+          <AdminDashboard user={adminUser} setPage={navSetPage} />
         ) : (
-          <UnifiedLogin setPage={setPage} />
+          <UnifiedLogin setPage={navSetPage} />
         );
       case PAGES.FIND:
         return (
           <FindPage
-            setPage={setPage}
+            setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             currentUser={currentUser}
             socket={socket}
@@ -471,7 +573,7 @@ function App() {
         return selectedGirl ? (
           <DetailsPage
             girl={selectedGirl}
-            setPage={setPage}
+            setPage={navSetPage}
             currentUser={currentUser}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
@@ -482,7 +584,7 @@ function App() {
           />
         ) : (
           <FindPage
-            setPage={setPage}
+            setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             currentUser={currentUser}
             socket={socket}
@@ -493,13 +595,13 @@ function App() {
           <ChatPage
             girl={selectedGirl}
             currentUser={currentUser}
-            setPage={setPage}
+            setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
           />
         ) : (
           <FindPage
-            setPage={setPage}
+            setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             currentUser={currentUser}
             socket={socket}
@@ -520,7 +622,7 @@ function App() {
                   if (currentUser.role === "girl") setGirlUser(updatedUser);
                   else setBoyUser(updatedUser);
                 }}
-                onCancel={() => setPage(PAGES.HOME)}
+                onCancel={() => handleNavigate(PAGES.HOME)}
               />
             </div>
           ) : (
@@ -537,15 +639,15 @@ function App() {
             </div>
           )
         ) : (
-          <UnifiedLogin setPage={setPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} />
+          <UnifiedLogin setPage={navSetPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} />
         );
       }
       case PAGES.LEGAL:
-        return <LegalPages setPage={setPage} />;
+        return <LegalPages setPage={navSetPage} />;
       default:
         return (
           <HomePage
-            setPage={setPage}
+            setPage={navSetPage}
             currentUser={currentUser}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
@@ -559,7 +661,7 @@ function App() {
       <OfflineBanner isOnline={isOnline} />
       <Navbar
         page={page}
-        setPage={setPage}
+        setPage={handleNavigate}
         girlUser={girlUser}
         boyUser={boyUser}
         adminUser={adminUser}
@@ -683,6 +785,13 @@ function App() {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Native Android Double-Tap Exit Toast */}
+      {backToast && (
+        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[9999] px-4 py-2 rounded-full bg-black/90 backdrop-blur-md border border-white/20 text-white text-xs font-semibold shadow-2xl animate-fade-in pointer-events-none flex items-center gap-2">
+          <span>{backToast}</span>
         </div>
       )}
     </div>
