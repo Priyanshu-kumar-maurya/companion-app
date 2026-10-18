@@ -860,6 +860,12 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket }) {
                           <span>Online</span>
                         </div>
                       )}
+                      {u.is_instant_available && (
+                        <div className="bg-amber-950/80 backdrop-blur-md border border-amber-500/40 rounded-full px-2 py-0.5 text-[10px] font-bold text-amber-300 flex items-center gap-1 shadow-md">
+                          <FiZap size={10} className="text-amber-400" />
+                          <span>Available Today</span>
+                        </div>
+                      )}
                     </div>
 
                     {currentUser && currentUser.id !== u.id && (

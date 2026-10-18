@@ -26,7 +26,9 @@ import {
   FiDollarSign,
   FiShield,
   FiCamera,
+  FiZap,
 } from "react-icons/fi";
+import ScheduleManagerModal from "./ScheduleManagerModal";
 
 // Backend API Base Configuration
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
@@ -42,6 +44,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
   const [myBookings, setMyBookings] = useState([]);
   const [newBookingAlert, setNewBookingAlert] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [followStats, setFollowStats] = useState({ followers: 0, following: 0 });
 
   const handleDpFileSelect = (e) => {
@@ -570,6 +573,12 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
               <FiSettings size={13} /> Edit profile
             </button>
             <button
+              onClick={() => setShowScheduleModal(true)}
+              className="flex-1 py-1.5 bg-gradient-to-r from-pink-500/15 to-purple-500/15 hover:from-pink-500/25 hover:to-purple-500/25 border border-pink-500/30 text-pink-300 rounded-lg text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5"
+            >
+              <FiCalendar size={13} /> Schedule
+            </button>
+            <button
               onClick={() => {
                 if (navigator.share) {
                   navigator.share({ title: user.name, url: window.location.href }).catch(() => {});
@@ -580,12 +589,52 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
               }}
               className="flex-1 py-1.5 bg-[#262626] hover:bg-[#363636] text-white rounded-lg text-xs font-semibold transition active:scale-95 flex items-center justify-center gap-1.5"
             >
-              Share profile
+              Share
+            </button>
+          </div>
+
+          {/* Live Availability Status Strip */}
+          <div className="w-full mt-3 p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  user.is_instant_available
+                    ? "bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+                    : "bg-gray-500"
+                }`}
+              />
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>
+                    {user.is_instant_available
+                      ? "Available Today (Instant Meetup)"
+                      : "Standard Working Schedule"}
+                  </span>
+                  {user.is_instant_available && (
+                    <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-full font-extrabold uppercase">
+                      ⚡ Instant
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  {user.schedule_status === "busy"
+                    ? "Status: Busy / Off Duty"
+                    : user.schedule_status === "away"
+                      ? "Status: Away on Vacation"
+                      : "Status: Accepting Dates"}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="px-3 py-1 bg-white/10 hover:bg-white/15 text-white text-[11px] font-bold rounded-xl transition border border-white/10"
+            >
+              Edit
             </button>
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 justify-start mb-6">
+        <div className="flex flex-wrap gap-2 justify-start mb-6 mt-4">
           {myTags.map((tag, i) => (
             <span
               key={i}
@@ -1288,6 +1337,16 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           onClose={() => setCropModalData(null)}
         />
       )}
+      <ScheduleManagerModal
+        isOpen={showScheduleModal}
+        onClose={() => setShowScheduleModal(false)}
+        user={user}
+        onSave={(updated) => {
+          if (typeof setGirlUser === "function") {
+            setGirlUser(updated);
+          }
+        }}
+      />
       <SOSButton user={user} socket={socket} />
     </div>
   );

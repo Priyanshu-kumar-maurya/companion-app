@@ -109,6 +109,18 @@ const connectDB = async () => {
     await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS dob VARCHAR(20);");
     await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;");
     await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_instant_available BOOLEAN DEFAULT false;"
+    );
+    await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS schedule_status VARCHAR(50) DEFAULT 'available';"
+    );
+    await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS available_days TEXT[] DEFAULT '{\"monday\",\"tuesday\",\"wednesday\",\"thursday\",\"friday\",\"saturday\",\"sunday\"}';"
+    );
+    await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS available_slots TEXT[] DEFAULT '{\"morning\",\"afternoon\",\"evening\",\"night\",\"late_night\"}';"
+    );
+    await pool.query(
       "ALTER TABLE posts ADD COLUMN IF NOT EXISTS show_on_feed BOOLEAN DEFAULT true;"
     );
     await pool.query(

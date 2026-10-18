@@ -29,6 +29,7 @@ import {
   FiVideo,
   FiPhone,
   FiHeart,
+  FiZap,
 } from "react-icons/fi";
 
 // Backend API Base Configuration
@@ -599,6 +600,37 @@ function DetailsPage({
     }
     if (!meetingInfo.date) return alert("Please select a date!");
 
+    const DAYS_OF_WEEK_IDS = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
+    const companionWorkingDays =
+      Array.isArray(profile.available_days) && profile.available_days.length > 0
+        ? profile.available_days
+        : ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    const selectedDayOfWeekIndex = new Date(meetingInfo.date + "T00:00:00").getDay();
+    const selectedDayId = DAYS_OF_WEEK_IDS[selectedDayOfWeekIndex];
+    if (!companionWorkingDays.includes(selectedDayId)) {
+      return alert(
+        `${profile.name} is off-duty on ${selectedDayId}s. Please pick an active working day.`
+      );
+    }
+
+    const companionAvailableSlots =
+      Array.isArray(profile.available_slots) && profile.available_slots.length > 0
+        ? profile.available_slots
+        : ["morning", "afternoon", "evening", "night", "late_night"];
+    if (!companionAvailableSlots.includes(selectedSlot)) {
+      return alert(
+        `${profile.name} does not accept bookings during this time slot. Please choose another slot.`
+      );
+    }
+
     const amount = (profile.price || 1000) * hours;
     const activeSlotObj = TIME_SLOTS.find((s) => s.id === selectedSlot);
     const slotLabel = activeSlotObj
@@ -903,6 +935,23 @@ function DetailsPage({
                 ) : (
                   <span className="text-gray-500">Offline</span>
                 )}
+                {profile.is_instant_available && (
+                  <>
+                    <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <FiZap size={10} className="text-amber-400" />
+                      <span>Available Today</span>
+                    </span>
+                  </>
+                )}
+                {profile.schedule_status === "busy" && (
+                  <>
+                    <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                      <span>⏸️ Off Duty</span>
+                    </span>
+                  </>
+                )}
               </div>
 
               {profile.bio && (
@@ -1023,6 +1072,23 @@ function DetailsPage({
                 <span className="text-green-400 font-bold">Online</span>
               ) : (
                 <span className="text-gray-500">Offline</span>
+              )}
+              {profile.is_instant_available && (
+                <>
+                  <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <FiZap size={10} className="text-amber-400" />
+                    <span>Available Today</span>
+                  </span>
+                </>
+              )}
+              {profile.schedule_status === "busy" && (
+                <>
+                  <span className="w-1 h-1 bg-gray-600 rounded-full" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                    <span>⏸️ Off Duty</span>
+                  </span>
+                </>
               )}
               <span className="w-1 h-1 bg-gray-600 rounded-full" />
               <span className="text-yellow-400 flex items-center gap-0.5">
@@ -1352,6 +1418,28 @@ function DetailsPage({
                       "Dec",
                     ];
                     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+                    const DAYS_OF_WEEK_IDS = [
+                      "sunday",
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                    ];
+                    const companionWorkingDays =
+                      Array.isArray(profile.available_days) && profile.available_days.length > 0
+                        ? profile.available_days
+                        : [
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thursday",
+                            "friday",
+                            "saturday",
+                            "sunday",
+                          ];
+
                     for (let i = 0; i < 10; i++) {
                       const d = new Date();
                       d.setDate(d.getDate() + i);
@@ -1359,13 +1447,18 @@ function DetailsPage({
                       const mm = String(d.getMonth() + 1).padStart(2, "0");
                       const dd = String(d.getDate()).padStart(2, "0");
                       const dateStr = `${yyyy}-${mm}-${dd}`;
+                      const dayId = DAYS_OF_WEEK_IDS[d.getDay()];
+                      const isDayWorking = companionWorkingDays.includes(dayId);
+
                       days.push({
                         dateStr,
                         dayName: i === 0 ? "Today" : i === 1 ? "Tomorrow" : dayNames[d.getDay()],
                         dayNum: d.getDate(),
                         month: monthNames[d.getMonth()],
+                        isDayWorking,
                       });
                     }
+
                     return days.map((item) => {
                       const isSelected = meetingInfo.date === item.dateStr;
                       return (
@@ -1376,7 +1469,9 @@ function DetailsPage({
                           className={`flex flex-col items-center justify-center min-w-[68px] h-[78px] rounded-xl border transition-all ${
                             isSelected
                               ? `bg-gradient-to-br ${accentGrad} border-transparent text-white shadow-lg scale-105`
-                              : "bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-pink-500/50"
+                              : item.isDayWorking
+                                ? "bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-pink-500/50"
+                                : "bg-white/[0.02] border-white/5 text-gray-600 hover:border-white/15"
                           }`}
                         >
                           <span className="text-[9px] font-bold uppercase opacity-85">
@@ -1384,7 +1479,11 @@ function DetailsPage({
                           </span>
                           <span className="text-lg font-black my-0.5">{item.dayNum}</span>
                           <span className="text-[8px] font-bold uppercase tracking-wider opacity-85">
-                            {item.month}
+                            {item.isDayWorking ? (
+                              item.month
+                            ) : (
+                              <span className="text-amber-400/90 font-bold">Off</span>
+                            )}
                           </span>
                         </button>
                       );
@@ -1395,6 +1494,47 @@ function DetailsPage({
 
               {/* Time Slot Scheduler */}
               <div>
+                {(() => {
+                  const DAYS_OF_WEEK_IDS = [
+                    "sunday",
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                  ];
+                  const companionWorkingDays =
+                    Array.isArray(profile.available_days) && profile.available_days.length > 0
+                      ? profile.available_days
+                      : [
+                          "monday",
+                          "tuesday",
+                          "wednesday",
+                          "thursday",
+                          "friday",
+                          "saturday",
+                          "sunday",
+                        ];
+                  const selectedDateObj = meetingInfo.date
+                    ? new Date(meetingInfo.date + "T00:00:00")
+                    : new Date();
+                  const selectedDayId = DAYS_OF_WEEK_IDS[selectedDateObj.getDay()];
+                  const isSelectedDateWorking = companionWorkingDays.includes(selectedDayId);
+
+                  return (
+                    !isSelectedDateWorking && (
+                      <div className="p-3 mb-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 text-xs flex items-center gap-2 animate-fade-in">
+                        <FiAlertTriangle size={15} className="shrink-0 text-amber-400" />
+                        <span>
+                          {profile.name} is off-duty on {selectedDayId}s. Please pick an active
+                          working day above.
+                        </span>
+                      </div>
+                    )
+                  );
+                })()}
+
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="text-[10px] text-gray-500 uppercase font-bold">
                     2. Available Time Slots
@@ -1410,16 +1550,52 @@ function DetailsPage({
                     const isBooked = bookedSlots.some(
                       (b) => b && b.toLowerCase().includes(slot.label.toLowerCase())
                     );
-                    const isSelected = selectedSlot === slot.id;
+                    const DAYS_OF_WEEK_IDS = [
+                      "sunday",
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                    ];
+                    const companionWorkingDays =
+                      Array.isArray(profile.available_days) && profile.available_days.length > 0
+                        ? profile.available_days
+                        : [
+                            "monday",
+                            "tuesday",
+                            "wednesday",
+                            "thursday",
+                            "friday",
+                            "saturday",
+                            "sunday",
+                          ];
+                    const companionAvailableSlots =
+                      Array.isArray(profile.available_slots) && profile.available_slots.length > 0
+                        ? profile.available_slots
+                        : ["morning", "afternoon", "evening", "night", "late_night"];
+
+                    const selectedDateObj = meetingInfo.date
+                      ? new Date(meetingInfo.date + "T00:00:00")
+                      : new Date();
+                    const selectedDayId = DAYS_OF_WEEK_IDS[selectedDateObj.getDay()];
+                    const isSelectedDateWorking = companionWorkingDays.includes(selectedDayId);
+                    const isCompanionSlotAccepted = companionAvailableSlots.includes(slot.id);
+
+                    const isDisabled =
+                      isBooked || !isCompanionSlotAccepted || !isSelectedDateWorking;
+                    const isSelected = selectedSlot === slot.id && !isDisabled;
+
                     return (
                       <button
                         key={slot.id}
                         type="button"
-                        disabled={isBooked}
+                        disabled={isDisabled}
                         onClick={() => setSelectedSlot(slot.id)}
                         className={`p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
-                          isBooked
-                            ? "bg-red-500/5 border-red-500/20 text-gray-500 cursor-not-allowed opacity-60"
+                          isDisabled
+                            ? "bg-white/[0.02] border-white/5 text-gray-600 cursor-not-allowed opacity-60"
                             : isSelected
                               ? `bg-gradient-to-r ${accentGrad} text-white border-transparent shadow-md scale-[1.02]`
                               : "bg-[#0D0D1A] border-white/10 text-gray-300 hover:border-pink-500/40 hover:text-white"
@@ -1439,6 +1615,10 @@ function DetailsPage({
                         {isBooked ? (
                           <span className="text-[9px] font-bold text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/20">
                             Booked
+                          </span>
+                        ) : !isCompanionSlotAccepted ? (
+                          <span className="text-[9px] font-bold text-gray-400 bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
+                            Off Duty
                           </span>
                         ) : isSelected ? (
                           <span className="text-xs font-bold">✓</span>
