@@ -5,6 +5,7 @@ import SOSButton from "../shared/SOSButton";
 import InstagramPostModal from "../shared/InstagramPostModal";
 import InvoiceModal from "../shared/InvoiceModal";
 import ReviewModal from "../shared/ReviewModal";
+import ActiveMeetupCard from "../shared/ActiveMeetupCard";
 import GirlWalletTab from "../girl/GirlWalletTab";
 import KYCUploadPrompt from "../shared/KYCUploadPrompt";
 import VerifiedBadge from "../shared/VerifiedBadge";
@@ -645,6 +646,21 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             </div>
           )}
         </div>
+
+        {/* ── Active Date / Upcoming Meetup Live Card ── */}
+        <ActiveMeetupCard
+          bookings={myBookings}
+          currentUser={user}
+          onOpenChat={(partner) => {
+            setSelectedGirl(partner);
+            setPage(PAGES.CHAT);
+          }}
+          onComplete={handleBookingStatus}
+          onOpenInvoice={(booking) => setInvoiceModalBooking(booking)}
+          onOpenReview={(booking) => setReviewModalBooking(booking)}
+          onReschedule={handleRescheduleBooking}
+          onCancel={handleCancelBooking}
+        />
 
         <div className={`grid ${hasDocument ? "grid-cols-3" : "grid-cols-2"} gap-3 mb-7`}>
           <div

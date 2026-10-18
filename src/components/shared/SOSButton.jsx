@@ -26,6 +26,13 @@ function SOSButton({ user, socket }) {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
+  // Listen for open-sos global event
+  useEffect(() => {
+    const handleOpenSos = () => setShowPanel(true);
+    window.addEventListener("open-sos", handleOpenSos);
+    return () => window.removeEventListener("open-sos", handleOpenSos);
+  }, []);
+
   // Fetch emergency contacts
   useEffect(() => {
     if (user) fetchContacts();
