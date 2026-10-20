@@ -412,7 +412,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowPostModal(true)}
-                  className="w-10 h-10 rounded-full hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90"
                   title="New Post"
                   aria-label="New Post"
                 >
@@ -420,7 +420,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 </button>
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent("open-settings"))}
-                  className="w-10 h-10 rounded-full hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90"
+                  className="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90"
                   title="Settings & Menu"
                   aria-label="Settings & Menu"
                 >
@@ -445,7 +445,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 {/* Notifications (Instagram-Style Heart Activity) */}
                 <button
                   onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
-                  className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.NOTIFICATIONS ? "text-[#e1306c]" : "text-white hover:text-gray-300"}`}
+                  className={`relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition active:scale-90 ${page === PAGES.NOTIFICATIONS ? "text-[#e1306c]" : "text-white hover:text-gray-300"}`}
                   title="Notifications"
                   aria-label="Notifications"
                 >
@@ -461,7 +461,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 {/* Direct Messages Icon */}
                 <button
                   onClick={() => handleNavClick(PAGES.MESSAGES)}
-                  className={`relative p-2.5 rounded-full transition active:scale-90 ${page === PAGES.MESSAGES ? "text-[#e1306c]" : "text-white hover:text-gray-300"}`}
+                  className={`relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition active:scale-90 ${page === PAGES.MESSAGES ? "text-[#e1306c]" : "text-white hover:text-gray-300"}`}
                   title="Direct Messages"
                   aria-label="Direct Messages"
                 >

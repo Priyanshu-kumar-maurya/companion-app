@@ -124,6 +124,31 @@ function App() {
     return false;
   };
 
+  // ── Global In-App Back Listener ──
+  useEffect(() => {
+    const handleAppGoBack = () => goBack();
+    window.addEventListener("app_go_back", handleAppGoBack);
+    return () => window.removeEventListener("app_go_back", handleAppGoBack);
+  }, [page, pageHistory, girlUser, boyUser, adminUser, selectedGirl]);
+
+  // ── Auto-Resume Pending Guest Booking / Action after Login ──
+  useEffect(() => {
+    if (currentUser) {
+      try {
+        const pendingRaw = sessionStorage.getItem("coffeely_pending_action");
+        if (pendingRaw) {
+          const pending = JSON.parse(pendingRaw);
+          if (pending && pending.companion) {
+            setSelectedGirl(pending.companion);
+            if (Date.now() - (pending.timestamp || 0) < 30 * 60 * 1000) {
+              setPage(PAGES.DETAILS);
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     configureNativeStatusBar("#0D0D1A");
   }, []);
@@ -471,9 +496,9 @@ function App() {
           />
         );
       case PAGES.ABOUT:
-        return <AboutPage setPage={navSetPage} />;
+        return <AboutPage setPage={navSetPage} onBack={goBack} />;
       case PAGES.HELP:
-        return <HelpPage setPage={navSetPage} />;
+        return <HelpPage setPage={navSetPage} onBack={goBack} />;
       case PAGES.MESSAGES:
         return currentUser ? (
           <MessagesPage
@@ -492,6 +517,7 @@ function App() {
             setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
+            onBack={goBack}
           />
         ) : (
           <UnifiedLogin setPage={navSetPage} />
@@ -577,6 +603,7 @@ function App() {
             currentUser={currentUser}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
+            onBack={goBack}
             onUpdateUser={(updated) => {
               if (currentUser?.role === "girl") setGirlUser(updated);
               else setBoyUser(updated);
@@ -598,6 +625,7 @@ function App() {
             setPage={navSetPage}
             setSelectedGirl={setSelectedGirl}
             socket={socket}
+            onBack={goBack}
           />
         ) : (
           <FindPage

@@ -3,18 +3,24 @@ import { APP_VERSION_TAG, APP_RELEASE_STAGE, APP_BUILD_DATE } from "../config/ve
 
 import { PAGES } from "../App";
 
-function AboutPage({ setPage }) {
+function AboutPage({ setPage, onBack }) {
   return (
     <div className="pt-20 min-h-[100dvh]">
       {setPage && (
         <div className="max-w-5xl mx-auto px-6 pt-4">
           <button
             type="button"
-            onClick={() => setPage(PAGES.HOME)}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5"
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 active:scale-95"
           >
             <span>←</span>
-            <span>Back to Home</span>
+            <span>Back</span>
           </button>
         </div>
       )}

@@ -17,7 +17,7 @@ import {
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
+function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket, onBack }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -296,7 +296,13 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket }) {
       <div className="flex items-center justify-between mb-5 sticky top-16 bg-[#0D0D1A]/90 backdrop-blur-md py-3 z-30 border-b border-white/5">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setPage(PAGES.HOME)}
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
             className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition active:scale-95"
             title="Back to Feed"
           >

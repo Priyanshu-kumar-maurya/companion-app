@@ -671,10 +671,73 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
           {loading ? (
             <FeedPostSkeleton count={3} />
           ) : feed.length === 0 ? (
-            <div className="text-center py-20 bg-[#121212] rounded-2xl border border-[#262626]/80">
-              <FaInbox className="text-5xl text-gray-500 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">No Posts Yet</h3>
-              <p className="text-gray-400">Be the first to share a moment!</p>
+            <div className="bg-[#121212] rounded-3xl border border-[#262626] p-6 text-center shadow-xl">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 border border-[#e1306c]/30 flex items-center justify-center mx-auto mb-4 text-3xl">
+                ☕
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Welcome to your Coffeely Feed!</h3>
+              <p className="text-xs sm:text-sm text-gray-400 max-w-sm mx-auto mb-6">
+                Connect with verified companions and fellow members to see their latest moments, photos, and date updates right here.
+              </p>
+
+              <button
+                onClick={() => setPage(PAGES.FIND)}
+                className="px-6 py-3 rounded-full bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:opacity-95 active:scale-95 transition inline-flex items-center gap-2 mb-6"
+              >
+                <span>Find Companions</span>
+                <span>→</span>
+              </button>
+
+              {/* Suggested Companions Shelf */}
+              {featuredCompanions && featuredCompanions.length > 0 && (
+                <div className="border-t border-white/5 pt-5 text-left">
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <span>✨</span>
+                      <span>Suggested Verified Companions</span>
+                    </span>
+                    <button
+                      onClick={() => setPage(PAGES.FIND)}
+                      className="text-[11px] font-bold text-[#e1306c] hover:underline"
+                    >
+                      See All
+                    </button>
+                  </div>
+
+                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                    {featuredCompanions.map((comp) => (
+                      <div
+                        key={comp.id}
+                        onClick={() => {
+                          if (typeof setSelectedGirl === "function") {
+                            setSelectedGirl(comp.userObj || comp);
+                          }
+                          setPage(PAGES.DETAILS);
+                        }}
+                        className="w-36 shrink-0 bg-[#181818] border border-white/10 rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-[#e1306c]/50 transition group"
+                      >
+                        <div className="relative w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-white/10 group-hover:border-[#e1306c] transition">
+                          <img
+                            src={comp.profile_pic}
+                            alt={comp.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="font-bold text-xs text-white truncate w-full flex items-center justify-center gap-1">
+                          <span className="truncate">{comp.name.split(" ")[0]}</span>
+                          <VerifiedBadge size="xs" />
+                        </div>
+                        <div className="text-[10px] text-gray-400 truncate w-full mt-0.5">
+                          {comp.city ? comp.city.split(",")[0] : "Verified"}
+                        </div>
+                        <div className="mt-2 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full w-fit">
+                          ₹{comp.price}/hr
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             feed.map((post) => (

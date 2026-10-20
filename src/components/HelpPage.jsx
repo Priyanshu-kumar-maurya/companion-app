@@ -36,7 +36,7 @@ const faqs = [
   ],
 ];
 
-function HelpPage({ setPage }) {
+function HelpPage({ setPage, onBack }) {
   const [openIndex, setOpenIndex] = useState(null);
 
   return (
@@ -45,11 +45,17 @@ function HelpPage({ setPage }) {
         <div className="max-w-3xl mx-auto px-6 pt-4">
           <button
             type="button"
-            onClick={() => setPage(PAGES.HOME)}
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
             className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5"
           >
             <span>←</span>
-            <span>Back to Home</span>
+            <span>Back</span>
           </button>
         </div>
       )}
@@ -115,7 +121,7 @@ function HelpPage({ setPage }) {
           <button
             onClick={() =>
               (window.location.href =
-                "mailto:support@rentgf.com?subject=Coffeely%20Support%20Request")
+                "mailto:support@coffeely.app?subject=Coffeely%20Support%20Request")
             }
             className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-semibold text-sm hover:opacity-90 active:scale-95 transition"
           >

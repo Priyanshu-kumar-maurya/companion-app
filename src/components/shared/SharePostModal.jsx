@@ -256,8 +256,8 @@ export default function SharePostModal({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Post by ${post?.user_name || "Companion"} on RentGF`,
-          text: post?.caption || "Check out this post on RentGF!",
+          title: `Post by ${post?.user_name || "Companion"} on Coffeely`,
+          text: post?.caption || "Check out this post on Coffeely!",
           url: postUrl,
         });
       } catch (err) {
@@ -273,14 +273,14 @@ export default function SharePostModal({
   // WhatsApp Share
   const handleWhatsAppShare = () => {
     const text = encodeURIComponent(
-      `Check out this post by @${post?.user_name || "Companion"} on RentGF:\n${postUrl}`
+      `Check out this post by @${post?.user_name || "Companion"} on Coffeely:\n${postUrl}`
     );
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };
 
   // SMS Share
   const handleSmsShare = () => {
-    const text = encodeURIComponent(`Check out this post on RentGF: ${postUrl}`);
+    const text = encodeURIComponent(`Check out this post on Coffeely: ${postUrl}`);
     window.open(`sms:?body=${text}`, "_blank");
   };
 
@@ -328,7 +328,7 @@ export default function SharePostModal({
               />
             </div>
             <p className="text-[11px] text-gray-400 truncate mt-0.5">
-              {post.caption || "View photo on RentGF"}
+              {post.caption || "View photo on Coffeely"}
             </p>
           </div>
         </div>

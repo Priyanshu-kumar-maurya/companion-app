@@ -90,6 +90,13 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
           setPage(PAGES.ADMIN_DASHBOARD);
         } else {
           if (setBoyUser) setBoyUser(data.user);
+          try {
+            const pending = sessionStorage.getItem("coffeely_pending_action");
+            if (pending) {
+              setPage(PAGES.DETAILS);
+              return;
+            }
+          } catch (e) {}
           setPage(PAGES.BOY_DASHBOARD);
         }
       } else if (response.status === 403 && data.error === "UNVERIFIED_ACCOUNT") {
@@ -162,6 +169,13 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             setPage(PAGES.ADMIN_DASHBOARD);
           } else {
             if (setBoyUser) setBoyUser(data.user);
+            try {
+              const pending = sessionStorage.getItem("coffeely_pending_action");
+              if (pending) {
+                setPage(PAGES.DETAILS);
+                return;
+              }
+            } catch (e) {}
             setPage(PAGES.BOY_DASHBOARD);
           }
         }, 1000);

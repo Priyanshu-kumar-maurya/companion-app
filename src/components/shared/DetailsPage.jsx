@@ -59,6 +59,7 @@ function DetailsPage({
   setSelectedGirl,
   onUpdateUser,
   socket: propSocket,
+  onBack,
 }) {
   const socket = propSocket || defaultSocket;
   const [hours, setHours] = useState(2);
@@ -153,6 +154,32 @@ function DetailsPage({
   const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[2].id);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
+
+  // Auto-restore pending guest booking draft upon logging in
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("coffeely_pending_action");
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (draft && draft.action === "booking" && String(draft.companion?.id) === String(profile?.id)) {
+          if (draft.hours) setHours(draft.hours);
+          if (draft.selectedSlot) setSelectedSlot(draft.selectedSlot);
+          if (draft.date || draft.location) {
+            setMeetingInfo((prev) => ({
+              ...prev,
+              date: draft.date || prev.date,
+              time: draft.time || prev.time,
+              location: draft.location || prev.location,
+            }));
+          }
+          sessionStorage.removeItem("coffeely_pending_action");
+          if (currentUser) {
+            setShowBookingModal(true);
+          }
+        }
+      }
+    } catch (e) {}
+  }, [currentUser, profile?.id]);
 
   useEffect(() => {
     if (!currentUser || !profile?.id || currentUser.id === profile.id) return;
@@ -592,7 +619,27 @@ function DetailsPage({
   };
 
   const handleOpenPaymentCheckout = () => {
-    if (!currentUser) return alert("Please login first!");
+    if (!currentUser) {
+      try {
+        const draft = {
+          action: "booking",
+          companion: profile,
+          hours,
+          date: meetingInfo.date,
+          time: meetingInfo.time,
+          selectedSlot,
+          location: meetingInfo.location,
+          timestamp: Date.now(),
+        };
+        sessionStorage.setItem("coffeely_pending_action", JSON.stringify(draft));
+      } catch (e) {}
+      setGuestModalReason(
+        `Sign in or create an account to book your date with ${profile.name}. Your selected date and slot will be saved automatically!`
+      );
+      setShowBookingModal(false);
+      setShowGuestAuthModal(true);
+      return;
+    }
     if (!hasDocument) {
       setShowBookingModal(false);
       setShowKycModal(true);
@@ -762,8 +809,14 @@ function DetailsPage({
       <div className="sticky top-0 bg-[#0D0D1A]/85 backdrop-blur-md z-30 border-b border-white/5">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
-            onClick={() => setPage(PAGES.FIND)}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition"
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition active:scale-95"
           >
             <FiArrowLeft size={18} />
           </button>
@@ -776,7 +829,7 @@ function DetailsPage({
             <div ref={menuRef} className="relative">
               <button
                 onClick={() => setShowMenu((prev) => !prev)}
-                className="w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition"
+                className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white transition active:scale-95"
               >
                 <FiMoreVertical size={18} />
               </button>

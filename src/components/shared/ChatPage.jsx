@@ -91,7 +91,7 @@ const defaultSocket = io(API_BASE, {
   },
 });
 
-function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSocket }) {
+function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSocket, onBack }) {
   const socket = propSocket || defaultSocket;
   const userPrefs = getStoredPreferences();
   const wallpaperBackgrounds = {
@@ -1256,10 +1256,17 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
           style={{ background: "#16162A", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <button
-            onClick={() =>
-              setPage(currentUser.role === "girl" ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD)
-            }
-            className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10"
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
+            className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white transition rounded-full hover:bg-white/10 active:scale-95"
+            style={{ minWidth: 40, minHeight: 40 }}
+            aria-label="Go back"
+            title="Go back"
           >
             <FiArrowLeft size={22} />
           </button>
@@ -2708,7 +2715,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             <h3 className="text-lg font-bold text-white mb-2">Verify encryption</h3>
             <p className="text-xs text-gray-400 leading-relaxed mb-6 font-medium">
               Messages and voice/video calls in this chat are end-to-end encrypted with a secure
-              verification code. No one outside of this chat, not even RentGF, can read or listen to
+              verification code. No one outside of this chat, not even Coffeely, can read or listen to
               them.
             </p>
             <div className="flex justify-center gap-2 mb-6">

@@ -2,7 +2,7 @@ import React from "react";
 
 /**
  * VerifiedBadge — App Brand Theme (Pink-Purple Gradient)
- * Replaces generic Twitter/Telegram sky-blue checkmarks with RentGF's signature vibrant gradient.
+ * Replaces generic Twitter/Telegram sky-blue checkmarks with Coffeely's signature vibrant gradient.
  */
 function VerifiedBadge({ size = "md", className = "", title = "Verified Companion" }) {
   const sizeMap = {
