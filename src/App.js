@@ -66,6 +66,7 @@ function App() {
   const [girlUser, setGirlUser] = useState(null);
   const [boyUser, setBoyUser] = useState(null);
   const [adminUser, setAdminUser] = useState(null);
+  const currentUser = boyUser || girlUser || adminUser;
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [globalAlert, setGlobalAlert] = useState(null);
   const [activeMessageAlert, setActiveMessageAlert] = useState(null);
@@ -333,8 +334,6 @@ function App() {
 
     verifySession();
   }, []);
-
-  const currentUser = boyUser || girlUser || adminUser;
 
   useEffect(() => {
     if (currentUser && socket) {
