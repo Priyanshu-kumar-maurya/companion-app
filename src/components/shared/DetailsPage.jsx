@@ -151,6 +151,7 @@ function DetailsPage({
   const menuRef = useRef(null);
 
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showEscrowInfoModal, setShowEscrowInfoModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(TIME_SLOTS[2].id);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -1363,8 +1364,16 @@ function DetailsPage({
                         </div>
                         <div className="flex items-center justify-between gap-3 pt-2 border-t border-white/5">
                           <div>
-                            <div className="text-[11px] font-semibold text-gray-400">
-                              Total Price
+                            <div className="text-[11px] font-semibold text-gray-400 flex items-center gap-1.5">
+                              <span>Total Price</span>
+                              <button
+                                type="button"
+                                onClick={() => setShowEscrowInfoModal(true)}
+                                className="text-[10px] font-bold text-emerald-400 hover:underline flex items-center gap-1"
+                              >
+                                <FiShield size={10} />
+                                <span>Escrow Safe</span>
+                              </button>
                             </div>
                             <div
                               className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text"
@@ -1745,7 +1754,14 @@ function DetailsPage({
                   <div className="text-lg font-black text-pink-400">
                     ₹{((profile.price || 1000) * hours).toLocaleString()}
                   </div>
-                  <div className="text-[9px] text-emerald-400">Escrow Protected</div>
+                  <button
+                    type="button"
+                    onClick={() => setShowEscrowInfoModal(true)}
+                    className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 underline decoration-emerald-500/50"
+                  >
+                    <FiShield size={10} />
+                    <span>100% Escrow Protected</span>
+                  </button>
                 </div>
               </div>
 
@@ -2064,6 +2080,139 @@ function DetailsPage({
           </div>
         </div>
       )}
+      {/* ── ESCROW INFO MODAL ── */}
+      {showEscrowInfoModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="w-full sm:max-w-md bg-[#16162A] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative animate-in fade-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <FiShield size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white leading-tight">
+                    100% Escrow Safety Protection
+                  </h3>
+                  <p className="text-[11px] text-gray-400">Your payments are fully secure & refundable</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEscrowInfoModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center transition active:scale-95"
+              >
+                <FiX size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 my-5">
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 mt-0.5 text-base">
+                  🔒
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Funds Held in Secure Vault</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
+                    Aapka payment Coffeely ke safe escrow vault me locked rehta hai. Companion ko date se pehle koi payment release nahi hoti.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 text-base">
+                  🤝
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Client-Confirmed Release</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
+                    Meetup successfully complete hone ke baad jab aap app par "Mark Completed" tap karenge, tabhi companion ko paise transfer hote hain.
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-white/[0.03] border border-white/5">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 text-base">
+                  ⚡
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-white">Instant 100% Refund Policy</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">
+                    Agar companion arrive nahi karti, meetup decline karti hai, ya plan cancel hota hai, aapka poora amount bina kisi deduction ke aapke account me laut jata hai.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowEscrowInfoModal(false)}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:opacity-95 active:scale-95 transition"
+            >
+              Got it, Continue Booking
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Mobile Sticky Booking Quick Action Bar ── */}
+      {showBookingCard &&
+        !showBookingModal &&
+        !showPaymentModal &&
+        !showKycModal &&
+        !showGuestAuthModal &&
+        !showEscrowInfoModal &&
+        !expandedPost &&
+        !showDpModal && (
+          <div className="sm:hidden fixed bottom-14 left-0 right-0 z-30 bg-[#0D0D1A]/95 backdrop-blur-lg border-t border-white/10 px-4 py-2.5 shadow-2xl flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-black text-white">
+                  ₹{profile.price || 1000}
+                </span>
+                <span className="text-[11px] text-gray-400">/hr</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEscrowInfoModal(true)}
+                className="text-[10px] font-bold text-emerald-400 flex items-center gap-1"
+              >
+                <FiShield size={10} />
+                <span>Escrow Protected</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!currentUser) {
+                  setGuestModalReason(
+                    `Sign in or create an account to book your date with ${profile.name}.`
+                  );
+                  setShowGuestAuthModal(true);
+                  return;
+                }
+                if (!hasDocument) {
+                  setShowKycModal(true);
+                  return;
+                }
+                setShowBookingModal(true);
+              }}
+              className={`px-5 py-2.5 rounded-full font-bold text-xs text-white bg-gradient-to-r ${accentGrad} shadow-lg active:scale-95 transition flex items-center gap-1.5`}
+            >
+              {profile.is_instant_available ? (
+                <>
+                  <FiZap size={13} className="text-amber-300" />
+                  <span>Instant Meetup</span>
+                </>
+              ) : (
+                <>
+                  <FiCalendar size={13} />
+                  <span>Book Date</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
     </div>
   );
 }

@@ -33,6 +33,7 @@ import {
   FiFileText,
 } from "react-icons/fi";
 import ScheduleManagerModal from "./ScheduleManagerModal";
+import CompanionReadinessCard from "./CompanionReadinessCard";
 
 // Backend API Base Configuration
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
@@ -505,6 +506,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  id="girl-dp-file-input"
                   onChange={handleDpFileSelect}
                 />
               </label>
@@ -651,6 +653,15 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           ))}
         </div>
 
+                {/* Companion Readiness & Onboarding Checklist */}
+        <CompanionReadinessCard
+          user={user}
+          onOpenSchedule={() => setShowScheduleModal(true)}
+          onOpenSettings={() => setShowSettings(true)}
+          onTriggerDpUpload={() => document.getElementById("girl-dp-file-input")?.click()}
+          onTriggerKycUpload={() => document.getElementById("girl-kyc-file-input")?.click()}
+        />
+
         <div className="mb-6 mt-6">
           {(!user.kyc_status || user.kyc_status === "unverified") && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -669,6 +680,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  id="girl-kyc-file-input"
                   onChange={handleKycUpload}
                   disabled={kycUploading}
                 />
