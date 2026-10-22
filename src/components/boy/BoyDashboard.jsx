@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
 import SettingsModal from "../shared/SettingsModal";
-import SOSButton from "../shared/SOSButton";
 import InstagramPostModal from "../shared/InstagramPostModal";
 import InvoiceModal from "../shared/InvoiceModal";
 import ReviewModal from "../shared/ReviewModal";
@@ -1292,8 +1291,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
           </div>
         </div>
       )}
-      <SOSButton user={user} socket={socket} />
-
+      
       {/* Printable Digital Invoice Receipt Modal */}
       <InvoiceModal
         isOpen={!!invoiceModalBooking}

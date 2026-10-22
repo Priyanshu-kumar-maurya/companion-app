@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { PAGES } from "../../App";
 import SettingsModal from "../shared/SettingsModal";
-import SOSButton from "../shared/SOSButton";
 import InstagramPostModal from "../shared/InstagramPostModal";
 import GirlWalletTab from "./GirlWalletTab";
 import InvoiceModal from "../shared/InvoiceModal";
@@ -1413,8 +1412,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           }}
         />
       )}
-      <SOSButton user={user} socket={socket} />
-    </div>
+          </div>
   );
 }
 

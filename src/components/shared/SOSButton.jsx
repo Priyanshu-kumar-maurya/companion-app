@@ -13,7 +13,7 @@ import {
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-function SOSButton({ user, socket }) {
+function SOSButton({ user, socket, currentPage }) {
   const [showPanel, setShowPanel] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [contacts, setContacts] = useState([]);
@@ -167,13 +167,15 @@ function SOSButton({ user, socket }) {
   return (
     <>
       {/* ── Floating SOS Button ── */}
-      <button
-        onClick={() => setShowPanel(true)}
-        className="fixed bottom-24 right-4 z-[80] w-14 h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg shadow-red-500/40 flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all duration-200 animate-pulse hover:animate-none print:hidden"
-        title="Emergency SOS"
-      >
-        <FiShield size={24} />
-      </button>
+      {currentPage !== "chat" && currentPage !== "details" && (
+        <button
+          onClick={() => setShowPanel(true)}
+          className="fixed bottom-20 right-4 z-[40] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-red-500 to-red-700 rounded-full shadow-lg shadow-red-500/40 flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all duration-200 animate-pulse hover:animate-none print:hidden border-2 border-white/10"
+          title="Emergency SOS"
+        >
+          <FiShield size={22} />
+        </button>
+      )}
 
       {/* ── SOS Panel Modal ── */}
       {showPanel && (

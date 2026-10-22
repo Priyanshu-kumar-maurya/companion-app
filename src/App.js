@@ -20,6 +20,7 @@ import CallOverlay from "./components/shared/CallOverlay";
 import GirlWalletTab from "./components/girl/GirlWalletTab";
 import KYCUploadPrompt from "./components/shared/KYCUploadPrompt";
 import OfflineBanner from "./components/shared/OfflineBanner";
+import SOSButton from "./components/shared/SOSButton";
 import { registerPushNotifications } from "./utils/pushManager";
 import {
   configureNativeStatusBar,
@@ -814,6 +815,9 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Global 24/7 Emergency SOS Safety System */}
+      <SOSButton user={currentUser} socket={socket} currentPage={page} />
 
       {/* Native Android Double-Tap Exit Toast */}
       {backToast && (

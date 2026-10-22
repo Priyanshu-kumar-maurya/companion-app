@@ -2163,7 +2163,7 @@ function DetailsPage({
         !showEscrowInfoModal &&
         !expandedPost &&
         !showDpModal && (
-          <div className="sm:hidden fixed bottom-14 left-0 right-0 z-30 bg-[#0D0D1A]/95 backdrop-blur-lg border-t border-white/10 px-4 py-2.5 shadow-2xl flex items-center justify-between">
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0D0D1A]/95 backdrop-blur-lg border-t border-white/10 px-4 py-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-2xl flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-black text-white">

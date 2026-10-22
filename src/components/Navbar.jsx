@@ -442,6 +442,16 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
               {/* Instagram Feed Top Header: Notification (Heart) + DM (Message) on Right */}
               <div className="flex items-center gap-1">
+                {/* Emergency Safety SOS Button */}
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-sos"))}
+                  className="relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full text-red-400 hover:text-red-300 transition active:scale-90"
+                  title="Emergency SOS"
+                  aria-label="Emergency SOS"
+                >
+                  <FiShield size={22} />
+                </button>
+
                 {/* Notifications (Instagram-Style Heart Activity) */}
                 <button
                   onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
