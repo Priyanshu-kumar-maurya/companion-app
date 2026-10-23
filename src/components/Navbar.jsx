@@ -172,7 +172,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
   return (
     <>
       {!isHiddenScreen && (
-        <nav className="fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
+        <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
           <div className="max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
             {/* ─── LEFT: Logo ─── */}
             <button
@@ -396,7 +396,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
       {/* ─── MOBILE TOP BAR: Instagram Style for Logged In, Guest Header for Visitors ─── */}
       {!isHiddenScreen && currentUser && (
-        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
           {isProfilePage ? (
             <>
               {/* Instagram Profile Top Header: Username on Left */}
@@ -489,7 +489,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
       )}
 
       {!isHiddenScreen && !currentUser && (
-        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-xl border-b border-[#262626] pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
+        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
           <button
             onClick={() => handleNavClick(PAGES.HOME)}
             className="flex items-center gap-2 outline-none"
@@ -509,7 +509,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
       )}
 
       {isMenuOpen && !isHiddenScreen && !currentUser && (
-        <div className="md:hidden fixed top-[calc(3.5rem+env(safe-area-inset-top,0px))] left-0 w-full bg-[#121212] border-b border-[#262626] py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
+        <div className="md:hidden fixed top-[calc(3.5rem+env(safe-area-inset-top,0px))] left-0 w-full bg-[#16162A]/98 backdrop-blur-xl border-b border-white/10 py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
           <button
             onClick={() => handleNavClick(PAGES.HOME)}
             className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}
@@ -565,7 +565,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
       )}
 
       {!isHiddenScreen && (
-        <div className="fixed bottom-0 left-0 w-full bg-[#121212]/95 backdrop-blur-xl border-t border-[#262626] z-40 md:hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-2">
+        <div className="fixed bottom-0 left-0 w-full bg-[#0D0D1A]/90 backdrop-blur-xl border-t border-white/5 z-40 md:hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-2">
           <div className="flex justify-around items-center h-14 max-w-md mx-auto px-2">
             {currentUser ? (
               <>

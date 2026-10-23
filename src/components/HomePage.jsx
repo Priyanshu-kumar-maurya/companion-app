@@ -660,7 +660,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
   if (isLoggedIn) {
     return (
       <div
-        className="min-h-[100dvh] bg-black pt-20 pb-20 flex justify-center"
+        className="min-h-[100dvh] bg-[#0D0D1A] pt-20 pb-20 flex justify-center"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -671,7 +671,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
           {loading ? (
             <FeedPostSkeleton count={3} />
           ) : feed.length === 0 ? (
-            <div className="bg-[#121212] rounded-3xl border border-[#262626] p-6 text-center shadow-xl">
+            <div className="bg-[#16162A] rounded-3xl border border-white/5 p-6 text-center shadow-xl">
               <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 border border-[#e1306c]/30 flex items-center justify-center mx-auto mb-4 text-3xl">
                 ☕
               </div>
@@ -743,9 +743,9 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
             feed.map((post) => (
               <div
                 key={post.id}
-                className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden shadow-lg"
+                className="bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden shadow-lg"
               >
-                <div className="flex items-center justify-between p-3 border-b border-[#262626]/60">
+                <div className="flex items-center justify-between p-3 border-b border-white/5">
                   <div
                     className="flex items-center gap-3 cursor-pointer group"
                     onClick={() => handleProfileClick(post)}
@@ -869,8 +869,8 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
 
         {commentModal.isOpen && (
           <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4">
-            <div className="bg-[#121212] w-full max-w-lg h-[70vh] sm:h-[80vh] sm:rounded-2xl rounded-t-3xl border border-[#262626] flex flex-col animate-slide-up sm:animate-none">
-              <div className="flex justify-between items-center p-4 border-b border-[#262626]">
+            <div className="bg-[#16162A] w-full max-w-lg h-[70vh] sm:h-[80vh] sm:rounded-2xl rounded-t-3xl border border-[#262626] flex flex-col animate-slide-up sm:animate-none">
+              <div className="flex justify-between items-center p-4 border-b border-white/5">
                 <h3 className="font-bold text-white text-lg w-full text-center">Comments</h3>
                 <button
                   onClick={() => setCommentModal({ isOpen: false, postId: null, comments: [] })}
@@ -957,7 +957,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-black pt-24 pb-10">
+    <div className="min-h-[100dvh] bg-[#0D0D1A] pt-24 pb-10">
       {/* Main Hero Container */}
       <div className="max-w-5xl mx-auto px-6 mt-6 md:mt-12 mb-16 relative">
         {/* Ambient lights */}
@@ -1051,7 +1051,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 border-b border-[#262626] pb-2 mt-2">
+                    <div className="flex items-center gap-2 border-b border-white/5 pb-2 mt-2">
                       <div className="w-6 h-6 rounded-full overflow-hidden shadow">
                         <img
                           src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80"
@@ -1304,7 +1304,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
         </div>
 
         {featuredCompanions.length === 0 ? (
-          <div className="text-center py-12 bg-[#121212] border border-[#262626] rounded-2xl text-gray-400 text-sm">
+          <div className="text-center py-12 bg-[#16162A] border border-white/5 rounded-2xl text-gray-400 text-sm">
             No companion profiles available right now.
           </div>
         ) : (
@@ -1312,7 +1312,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
             {featuredCompanions.map((comp) => (
               <div
                 key={comp.id}
-                className="bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden shadow-xl hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group"
+                className="bg-[#16162A] border border-white/5 rounded-2xl overflow-hidden shadow-xl hover:-translate-y-1.5 transition duration-300 flex flex-col justify-between group"
               >
                 {/* Profile Image Column */}
                 <div className="relative aspect-[4/5] overflow-hidden bg-black shrink-0">
@@ -1394,7 +1394,7 @@ function HomePage({ setPage, currentUser, setSelectedGirl, socket }) {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-[#121212] border border-[#262626] rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300">
+            <div className="bg-[#16162A] border border-white/5 rounded-2xl p-6 text-center hover:-translate-y-1 transition duration-300">
               <div className="text-4xl font-extrabold text-white mb-2">{stats.total}</div>
               <div className="text-xs text-gray-400 uppercase tracking-widest">Total Users</div>
             </div>
