@@ -508,7 +508,7 @@ function App() {
             socket={socket}
           />
         ) : (
-          <UnifiedLogin setPage={navSetPage} />
+          <UnifiedLogin setPage={navSetPage} onBack={goBack} />
         );
       case PAGES.NOTIFICATIONS:
         return currentUser ? (
@@ -520,7 +520,7 @@ function App() {
             onBack={goBack}
           />
         ) : (
-          <UnifiedLogin setPage={navSetPage} />
+          <UnifiedLogin setPage={navSetPage} onBack={goBack} />
         );
       case PAGES.GIRL_LOGIN:
         return (
@@ -543,9 +543,9 @@ function App() {
           />
         );
       case PAGES.GIRL_REGISTER:
-        return <UnifiedRegister setPage={navSetPage} initialRole="girl" />;
+        return <UnifiedRegister setPage={navSetPage} initialRole="girl" onBack={goBack} />;
       case PAGES.BOY_REGISTER:
-        return <UnifiedRegister setPage={navSetPage} initialRole="boy" />;
+        return <UnifiedRegister setPage={navSetPage} initialRole="boy" onBack={goBack} />;
       case PAGES.GIRL_DASHBOARD:
         return girlUser ? (
           <GirlDashboard
@@ -584,7 +584,7 @@ function App() {
         return adminUser ? (
           <AdminDashboard user={adminUser} setPage={navSetPage} />
         ) : (
-          <UnifiedLogin setPage={navSetPage} />
+          <UnifiedLogin setPage={navSetPage} onBack={goBack} />
         );
       case PAGES.FIND:
         return (
@@ -655,6 +655,14 @@ function App() {
             </div>
           ) : (
             <div className="pt-20 pb-24 min-h-[100dvh] max-w-4xl mx-auto px-4">
+              <button
+                type="button"
+                onClick={goBack}
+                className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 active:scale-95 mb-4"
+              >
+                <span>←</span>
+                <span>Back</span>
+              </button>
               <div className="mb-6 text-left">
                 <h1 className="text-2xl font-black bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent">
                   My Wallet & Earnings 💰
@@ -667,7 +675,7 @@ function App() {
             </div>
           )
         ) : (
-          <UnifiedLogin setPage={navSetPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} />
+          <UnifiedLogin setPage={navSetPage} setGirlUser={setGirlUser} setBoyUser={setBoyUser} onBack={goBack} />
         );
       }
       case PAGES.LEGAL:

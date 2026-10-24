@@ -7,7 +7,7 @@ import { getFriendlyErrorMessage } from "../utils/errorHandler";
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole = "boy" }) {
+function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultRole = "boy", onBack }) {
   const [roleMode, setRoleMode] = useState(defaultRole || "boy");
   const [step, setStep] = useState("login"); // "login" | "forgot" | "reset" | "verify"
   const [formData, setFormData] = useState({ emailOrPhone: "", password: "" });
@@ -331,15 +331,21 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
       <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-pink-600/10"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-purple-600/10"></div>
 
-      {/* Top Navigation Bar: Back to Home */}
+      {/* Top Navigation Bar: Back */}
       <div className="w-full max-w-md mb-3 flex items-center justify-between z-10">
         <button
           type="button"
-          onClick={() => setPage(PAGES.HOME)}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 backdrop-blur"
+          onClick={() => {
+            if (typeof onBack === "function") {
+              onBack();
+            } else {
+              window.dispatchEvent(new CustomEvent("app_go_back"));
+            }
+          }}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 backdrop-blur active:scale-95"
         >
           <span>←</span>
-          <span>Back to Home</span>
+          <span>Back</span>
         </button>
       </div>
 

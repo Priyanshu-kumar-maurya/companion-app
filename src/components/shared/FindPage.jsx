@@ -67,7 +67,7 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   return Math.round(d * 10) / 10;
 }
 
-function FindPage({ setPage, setSelectedGirl, currentUser, socket }) {
+function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
   const [searchQ, setSearchQ] = useState("");
   const [filterCity, setFilterCity] = useState("All");
   const [filterTag, setFilterTag] = useState("All");
@@ -356,9 +356,25 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket }) {
   return (
     <div className="pt-16 min-h-[100dvh] bg-[#0D0D1A]">
       <div className="max-w-5xl mx-auto px-6 py-8">
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
+            className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 active:scale-95"
+          >
+            <span>←</span>
+            <span>Back</span>
+          </button>
+        </div>
         <h1 className="text-3xl font-bold mb-1">
           Find a{" "}
-          <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
             Companion
           </span>
         </h1>

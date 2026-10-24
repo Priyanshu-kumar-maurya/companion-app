@@ -33,7 +33,7 @@ import { MessageListSkeleton } from "./SkeletonLoaders";
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
 const API = `${API_BASE}/api`;
 
-function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
+function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack }) {
   const [activeTab, setActiveTab] = useState("chats"); // 'chats' | 'calls'
   const [chatHistory, setChatHistory] = useState([]);
   const [callLogs, setCallLogs] = useState([]);
@@ -362,10 +362,16 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => setPage(PAGES.HOME)}
+            onClick={() => {
+              if (typeof onBack === "function") {
+                onBack();
+              } else {
+                window.dispatchEvent(new CustomEvent("app_go_back"));
+              }
+            }}
             className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 text-white flex items-center justify-center transition active:scale-90 shrink-0"
-            title="Back to Home Feed"
-            aria-label="Back to Home Feed"
+            title="Back"
+            aria-label="Back"
           >
             <FiArrowLeft size={20} />
           </button>
@@ -468,7 +474,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket }) {
               <p>No messages yet. Start a conversation!</p>
               <button
                 onClick={() => setPage(PAGES.FIND)}
-                className="mt-4 px-6 py-2 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-bold hover:opacity-90 transition"
+                className="mt-4 px-6 py-2.5 bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-full font-bold hover:opacity-95 shadow-lg active:scale-95 transition"
               >
                 Find Companions
               </button>

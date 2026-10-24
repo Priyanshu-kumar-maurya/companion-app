@@ -31,7 +31,7 @@ function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
   );
 }
 
-function UnifiedRegister({ setPage, initialRole = "boy" }) {
+function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -333,11 +333,17 @@ function UnifiedRegister({ setPage, initialRole = "boy" }) {
       <div className="w-full max-w-md mb-3 flex items-center justify-between z-10">
         <button
           type="button"
-          onClick={() => setPage(PAGES.HOME)}
-          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 backdrop-blur"
+          onClick={() => {
+            if (typeof onBack === "function") {
+              onBack();
+            } else {
+              window.dispatchEvent(new CustomEvent("app_go_back"));
+            }
+          }}
+          className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl transition border border-white/5 backdrop-blur active:scale-95"
         >
           <span>←</span>
-          <span>Back to Home</span>
+          <span>Back</span>
         </button>
         <div className="text-xs text-gray-400">
           Already registered?{" "}
