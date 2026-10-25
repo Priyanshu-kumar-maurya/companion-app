@@ -93,6 +93,10 @@ const defaultSocket = io(API_BASE, {
 
 function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSocket, onBack }) {
   const socket = propSocket || defaultSocket;
+  const roomId =
+    currentUser?.id && girl?.id
+      ? [Number(currentUser.id), Number(girl.id)].sort((a, b) => a - b).join("_")
+      : "";
   const userPrefs = getStoredPreferences();
   const wallpaperBackgrounds = {
     dark: "#0D0D1A",
