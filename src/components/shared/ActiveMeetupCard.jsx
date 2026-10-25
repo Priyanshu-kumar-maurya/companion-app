@@ -166,10 +166,7 @@ export default function ActiveMeetupCard({
 
   const handleStartVoiceCall = () => {
     if (!currentUser || !partner?.id) return;
-    const roomId =
-      currentUser.id < partner.id
-        ? `${currentUser.id}_${partner.id}`
-        : `${partner.id}_${currentUser.id}`;
+    const roomId = [Number(currentUser.id), Number(partner.id)].sort((a, b) => a - b).join("_");
 
     window.dispatchEvent(
       new CustomEvent("rentgf_start_call", {
@@ -180,10 +177,7 @@ export default function ActiveMeetupCard({
 
   const handleStartVideoCall = () => {
     if (!currentUser || !partner?.id) return;
-    const roomId =
-      currentUser.id < partner.id
-        ? `${currentUser.id}_${partner.id}`
-        : `${partner.id}_${currentUser.id}`;
+    const roomId = [Number(currentUser.id), Number(partner.id)].sort((a, b) => a - b).join("_");
 
     window.dispatchEvent(
       new CustomEvent("rentgf_start_call", {

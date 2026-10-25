@@ -337,11 +337,23 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (currentUser && socket) {
+    if (!currentUser || !socket) return;
+
+    const bindUserSocket = () => {
       socket.emit("user_connected", currentUser.id);
       socket.emit("join_own_room", currentUser.id);
-      registerPushNotifications(currentUser);
-    }
+    };
+
+    bindUserSocket();
+    registerPushNotifications(currentUser);
+
+    socket.on("connect", bindUserSocket);
+    socket.on("reconnect", bindUserSocket);
+
+    return () => {
+      socket.off("connect", bindUserSocket);
+      socket.off("reconnect", bindUserSocket);
+    };
   }, [currentUser]);
 
   useEffect(() => {

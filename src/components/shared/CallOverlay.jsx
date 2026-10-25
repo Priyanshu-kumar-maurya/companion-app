@@ -14,6 +14,8 @@ const DEFAULT_ICE_SERVERS = {
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" },
     { urls: "stun:stun.services.mozilla.com" },
     {
       urls: [
@@ -25,12 +27,16 @@ const DEFAULT_ICE_SERVERS = {
       credential: "openrelayproject",
     },
     {
-      urls: ["turns:openrelay.metered.ca:443?transport=tcp", "turns:openrelay.metered.ca:5349"],
+      urls: [
+        "turns:openrelay.metered.ca:443?transport=tcp",
+        "turns:openrelay.metered.ca:5349",
+        "turns:openrelay.metered.ca:5349?transport=tcp",
+      ],
       username: "openrelayproject",
       credential: "openrelayproject",
     },
   ],
-  iceCandidatePoolSize: 2,
+  iceCandidatePoolSize: 10,
 };
 
 const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
@@ -38,20 +44,19 @@ const API = `${API_BASE}/api`;
 
 const extractIceCandidate = (data) => {
   if (!data) return null;
-  let cand =
-    data.candidate !== undefined && typeof data.candidate === "object" ? data.candidate : data;
-  if (typeof cand === "string") {
-    if (data.sdpMid !== undefined || data.sdpMLineIndex !== undefined) {
-      return {
-        candidate: cand,
-        sdpMid: data.sdpMid,
-        sdpMLineIndex: data.sdpMLineIndex,
-        usernameFragment: data.usernameFragment,
-      };
-    }
-    return { candidate: cand };
+  let target = data;
+  if (data.candidate && typeof data.candidate === "object") {
+    target = data.candidate;
   }
-  return cand;
+  const candidateStr = typeof target === "string" ? target : target.candidate || "";
+  if (!candidateStr || candidateStr.trim() === "") return null;
+
+  return {
+    candidate: candidateStr,
+    sdpMid: target.sdpMid !== undefined ? target.sdpMid : data.sdpMid,
+    sdpMLineIndex: target.sdpMLineIndex !== undefined ? target.sdpMLineIndex : data.sdpMLineIndex,
+    usernameFragment: target.usernameFragment || data.usernameFragment,
+  };
 };
 
 function CallOverlay({ socket, currentUser }) {
@@ -98,7 +103,7 @@ function CallOverlay({ socket, currentUser }) {
     if (hasLoggedCallRef.current) return;
     hasLoggedCallRef.current = true;
 
-    // ONLY the caller initiates the chat call log and DB history to avoid duplicate entries
+    // ONLY the caller logs the call history to prevent duplicate entries
     if (!isCallerRef.current) return;
 
     const p = partnerRef.current || partner;
@@ -145,19 +150,72 @@ function CallOverlay({ socket, currentUser }) {
     }).catch((err) => console.error("Call history DB log error:", err));
   };
 
-  // --- Web Audio Ringtone Synthesizer ---
-  const startRingtone = () => {
+  // --- Sound Synthesizers for Ringtone & Ringback Tone ---
+  const stopAllAudio = () => {
+    if (ringtoneTimerRef.current) {
+      clearInterval(ringtoneTimerRef.current);
+      ringtoneTimerRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close().catch(() => {});
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+  };
+
+  // Incoming Ringtone: Gentle dual harmonic chime
+  const startIncomingRingtone = () => {
     try {
-      stopRingtone();
+      stopAllAudio();
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
       audioContextRef.current = ctx;
 
       const playChime = () => {
-        if (ctx.state === "suspended") {
-          ctx.resume();
-        }
+        if (ctx.state === "suspended") ctx.resume();
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = "sine";
+        osc2.type = "sine";
+        osc1.frequency.setValueAtTime(440, now);
+        osc2.frequency.setValueAtTime(554.37, now); // C#5
+
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 1.6);
+        osc2.stop(now + 1.6);
+      };
+
+      playChime();
+      ringtoneTimerRef.current = setInterval(playChime, 2400);
+    } catch (e) {
+      console.warn("Incoming ringtone synth warning:", e);
+    }
+  };
+
+  // Outgoing Call Ringback Tone: Standard phone ringing tone
+  const startOutgoingTone = () => {
+    try {
+      stopAllAudio();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      audioContextRef.current = ctx;
+
+      const playRingback = () => {
+        if (ctx.state === "suspended") ctx.resume();
         const now = ctx.currentTime;
         const osc1 = ctx.createOscillator();
         const osc2 = ctx.createOscillator();
@@ -168,8 +226,9 @@ function CallOverlay({ socket, currentUser }) {
         osc1.frequency.setValueAtTime(440, now);
         osc2.frequency.setValueAtTime(480, now);
 
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+        gain.gain.setValueAtTime(0.06, now);
+        gain.gain.setValueAtTime(0.06, now + 1.2);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.3);
 
         osc1.connect(gain);
         osc2.connect(gain);
@@ -177,31 +236,20 @@ function CallOverlay({ socket, currentUser }) {
 
         osc1.start(now);
         osc2.start(now);
-        osc1.stop(now + 1.5);
-        osc2.stop(now + 1.5);
+        osc1.stop(now + 1.3);
+        osc2.stop(now + 1.3);
       };
 
-      playChime();
-      ringtoneTimerRef.current = setInterval(playChime, 2500);
+      playRingback();
+      ringtoneTimerRef.current = setInterval(playRingback, 3500);
     } catch (e) {
-      console.error("Ringtone synth error:", e);
-    }
-  };
-
-  const stopRingtone = () => {
-    if (ringtoneTimerRef.current) {
-      clearInterval(ringtoneTimerRef.current);
-      ringtoneTimerRef.current = null;
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close().catch(() => {});
-      audioContextRef.current = null;
+      console.warn("Outgoing tone synth warning:", e);
     }
   };
 
   // --- Call Cleanup ---
   const cleanupCall = () => {
-    stopRingtone();
+    stopAllAudio();
     if (callingTimeoutRef.current) {
       clearTimeout(callingTimeoutRef.current);
       callingTimeoutRef.current = null;
@@ -225,7 +273,9 @@ function CallOverlay({ socket, currentUser }) {
     }
     setRemoteStream(null);
     if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
+      try {
+        peerConnectionRef.current.close();
+      } catch (e) {}
       peerConnectionRef.current = null;
     }
     if (remoteVideoRef.current) {
@@ -254,7 +304,7 @@ function CallOverlay({ socket, currentUser }) {
   // --- WebRTC Peer Setup ---
   const setupWebRTC = async (type, isCaller) => {
     try {
-      // 1. Instant Media Acquisition (reuse pre-warmed stream if active)
+      // 1. Acquire media stream (reuse pre-warmed stream if active)
       let stream = localStreamRef.current;
       const hasValidVideo =
         stream &&
@@ -288,10 +338,10 @@ function CallOverlay({ socket, currentUser }) {
         try {
           stream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch (mediaErr) {
-          console.warn("Retrying getUserMedia with fallback constraints:", mediaErr);
+          console.warn("Retrying getUserMedia with standard constraints:", mediaErr);
           stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
-            video: type === "video" ? true : false,
+            video: type === "video",
           });
         }
         localStreamRef.current = stream;
@@ -303,11 +353,10 @@ function CallOverlay({ socket, currentUser }) {
         localVideoRef.current.play().catch(() => {});
       }
 
-      // 2. Direct RTCPeerConnection using pre-loaded high-speed ICE configuration (NO blocking network fetch!)
+      // 2. Direct RTCPeerConnection with high-speed ICE configuration
       const pc = new RTCPeerConnection(DEFAULT_ICE_SERVERS);
       peerConnectionRef.current = pc;
 
-      // Connection state change monitors
       pc.onconnectionstatechange = () => {
         if (pc.connectionState === "disconnected" || pc.connectionState === "failed") {
           setNetQuality({
@@ -335,7 +384,7 @@ function CallOverlay({ socket, currentUser }) {
         }
       };
 
-      // Periodically check RTT and latency stats
+      // Periodic RTT and Latency Monitoring
       if (statsIntervalRef.current) clearInterval(statsIntervalRef.current);
       statsIntervalRef.current = setInterval(async () => {
         if (pc && pc.connectionState === "connected") {
@@ -374,7 +423,7 @@ function CallOverlay({ socket, currentUser }) {
       // Add all tracks to RTCPeerConnection
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
-      // Reliable track receiver & stream listener
+      // Reliable Remote Track Listener
       pc.ontrack = (event) => {
         let incomingStream = null;
         if (event.streams && event.streams[0]) {
@@ -395,23 +444,22 @@ function CallOverlay({ socket, currentUser }) {
 
           if (remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = incomingStream;
-            remoteVideoRef.current.play().catch(() => {
-              if (remoteVideoRef.current) {
-                remoteVideoRef.current.muted = true;
-                remoteVideoRef.current.play().catch(() => {});
-              }
+            remoteVideoRef.current.play().catch((err) => {
+              console.warn("Remote video play warning:", err);
             });
           }
           if (remoteAudioRef.current) {
             remoteAudioRef.current.srcObject = incomingStream;
-            remoteAudioRef.current.play().catch(() => {});
+            remoteAudioRef.current.play().catch((err) => {
+              console.warn("Remote audio play warning:", err);
+            });
           }
         }
       };
 
       pc.onicecandidate = (event) => {
         const p = partnerRef.current || partner;
-        if (event.candidate && p && socket) {
+        if (event.candidate && event.candidate.candidate && p && socket) {
           const candData = {
             candidate: event.candidate.candidate,
             sdpMid: event.candidate.sdpMid,
@@ -445,12 +493,14 @@ function CallOverlay({ socket, currentUser }) {
       return pc;
     } catch (err) {
       console.error("WebRTC Setup Error:", err);
-      alert("Could not access camera/microphone permissions.");
+      alert(
+        "Camera or Microphone permission was denied or unavailable. Please enable permissions to make calls."
+      );
       cleanupCall();
     }
   };
 
-  // --- Global Call Event Handler ---
+  // --- Global Call Event Handler (rentgf_start_call) ---
   useEffect(() => {
     const handleStartCall = async (e) => {
       const { targetUser, type, room } = e.detail;
@@ -470,8 +520,9 @@ function CallOverlay({ socket, currentUser }) {
       setPartner(p);
       setCallState("calling");
       setStatusText("Calling...");
+      startOutgoingTone();
 
-      // Pre-warm camera & mic immediately so it's instantly ready when partner answers
+      // Pre-warm camera & mic immediately
       try {
         const constraints = {
           audio: { echoCancellation: true, noiseSuppression: true },
@@ -492,7 +543,6 @@ function CallOverlay({ socket, currentUser }) {
         console.warn("Pre-warm media stream warning:", err);
       }
 
-      // Ensure global socket joins room
       if (socket && room) {
         socket.emit("join_room", room);
       }
@@ -507,13 +557,13 @@ function CallOverlay({ socket, currentUser }) {
         caller_user_id: currentUser?.id,
       });
 
-      // Timeout after 25 sec if unanswered
+      // Timeout after 30 seconds if unanswered
       if (callingTimeoutRef.current) clearTimeout(callingTimeoutRef.current);
       callingTimeoutRef.current = setTimeout(() => {
         setStatusText("User Unavailable");
         logCallHistory(`📞 Missed ${type === "video" ? "Video" : "Voice"} Call`);
         setTimeout(() => cleanupCall(), 2000);
-      }, 25000);
+      }, 30000);
     };
 
     window.addEventListener("rentgf_start_call", handleStartCall);
@@ -525,15 +575,17 @@ function CallOverlay({ socket, currentUser }) {
     if (!socket) return;
 
     const handleIncomingCall = (data) => {
-      // Ignore if I am the caller!
+      // Ignore if I am the caller or call is already active
       if (
         currentUser &&
         data.caller_user_id &&
         String(data.caller_user_id) === String(currentUser.id)
-      )
+      ) {
         return;
+      }
       if (data.caller_id === socket.id) return;
-      if (callStateRef.current !== "idle") return; // Busy
+      if (callStateRef.current !== "idle") return; // Already busy
+
       hasLoggedCallRef.current = false;
       callDurationRef.current = 0;
       isCallerRef.current = false;
@@ -551,9 +603,8 @@ function CallOverlay({ socket, currentUser }) {
       setPartner(p);
       setCallState("receiving");
       setShowBanner(true);
-      startRingtone();
+      startIncomingRingtone();
 
-      // Ensure global socket joins room for incoming call
       if (data.room) {
         socket.emit("join_room", data.room);
       }
@@ -566,7 +617,8 @@ function CallOverlay({ socket, currentUser }) {
     };
 
     const handleCallAccepted = async () => {
-      stopRingtone();
+      if (callStateRef.current === "active") return; // Dedup against multiple socket events
+      stopAllAudio();
       if (callingTimeoutRef.current) {
         clearTimeout(callingTimeoutRef.current);
         callingTimeoutRef.current = null;
@@ -612,7 +664,7 @@ function CallOverlay({ socket, currentUser }) {
       if (pc && offer) {
         try {
           if (pc.signalingState !== "stable" && pc.signalingState !== "have-local-offer") {
-            console.warn("Ignoring offer because signalingState is:", pc.signalingState);
+            console.warn("Ignoring duplicate offer; signalingState is:", pc.signalingState);
             return;
           }
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
@@ -625,7 +677,7 @@ function CallOverlay({ socket, currentUser }) {
           while (iceQueueRef.current.length > 0) {
             const rawCand = iceQueueRef.current.shift();
             const parsed = extractIceCandidate(rawCand);
-            if (parsed) {
+            if (parsed && parsed.candidate) {
               try {
                 await pc.addIceCandidate(new RTCIceCandidate(parsed));
               } catch (e) {}
@@ -647,7 +699,7 @@ function CallOverlay({ socket, currentUser }) {
           while (iceQueueRef.current.length > 0) {
             const rawCand = iceQueueRef.current.shift();
             const parsed = extractIceCandidate(rawCand);
-            if (parsed) {
+            if (parsed && parsed.candidate) {
               try {
                 await pc.addIceCandidate(new RTCIceCandidate(parsed));
               } catch (e) {}
@@ -661,7 +713,7 @@ function CallOverlay({ socket, currentUser }) {
 
     const handleWebrtcIceCandidate = async (data) => {
       const parsed = extractIceCandidate(data);
-      if (!parsed) return;
+      if (!parsed || !parsed.candidate) return;
       const pc = peerConnectionRef.current;
       if (pc && pc.remoteDescription && pc.remoteDescription.type) {
         try {
@@ -713,25 +765,24 @@ function CallOverlay({ socket, currentUser }) {
         remoteVideoRef.current.srcObject = stream;
       }
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.play().catch(() => {
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.muted = true;
-            remoteVideoRef.current.play().catch(() => {});
-          }
+        remoteVideoRef.current.play().catch((err) => {
+          console.warn("Remote video play error:", err);
         });
       }
       if (remoteAudioRef.current && remoteAudioRef.current.srcObject !== stream) {
         remoteAudioRef.current.srcObject = stream;
       }
       if (remoteAudioRef.current) {
-        remoteAudioRef.current.play().catch(() => {});
+        remoteAudioRef.current.play().catch((err) => {
+          console.warn("Remote audio play error:", err);
+        });
       }
     }
   }, [remoteStream, callState]);
 
   // --- User Actions ---
   const acceptCall = async () => {
-    stopRingtone();
+    stopAllAudio();
     if (callingTimeoutRef.current) {
       clearTimeout(callingTimeoutRef.current);
       callingTimeoutRef.current = null;
@@ -843,7 +894,7 @@ function CallOverlay({ socket, currentUser }) {
 
   return (
     <>
-      {/* ── INSTAGRAM STYLE TOP FLOATING NOTIFICATION BANNER (When Receiving Call) ── */}
+      {/* ── TOP FLOATING NOTIFICATION BANNER (When Receiving Call) ── */}
       {callState === "receiving" && showBanner && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[92%] max-w-md bg-[#121212]/95 border border-[#262626] rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] backdrop-blur-xl p-3.5 flex items-center justify-between animate-bounce">
           <div
@@ -871,12 +922,14 @@ function CallOverlay({ socket, currentUser }) {
             <button
               onClick={rejectCall}
               className="w-10 h-10 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-lg transition active:scale-90"
+              aria-label="Decline Call"
             >
               <FiPhoneOff size={18} />
             </button>
             <button
               onClick={acceptCall}
               className="w-10 h-10 rounded-full bg-[#30d158] hover:bg-green-600 text-white flex items-center justify-center shadow-lg transition active:scale-90 animate-pulse"
+              aria-label="Accept Call"
             >
               {callType === "video" ? <FiVideo size={18} /> : <FiPhone size={18} />}
             </button>
@@ -886,8 +939,13 @@ function CallOverlay({ socket, currentUser }) {
 
       {/* ── FULL SCREEN CALL MODAL ── */}
       <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex flex-col justify-between overflow-hidden animate-fade-in">
-        {/* Hidden Audio Element for Voice Calls */}
-        <audio ref={remoteAudioRef} autoPlay playsInline style={{ display: "none" }} />
+        {/* Hidden Audio Element for Voice Calls (UNMUTED) */}
+        <audio
+          ref={remoteAudioRef}
+          autoPlay
+          playsInline
+          className="opacity-0 pointer-events-none absolute -top-[9999px]"
+        />
 
         {/* Top Bar / Caller Header */}
         <div className="pt-10 px-6 flex flex-col items-center z-20 text-center">
@@ -922,15 +980,15 @@ function CallOverlay({ socket, currentUser }) {
           {/* Active Video Stream */}
           {callState === "active" && callType === "video" ? (
             <div className="relative w-full h-full max-w-4xl rounded-3xl overflow-hidden border border-[#262626] bg-[#121212] shadow-2xl flex items-center justify-center">
+              {/* Remote Video is UNMUTED so user hears remote audio! */}
               <video
                 ref={remoteVideoRef}
                 autoPlay
                 playsInline
-                muted
                 className="w-full h-full object-cover"
               />
 
-              {/* Local Video Picture-in-Picture */}
+              {/* Local Video Picture-in-Picture is MUTED to prevent hearing own echo */}
               <div className="absolute top-4 right-4 w-32 h-44 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl bg-black z-30">
                 <video
                   ref={localVideoRef}
@@ -972,6 +1030,7 @@ function CallOverlay({ socket, currentUser }) {
               <button
                 onClick={rejectCall}
                 className="w-16 h-16 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95"
+                aria-label="Decline Call"
               >
                 <FiPhoneOff size={26} />
               </button>
@@ -979,6 +1038,7 @@ function CallOverlay({ socket, currentUser }) {
               <button
                 onClick={acceptCall}
                 className="w-16 h-16 rounded-full bg-[#30d158] hover:bg-green-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95 animate-bounce"
+                aria-label="Answer Call"
               >
                 {callType === "video" ? <FiVideo size={26} /> : <FiPhone size={26} />}
               </button>
@@ -988,6 +1048,7 @@ function CallOverlay({ socket, currentUser }) {
               <button
                 onClick={toggleMic}
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-90 ${isMuted ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-[#262626] text-white hover:bg-[#363636]"}`}
+                aria-label={isMuted ? "Unmute" : "Mute"}
               >
                 {isMuted ? <FiMicOff size={20} /> : <FiMic size={20} />}
               </button>
@@ -997,6 +1058,7 @@ function CallOverlay({ socket, currentUser }) {
                   <button
                     onClick={toggleVideo}
                     className={`w-12 h-12 rounded-full flex items-center justify-center transition active:scale-90 ${isVideoOff ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-[#262626] text-white hover:bg-[#363636]"}`}
+                    aria-label={isVideoOff ? "Turn Video On" : "Turn Video Off"}
                   >
                     {isVideoOff ? <FiVideoOff size={20} /> : <FiVideo size={20} />}
                   </button>
@@ -1004,6 +1066,7 @@ function CallOverlay({ socket, currentUser }) {
                   <button
                     onClick={switchCamera}
                     className="w-12 h-12 rounded-full bg-[#262626] hover:bg-[#363636] text-white flex items-center justify-center transition active:scale-90"
+                    aria-label="Switch Camera"
                   >
                     <FiRefreshCw size={20} />
                   </button>
@@ -1013,6 +1076,7 @@ function CallOverlay({ socket, currentUser }) {
               <button
                 onClick={endCall}
                 className="w-14 h-14 rounded-full bg-[#ff3b30] hover:bg-red-600 text-white flex items-center justify-center shadow-xl transition transform hover:scale-110 active:scale-95 ml-2"
+                aria-label="End Call"
               >
                 <FiPhoneOff size={22} />
               </button>
