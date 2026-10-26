@@ -376,6 +376,19 @@ module.exports = (io) => {
       }
     });
 
+    socket.on("call_reaction", (data) => {
+      if (data.to) {
+        io.to(`user_${data.to}`).emit("call_reaction", data);
+        io.to(data.to.toString()).emit("call_reaction", data);
+        const sId = onlineUsers.get(data.to.toString());
+        if (sId && sId !== socket.id) {
+          io.to(sId).emit("call_reaction", data);
+        }
+      } else if (data.room) {
+        socket.to(data.room).emit("call_reaction", data);
+      }
+    });
+
     socket.on("delete_message", async (data) => {
       try {
         const verifiedSender = socket.user ? socket.user.id : data.sender_id;

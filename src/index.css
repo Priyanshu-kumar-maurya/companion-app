@@ -171,3 +171,23 @@
   background-color: #1c1c28;
   border-radius: 0.5rem;
 }
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-80px) scale(1.2);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-180px) scale(1.4);
+    opacity: 0;
+  }
+}
+
+.animate-float-up {
+  animation: floatUp 2.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
