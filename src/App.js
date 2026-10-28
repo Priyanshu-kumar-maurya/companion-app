@@ -21,6 +21,7 @@ import GirlWalletTab from "./components/girl/GirlWalletTab";
 import KYCUploadPrompt from "./components/shared/KYCUploadPrompt";
 import OfflineBanner from "./components/shared/OfflineBanner";
 import SOSButton from "./components/shared/SOSButton";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 import { registerPushNotifications } from "./utils/pushManager";
 import {
   configureNativeStatusBar,
@@ -717,7 +718,9 @@ function App() {
         setBoyUser={setBoyUser}
         socket={socket}
       />
-      {renderPage()}
+      <ErrorBoundary onReset={() => handleNavigate(PAGES.HOME)}>
+        {renderPage()}
+      </ErrorBoundary>
       <PWAInstallBanner />
       <AppUpdateModal />
       {/* Instagram-Style Top Floating Message Alert Banner */}

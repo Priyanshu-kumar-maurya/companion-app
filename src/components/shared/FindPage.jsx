@@ -348,6 +348,8 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
       return 0;
     });
 
+  const hasActiveFilters = activeFilterCount > 0 || Boolean(searchQ);
+
   const handleProfileClick = (profile) => {
     setSelectedGirl(profile);
     setPage(PAGES.DETAILS);
@@ -830,8 +832,26 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
             onToggleFavorite={handleQuickFavorite}
           />
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 text-gray-500">
-            No companions found. Try different filters.
+          <div className="bg-[#16162A]/60 border border-white/5 rounded-3xl p-10 text-center flex flex-col items-center justify-center my-8 shadow-xl max-w-lg mx-auto backdrop-blur-md">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 mb-4 shadow-inner">
+              <FiSearch size={28} />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-1">
+              No Companions Found
+            </h3>
+            <p className="text-xs text-gray-400 max-w-xs mb-5 leading-relaxed">
+              {hasActiveFilters
+                ? "We couldn't find any profiles matching your search filters. Try clearing some filters to see more profiles."
+                : "There are currently no companion profiles available in this view."}
+            </p>
+            {hasActiveFilters && (
+              <button
+                onClick={handleResetFilters}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-bold text-xs shadow-lg transition active:scale-95"
+              >
+                Reset All Filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -730,6 +730,24 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                   </div>
                 </div>
               ))}
+
+              {/* ── Empty search / no visible chats state ── */}
+              {unlockedRegularChats.length === 0 && !isLockedUnlocked && (
+                <div className="text-gray-500 text-center py-14 flex flex-col items-center">
+                  <FiSearch className="text-gray-600 text-4xl mb-3" />
+                  <p className="text-sm font-medium text-gray-400">
+                    {searchQuery ? `No chats found matching "${searchQuery}"` : "No conversations to display"}
+                  </p>
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="mt-3 text-xs text-pink-400 hover:text-pink-300 font-semibold underline"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )
         ) : /* Call History Tab Content */
