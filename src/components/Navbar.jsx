@@ -240,87 +240,62 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
               </span>
             </button>
 
-            {/* ─── CENTER: Nav Icons ─── */}
+            {/* ─── CENTER: Nav Icons (Unified for all users) ─── */}
             <div className="flex items-center gap-1 flex-1 justify-center">
-              {!currentUser ? (
-                <>
-                  <button
-                    onClick={() => handleNavClick(PAGES.HOME)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HOME ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
-                  >
-                    Home
-                  </button>
-                  <button
-                    onClick={() => handleNavClick(PAGES.ABOUT)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.ABOUT ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
-                  >
-                    About
-                  </button>
-                  <button
-                    onClick={() => handleNavClick(PAGES.HELP)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${page === PAGES.HELP ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
-                  >
-                    Help
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => handleNavClick(PAGES.HOME)}
-                    title="Home"
-                    className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.HOME ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-500 hover:text-white hover:bg-white/5"}`}
-                  >
-                    <FiHome size={20} />
-                    <span className="text-[9px] mt-0.5 font-semibold">Home</span>
-                  </button>
-                  <button
-                    onClick={() => handleNavClick(PAGES.FIND)}
-                    title="Find"
-                    className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.FIND ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-500 hover:text-white hover:bg-white/5"}`}
-                  >
-                    <FiSearch size={20} />
-                    <span className="text-[9px] mt-0.5 font-semibold">Find</span>
-                  </button>
-                  <button
-                    onClick={() => handleNavClick(PAGES.MESSAGES)}
-                    title="Messages"
-                    className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.MESSAGES ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-500 hover:text-white hover:bg-white/5"}`}
-                  >
-                    <span className="relative">
-                      <FiMessageCircle size={20} />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[15px] text-center leading-[15px]">
-                          {unreadCount}
-                        </span>
-                      )}
+              <button
+                onClick={() => handleNavClick(PAGES.HOME)}
+                title="Home"
+                className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.HOME ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                <FiHome size={20} />
+                <span className="text-[9px] mt-0.5 font-semibold">Home</span>
+              </button>
+              <button
+                onClick={() => handleNavClick(PAGES.FIND)}
+                title="Explore"
+                className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.FIND ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                <FiSearch size={20} />
+                <span className="text-[9px] mt-0.5 font-semibold">Explore</span>
+              </button>
+              <button
+                onClick={() => handleNavClick(currentUser ? PAGES.MESSAGES : PAGES.BOY_LOGIN)}
+                title="Messages"
+                className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.MESSAGES ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                <span className="relative">
+                  <FiMessageCircle size={20} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full min-w-[15px] text-center leading-[15px]">
+                      {unreadCount}
                     </span>
-                    <span className="text-[9px] mt-0.5 font-semibold">Inbox</span>
-                  </button>
-                  {hasDocument && (
-                    <button
-                      onClick={() => handleNavClick(PAGES.WALLET)}
-                      title="Wallet"
-                      className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.WALLET ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-500 hover:text-white hover:bg-white/5"}`}
-                    >
-                      <FiCreditCard size={20} />
-                      <span className="text-[9px] mt-0.5 font-semibold">Wallet</span>
-                    </button>
                   )}
-                  <button
-                    onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
-                    title="Activity"
-                    className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-500 hover:text-white hover:bg-white/5"}`}
-                  >
-                    <span className="relative">
-                      <FiBell size={20} />
-                      {unreadNotifsCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
-                      )}
-                    </span>
-                    <span className="text-[9px] mt-0.5 font-semibold">Activity</span>
-                  </button>
-                </>
+                </span>
+                <span className="text-[9px] mt-0.5 font-semibold">Inbox</span>
+              </button>
+              {currentUser && hasDocument && (
+                <button
+                  onClick={() => handleNavClick(PAGES.WALLET)}
+                  title="Wallet"
+                  className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.WALLET ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+                >
+                  <FiCreditCard size={20} />
+                  <span className="text-[9px] mt-0.5 font-semibold">Wallet</span>
+                </button>
               )}
+              <button
+                onClick={() => handleNavClick(currentUser ? PAGES.NOTIFICATIONS : PAGES.BOY_LOGIN)}
+                title="Activity"
+                className={`relative flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${page === PAGES.NOTIFICATIONS ? "text-[#e1306c] bg-[#e1306c]/10" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              >
+                <span className="relative">
+                  <FiBell size={20} />
+                  {unreadNotifsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
+                  )}
+                </span>
+                <span className="text-[9px] mt-0.5 font-semibold">Activity</span>
+              </button>
             </div>
 
             {/* ─── RIGHT: Actions ─── */}
@@ -398,10 +373,10 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         </nav>
       )}
 
-      {/* ─── MOBILE TOP BAR: Instagram Style for Logged In, Guest Header for Visitors ─── */}
-      {!isHiddenScreen && currentUser && (
-        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
-          {isProfilePage ? (
+      {/* ─── MOBILE TOP BAR: Instagram Header for ALL Users ─── */}
+      {!isHiddenScreen && (
+        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#000000]/95 backdrop-blur-xl border-b border-[#262626] pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
+          {currentUser && isProfilePage ? (
             <>
               {/* Instagram Profile Top Header: Username on Left */}
               <div className="flex items-center gap-1.5 min-w-0">
@@ -447,14 +422,14 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
               {/* Instagram Feed Top Header: Coffeely on Left */}
               <button
                 onClick={() => handleNavClick(PAGES.HOME)}
-                className="flex items-center gap-2 outline-none"
+                className="flex items-center gap-2 outline-none group"
               >
-                <h3 className="text-2xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider select-none">
+                <h3 className="text-2xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wide select-none">
                   Coffeely
                 </h3>
               </button>
 
-              {/* Instagram Feed Top Header: Notification (Heart) + DM (Message) on Right */}
+              {/* Instagram Feed Top Header: SOS + Notification (Heart) + DM (Message) on Right */}
               <div className="flex items-center gap-1">
                 {/* Emergency Safety SOS Button */}
                 <button
@@ -467,7 +442,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
                 </button>
 
                 {/* Wallet Shortcut for Companions / ID Verified */}
-                {hasDocument && (
+                {currentUser && hasDocument && (
                   <button
                     onClick={() => handleNavClick(PAGES.WALLET)}
                     className={`relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition active:scale-90 ${page === PAGES.WALLET ? "text-[#e1306c]" : "text-amber-400 hover:text-amber-300"}`}
@@ -480,7 +455,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
                 {/* Notifications (Instagram-Style Heart Activity) */}
                 <button
-                  onClick={() => handleNavClick(PAGES.NOTIFICATIONS)}
+                  onClick={() => handleNavClick(currentUser ? PAGES.NOTIFICATIONS : PAGES.BOY_LOGIN)}
                   className={`relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition active:scale-90 ${page === PAGES.NOTIFICATIONS ? "text-[#e1306c]" : "text-white hover:text-gray-300"}`}
                   title="Notifications"
                   aria-label="Notifications"
@@ -496,7 +471,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
 
                 {/* Direct Messages Icon */}
                 <button
-                  onClick={() => handleNavClick(PAGES.MESSAGES)}
+                  onClick={() => handleNavClick(currentUser ? PAGES.MESSAGES : PAGES.BOY_LOGIN)}
                   className={`relative w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full transition active:scale-90 ${page === PAGES.MESSAGES ? "text-[#e1306c]" : "text-white hover:text-gray-300"}`}
                   title="Direct Messages"
                   aria-label="Direct Messages"
@@ -514,226 +489,117 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
         </div>
       )}
 
-      {!isHiddenScreen && !currentUser && (
-        <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 pt-[env(safe-area-inset-top,0px)] h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-between px-4">
-          <button
-            onClick={() => handleNavClick(PAGES.HOME)}
-            className="flex items-center gap-2 outline-none"
-          >
-            <h3 className="text-xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent tracking-wider">
-              Coffeely
-            </h3>
-          </button>
-
-          <button
-            className="text-2xl text-white outline-none w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition active:scale-95"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? "✕" : "☰"}
-          </button>
-        </div>
-      )}
-
-      {isMenuOpen && !isHiddenScreen && !currentUser && (
-        <div className="md:hidden fixed top-[calc(3.5rem+env(safe-area-inset-top,0px))] left-0 w-full bg-[#16162A]/98 backdrop-blur-xl border-b border-white/10 py-4 px-6 flex flex-col gap-4 shadow-xl z-40">
-          <button
-            onClick={() => handleNavClick(PAGES.HOME)}
-            className={`text-left ${getLinkStyle(PAGES.HOME)} w-fit`}
-          >
-            Home
-          </button>
-          <button
-            onClick={() => handleNavClick(PAGES.FIND)}
-            className={`text-left ${getLinkStyle(PAGES.FIND)} w-fit`}
-          >
-            Explore Companions
-          </button>
-          <button
-            onClick={() => handleNavClick(PAGES.GIRL_REGISTER)}
-            className="text-left text-pink-400 hover:text-pink-300 text-sm font-semibold transition w-fit"
-          >
-            Become a Companion
-          </button>
-          <button
-            onClick={() => handleNavClick(PAGES.ABOUT)}
-            className={`text-left ${getLinkStyle(PAGES.ABOUT)} w-fit`}
-          >
-            About
-          </button>
-          <button
-            onClick={() => handleNavClick(PAGES.HELP)}
-            className={`text-left ${getLinkStyle(PAGES.HELP)} w-fit`}
-          >
-            Help
-          </button>
-          <div className="h-px bg-white/10 w-full my-1"></div>
-          <div className="grid grid-cols-2 gap-2.5">
+      {!isHiddenScreen && (
+        <div className="fixed bottom-0 left-0 w-full bg-[#000000]/95 backdrop-blur-2xl border-t border-[#262626] z-40 md:hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-1.5 shadow-[0_-8px_30px_rgba(0,0,0,0.8)]">
+          <div className="flex justify-around items-center h-14 max-w-md mx-auto px-1">
+            {/* 1. Home */}
             <button
-              onClick={() => handleNavClick(PAGES.BOY_LOGIN)}
-              className="px-3 py-2.5 text-xs border border-white/20 text-gray-200 hover:bg-white/5 font-bold rounded-xl text-center transition"
+              onClick={() => handleNavClick(PAGES.HOME)}
+              className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.HOME ? activeColor + " scale-105" : inactiveColor}`}
+              title="Home"
             >
-              Log In
+              <FiHome size={22} className="transition-transform group-hover:scale-110" />
+              <span className="text-[10px] font-bold tracking-tight">Home</span>
+              {page === PAGES.HOME && (
+                <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
+              )}
             </button>
+
+            {/* 2. Explore */}
             <button
               onClick={() => handleNavClick(PAGES.FIND)}
-              className="px-3 py-2.5 text-xs bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-bold rounded-xl text-center shadow-lg hover:opacity-95 transition"
+              className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.FIND ? activeColor + " scale-105" : inactiveColor}`}
+              title="Explore"
             >
-              Find a Companion
+              <FiSearch size={22} className="transition-transform group-hover:scale-110" />
+              <span className="text-[10px] font-bold tracking-tight">Explore</span>
+              {page === PAGES.FIND && (
+                <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
+              )}
             </button>
-          </div>
-          <div className="pt-2 flex items-center justify-between text-[11px] text-gray-500 border-t border-white/5 mt-1">
-            <span>Coffeely App</span>
-            <span className="font-mono text-emerald-400 font-semibold">
-              {APP_VERSION_TAG} (Latest)
-            </span>
-          </div>
-        </div>
-      )}
 
-      {!isHiddenScreen && (
-        <div className="fixed bottom-0 left-0 w-full bg-[#0D0D1A]/95 backdrop-blur-2xl border-t border-white/10 z-40 md:hidden pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] pt-1.5 shadow-[0_-8px_30px_rgba(0,0,0,0.8)]">
-          <div className="flex justify-around items-center h-14 max-w-md mx-auto px-1">
-            {currentUser ? (
-              <>
-                {/* 1. Home */}
-                <button
-                  onClick={() => handleNavClick(PAGES.HOME)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.HOME ? activeColor + " scale-105" : inactiveColor}`}
-                  title="Home"
-                >
-                  <FiHome size={22} className="transition-transform group-hover:scale-110" />
-                  <span className="text-[10px] font-bold tracking-tight">Home</span>
-                  {page === PAGES.HOME && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
+            {/* 3. Center Create Action (+) */}
+            <button
+              onClick={() => {
+                try {
+                  triggerHaptic("medium");
+                } catch (e) {}
+                if (currentUser) {
+                  setShowPostModal(true);
+                } else {
+                  handleNavClick(PAGES.BOY_LOGIN);
+                }
+              }}
+              className="flex flex-col items-center justify-center w-14 -translate-y-2 group active:scale-90 transition-transform"
+              title="New Post"
+              aria-label="New Post"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] p-[1.5px] shadow-[0_0_18px_rgba(225,48,108,0.5)] group-hover:scale-110 transition-transform flex items-center justify-center">
+                <div className="w-full h-full bg-[#121212] rounded-[14px] flex items-center justify-center group-hover:bg-transparent transition-colors">
+                  <FiPlusSquare size={22} className="text-white drop-shadow" />
+                </div>
+              </div>
+              <span className="text-[9px] font-bold text-gray-400 group-hover:text-white transition-colors mt-0.5">Post</span>
+            </button>
 
-                {/* 2. Explore */}
-                <button
-                  onClick={() => handleNavClick(PAGES.FIND)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.FIND ? activeColor + " scale-105" : inactiveColor}`}
-                  title="Explore"
-                >
-                  <FiSearch size={22} className="transition-transform group-hover:scale-110" />
-                  <span className="text-[10px] font-bold tracking-tight">Explore</span>
-                  {page === PAGES.FIND && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
+            {/* 4. Messages / Chats (with Real-time Unread Badge) */}
+            <button
+              onClick={() => handleNavClick(currentUser ? PAGES.MESSAGES : PAGES.BOY_LOGIN)}
+              className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.MESSAGES ? activeColor + " scale-105" : inactiveColor}`}
+              title="Messages"
+            >
+              <div className="relative">
+                <FiMessageCircle size={22} className="transition-transform group-hover:scale-110" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center ring-2 ring-black shadow-md animate-pulse">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] font-bold tracking-tight">Chats</span>
+              {page === PAGES.MESSAGES && (
+                <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
+              )}
+            </button>
 
-                {/* 3. Center Create Action (+) */}
-                <button
-                  onClick={() => {
-                    try {
-                      triggerHaptic("medium");
-                    } catch (e) {}
-                    setShowPostModal(true);
-                  }}
-                  className="flex flex-col items-center justify-center w-14 -translate-y-2 group active:scale-90 transition-transform"
-                  title="New Post"
-                  aria-label="New Post"
-                >
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] p-[1.5px] shadow-[0_0_18px_rgba(225,48,108,0.5)] group-hover:scale-110 transition-transform flex items-center justify-center">
-                    <div className="w-full h-full bg-[#0D0D1A] rounded-[14px] flex items-center justify-center group-hover:bg-transparent transition-colors">
-                      <FiPlusSquare size={22} className="text-white drop-shadow" />
-                    </div>
-                  </div>
-                  <span className="text-[9px] font-bold text-gray-400 group-hover:text-white transition-colors mt-0.5">Post</span>
-                </button>
-
-                {/* 4. Messages / Chats (with Real-time Unread Badge) */}
-                <button
-                  onClick={() => handleNavClick(PAGES.MESSAGES)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.MESSAGES ? activeColor + " scale-105" : inactiveColor}`}
-                  title="Messages"
-                >
-                  <div className="relative">
-                    <FiMessageCircle size={22} className="transition-transform group-hover:scale-110" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full min-w-[16px] h-4 flex items-center justify-center ring-2 ring-[#0D0D1A] shadow-md animate-pulse">
-                        {unreadCount > 9 ? "9+" : unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-bold tracking-tight">Chats</span>
-                  {page === PAGES.MESSAGES && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
-
-                {/* 5. Profile */}
-                <button
-                  onClick={() =>
-                    handleNavClick(
-                      currentUser.role === "girl" ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD
-                    )
-                  }
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD ? activeColor + " scale-105" : inactiveColor}`}
-                  title="Profile"
-                >
-                  {currentUser.profile_pic ? (
-                    <img
-                      src={currentUser.profile_pic}
-                      alt=""
-                      className={`w-6 h-6 rounded-full object-cover transition-all ${
-                        page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD
-                          ? "ring-2 ring-[#e1306c] ring-offset-1 ring-offset-black"
-                          : "border border-white/20"
-                      }`}
-                    />
-                  ) : (
-                    <FiUser size={22} className="transition-transform group-hover:scale-110" />
-                  )}
-                  <span className="text-[10px] font-bold tracking-tight">Profile</span>
-                  {(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD) && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => handleNavClick(PAGES.HOME)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.HOME ? activeColor + " scale-105" : inactiveColor}`}
-                >
-                  <FiHome size={22} />
-                  <span className="text-[10px] font-bold">Home</span>
-                  {page === PAGES.HOME && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleNavClick(PAGES.FIND)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.FIND ? activeColor + " scale-105" : inactiveColor}`}
-                >
-                  <FiSearch size={22} />
-                  <span className="text-[10px] font-bold">Explore</span>
-                  {page === PAGES.FIND && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleNavClick(PAGES.BOY_LOGIN)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.BOY_LOGIN || page === PAGES.GIRL_LOGIN ? activeColor + " scale-105" : inactiveColor}`}
-                >
-                  <FiLogIn size={22} />
-                  <span className="text-[10px] font-bold">Log In</span>
-                  {(page === PAGES.BOY_LOGIN || page === PAGES.GIRL_LOGIN) && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
-                <button
-                  onClick={() => handleNavClick(PAGES.BOY_REGISTER)}
-                  className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${page === PAGES.BOY_REGISTER || page === PAGES.GIRL_REGISTER ? activeColor + " scale-105" : inactiveColor}`}
-                >
-                  <FiUserPlus size={22} />
-                  <span className="text-[10px] font-bold">Register</span>
-                  {(page === PAGES.BOY_REGISTER || page === PAGES.GIRL_REGISTER) && (
-                    <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-pink-500 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
-                  )}
-                </button>
-              </>
-            )}
+            {/* 5. Profile / Log In */}
+            <button
+              onClick={() => {
+                if (currentUser) {
+                  handleNavClick(
+                    currentUser.role === "girl" ? PAGES.GIRL_DASHBOARD : PAGES.BOY_DASHBOARD
+                  );
+                } else {
+                  handleNavClick(PAGES.BOY_LOGIN);
+                }
+              }}
+              className={`flex flex-col items-center justify-center w-14 py-1 gap-1 transition-all duration-300 relative group ${
+                page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD || (!currentUser && (page === PAGES.BOY_LOGIN || page === PAGES.BOY_REGISTER))
+                  ? activeColor + " scale-105"
+                  : inactiveColor
+              }`}
+              title="Profile"
+            >
+              {currentUser?.profile_pic ? (
+                <img
+                  src={currentUser.profile_pic}
+                  alt=""
+                  className={`w-6 h-6 rounded-full object-cover transition-all ${
+                    page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD
+                      ? "ring-2 ring-[#e1306c] ring-offset-1 ring-offset-black"
+                      : "border border-white/20"
+                  }`}
+                />
+              ) : (
+                <FiUser size={22} className="transition-transform group-hover:scale-110" />
+              )}
+              <span className="text-[10px] font-bold tracking-tight">
+                {currentUser ? "Profile" : "Log In"}
+              </span>
+              {(page === PAGES.BOY_DASHBOARD || page === PAGES.GIRL_DASHBOARD || (!currentUser && (page === PAGES.BOY_LOGIN || page === PAGES.BOY_REGISTER))) && (
+                <span className="absolute bottom-0 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 shadow-[0_0_6px_rgba(225,48,108,0.8)]" />
+              )}
+            </button>
           </div>
         </div>
       )}

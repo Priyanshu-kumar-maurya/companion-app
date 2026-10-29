@@ -90,7 +90,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [favIds, setFavIds] = useState(new Set());
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' | 'map'
+  const [viewMode, setViewMode] = useState("insta"); // 'insta' | 'grid' | 'map'
 
   const [genderFilter, setGenderFilter] = useState(currentUser?.role === "girl" ? "boy" : "girl");
 
@@ -555,8 +555,19 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* View Switcher: Cards vs Map */}
+            {/* View Switcher: 3x3 Insta Grid vs Cards vs Map */}
             <div className="flex items-center bg-[#16162A] border border-white/10 rounded-xl p-1">
+              <button
+                onClick={() => setViewMode("insta")}
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
+                  viewMode === "insta"
+                    ? "bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-md"
+                    : "text-gray-400 hover:text-white"
+                }`}
+                title="Instagram 3x3 Explore Grid"
+              >
+                <span>📸 Grid</span>
+              </button>
               <button
                 onClick={() => setViewMode("grid")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
@@ -852,6 +863,56 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
                 Reset All Filters
               </button>
             )}
+          </div>
+        ) : viewMode === "insta" ? (
+          <div className="grid grid-cols-3 gap-1 sm:gap-2.5">
+            {filtered.map((u) => (
+              <div
+                key={u.id}
+                onClick={() => handleProfileClick(u)}
+                className="group relative aspect-square bg-[#121212] overflow-hidden rounded-lg sm:rounded-xl cursor-pointer border border-[#262626] hover:border-[#e1306c]/60 transition-all duration-300 shadow-md"
+              >
+                {u.profile_pic ? (
+                  <img
+                    src={u.profile_pic}
+                    alt={u.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-600 text-3xl">
+                    <FiUser />
+                  </div>
+                )}
+
+                {/* Ambient dark gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-black/30 opacity-80 group-hover:opacity-95 transition-opacity" />
+
+                {/* Top Badges */}
+                <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex items-center gap-1 z-10">
+                  {(u.kyc_status === "verified" || u.is_verified) && (
+                    <VerifiedBadge size="xs" />
+                  )}
+                  {liveOnlineIds.has(String(u.id)) && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-black animate-pulse" />
+                  )}
+                </div>
+
+                {/* Bottom Companion Details */}
+                <div className="absolute bottom-1.5 left-1.5 right-1.5 sm:bottom-2.5 sm:left-2.5 sm:right-2.5 z-10">
+                  <div className="font-extrabold text-xs sm:text-sm text-white truncate drop-shadow">
+                    {u.name?.split(" ")[0]}, {u.age || 22}
+                  </div>
+                  <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-gray-300 mt-0.5">
+                    <span className="truncate max-w-[65px] sm:max-w-[100px]">
+                      {u.city ? u.city.split(",")[0] : "Verified"}
+                    </span>
+                    <span className="font-bold text-emerald-400 bg-emerald-500/20 px-1 rounded font-mono">
+                      ₹{u.price || 1000}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
