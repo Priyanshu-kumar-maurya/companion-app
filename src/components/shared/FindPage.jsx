@@ -15,6 +15,8 @@ import {
   FiZap,
   FiCheckCircle,
   FiGlobe,
+  FiX,
+  FiSliders,
 } from "react-icons/fi";
 import StoriesBar from "./StoriesBar";
 import CompanionMapView from "./CompanionMapView";
@@ -51,6 +53,22 @@ const LANGUAGES = [
   "Telugu",
 ];
 
+const QUICK_CATEGORIES = [
+  { id: "all", label: "✨ All", type: "all" },
+  { id: "Coffee Date", label: "☕ Coffee Date", type: "tag", value: "Coffee Date" },
+  { id: "Movie", label: "🎬 Movies", type: "tag", value: "Movie" },
+  { id: "Dinner", label: "🍽️ Dinner", type: "tag", value: "Dinner" },
+  { id: "today", label: "⚡ Available Today", type: "today" },
+  { id: "verified", label: "🛡️ Verified", type: "verified" },
+  { id: "online", label: "🟢 Online Now", type: "online" },
+  { id: "Shopping", label: "🛍️ Shopping", type: "tag", value: "Shopping" },
+  { id: "Gaming", label: "🎮 Gaming", type: "tag", value: "Gaming" },
+  { id: "top_rated", label: "⭐ Top Rated", type: "sort", value: "rating" },
+  { id: "Study Partner", label: "📚 Study Partner", type: "tag", value: "Study Partner" },
+  { id: "Events", label: "🎉 Events", type: "tag", value: "Events" },
+  { id: "Walk", label: "🚶 Walk", type: "tag", value: "Walk" },
+];
+
 function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
   if (!lat1 || !lon1 || !lat2 || !lon2) return null;
   const R = 6371; // Radius of earth in km
@@ -78,7 +96,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [availableTodayOnly, setAvailableTodayOnly] = useState(false);
   const [languageFilter, setLanguageFilter] = useState("All");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   // Real-time online users set via Socket
   const [liveOnlineIds, setLiveOnlineIds] = useState(new Set());
@@ -266,6 +284,44 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
     (languageFilter !== "All" ? 1 : 0) +
     (sortBy !== "default" ? 1 : 0);
 
+  const handleCategoryClick = (cat) => {
+    if (cat.type === "all") {
+      setFilterTag("All");
+      setAvailableTodayOnly(false);
+      setVerifiedOnly(false);
+      setOnlineOnly(false);
+      if (sortBy === "rating") setSortBy("default");
+    } else if (cat.type === "tag") {
+      setFilterTag((prev) => (prev === cat.value ? "All" : cat.value));
+    } else if (cat.type === "today") {
+      setAvailableTodayOnly((prev) => !prev);
+    } else if (cat.type === "verified") {
+      setVerifiedOnly((prev) => !prev);
+    } else if (cat.type === "online") {
+      setOnlineOnly((prev) => !prev);
+    } else if (cat.type === "sort") {
+      setSortBy((prev) => (prev === cat.value ? "default" : cat.value));
+    }
+  };
+
+  const isCategoryActive = (cat) => {
+    if (cat.type === "all") {
+      return (
+        filterTag === "All" &&
+        !availableTodayOnly &&
+        !verifiedOnly &&
+        !onlineOnly &&
+        sortBy !== "rating"
+      );
+    }
+    if (cat.type === "tag") return filterTag === cat.value;
+    if (cat.type === "today") return availableTodayOnly;
+    if (cat.type === "verified") return verifiedOnly;
+    if (cat.type === "online") return onlineOnly;
+    if (cat.type === "sort") return sortBy === cat.value;
+    return false;
+  };
+
   const filtered = users
     .map((u) => {
       let dist = null;
@@ -385,451 +441,454 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
         {/* 24-Hour Ephemeral Stories Bar */}
         <StoriesBar currentUser={currentUser} />
 
-        {/* Search Bar + Geolocation Button */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        {/* ─── UNIFIED SEARCH & CONTROLS BAR (Single Row) ─── */}
+        <div className="flex items-center gap-2 mb-3">
+          {/* Search Input */}
           <div className="relative flex-1">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-base" />
+            <FiSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm" />
             <input
-              className="w-full bg-[#16162A] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
-              placeholder="Search by name or city..."
+              type="text"
+              className="w-full bg-[#121212] border border-[#262626] rounded-xl pl-9 pr-8 py-2.5 text-xs sm:text-sm text-white placeholder-gray-500 outline-none focus:border-[#e1306c] transition"
+              placeholder="Search companion, city, vibes..."
               value={searchQ}
               onChange={(e) => setSearchQ(e.target.value)}
             />
+            {searchQ && (
+              <button
+                type="button"
+                onClick={() => setSearchQ("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+              >
+                <FiX size={14} />
+              </button>
+            )}
           </div>
+
+          {/* Near Me Geo Button */}
           <button
+            type="button"
             onClick={getUserLocation}
             disabled={locLoading}
-            className={`px-4 py-3 rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition shrink-0 ${
+            className={`px-3 py-2.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition shrink-0 ${
               userLoc
-                ? "bg-pink-500/20 border-pink-500 text-pink-300 shadow-[0_0_12px_rgba(236,72,153,0.3)]"
-                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-pink-500/40 hover:text-white"
+                ? "bg-pink-500/20 border-pink-500 text-pink-300 shadow-sm"
+                : "bg-[#121212] border-[#262626] text-gray-300 hover:border-[#e1306c]/40 hover:text-white"
             }`}
+            title={userLoc ? "Near Me Active" : "Find Near Me"}
           >
             <FiNavigation
-              size={14}
+              size={13}
               className={locLoading ? "animate-spin" : userLoc ? "text-pink-400" : ""}
             />
-            <span>
-              {locLoading ? "Locating..." : userLoc ? "📍 Near Me Active" : "📍 Find Near Me"}
+            <span className="hidden sm:inline">
+              {locLoading ? "Locating..." : userLoc ? "Near Me" : "Near Me"}
             </span>
           </button>
-        </div>
 
-        <div className="flex gap-2 flex-wrap items-center mb-3 pb-3 border-b border-white/5">
-          <span className="text-xs text-gray-500">View:</span>
-          {[
-            { v: "girl", l: "Girls Only", icon: <FiUser size={13} /> },
-            { v: "boy", l: "Boys Only", icon: <FiUser size={13} /> },
-            { v: "all", l: "Show All", icon: <FiUsers size={13} /> },
-          ].map((g) => (
-            <button
-              key={g.v}
-              onClick={() => setGenderFilter(g.v)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold border transition-all duration-300 flex items-center gap-1.5 ${
-                genderFilter === g.v
-                  ? g.v === "girl"
-                    ? "bg-pink-500/10 border-pink-500 text-pink-400 shadow-[0_0_12px_rgba(236,72,153,0.2)]"
-                    : g.v === "boy"
-                      ? "bg-blue-500/10 border-blue-500 text-blue-400 shadow-[0_0_12px_rgba(59,130,246,0.2)]"
-                      : "bg-purple-500/10 border-purple-500 text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
-                  : "border-white/5 bg-[#121224]/30 text-gray-400 hover:border-white/20 hover:text-white"
-              }`}
-            >
-              {g.icon}
-              {g.l}
-            </button>
-          ))}
-        </div>
-
-        {/* ─── QUICK DISCOVERY ACTION CHIPS BAR ─── */}
-        <div
-          className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {/* Verified Only Chip */}
+          {/* Filters Sheet Trigger Button */}
           <button
-            onClick={() => setVerifiedOnly((prev) => !prev)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 shrink-0 active:scale-95 ${
-              verifiedOnly
-                ? "bg-sky-500/20 border-sky-400 text-sky-300 shadow-[0_0_12px_rgba(56,189,248,0.25)]"
-                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/25"
+            type="button"
+            onClick={() => setShowFilterModal(true)}
+            className={`px-3 py-2.5 rounded-xl text-xs font-bold border flex items-center gap-1.5 transition shrink-0 ${
+              activeFilterCount > 0
+                ? "bg-gradient-to-r from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 border-[#e1306c] text-pink-300 shadow-md"
+                : "bg-[#121212] border-[#262626] text-gray-300 hover:border-white/20"
             }`}
+            title="Open Filters and Preferences"
           >
-            <VerifiedBadge size="xs" />
-            <span>Verified Only</span>
-          </button>
-
-          {/* Online Now Chip */}
-          <button
-            onClick={() => setOnlineOnly((prev) => !prev)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 shrink-0 active:scale-95 ${
-              onlineOnly
-                ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.25)]"
-                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/25"
-            }`}
-          >
-            <span
-              className={`w-2 h-2 rounded-full ${onlineOnly ? "bg-emerald-400 animate-pulse" : "bg-gray-500"}`}
-            />
-            <span>Online Now</span>
-            {liveOnlineIds.size > 0 && (
-              <span className="text-[10px] bg-emerald-500/30 px-1.5 py-0.5 rounded-full font-mono text-emerald-300">
-                {liveOnlineIds.size}
+            <FiSliders size={13} />
+            <span className="hidden sm:inline">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="w-4 h-4 bg-gradient-to-tr from-[#f9ce3f] to-[#e1306c] text-white rounded-full text-[10px] font-extrabold flex items-center justify-center">
+                {activeFilterCount}
               </span>
             )}
           </button>
 
-          {/* Available Today Chip */}
-          <button
-            onClick={() => setAvailableTodayOnly((prev) => !prev)}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 shrink-0 active:scale-95 ${
-              availableTodayOnly
-                ? "bg-amber-500/20 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.25)]"
-                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/25"
-            }`}
-          >
-            <FiZap
-              size={13}
-              className={availableTodayOnly ? "text-amber-400 fill-amber-400" : "text-gray-400"}
-            />
-            <span>Available Today</span>
-          </button>
-
-          {/* Budget Under 1000 Chip */}
-          <button
-            onClick={() => setBudgetPreset((prev) => (prev === "under1000" ? "all" : "under1000"))}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 shrink-0 active:scale-95 ${
-              budgetPreset === "under1000"
-                ? "bg-pink-500/20 border-pink-400 text-pink-300 shadow-[0_0_12px_rgba(244,114,182,0.25)]"
-                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/25"
-            }`}
-          >
-            <span>Under ₹1,000/hr</span>
-          </button>
-
-          {/* Top Rated Chip */}
-          <button
-            onClick={() => setSortBy((prev) => (prev === "rating" ? "default" : "rating"))}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 shrink-0 active:scale-95 ${
-              sortBy === "rating"
-                ? "bg-yellow-500/20 border-yellow-400 text-yellow-300 shadow-[0_0_12px_rgba(250,204,21,0.25)]"
-                : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/25"
-            }`}
-          >
-            <FiStar
-              size={12}
-              className={sortBy === "rating" ? "fill-yellow-400 text-yellow-400" : "text-gray-400"}
-            />
-            <span>Top Rated ⭐</span>
-          </button>
-        </div>
-
-        {/* Advanced Filters Toggle Bar + Sort Dropdown */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div className="flex items-center gap-2">
+          {/* View Switcher: Insta 3x3 Grid | Cards | Map */}
+          <div className="flex items-center bg-[#121212] border border-[#262626] rounded-xl p-0.5 shrink-0">
             <button
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 transition ${
-                showAdvancedFilters || activeFilterCount > 0
-                  ? "bg-pink-500/10 border-pink-500 text-pink-400 shadow-md"
-                  : "bg-[#16162A] border-white/10 text-gray-300 hover:border-white/20"
+              type="button"
+              onClick={() => setViewMode("insta")}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                viewMode === "insta"
+                  ? "bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-sm"
+                  : "text-gray-400 hover:text-white"
               }`}
+              title="Instagram 3x3 Explore Grid"
             >
-              <FiFilter size={14} />
-              <span>Filters</span>
-              {activeFilterCount > 0 && (
-                <span className="w-5 h-5 bg-pink-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center">
-                  {activeFilterCount}
-                </span>
-              )}
+              <span>📸</span>
             </button>
-
-            {activeFilterCount > 0 && (
-              <button
-                onClick={handleResetFilters}
-                className="text-xs text-gray-400 hover:text-red-400 flex items-center gap-1.5 transition ml-1"
-              >
-                <FiRotateCcw size={12} /> Reset All
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* View Switcher: 3x3 Insta Grid vs Cards vs Map */}
-            <div className="flex items-center bg-[#16162A] border border-white/10 rounded-xl p-1">
-              <button
-                onClick={() => setViewMode("insta")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  viewMode === "insta"
-                    ? "bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-md"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                title="Instagram 3x3 Explore Grid"
-              >
-                <span>📸 Grid</span>
-              </button>
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  viewMode === "grid"
-                    ? "bg-pink-500 text-white shadow-md"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                title="Grid Cards View"
-              >
-                <FiGrid size={13} />
-                <span className="hidden sm:inline">Cards</span>
-              </button>
-              <button
-                onClick={() => setViewMode("map")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                  viewMode === "map"
-                    ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-md"
-                    : "text-gray-400 hover:text-white"
-                }`}
-                title="Interactive Map View"
-              >
-                <FiMap size={13} />
-                <span className="hidden sm:inline">Map 📍</span>
-              </button>
-            </div>
-
-            <span className="text-xs text-gray-500 hidden sm:inline">Sort:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="bg-[#16162A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition cursor-pointer"
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                viewMode === "grid"
+                  ? "bg-[#262626] text-white shadow-sm"
+                  : "text-gray-400 hover:text-white"
+              }`}
+              title="Cards View"
             >
-              <option value="default">Default</option>
-              <option value="distance">Nearest First 📍</option>
-              <option value="rating">Highest Rated ⭐</option>
-              <option value="price_low">Price: Low to High 📈</option>
-              <option value="price_high">Price: High to Low 📉</option>
-            </select>
+              <FiGrid size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("map")}
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition ${
+                viewMode === "map"
+                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-sm"
+                  : "text-gray-400 hover:text-white"
+              }`}
+              title="Interactive Map"
+            >
+              <FiMap size={13} />
+            </button>
           </div>
         </div>
 
-        {/* Collapsible Advanced Filters Drawer */}
-        {showAdvancedFilters && (
-          <div className="bg-[#16162A] border border-pink-500/20 rounded-2xl p-5 mb-6 space-y-5 animate-fade-in shadow-xl">
-            {/* Hourly Budget Presets & Custom Slider */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-xs font-semibold text-gray-300">Budget Range</label>
-                <span className="text-xs font-bold text-pink-400">
-                  {budgetPreset === "under1000"
-                    ? "Under ₹1,000/hr"
-                    : budgetPreset === "1000-2500"
-                      ? "₹1,000 – ₹2,500/hr"
-                      : budgetPreset === "2500plus"
+        {/* ─── SINGLE ROW HORIZONTAL CATEGORIES (Instagram Explore Style) ─── */}
+        <div
+          className="flex items-center gap-2 overflow-x-auto pb-2 mb-5 scrollbar-none"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {QUICK_CATEGORIES.map((cat) => {
+            const active = isCategoryActive(cat);
+            return (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => handleCategoryClick(cat)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 border shrink-0 active:scale-95 ${
+                  active
+                    ? "bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white border-transparent shadow-md"
+                    : "bg-[#121212] border-[#262626] text-gray-300 hover:border-white/25 hover:text-white"
+                }`}
+              >
+                {cat.label}
+              </button>
+            );
+          })}
+
+          {activeFilterCount > 0 && (
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="px-3 py-1.5 rounded-full text-xs font-bold text-rose-400 hover:text-rose-300 bg-rose-500/10 border border-rose-500/20 whitespace-nowrap transition shrink-0 flex items-center gap-1 active:scale-95"
+            >
+              <FiRotateCcw size={11} />
+              <span>Reset</span>
+            </button>
+          )}
+        </div>
+
+        {/* ─── FILTER BOTTOM SHEET / MODAL ─── */}
+        {showFilterModal && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-0 sm:p-4">
+            <div
+              className="absolute inset-0"
+              onClick={() => setShowFilterModal(false)}
+            />
+
+            <div
+              className="relative z-10 w-full sm:max-w-lg bg-[#121212] border border-[#262626] rounded-t-3xl sm:rounded-2xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-[#262626]">
+                <div className="flex items-center gap-2">
+                  <FiSliders size={16} className="text-[#e1306c]" />
+                  <h2 className="text-base font-bold text-white">Filters & Preferences</h2>
+                  {activeFilterCount > 0 && (
+                    <span className="text-[10px] bg-gradient-to-r from-[#f9ce3f] to-[#e1306c] text-white px-2 py-0.5 rounded-full font-bold">
+                      {activeFilterCount} Active
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  {activeFilterCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="text-xs text-gray-400 hover:text-rose-400 font-semibold transition"
+                    >
+                      Reset
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowFilterModal(false)}
+                    className="w-8 h-8 rounded-full bg-[#1e1e1e] hover:bg-[#2a2a2a] flex items-center justify-center text-gray-400 hover:text-white transition"
+                  >
+                    <FiX size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Scrollable Body */}
+              <div className="px-5 py-4 overflow-y-auto space-y-5 text-xs text-gray-300">
+                {/* 1. Companion Type (Gender) */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    Companion Type
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { v: "girl", l: "Girls Only", icon: <FiUser size={13} /> },
+                      { v: "boy", l: "Boys Only", icon: <FiUser size={13} /> },
+                      { v: "all", l: "Show All", icon: <FiUsers size={13} /> },
+                    ].map((g) => (
+                      <button
+                        key={g.v}
+                        type="button"
+                        onClick={() => setGenderFilter(g.v)}
+                        className={`py-2 px-3 rounded-xl font-bold border transition flex items-center justify-center gap-1.5 ${
+                          genderFilter === g.v
+                            ? "bg-gradient-to-r from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 border-[#e1306c] text-white shadow-sm"
+                            : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {g.icon}
+                        <span>{g.l}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Sort Companions By */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    Sort Companions By
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: "default", l: "Default" },
+                      { id: "distance", l: "Nearest First 📍" },
+                      { id: "rating", l: "Highest Rated ⭐" },
+                      { id: "price_low", l: "Price: Low to High" },
+                      { id: "price_high", l: "Price: High to Low" },
+                    ].map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSortBy(s.id)}
+                        className={`py-2 px-2.5 rounded-xl text-center font-semibold border transition ${
+                          sortBy === s.id
+                            ? "bg-[#e1306c]/20 border-[#e1306c] text-pink-300 font-bold"
+                            : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. City Selection */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    City
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {CITIES.map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setFilterCity(c)}
+                        className={`px-3 py-1.5 rounded-full border transition font-medium ${
+                          filterCity === c
+                            ? "bg-[#e1306c]/20 border-[#e1306c] text-pink-300 font-bold"
+                            : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 4. Quick Status & Verification */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    Status & Verification
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {/* Verified Only */}
+                    <button
+                      type="button"
+                      onClick={() => setVerifiedOnly((prev) => !prev)}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between text-left transition ${
+                        verifiedOnly
+                          ? "bg-sky-500/20 border-sky-400 text-sky-300"
+                          : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <VerifiedBadge size="xs" />
+                        <span>Verified Only</span>
+                      </div>
+                      <div className={`w-3.5 h-3.5 rounded-full border ${verifiedOnly ? "bg-sky-400 border-sky-400" : "border-gray-500"}`} />
+                    </button>
+
+                    {/* Online Now */}
+                    <button
+                      type="button"
+                      onClick={() => setOnlineOnly((prev) => !prev)}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between text-left transition ${
+                        onlineOnly
+                          ? "bg-emerald-500/20 border-emerald-400 text-emerald-300"
+                          : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Online Now</span>
+                      </div>
+                      <div className={`w-3.5 h-3.5 rounded-full border ${onlineOnly ? "bg-emerald-400 border-emerald-400" : "border-gray-500"}`} />
+                    </button>
+
+                    {/* Available Today */}
+                    <button
+                      type="button"
+                      onClick={() => setAvailableTodayOnly((prev) => !prev)}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between text-left transition ${
+                        availableTodayOnly
+                          ? "bg-amber-500/20 border-amber-400 text-amber-300"
+                          : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold">
+                        <FiZap size={13} className="text-amber-400" />
+                        <span>Available Today</span>
+                      </div>
+                      <div className={`w-3.5 h-3.5 rounded-full border ${availableTodayOnly ? "bg-amber-400 border-amber-400" : "border-gray-500"}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. Hourly Budget */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-gray-400">
+                      Hourly Budget
+                    </label>
+                    <span className="text-xs font-bold text-pink-400">
+                      {budgetPreset === "under1000"
+                        ? "Under ₹1,000/hr"
+                        : budgetPreset === "1000-2500"
+                        ? "₹1,000 – ₹2,500/hr"
+                        : budgetPreset === "2500plus"
                         ? "₹2,500+/hr"
                         : `Up to ₹${maxPrice.toLocaleString()}/hr`}
-                </span>
-              </div>
+                    </span>
+                  </div>
 
-              {/* Quick Budget Preset Buttons */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                {[
-                  { id: "all", label: "All Prices" },
-                  { id: "under1000", label: "Under ₹1,000" },
-                  { id: "1000-2500", label: "₹1,000 - ₹2,500" },
-                  { id: "2500plus", label: "₹2,500+" },
-                ].map((b) => (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => {
-                      setBudgetPreset(b.id);
-                      if (b.id === "under1000") setMaxPrice(1000);
-                      else if (b.id === "1000-2500") setMaxPrice(2500);
-                      else if (b.id === "2500plus") setMaxPrice(5000);
-                      else setMaxPrice(5000);
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {[
+                      { id: "all", label: "All Rates" },
+                      { id: "under1000", label: "Under ₹1k" },
+                      { id: "1000-2500", label: "₹1k - ₹2.5k" },
+                      { id: "2500plus", label: "₹2.5k+" },
+                    ].map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => {
+                          setBudgetPreset(b.id);
+                          if (b.id === "under1000") setMaxPrice(1000);
+                          else if (b.id === "1000-2500") setMaxPrice(2500);
+                          else if (b.id === "2500plus") setMaxPrice(5000);
+                          else setMaxPrice(5000);
+                        }}
+                        className={`py-1.5 px-1 rounded-xl text-center font-medium border transition ${
+                          budgetPreset === b.id
+                            ? "bg-[#e1306c]/20 border-[#e1306c] text-pink-300 font-bold"
+                            : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <input
+                    type="range"
+                    min="300"
+                    max="5000"
+                    step="100"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      setMaxPrice(parseInt(e.target.value));
+                      setBudgetPreset("all");
                     }}
-                    className={`py-1.5 px-2 rounded-xl text-xs font-medium border transition ${
-                      budgetPreset === b.id
-                        ? "bg-pink-500/20 border-pink-500 text-pink-300 font-bold"
-                        : "border-white/10 text-gray-400 hover:border-white/20"
-                    }`}
-                  >
-                    {b.label}
-                  </button>
-                ))}
-              </div>
-
-              <input
-                type="range"
-                min="300"
-                max="5000"
-                step="100"
-                value={maxPrice}
-                onChange={(e) => {
-                  setMaxPrice(parseInt(e.target.value));
-                  setBudgetPreset("all");
-                }}
-                className="w-full accent-pink-500 bg-white/10 h-1.5 rounded-lg cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-                <span>₹300</span>
-                <span>₹2,500</span>
-                <span>₹5,000+</span>
-              </div>
-            </div>
-
-            {/* Languages Spoken Filter */}
-            <div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <FiGlobe size={13} className="text-gray-400" />
-                <label className="text-xs font-semibold text-gray-300">Languages Spoken</label>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={() => setLanguageFilter(lang)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${
-                      languageFilter === lang
-                        ? "bg-sky-500/20 border-sky-400 text-sky-300 font-bold"
-                        : "border-white/10 text-gray-400 hover:border-white/20"
-                    }`}
-                  >
-                    {lang === "All" ? "All Languages" : lang}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Age Bracket Filter */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 mb-2">Age Bracket</label>
-              <div className="flex gap-2 flex-wrap">
-                {AGE_RANGES.map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setAgeRange(range)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition ${
-                      ageRange === range
-                        ? "bg-purple-500/20 border-purple-500 text-purple-300 font-bold"
-                        : "border-white/10 text-gray-400 hover:border-white/20"
-                    }`}
-                  >
-                    {range === "All" ? "All Ages" : `${range} yrs`}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Toggles Grid */}
-            <div className="pt-3 border-t border-white/5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Verified Only Toggle */}
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                <div>
-                  <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <VerifiedBadge size="xs" />
-                    <span>Verified Only</span>
+                    className="w-full accent-[#e1306c] bg-white/10 h-1.5 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-gray-500 mt-1">
+                    <span>₹300</span>
+                    <span>₹2,500</span>
+                    <span>₹5,000+</span>
                   </div>
-                  <div className="text-[10px] text-gray-400">100% KYC verified profiles</div>
                 </div>
+
+                {/* 6. Age Bracket */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    Age Bracket
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {AGE_RANGES.map((range) => (
+                      <button
+                        key={range}
+                        type="button"
+                        onClick={() => setAgeRange(range)}
+                        className={`px-3 py-1.5 rounded-xl border transition font-medium ${
+                          ageRange === range
+                            ? "bg-[#e1306c]/20 border-[#e1306c] text-pink-300 font-bold"
+                            : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {range === "All" ? "All Ages" : `${range} yrs`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 7. Languages Spoken */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+                    Languages Spoken
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {LANGUAGES.map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => setLanguageFilter(lang)}
+                        className={`px-3 py-1.5 rounded-xl border transition font-medium ${
+                          languageFilter === lang
+                            ? "bg-[#e1306c]/20 border-[#e1306c] text-pink-300 font-bold"
+                            : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        {lang === "All" ? "All Languages" : lang}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Sticky Bottom Action */}
+              <div className="p-4 border-t border-[#262626] bg-[#121212]/95 backdrop-blur-md">
                 <button
                   type="button"
-                  onClick={() => setVerifiedOnly(!verifiedOnly)}
-                  className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 shrink-0 ml-2 ${
-                    verifiedOnly ? "bg-sky-500" : "bg-white/10"
-                  }`}
+                  onClick={() => setShowFilterModal(false)}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white font-bold text-sm shadow-lg shadow-[#e1306c]/20 hover:opacity-95 active:scale-98 transition flex items-center justify-center gap-2"
                 >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform duration-300 ${
-                      verifiedOnly ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Online Now Toggle */}
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                <div>
-                  <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Online Now</span>
-                  </div>
-                  <div className="text-[10px] text-gray-400">Active right now in chat</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setOnlineOnly(!onlineOnly)}
-                  className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 shrink-0 ml-2 ${
-                    onlineOnly ? "bg-emerald-500" : "bg-white/10"
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform duration-300 ${
-                      onlineOnly ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Available Today Toggle */}
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                <div>
-                  <div className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <FiZap size={13} className="text-amber-400" />
-                    <span>Available Today</span>
-                  </div>
-                  <div className="text-[10px] text-gray-400">Instant same-day meetup</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setAvailableTodayOnly(!availableTodayOnly)}
-                  className={`w-11 h-6 rounded-full p-1 transition-colors duration-300 shrink-0 ml-2 ${
-                    availableTodayOnly ? "bg-amber-500" : "bg-white/10"
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white transition-transform duration-300 ${
-                      availableTodayOnly ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
+                  <span>Show {filtered.length} Companions</span>
                 </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Cities Quick Filter Pills */}
-        <div className="flex gap-2 flex-wrap items-center mb-3">
-          <span className="text-xs text-gray-500">City:</span>
-          {CITIES.map((c) => (
-            <button
-              key={c}
-              onClick={() => setFilterCity(c)}
-              className={`px-3 py-1 rounded-full text-xs border transition ${
-                filterCity === c
-                  ? "bg-pink-500/15 border-pink-500 text-pink-300"
-                  : "border-white/10 text-gray-400 hover:border-pink-500/30"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-2 flex-wrap items-center mb-8">
-          <span className="text-xs text-gray-500">Activity:</span>
-          {ALL_TAGS.map((t) => (
-            <button
-              key={t}
-              onClick={() => setFilterTag(t)}
-              className={`px-3 py-1 rounded-full text-xs border transition ${
-                filterTag === t
-                  ? "bg-pink-500/15 border-pink-500 text-pink-300"
-                  : "border-white/10 text-gray-400 hover:border-pink-500/30"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
 
         {loading ? (
           <CompanionGridSkeleton count={6} />
