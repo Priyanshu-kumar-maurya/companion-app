@@ -439,7 +439,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
     : [];
 
   return (
-    <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#0D0D1A]">
+    <div className="pt-16 pb-20 min-h-[100dvh] relative bg-[#000000]">
       {newBookingAlert && hasDocument && (
         <div className="fixed top-20 right-6 z-50 bg-blue-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-bounce">
           <FiBell size={22} />
@@ -463,7 +463,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
               onClick={() => user?.profile_pic && setShowDpModal(true)}
             >
               <div className="w-full h-full rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 p-[3px] shadow-xl shadow-blue-500/20">
-                <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A] flex items-center justify-center">
+                <div className="w-full h-full rounded-full overflow-hidden bg-[#000000] flex items-center justify-center">
                   {user?.profile_pic ? (
                     <img
                       src={user.profile_pic}
@@ -478,7 +478,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
               {/* Camera Edit Badge */}
               <label
-                className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center cursor-pointer shadow-lg border-2 border-[#0D0D1A] hover:scale-110 active:scale-95 transition z-10"
+                className="absolute bottom-0 right-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center cursor-pointer shadow-lg border-2 border-[#000000] hover:scale-110 active:scale-95 transition z-10"
                 title="Change or adjust profile picture"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -663,7 +663,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
 
         <div className={`grid ${hasDocument ? "grid-cols-3" : "grid-cols-2"} gap-3 mb-7`}>
           <div
-            className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group"
+            className="bg-[#121212] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group"
             onClick={() => setActiveStatModal("rating")}
           >
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2">
@@ -677,7 +677,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
           </div>
           {hasDocument && (
             <div
-              className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative group"
+              className="bg-[#121212] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative group"
               onClick={() => setActiveStatModal("my_bookings")}
             >
               <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2">
@@ -693,7 +693,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             </div>
           )}
           <div
-            className="bg-[#16162A] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group"
+            className="bg-[#121212] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition group"
             onClick={() => setActiveStatModal("notifications")}
           >
             <div className="flex items-center gap-1.5 text-[11px] text-gray-400 mb-2">
@@ -798,7 +798,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                       if (setSelectedGirl) setSelectedGirl(fav);
                       setPage(PAGES.DETAILS);
                     }}
-                    className="bg-[#16162A] border border-white/5 hover:border-pink-500/30 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:-translate-y-1 transition group"
+                    className="bg-[#121212] border border-white/5 hover:border-pink-500/30 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:-translate-y-1 transition group"
                   >
                     <div className="flex items-center gap-3">
                       <img
@@ -879,7 +879,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
             </button>
 
             {/* Image Frame */}
-            <div className="bg-[#16162A] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
+            <div className="bg-[#121212] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
               <img
                 src={user.profile_pic}
                 alt={user.name}
@@ -927,10 +927,10 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
           }}
         >
           <div
-            className="bg-[#16162A] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]"
+            className="bg-[#121212] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#16162A] sticky top-0 z-20">
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#121212] sticky top-0 z-20">
               <h2 className="text-lg font-bold text-white">
                 {activeStatModal === "earnings" && "Earnings History"}
                 {activeStatModal === "rating" && "Reviews & Ratings"}
@@ -972,7 +972,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                   </div>
                 ) : (
                   <>
-                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar shrink-0 sticky top-0 bg-[#16162A] z-10 -mt-2 pt-2">
+                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar shrink-0 sticky top-0 bg-[#121212] z-10 -mt-2 pt-2">
                       {["all", "pending", "accepted", "completed", "canceled"].map((filter) => (
                         <button
                           key={filter}
@@ -997,7 +997,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                         {filteredBookings.map((booking) => (
                           <div
                             key={booking.id}
-                            className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex flex-col gap-4"
+                            className="bg-[#000000] border border-white/5 p-4 rounded-xl flex flex-col gap-4"
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex items-center gap-3">
@@ -1178,7 +1178,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                   completedBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="flex justify-between items-center bg-[#0D0D1A] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition"
+                      className="flex justify-between items-center bg-[#000000] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition"
                     >
                       <div>
                         <p className="text-sm font-bold text-white">{b.girl_name}</p>
@@ -1198,7 +1198,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                   reviews.map((rev) => (
                     <div
                       key={rev.id}
-                      className="bg-[#0D0D1A] border border-white/5 p-4 rounded-xl flex gap-3 hover:bg-white/5 transition"
+                      className="bg-[#000000] border border-white/5 p-4 rounded-xl flex gap-3 hover:bg-white/5 transition"
                     >
                       <img
                         src={
@@ -1228,7 +1228,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                   notificationsList.map((notif) => (
                     <div
                       key={notif.id}
-                      className="flex justify-between items-center bg-[#0D0D1A] p-3 rounded-xl border border-white/5 hover:bg-white/5 cursor-pointer transition"
+                      className="flex justify-between items-center bg-[#000000] p-3 rounded-xl border border-white/5 hover:bg-white/5 cursor-pointer transition"
                     >
                       <div className="flex items-center gap-3">
                         <img
@@ -1269,7 +1269,7 @@ function BoyDashboard({ user, setBoyUser, setPage, setSelectedGirl, socket }) {
                     {followList.map((u) => (
                       <div
                         key={u.id}
-                        className="flex items-center gap-3 bg-[#0D0D1A] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition"
+                        className="flex items-center gap-3 bg-[#000000] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition"
                       >
                         <img
                           src={

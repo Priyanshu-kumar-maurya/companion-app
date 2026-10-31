@@ -13,13 +13,13 @@ function CustomDropdown({ value, options, onChange, placeholder, isBoy }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full bg-[#0D0D1A] border border-white/15 rounded-xl pl-3 pr-7 py-3 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"} appearance-none cursor-pointer`}
+        className={`w-full bg-[#000000] border border-white/15 rounded-xl pl-3 pr-7 py-3 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"} appearance-none cursor-pointer`}
       >
-        <option value="" disabled className="bg-[#121224] text-gray-500">
+        <option value="" disabled className="bg-[#181818] text-gray-500">
           {placeholder}
         </option>
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value} className="bg-[#121224] text-white">
+          <option key={opt.value} value={opt.value} className="bg-[#181818] text-white">
             {opt.label}
           </option>
         ))}
@@ -324,7 +324,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
   const isBoy = formData.role === "boy";
 
   return (
-    <div className="min-h-[100dvh] bg-[#0D0D1A] flex flex-col items-center justify-center p-4 relative z-0 overflow-x-hidden w-full">
+    <div className="min-h-[100dvh] bg-[#000000] flex flex-col items-center justify-center p-4 relative z-0 overflow-x-hidden w-full">
       <div
         className={`absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 transition-colors duration-500 ${isBoy ? "bg-blue-600/20" : "bg-pink-600/20"}`}
       ></div>
@@ -358,7 +358,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
       </div>
 
       <div
-        className={`bg-[#16162A] w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? "border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]" : "border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]"}`}
+        className={`bg-[#121212] w-full max-w-md p-6 sm:p-8 rounded-3xl border shadow-2xl transition-colors duration-500 ${isBoy ? "border-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.1)]" : "border-pink-500/20 shadow-[0_0_30px_rgba(236,72,153,0.1)]"}`}
       >
         {/* Header with Back button and Progress indicator */}
         <div className="flex items-center justify-between mb-6">
@@ -411,7 +411,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                   value={formData.name}
                   onChange={handleChange}
                   onKeyDown={(e) => e.key === "Enter" && handleNextStep()}
-                  className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
+                  className={`w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
                   placeholder="Enter your name"
                   autoFocus
                 />
@@ -441,7 +441,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                     if (genderTimerRef.current) clearTimeout(genderTimerRef.current);
                     genderTimerRef.current = setTimeout(() => setCurrentStep(3), 250);
                   }}
-                  className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "boy" ? "bg-blue-500/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white" : "bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20"}`}
+                  className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "boy" ? "bg-blue-500/10 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.2)] text-white" : "bg-[#000000] border-white/10 text-gray-400 hover:border-white/20"}`}
                 >
                   <FiUser
                     size={30}
@@ -458,7 +458,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                     if (genderTimerRef.current) clearTimeout(genderTimerRef.current);
                     genderTimerRef.current = setTimeout(() => setCurrentStep(3), 250);
                   }}
-                  className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "girl" ? "bg-pink-500/10 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.2)] text-white" : "bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-white/20"}`}
+                  className={`p-6 rounded-2xl border text-center transition-all duration-300 flex flex-col items-center gap-3 ${formData.role === "girl" ? "bg-pink-500/10 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.2)] text-white" : "bg-[#000000] border-white/10 text-gray-400 hover:border-white/20"}`}
                 >
                   <FiUser
                     size={30}
@@ -559,7 +559,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                   value={formData.email}
                   onChange={handleChange}
                   onKeyDown={(e) => e.key === "Enter" && handleNextStep()}
-                  className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
+                  className={`w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
                   placeholder="example@mail.com"
                   autoFocus
                 />
@@ -573,7 +573,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                   value={formData.phone}
                   onChange={handlePhoneChange}
                   onKeyDown={(e) => e.key === "Enter" && handleNextStep()}
-                  className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
+                  className={`w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3.5 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
                   placeholder="10-digit mobile number"
                   maxLength={10}
                 />
@@ -601,7 +601,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                     value={formData.password}
                     onChange={handleChange}
                     onKeyDown={(e) => e.key === "Enter" && handleRegister(e)}
-                    className={`w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3.5 pr-12 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
+                    className={`w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3.5 pr-12 text-base sm:text-sm text-white outline-none transition ${isBoy ? "focus:border-blue-500" : "focus:border-pink-500"}`}
                     placeholder="Min. 6 characters"
                     autoFocus
                   />
@@ -643,7 +643,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
       {/* ─── OTP VERIFICATION MODAL ─── */}
       {showOtpModal && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#16162A] w-full max-w-sm p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl text-center relative max-h-[92vh] overflow-y-auto overscroll-contain">
+          <div className="bg-[#121212] w-full max-w-sm p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl text-center relative max-h-[92vh] overflow-y-auto overscroll-contain">
             {/* Close/Cancel button */}
             <button
               onClick={cancelRegistration}
@@ -667,7 +667,7 @@ function UnifiedRegister({ setPage, initialRole = "boy", onBack }) {
                 maxLength="6"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#0095f6] transition font-mono"
+                className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#0095f6] transition font-mono"
                 placeholder="······"
                 autoFocus
               />

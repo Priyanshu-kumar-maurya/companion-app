@@ -63,6 +63,7 @@ function DetailsPage({
 }) {
   const socket = propSocket || defaultSocket;
   const [hours, setHours] = useState(2);
+  const [activeProfileTab, setActiveProfileTab] = useState("posts"); // "posts" | "reviews" | "meetup"
   const [posts, setPosts] = useState([]);
   const [expandedPost, setExpandedPost] = useState(null);
   const [showDpModal, setShowDpModal] = useState(false);
@@ -805,9 +806,9 @@ function DetailsPage({
     profile.role === "boy" ? "from-blue-500 to-purple-600" : "from-pink-500 to-purple-600";
 
   return (
-    <div className="min-h-[100dvh] relative bg-[#0D0D1A] pb-20 text-white">
+    <div className="min-h-[100dvh] relative bg-[#000000] pb-20 text-white">
       {/* ── TOP NAV BAR ── */}
-      <div className="sticky top-0 bg-[#0D0D1A]/85 backdrop-blur-md z-30 border-b border-white/5">
+      <div className="sticky top-0 bg-[#000000]/85 backdrop-blur-md z-30 border-b border-white/5">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => {
@@ -837,7 +838,7 @@ function DetailsPage({
 
               {/* Dropdown */}
               {showMenu && (
-                <div className="absolute right-0 top-11 w-52 bg-[#16162A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
+                <div className="absolute right-0 top-11 w-52 bg-[#121212] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-fade-in">
                   <button
                     onClick={handleBlockToggle}
                     disabled={blockLoading}
@@ -889,7 +890,7 @@ function DetailsPage({
             className={`relative w-20 h-20 md:w-36 md:h-36 rounded-full p-[3px] shadow-2xl cursor-pointer shrink-0 bg-gradient-to-br ${accentGrad}`}
             onClick={() => profile.profile_pic && setShowDpModal(true)}
           >
-            <div className="w-full h-full rounded-full overflow-hidden bg-[#0D0D1A]">
+            <div className="w-full h-full rounded-full overflow-hidden bg-[#000000]">
               {profile.profile_pic ? (
                 <img
                   src={profile.profile_pic}
@@ -907,7 +908,7 @@ function DetailsPage({
               )}
             </div>
             {isOnline && (
-              <span className="absolute bottom-1 right-1 w-3 h-3 md:w-4 md:h-4 bg-green-400 border-2 border-[#0D0D1A] rounded-full" />
+              <span className="absolute bottom-1 right-1 w-3 h-3 md:w-4 md:h-4 bg-green-400 border-2 border-[#000000] rounded-full" />
             )}
           </div>
 
@@ -1248,16 +1249,53 @@ function DetailsPage({
         <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
           {/* ── MAIN CONTENT: Posts Grid & Reviews (Order 2 on mobile, Order 1 on desktop) ── */}
           <div
-            className={`${showBookingCard ? "lg:col-span-7" : "lg:col-span-12"} space-y-8 order-2 lg:order-1`}
+            className={`${showBookingCard ? "lg:col-span-7" : "lg:col-span-12"} space-y-6 order-1 lg:order-1`}
           >
-            {/* ── POSTS GRID (Instagram style) ── */}
+            {/* ── INSTAGRAM PROFILE TABS ── */}
             <div>
-              <div className="flex items-center gap-2 text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4 pb-2 border-b border-white/5">
-                <FiGrid size={15} />
-                Posts ({posts.length})
+              <div className="flex border-b border-[#262626] mb-4">
+                <button
+                  type="button"
+                  onClick={() => setActiveProfileTab("posts")}
+                  className={`flex-1 sm:flex-initial sm:px-6 py-2.5 text-xs font-bold flex items-center justify-center gap-2 border-b-2 transition ${
+                    activeProfileTab === "posts"
+                      ? "border-[#e1306c] text-white"
+                      : "border-transparent text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  <FiGrid size={14} />
+                  <span>POSTS ({posts.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveProfileTab("reviews")}
+                  className={`flex-1 sm:flex-initial sm:px-6 py-2.5 text-xs font-bold flex items-center justify-center gap-2 border-b-2 transition ${
+                    activeProfileTab === "reviews"
+                      ? "border-[#e1306c] text-white"
+                      : "border-transparent text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  <FiStar size={14} className="text-yellow-400" />
+                  <span>REVIEWS ({reviews.length})</span>
+                </button>
+                {showBookingCard && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveProfileTab("meetup")}
+                    className={`flex-1 sm:flex-initial sm:px-6 py-2.5 text-xs font-bold flex items-center justify-center gap-2 border-b-2 transition lg:hidden ${
+                      activeProfileTab === "meetup"
+                        ? "border-[#e1306c] text-white"
+                        : "border-transparent text-gray-500 hover:text-gray-300"
+                    }`}
+                  >
+                    <FiCalendar size={14} className="text-pink-400" />
+                    <span>MEETUP</span>
+                  </button>
+                )}
               </div>
+              <div className={activeProfileTab === "posts" ? "block" : "hidden lg:block"}>
               {profile.is_private && !followStats.isFollowing && profile.id !== currentUser?.id ? (
-                <div className="py-16 text-center flex flex-col items-center gap-3 bg-[#16162A]/40 rounded-2xl border border-white/5">
+                <div className="py-16 text-center flex flex-col items-center gap-3 bg-[#121212]/40 rounded-2xl border border-white/5">
                   <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
                     <FiLock size={24} className="text-gray-500" />
                   </div>
@@ -1267,7 +1305,7 @@ function DetailsPage({
               ) : loadingUserData ? (
                 <ProfileGridSkeleton count={6} />
               ) : posts.length === 0 ? (
-                <div className="py-16 text-center flex flex-col items-center gap-2 bg-[#16162A]/40 rounded-2xl border border-white/5">
+                <div className="py-16 text-center flex flex-col items-center gap-2 bg-[#121212]/40 rounded-2xl border border-white/5">
                   <FiGrid size={36} className="text-gray-700" />
                   <p className="text-gray-500 text-sm">No posts yet</p>
                 </div>
@@ -1293,21 +1331,22 @@ function DetailsPage({
                   ))}
                 </div>
               )}
+              </div>
             </div>
 
             {/* ── REVIEWS & RATINGS SECTION ── */}
-            <div className="border-t border-white/5 pt-6">
+            <div className={`border-t border-[#262626] pt-6 ${activeProfileTab === "reviews" ? "block" : "hidden lg:block"}`}>
               <ReviewsSection companion={profile} currentUser={currentUser} />
             </div>
           </div>
 
           {/* ── SIDEBAR: Sticky Booking & Action Card (Order 1 on mobile, Order 2 on desktop) ── */}
           {showBookingCard && (
-            <div className="lg:col-span-5 order-1 lg:order-2 mb-8 lg:mb-0">
+            <div className={`lg:col-span-5 order-2 lg:order-2 mb-8 lg:mb-0 ${activeProfileTab === "meetup" ? "block" : "hidden lg:block"}`}>
               <div className="lg:sticky lg:top-20 space-y-6">
                 {/* ── NON-LOGGED IN USER CTA BANNER ── */}
                 {!currentUser && (
-                  <div className="rounded-2xl overflow-hidden p-6 border border-pink-500/20 bg-gradient-to-br from-[#16162A] to-[#201633] flex flex-col gap-4 shadow-xl">
+                  <div className="rounded-2xl overflow-hidden p-6 border border-pink-500/20 bg-gradient-to-br from-[#121212] to-[#1a1a1a] flex flex-col gap-4 shadow-xl">
                     <div>
                       <h3 className="font-bold text-white text-base flex items-center gap-2">
                         <span>☕ Connect with {profile.name}</span>
@@ -1332,7 +1371,7 @@ function DetailsPage({
                   (hasDocument ? (
                     <div
                       className="rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-                      style={{ background: "#16162A" }}
+                      style={{ background: "#121212" }}
                     >
                       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
                         <div className="flex items-center gap-2 font-bold text-white">
@@ -1394,7 +1433,7 @@ function DetailsPage({
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-2xl overflow-hidden p-5 sm:p-6 border border-purple-500/20 bg-gradient-to-br from-[#16162A] via-[#1a142e] to-[#121224] shadow-xl">
+                    <div className="rounded-2xl overflow-hidden p-5 sm:p-6 border border-purple-500/20 bg-gradient-to-br from-[#121212] via-[#1a142e] to-[#181818] shadow-xl">
                       <div className="flex flex-col gap-4">
                         <div className="flex items-start gap-3.5">
                           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shrink-0 mt-0.5 shadow-inner">
@@ -1440,7 +1479,7 @@ function DetailsPage({
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center">
           <div
             className="w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 border border-white/10 shadow-2xl"
-            style={{ background: "#16162A" }}
+            style={{ background: "#121212" }}
           >
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -1532,7 +1571,7 @@ function DetailsPage({
                             isSelected
                               ? `bg-gradient-to-br ${accentGrad} border-transparent text-white shadow-lg scale-105`
                               : item.isDayWorking
-                                ? "bg-[#0D0D1A] border-white/10 text-gray-400 hover:border-pink-500/50"
+                                ? "bg-[#000000] border-white/10 text-gray-400 hover:border-pink-500/50"
                                 : "bg-white/[0.02] border-white/5 text-gray-600 hover:border-white/15"
                           }`}
                         >
@@ -1660,7 +1699,7 @@ function DetailsPage({
                             ? "bg-white/[0.02] border-white/5 text-gray-600 cursor-not-allowed opacity-60"
                             : isSelected
                               ? `bg-gradient-to-r ${accentGrad} text-white border-transparent shadow-md scale-[1.02]`
-                              : "bg-[#0D0D1A] border-white/10 text-gray-300 hover:border-pink-500/40 hover:text-white"
+                              : "bg-[#000000] border-white/10 text-gray-300 hover:border-pink-500/40 hover:text-white"
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
@@ -1706,7 +1745,7 @@ function DetailsPage({
                       if (locationSuggestions.length > 0) setShowSuggestions(true);
                     }}
                     className="w-full rounded-xl px-4 py-2.5 text-sm text-white outline-none border border-white/10 focus:border-pink-500 transition"
-                    style={{ background: "#0D0D1A" }}
+                    style={{ background: "#000000" }}
                   />
                   {searchLoading && (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
@@ -1718,7 +1757,7 @@ function DetailsPage({
                 {showSuggestions && locationSuggestions.length > 0 && (
                   <>
                     <div className="fixed inset-0 z-30" onClick={() => setShowSuggestions(false)} />
-                    <div className="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-white/10 shadow-2xl z-40 bg-[#0D0D1A] divide-y divide-white/5 scrollbar-thin">
+                    <div className="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto rounded-xl border border-white/10 shadow-2xl z-40 bg-[#000000] divide-y divide-white/5 scrollbar-thin">
                       {locationSuggestions.map((sug, i) => (
                         <div
                           key={i}
@@ -1743,7 +1782,7 @@ function DetailsPage({
               </div>
 
               {/* Booking Price Summary */}
-              <div className="p-3.5 rounded-2xl bg-[#0D0D1A] border border-white/5 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-[#000000] border border-white/5 flex items-center justify-between">
                 <div>
                   <div className="text-xs font-semibold text-gray-300">Estimated Total</div>
                   <div className="text-[10px] text-gray-500">
@@ -1823,7 +1862,7 @@ function DetailsPage({
             </button>
 
             {/* Image Frame */}
-            <div className="bg-[#16162A] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
+            <div className="bg-[#121212] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
               <img
                 src={profile.profile_pic}
                 alt={profile.name}
@@ -1843,7 +1882,7 @@ function DetailsPage({
       {/* ─── REPORT MODAL ─── */}
       {showReportModal && (
         <div className="fixed inset-0 z-[150] bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
-          <div className="w-full sm:max-w-md bg-[#16162A] rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl p-6">
+          <div className="w-full sm:max-w-md bg-[#121212] rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl p-6">
             {reportDone ? (
               <div className="py-8 flex flex-col items-center gap-3">
                 <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
@@ -1907,7 +1946,7 @@ function DetailsPage({
                     placeholder="Additional details (optional)..."
                     rows={3}
                     maxLength={300}
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-orange-500 transition resize-none placeholder-gray-600"
+                    className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-orange-500 transition resize-none placeholder-gray-600"
                   />
 
                   <button
@@ -1934,11 +1973,11 @@ function DetailsPage({
           }}
         >
           <div
-            className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up"
+            className="bg-[#181818] border border-white/10 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#181832] to-[#121224] px-5 py-4 border-b border-white/5 flex justify-between items-center">
+            <div className="bg-gradient-to-r from-[#181832] to-[#181818] px-5 py-4 border-b border-white/5 flex justify-between items-center">
               <h3 className="font-extrabold text-white text-sm capitalize">
                 {showFollowModal === "followers" ? "Followers" : "Following"}
               </h3>
@@ -2040,7 +2079,7 @@ function DetailsPage({
       {/* ── GUEST AUTH MODAL (Instagram / Tinder style) ── */}
       {showGuestAuthModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
-          <div className="w-full sm:max-w-sm bg-[#16162A] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative">
+          <div className="w-full sm:max-w-sm bg-[#121212] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative">
             <button
               onClick={() => setShowGuestAuthModal(false)}
               className="absolute right-4 top-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white flex items-center justify-center text-sm transition"
@@ -2083,7 +2122,7 @@ function DetailsPage({
       {/* ── ESCROW INFO MODAL ── */}
       {showEscrowInfoModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="w-full sm:max-w-md bg-[#16162A] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative animate-in fade-in slide-in-from-bottom duration-200">
+          <div className="w-full sm:max-w-md bg-[#121212] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl relative animate-in fade-in slide-in-from-bottom duration-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -2163,7 +2202,7 @@ function DetailsPage({
         !showEscrowInfoModal &&
         !expandedPost &&
         !showDpModal && (
-          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0D0D1A]/95 backdrop-blur-lg border-t border-white/10 px-4 py-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-2xl flex items-center justify-between">
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#000000]/95 backdrop-blur-lg border-t border-white/10 px-4 py-2.5 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shadow-2xl flex items-center justify-between">
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-base font-black text-white">
@@ -2213,6 +2252,38 @@ function DetailsPage({
             </button>
           </div>
         )}
+      {/* ── MOBILE FLOATING 1-TAP BOOKING BAR ── */}
+      {showBookingCard && (
+        <div className="fixed bottom-4 left-4 right-4 z-40 lg:hidden max-w-sm mx-auto animate-fade-in pointer-events-auto">
+          <div className="bg-[#121212]/95 backdrop-blur-xl border border-[#262626] rounded-2xl p-2.5 flex items-center justify-between shadow-[0_8px_30px_rgba(0,0,0,0.8)]">
+            <div className="pl-2">
+              <div className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Meetup Rate</div>
+              <div className="text-sm font-black text-white flex items-center gap-1">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4]">
+                  ₹{profile.price || 1000}
+                </span>
+                <span className="text-[10px] text-gray-400 font-normal">/hr</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!currentUser) {
+                  setShowGuestAuthModal(true);
+                  setGuestModalReason("book");
+                } else if (!hasDocument) {
+                  setShowKycModal(true);
+                } else {
+                  setShowBookingModal(true);
+                }
+              }}
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-lg shadow-[#e1306c]/20 active:scale-95 transition flex items-center gap-1.5"
+            >
+              <span>☕ Book Meetup</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

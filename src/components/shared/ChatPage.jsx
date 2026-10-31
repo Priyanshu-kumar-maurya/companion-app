@@ -99,7 +99,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
       : "";
   const userPrefs = getStoredPreferences();
   const wallpaperBackgrounds = {
-    dark: "#0D0D1A",
+    dark: "#000000",
     midnight: "linear-gradient(to bottom, #0B0F19, #111827)",
     emerald: "linear-gradient(to bottom, #061A14, #0A2E23)",
     sunset: "linear-gradient(to bottom, #1A0B1E, #2E1029)",
@@ -935,13 +935,13 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
   }, [lightboxState]);
 
   return (
-    <div className="fixed inset-0 flex z-50" style={{ background: "#0D0D1A" }}>
+    <div className="fixed inset-0 flex z-50" style={{ background: "#000000" }}>
       {/* ─── MAIN CHAT AREA ─── */}
       <div className="flex-1 flex flex-col h-full relative min-w-0">
         {/* ─── HEADER ─── */}
         <div
           className="flex items-center gap-3 px-3 py-2.5 shrink-0 border-b"
-          style={{ background: "#16162A", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "#121212", borderColor: "#262626" }}
         >
           <button
             onClick={() => {
@@ -1038,7 +1038,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
             {/* Dropdown Menu */}
             {showMenu && (
-              <div className="absolute right-0 top-12 bg-[#16162A] border border-white/10 rounded-xl shadow-2xl py-1.5 w-48 z-50 animate-fade-in text-left">
+              <div className="absolute right-0 top-12 bg-[#121212] border border-white/10 rounded-xl shadow-2xl py-1.5 w-48 z-50 animate-fade-in text-left">
                 <button
                   onClick={() => {
                     setShowSearch(true);
@@ -1165,7 +1165,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
         {showSearch && (
           <div
             className="flex items-center gap-2 px-3 py-2 border-b animate-fade-in z-30 shrink-0 shadow-lg"
-            style={{ background: "#121226", borderColor: "rgba(255,255,255,0.08)" }}
+            style={{ background: "#121226", borderColor: "#262626" }}
           >
             <FiSearch size={16} className="text-pink-400 shrink-0 ml-1" />
             <input
@@ -1233,7 +1233,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
         {/* ─── CHAT MESSAGES OR LOCKED OVERLAY ─── */}
         {isThisChatLocked && !isChatPinVerified ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#0D0D1A]">
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-[#000000]">
             <div className="w-20 h-20 rounded-3xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4 shadow-xl">
               <FiLock size={36} />
             </div>
@@ -1267,7 +1267,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             {/* ─── CHAT MESSAGES ─── */}
             <div
               className="flex-1 overflow-y-auto px-3 py-2 flex flex-col gap-1 transition-colors duration-300"
-              style={{ background: wallpaperBackgrounds[userPrefs?.chatWallpaper] || "#0D0D1A" }}
+              style={{ background: wallpaperBackgrounds[userPrefs?.chatWallpaper] || "#000000" }}
               onClick={() => setActiveReactionPickerId(null)}
             >
               {filteredMessagesToShow.map((msg, index) => {
@@ -1324,7 +1324,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                           className={`flex items-center gap-2.5 px-3.5 py-2 rounded-2xl text-xs border backdrop-blur-md shadow-md ${
                             msg.sent
                               ? "bg-gradient-to-r from-purple-900/40 to-pink-900/40 border-pink-500/25 text-white rounded-br-sm"
-                              : "bg-[#16162A] border-white/10 text-gray-200 rounded-bl-sm"
+                              : "bg-[#121212] border-white/10 text-gray-200 rounded-bl-sm"
                           }`}
                         >
                           <div
@@ -1417,7 +1417,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                               >
                                 <div
                                   className="flex gap-1 rounded-lg px-1.5 py-1 shadow-lg border border-white/10"
-                                  style={{ background: "#16162A" }}
+                                  style={{ background: "#121212" }}
                                 >
                                   <button
                                     onClick={(e) => {
@@ -1469,14 +1469,14 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                             <div
                               className="relative shadow-sm text-sm leading-relaxed"
                               style={{
-                                background: msg.sent ? "#2d1457" : "#16162A",
+                                background: msg.sent ? "#2d1457" : "#121212",
                                 color: "#f1f5f9",
                                 borderRadius: msg.sent
                                   ? "12px 12px 3px 12px"
                                   : "12px 12px 12px 3px",
                                 border: msg.sent
                                   ? "1px solid rgba(236,72,153,0.2)"
-                                  : "1px solid rgba(255,255,255,0.08)",
+                                  : "1px solid #262626",
                                 padding:
                                   msg.imageUrl && !msg.text
                                     ? "3px"
@@ -1696,7 +1696,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                     </div>
                   )}
                   <div
-                    className="px-4 py-3 rounded-2xl bg-[#16162A] border border-white/5 flex items-center gap-1.5"
+                    className="px-4 py-3 rounded-2xl bg-[#121212] border border-white/5 flex items-center gap-1.5"
                     style={{ borderRadius: "18px 18px 18px 4px" }}
                   >
                     <style>{`
@@ -1728,7 +1728,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             {editingMsgId && (
               <div
                 className="flex justify-between items-center px-4 py-2 text-xs border-t shrink-0"
-                style={{ background: "#16162A", borderColor: "#ec4899", color: "#ec4899" }}
+                style={{ background: "#121212", borderColor: "#ec4899", color: "#ec4899" }}
               >
                 <div className="flex items-center gap-2">
                   <FiEdit2 size={13} />
@@ -1748,7 +1748,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
             {/* ─── LIVE AUDIO RECORDING OR INPUT BAR ─── */}
             {isRecordingAudio ? (
-              <div className="flex items-center justify-between px-4 py-3 bg-[#16162A] border-t border-pink-500/30 text-white shrink-0">
+              <div className="flex items-center justify-between px-4 py-3 bg-[#121212] border-t border-pink-500/30 text-white shrink-0">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
                   <span className="text-xs font-bold text-red-400 font-mono tracking-wider">
@@ -1788,7 +1788,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             ) : (
               <div
                 className="flex items-end gap-2 px-3 py-2 shrink-0 border-t"
-                style={{ background: "#16162A", borderColor: "rgba(255,255,255,0.08)" }}
+                style={{ background: "#121212", borderColor: "#262626" }}
               >
                 <label
                   className="w-10 h-10 flex items-center justify-center rounded-full cursor-pointer transition flex-shrink-0 text-gray-500 hover:text-pink-400 hover:bg-white/10"
@@ -1806,7 +1806,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
                 <div
                   className="flex-1 flex items-end rounded-2xl px-4 py-2.5 border border-white/10"
-                  style={{ background: "#0D0D1A", minHeight: 44 }}
+                  style={{ background: "#000000", minHeight: 44 }}
                 >
                   <textarea
                     className="flex-1 bg-transparent text-sm outline-none resize-none placeholder-gray-600 border-none"
@@ -1852,7 +1852,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
       {/* ─── WHATSAPP STYLE CONTACT INFO SIDEBAR ─── */}
       {showContactInfo && (
-        <div className="w-full sm:w-80 bg-[#16162A] border-l border-white/10 shrink-0 z-35 flex flex-col h-full relative text-left">
+        <div className="w-full sm:w-80 bg-[#121212] border-l border-white/10 shrink-0 z-35 flex flex-col h-full relative text-left">
           <div className="px-4 py-3.5 border-b border-white/5 flex items-center gap-3 bg-[#121222]">
             <button
               onClick={() => {
@@ -1868,7 +1868,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
           <div className="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-5">
             {/* Avatar Card */}
-            <div className="flex flex-col items-center text-center bg-[#0D0D1A]/50 border border-white/5 p-5 rounded-2xl">
+            <div className="flex flex-col items-center text-center bg-[#000000]/50 border border-white/5 p-5 rounded-2xl">
               <div className="w-24 h-24 rounded-full overflow-hidden mb-3.5 border-2 border-pink-500/30 shadow-lg">
                 <img
                   src={
@@ -1884,7 +1884,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
             {/* About Bio */}
             {girl.bio && (
-              <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl">
+              <div className="bg-[#000000]/40 border border-white/5 p-4 rounded-xl">
                 <h5 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-2">
                   About & Status
                 </h5>
@@ -1893,7 +1893,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             )}
 
             {/* Media Links and Docs */}
-            <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl">
+            <div className="bg-[#000000]/40 border border-white/5 p-4 rounded-xl">
               <div className="flex justify-between items-center mb-3">
                 <h5 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider flex items-center gap-1.5">
                   <FiFolder size={11} className="text-pink-400" />
@@ -1927,7 +1927,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             {/* Starred Messages Access */}
             <button
               onClick={() => setShowStarredSubView(true)}
-              className="w-full flex justify-between items-center bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl hover:bg-white/5 transition text-left"
+              className="w-full flex justify-between items-center bg-[#000000]/40 border border-white/5 p-4 rounded-xl hover:bg-white/5 transition text-left"
             >
               <span className="text-xs font-semibold text-gray-300 flex items-center gap-2">
                 <FiStar size={13} className="text-yellow-400" /> Starred messages
@@ -1936,7 +1936,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             </button>
 
             {/* Disappearing Messages */}
-            <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl space-y-3">
+            <div className="bg-[#000000]/40 border border-white/5 p-4 rounded-xl space-y-3">
               <h5 className="text-[10px] uppercase font-bold text-gray-500 tracking-wider flex items-center gap-1.5">
                 <FiClock size={11} className="text-gray-400" /> Disappearing messages
               </h5>
@@ -1964,7 +1964,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             </div>
 
             {/* WhatsApp-Style Chat Lock Toggle in Sidebar */}
-            <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-[#000000]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-gray-200 flex items-center gap-1.5">
                   <FiLock size={12} className="text-purple-400" />
@@ -2002,7 +2002,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             </div>
 
             {/* WhatsApp-Style Hide Chat Toggle in Sidebar */}
-            <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-[#000000]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-gray-200 flex items-center gap-1.5">
                   <FiEyeOff size={12} className="text-pink-400" />
@@ -2041,7 +2041,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             </div>
 
             {/* Mute Notifications */}
-            <div className="bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
+            <div className="bg-[#000000]/40 border border-white/5 p-4 rounded-xl flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-300">Mute notifications</span>
               <label className="relative inline-flex items-center cursor-pointer select-none">
                 <input
@@ -2057,7 +2057,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
             {/* Security encryption info */}
             <button
               onClick={() => setShowEncryptionModal(true)}
-              className="w-full bg-[#0D0D1A]/40 border border-white/5 p-4 rounded-xl text-left hover:bg-white/5 transition"
+              className="w-full bg-[#000000]/40 border border-white/5 p-4 rounded-xl text-left hover:bg-white/5 transition"
             >
               <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider block mb-1">
                 Encryption
@@ -2093,7 +2093,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
 
           {/* Starred Messages Sub View inside sidebar */}
           {showStarredSubView && (
-            <div className="absolute inset-0 bg-[#16162A] z-[90] flex flex-col">
+            <div className="absolute inset-0 bg-[#121212] z-[90] flex flex-col">
               <div className="px-4 py-3.5 border-b border-white/5 flex items-center gap-3 bg-[#121222]">
                 <button
                   onClick={() => setShowStarredSubView(false)}
@@ -2351,7 +2351,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
       {messageToDelete && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
           <div
-            className="w-full max-w-xs overflow-hidden shadow-2xl border border-white/10 bg-[#16162A]"
+            className="w-full max-w-xs overflow-hidden shadow-2xl border border-white/10 bg-[#121212]"
             style={{ borderRadius: 16 }}
           >
             <div className="px-6 py-5">
@@ -2394,7 +2394,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
           onClick={() => setShowEncryptionModal(false)}
         >
           <div
-            className="bg-[#16162A] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl p-6 text-center"
+            className="bg-[#121212] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl p-6 text-center"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-16 h-16 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mx-auto mb-4">
@@ -2424,7 +2424,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
       {/* ─── REPORT MODAL ─── */}
       {showReportModal && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
-          <div className="bg-[#16162A] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl p-6 relative overflow-hidden animate-slide-up">
+          <div className="bg-[#121212] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl p-6 relative overflow-hidden animate-slide-up">
             {reportDone ? (
               <div className="text-center py-6">
                 <FiCheckCircle className="text-pink-500 text-5xl mx-auto mb-4 animate-bounce" />
@@ -2457,7 +2457,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                       required
                       value={reportReason}
                       onChange={(e) => setReportReason(e.target.value)}
-                      className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-3.5 py-3 text-xs text-white outline-none focus:border-pink-500 transition"
+                      className="w-full bg-[#000000] border border-white/10 rounded-xl px-3.5 py-3 text-xs text-white outline-none focus:border-pink-500 transition"
                     >
                       <option value="">Select a reason...</option>
                       <option value="Spam / Fake Profile">Spam / Fake Profile</option>
@@ -2475,7 +2475,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
                       value={reportDesc}
                       onChange={(e) => setReportDesc(e.target.value)}
                       placeholder="Provide more context..."
-                      className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition h-20 resize-none"
+                      className="w-full bg-[#000000] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition h-20 resize-none"
                     />
                   </div>
 

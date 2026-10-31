@@ -291,9 +291,9 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket, onBa
   if (!currentUser) return null;
 
   return (
-    <div className="pt-20 pb-24 min-h-[100dvh] bg-[#0D0D1A] text-white px-3 sm:px-6 max-w-2xl mx-auto flex flex-col">
+    <div className="pt-20 pb-24 min-h-[100dvh] bg-[#000000] text-white px-3 sm:px-6 max-w-2xl mx-auto flex flex-col">
       {/* ── Top Header ── */}
-      <div className="flex items-center justify-between mb-5 sticky top-16 bg-[#0D0D1A]/90 backdrop-blur-md py-3 z-30 border-b border-white/5">
+      <div className="flex items-center justify-between mb-5 sticky top-16 bg-[#000000]/90 backdrop-blur-md py-3 z-30 border-b border-white/5">
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
@@ -357,7 +357,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket, onBa
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 ${
               filter === tab.id
                 ? "bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white shadow-lg shadow-pink-500/20"
-                : "bg-[#16162A] text-gray-400 hover:text-white border border-white/5 hover:border-white/10"
+                : "bg-[#121212] text-gray-400 hover:text-white border border-white/5 hover:border-white/10"
             }`}
           >
             {tab.icon}
@@ -367,7 +367,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket, onBa
       </div>
 
       {/* ── Activity Content Body ── */}
-      <div className="bg-[#16162A] border border-white/5 rounded-3xl shadow-2xl overflow-hidden min-h-[360px] flex-1 flex flex-col">
+      <div className="bg-[#121212] border border-white/5 rounded-3xl shadow-2xl overflow-hidden min-h-[360px] flex-1 flex flex-col">
         {loading ? (
           <div className="p-3">
             <NotificationListSkeleton count={6} />
@@ -426,11 +426,11 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket, onBa
                                   "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                                 }
                                 alt={notif.sender_name}
-                                className="w-full h-full rounded-full object-cover bg-[#0D0D1A]"
+                                className="w-full h-full rounded-full object-cover bg-[#000000]"
                               />
                             </div>
                             {/* Activity badge icon on avatar corner */}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-[#16162A] border border-white/10 shadow-sm">
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[10px] bg-[#121212] border border-white/10 shadow-sm">
                               {notif.type === "like" && "❤️"}
                               {notif.type === "comment" && "💬"}
                               {notif.type === "follow" && "👤"}

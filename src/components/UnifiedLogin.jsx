@@ -327,7 +327,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#0D0D1A] flex flex-col items-center justify-center p-4 relative z-0 overflow-x-hidden w-full">
+    <div className="min-h-[100dvh] bg-[#000000] flex flex-col items-center justify-center p-4 relative z-0 overflow-x-hidden w-full">
       <div className="absolute w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-pink-600/10"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 rounded-full blur-[100px] pointer-events-none -z-10 bg-purple-600/10"></div>
 
@@ -349,7 +349,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
         </button>
       </div>
 
-      <div className="bg-[#16162A]/90 w-full max-w-md p-6 sm:p-8 rounded-2xl border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.8)] backdrop-blur-md relative overflow-hidden transition-colors duration-500">
+      <div className="bg-[#121212]/90 w-full max-w-md p-6 sm:p-8 rounded-2xl border border-white/10 shadow-[0_15px_50px_rgba(0,0,0,0.8)] backdrop-blur-md relative overflow-hidden transition-colors duration-500">
         <div className="absolute -top-12 -right-12 w-24 h-24 bg-pink-500/5 rounded-full blur-xl pointer-events-none"></div>
         <div className="absolute -bottom-12 -left-12 w-24 h-24 bg-purple-500/5 rounded-full blur-xl pointer-events-none"></div>
 
@@ -399,7 +399,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                 maxLength="6"
                 value={verifyOtp}
                 onChange={(e) => setVerifyOtp(e.target.value.replace(/[^0-9]/g, ""))}
-                className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#0095f6] transition font-mono"
+                className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-4 text-center text-2xl tracking-[0.5em] text-white outline-none focus:border-[#0095f6] transition font-mono"
                 placeholder="······"
                 autoFocus
               />
@@ -528,7 +528,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
             <p className="text-gray-400 text-center text-sm mb-5">Login to your account</p>
 
             {/* Role Selector Tabs */}
-            <div className="flex bg-[#0D0D1A] p-1 rounded-xl border border-white/10 mb-5">
+            <div className="flex bg-[#000000] p-1 rounded-xl border border-white/10 mb-5">
               <button
                 type="button"
                 onClick={() => setRoleMode("boy")}
@@ -570,7 +570,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                   required
                   value={formData.emailOrPhone}
                   onChange={handleChange}
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
+                  className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                   placeholder="example@mail.com or 9876543210"
                 />
               </div>
@@ -583,7 +583,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     required
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
+                    className="w-full bg-[#000000] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                     placeholder="••••••••"
                   />
                   <button
@@ -676,7 +676,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                   required
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-purple-500"
+                  className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-purple-500"
                   placeholder="example@mail.com"
                 />
               </div>
@@ -743,7 +743,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
+                    className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                     placeholder="example@mail.com"
                   />
                 </div>
@@ -763,7 +763,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                       otp: e.target.value.replace(/[^0-9]/g, "").slice(0, 6),
                     })
                   }
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6] tracking-[0.5rem] text-center font-bold text-lg"
+                  className="w-full bg-[#000000] border border-white/10 rounded-xl px-4 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6] tracking-[0.5rem] text-center font-bold text-lg"
                   placeholder="000000"
                 />
               </div>
@@ -775,7 +775,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     required
                     value={resetData.newPassword}
                     onChange={(e) => setResetData({ ...resetData, newPassword: e.target.value })}
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
+                    className="w-full bg-[#000000] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                     placeholder="Create a strong password"
                   />
                   <button
@@ -797,7 +797,7 @@ function UnifiedLogin({ setPage, setGirlUser, setBoyUser, setAdminUser, defaultR
                     onChange={(e) =>
                       setResetData({ ...resetData, confirmPassword: e.target.value })
                     }
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
+                    className="w-full bg-[#000000] border border-white/10 rounded-xl pl-4 pr-12 py-3 text-base sm:text-sm text-white outline-none transition focus:border-[#0095f6]"
                     placeholder="Repeat your password"
                   />
                   <button

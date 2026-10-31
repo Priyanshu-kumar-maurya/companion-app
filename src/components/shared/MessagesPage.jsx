@@ -354,7 +354,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
 
   return (
     <div
-      className="pt-20 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-4 sm:px-6 max-w-3xl mx-auto"
+      className="pt-20 pb-20 min-h-[100dvh] bg-[#000000] px-4 sm:px-6 max-w-3xl mx-auto"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -385,27 +385,27 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
           </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex bg-[#16162A] p-1 rounded-2xl border border-white/10 self-start sm:self-auto">
+        {/* Instagram-Style Tab Switcher */}
+        <div className="flex bg-[#121212] p-1 rounded-xl border border-[#262626] self-start sm:self-auto">
           <button
             onClick={() => setActiveTab("chats")}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
               activeTab === "chats"
-                ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg"
+                ? "bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-md"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            <FiMessageCircle size={14} /> Messages
+            <FiMessageCircle size={14} /> Chats
           </button>
           <button
             onClick={() => setActiveTab("calls")}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
               activeTab === "calls"
-                ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg"
+                ? "bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white shadow-md"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            <FiPhone size={14} /> Call History
+            <FiPhone size={14} /> Calls
           </button>
         </div>
       </div>
@@ -428,8 +428,8 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder="Search chats or enter 4-digit PIN to unhide secret chats..."
-            className="w-full bg-[#16162A] border border-white/10 rounded-2xl pl-11 pr-24 py-3 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500/50 transition shadow-lg"
+            placeholder="Search chats or enter 4-digit PIN..."
+            className="w-full bg-[#121212] border border-[#262626] rounded-2xl pl-11 pr-24 py-3 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500/50 transition shadow-lg"
           />
           {/* Secret Mode Status or Clear */}
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -451,7 +451,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                 className={`px-2.5 py-1 rounded-xl text-[10px] font-bold border transition flex items-center gap-1 ${
                   hideLockedFolder
                     ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
-                    : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                    : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                 }`}
               >
                 {hideLockedFolder ? <FiEyeOff size={11} /> : <FiEye size={11} />}
@@ -462,7 +462,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
         </div>
       )}
 
-      <div className="bg-[#16162A] border border-white/5 rounded-3xl shadow-xl overflow-hidden min-h-[300px]">
+      <div className="bg-[#121212] border border-[#262626] rounded-3xl shadow-xl overflow-hidden min-h-[300px]">
         {activeTab === "chats" ? (
           loading ? (
             <div className="p-3">
@@ -517,7 +517,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                       </div>
                     </div>
                   </div>
-                  <div className="text-xs font-bold text-purple-400 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                  <div className="text-xs font-bold text-purple-400 bg-white/5 px-3 py-1.5 rounded-xl border border-[#262626]">
                     {isLockedUnlocked ? "Lock 🔒" : "Unlock 🔑"}
                   </div>
                 </div>
@@ -586,7 +586,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                       <div className="flex items-center gap-2">
                         <button
                           onClick={(e) => handleToggleHideChat(e, person)}
-                          className="px-2.5 py-1 bg-white/5 hover:bg-pink-500/20 text-pink-300 border border-white/10 rounded-xl text-[11px] font-semibold transition flex items-center gap-1"
+                          className="px-2.5 py-1 bg-white/5 hover:bg-pink-500/20 text-pink-300 border border-[#262626] rounded-xl text-[11px] font-semibold transition flex items-center gap-1"
                           title="Unhide this chat"
                         >
                           <FiEye size={12} /> Unhide
@@ -646,14 +646,14 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                       <div className="flex items-center gap-2">
                         <button
                           onClick={(e) => handleToggleHideChat(e, person)}
-                          className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-[11px] font-semibold border border-white/10 transition flex items-center gap-1"
+                          className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-gray-300 rounded-xl text-[11px] font-semibold border border-[#262626] transition flex items-center gap-1"
                           title="Hide chat completely"
                         >
                           <FiEyeOff size={12} /> Hide
                         </button>
                         <button
                           onClick={(e) => handleToggleLockChat(e, person)}
-                          className="px-2.5 py-1 bg-white/5 hover:bg-purple-500/20 text-purple-300 border border-white/10 rounded-xl text-[11px] font-semibold transition flex items-center gap-1"
+                          className="px-2.5 py-1 bg-white/5 hover:bg-purple-500/20 text-purple-300 border border-[#262626] rounded-xl text-[11px] font-semibold transition flex items-center gap-1"
                           title="Unlock this chat"
                         >
                           <FiUnlock size={12} /> Unlock
@@ -678,7 +678,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                         <img
                           src={person.profile_pic}
                           alt={person.name}
-                          className="w-14 h-14 rounded-full object-cover border border-white/10"
+                          className="w-14 h-14 rounded-full object-cover border border-[#262626]"
                         />
                       ) : (
                         <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center text-xl font-bold shadow-inner text-white">
@@ -706,14 +706,14 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                     <div className="opacity-0 group-hover:opacity-100 transition flex items-center gap-1.5">
                       <button
                         onClick={(e) => handleToggleHideChat(e, person)}
-                        className="p-2 bg-white/5 hover:bg-pink-500/20 text-gray-400 hover:text-pink-400 rounded-xl transition border border-white/10"
+                        className="p-2 bg-white/5 hover:bg-pink-500/20 text-gray-400 hover:text-pink-400 rounded-xl transition border border-[#262626]"
                         title="Hide Chat 👁️‍🗨️"
                       >
                         <FiEyeOff size={13} />
                       </button>
                       <button
                         onClick={(e) => handleToggleLockChat(e, person)}
-                        className="p-2 bg-white/5 hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded-xl transition border border-white/10"
+                        className="p-2 bg-white/5 hover:bg-purple-500/20 text-gray-400 hover:text-purple-400 rounded-xl transition border border-[#262626]"
                         title="Lock Chat 🔒"
                       >
                         <FiLock size={13} />
@@ -820,7 +820,7 @@ function MessagesPage({ currentUser, setPage, setSelectedGirl, socket, onBack })
                       setSelectedGirl({ id: targetId, name: targetName, profile_pic: targetPic });
                       setPage(PAGES.CHAT);
                     }}
-                    className="px-3.5 py-1.5 bg-white/5 hover:bg-pink-500/20 text-gray-300 hover:text-pink-400 rounded-xl text-xs font-bold border border-white/10 transition flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 bg-white/5 hover:bg-pink-500/20 text-gray-300 hover:text-pink-400 rounded-xl text-xs font-bold border border-[#262626] transition flex items-center gap-1.5"
                   >
                     <FiMessageCircle size={13} /> Chat
                   </button>
