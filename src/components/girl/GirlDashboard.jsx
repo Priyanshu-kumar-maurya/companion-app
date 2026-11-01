@@ -474,7 +474,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
 
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* ── Instagram-style Profile Header ── */}
-        <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-white/5">
+        <div className="flex flex-col gap-4 mb-6 pb-6 border-b border-[#262626]">
           {/* Top Row: Avatar on Left, Stats on Right */}
           <div className="flex items-center justify-between sm:justify-start gap-6 w-full">
             {/* Profile Pic */}
@@ -601,7 +601,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           </div>
 
           {/* Live Availability Status Strip */}
-          <div className="w-full mt-3 p-3 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-between">
+          <div className="w-full mt-3 p-3 rounded-2xl bg-white/[0.03] border border-[#262626] flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div
                 className={`w-3 h-3 rounded-full ${
@@ -634,7 +634,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             </div>
             <button
               onClick={() => setShowScheduleModal(true)}
-              className="px-3 py-1 bg-white/10 hover:bg-white/15 text-white text-[11px] font-bold rounded-xl transition border border-white/10"
+              className="px-3 py-1 bg-white/10 hover:bg-white/15 text-white text-[11px] font-bold rounded-xl transition border border-[#262626]"
             >
               Edit
             </button>
@@ -737,59 +737,93 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           onCancel={handleCancelBooking}
         />
 
-        <div className={`grid ${hasDocument ? "grid-cols-3" : "grid-cols-2"} gap-3 mb-7`}>
-          <div
-            className="bg-[#121212] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between"
+        {/* ── Instagram Story Highlights Stats Row ── */}
+        <div className="flex items-center gap-4 overflow-x-auto pb-4 mb-5 scrollbar-none px-1">
+          {/* 1. Rating Highlight */}
+          <button
+            type="button"
             onClick={() => setActiveStatModal("rating")}
+            className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer outline-none"
           >
-            <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5">
-              <FiStar size={12} className="text-yellow-400 fill-yellow-400" /> Rating
-            </div>
-            <div className="text-xl font-bold text-yellow-400 flex items-center gap-1">
-              {reviews.length > 0
-                ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)
-                : stats.rating || "No Rating"}
-              {(reviews.length > 0 || (stats.rating && stats.rating !== "No Rating")) && (
-                <FiStar size={14} className="fill-yellow-400 text-yellow-400" />
-              )}
-            </div>
-          </div>
-          {hasDocument && (
-            <div
-              className="bg-[#121212] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition relative flex flex-col justify-between"
-              onClick={() => setActiveStatModal("my_bookings")}
-            >
-              <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5">
-                <FiCalendar size={12} /> Bookings
-              </div>
-              <div className="text-xl font-bold text-green-400">{completedBookings.length}</div>
-              {pendingBookings.length > 0 && (
-                <span className="absolute top-2 right-2 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
+            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] group-hover:scale-105 active:scale-95 transition-transform">
+              <div className="w-full h-full bg-[#121212] rounded-full border-2 border-black flex flex-col items-center justify-center">
+                <FiStar size={16} className="text-yellow-400 fill-yellow-400" />
+                <span className="text-[11px] font-black text-white mt-0.5">
+                  {reviews.length > 0
+                    ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)
+                    : stats.rating || "New"}
                 </span>
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold text-gray-300 tracking-tight">Rating</span>
+          </button>
+
+          {/* 2. Bookings Highlight */}
+          {hasDocument && (
+            <button
+              type="button"
+              onClick={() => setActiveStatModal("my_bookings")}
+              className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer outline-none relative"
+            >
+              <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] group-hover:scale-105 active:scale-95 transition-transform">
+                <div className="w-full h-full bg-[#121212] rounded-full border-2 border-black flex flex-col items-center justify-center">
+                  <FiCalendar size={16} className="text-emerald-400" />
+                  <span className="text-[11px] font-black text-white mt-0.5">
+                    {completedBookings.length}
+                  </span>
+                </div>
+              </div>
+              {pendingBookings.length > 0 && (
+                <span className="absolute top-0 right-1 w-3 h-3 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
               )}
-            </div>
+              <span className="text-[11px] font-semibold text-gray-300 tracking-tight">Bookings</span>
+            </button>
           )}
-          <div
-            className="bg-[#121212] border border-white/5 rounded-2xl p-4 cursor-pointer hover:bg-white/5 transition flex flex-col justify-between"
+
+          {/* 3. Alerts Highlight */}
+          <button
+            type="button"
             onClick={() => setActiveStatModal("notifications")}
+            className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer outline-none relative"
           >
-            <div className="text-[11px] text-gray-400 mb-1 flex items-center gap-1.5">
-              <FiBell size={12} /> Alerts
+            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] group-hover:scale-105 active:scale-95 transition-transform">
+              <div className="w-full h-full bg-[#121212] rounded-full border-2 border-black flex flex-col items-center justify-center">
+                <FiBell size={16} className="text-purple-400" />
+                <span className="text-[11px] font-black text-white mt-0.5">
+                  {notificationsList.length}
+                </span>
+              </div>
             </div>
-            <div className="text-xl font-bold text-purple-400">{notificationsList.length}</div>
-          </div>
+            {notificationsList.length > 0 && (
+              <span className="absolute top-0 right-1 w-3 h-3 bg-red-500 rounded-full ring-2 ring-black animate-pulse" />
+            )}
+            <span className="text-[11px] font-semibold text-gray-300 tracking-tight">Alerts</span>
+          </button>
+
+          {/* 4. Schedule Hours Highlight */}
+          <button
+            type="button"
+            onClick={() => setShowScheduleModal(true)}
+            className="flex flex-col items-center gap-1.5 shrink-0 group cursor-pointer outline-none"
+          >
+            <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-tr from-sky-400 to-blue-500 group-hover:scale-105 active:scale-95 transition-transform">
+              <div className="w-full h-full bg-[#121212] rounded-full border-2 border-black flex flex-col items-center justify-center">
+                <FiClock size={16} className="text-sky-400" />
+                <span className="text-[9px] font-bold text-sky-300 mt-0.5">Hours</span>
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold text-gray-300 tracking-tight">Schedule</span>
+          </button>
         </div>
 
         {/* ── Tabs Header (Posts vs Saved Favorites vs Wallet) ── */}
-        <div className="mb-6 border-t border-white/5 pt-3">
-          <div className="flex justify-center sm:justify-start gap-2 border-b border-white/10 mb-4 overflow-x-auto">
+        <div className="mb-6 border-t border-[#262626] pt-3">
+          <div className="flex justify-center sm:justify-start gap-2 border-b border-[#262626] mb-4 overflow-x-auto">
             <button
               onClick={() => setDashboardTab("posts")}
               className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
                 dashboardTab === "posts"
-                  ? "border-pink-500 text-pink-400"
+                  ? "border-[#e1306c] text-white"
                   : "border-transparent text-gray-400 hover:text-white"
               }`}
             >
@@ -800,7 +834,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                 onClick={() => setDashboardTab("wallet")}
                 className={`flex items-center gap-2 py-3 px-5 text-xs font-bold border-b-2 transition whitespace-nowrap ${
                   dashboardTab === "wallet"
-                    ? "border-emerald-500 text-emerald-400"
+                    ? "border-[#e1306c] text-white"
                     : "border-transparent text-gray-400 hover:text-white"
                 }`}
               >
@@ -846,7 +880,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                   <div
                     key={post.id}
                     onClick={() => setExpandedPost(post)}
-                    className="relative group rounded-xl overflow-hidden aspect-square border border-white/10 cursor-pointer"
+                    className="relative group rounded-xl overflow-hidden aspect-square border border-[#262626] cursor-pointer"
                   >
                     <img
                       src={post.image_url}
@@ -882,7 +916,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                       if (setSelectedGirl) setSelectedGirl(fav);
                       setPage(PAGES.DETAILS);
                     }}
-                    className="bg-[#121212] border border-white/5 hover:border-pink-500/30 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:-translate-y-1 transition group"
+                    className="bg-[#121212] border border-[#262626] hover:border-pink-500/30 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer hover:-translate-y-1 transition group"
                   >
                     <div className="flex items-center gap-3">
                       <img
@@ -907,7 +941,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    <div className="flex items-center justify-between pt-2 border-t border-[#262626]">
                       <div className="text-xs font-bold text-pink-400">
                         ₹{fav.price || 1000}
                         <span className="text-[10px] text-gray-500 font-normal">/hr</span>
@@ -963,7 +997,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
             </button>
 
             {/* Image Frame */}
-            <div className="bg-[#121212] p-2 rounded-3xl border border-white/10 shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
+            <div className="bg-[#121212] p-2 rounded-3xl border border-[#262626] shadow-2xl max-w-[90vw] max-h-[80vh] overflow-hidden">
               <img
                 src={user.profile_pic}
                 alt={user.name}
@@ -1011,10 +1045,10 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
           }}
         >
           <div
-            className="bg-[#121212] w-full max-w-md rounded-2xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]"
+            className="bg-[#121212] w-full max-w-md rounded-2xl border border-[#262626] shadow-2xl overflow-hidden relative flex flex-col max-h-[80vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#121212] sticky top-0 z-20">
+            <div className="px-5 py-4 border-b border-[#262626] flex items-center justify-between bg-[#121212] sticky top-0 z-20">
               <h2 className="text-lg font-bold text-white">
                 {activeStatModal === "earnings" && "Earnings History"}
                 {activeStatModal === "rating" && "Reviews & Ratings"}
@@ -1064,7 +1098,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                           className={`px-4 py-1.5 rounded-full text-[11px] font-bold capitalize whitespace-nowrap transition-all ${
                             bookingFilter === filter
                               ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20"
-                              : "bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5"
+                              : "bg-white/5 text-gray-400 hover:bg-white/10 border border-[#262626]"
                           }`}
                         >
                           {filter}
@@ -1081,7 +1115,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                         {filteredBookings.map((booking) => (
                           <div
                             key={booking.id}
-                            className="bg-[#000000] border border-white/5 p-4 rounded-xl flex flex-col gap-4"
+                            className="bg-[#000000] border border-[#262626] p-4 rounded-xl flex flex-col gap-4"
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex items-center gap-3">
@@ -1090,7 +1124,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                     booking.boy_pic ||
                                     "https://i.pinimg.com/736x/89/90/48/899048ab0cc455154006fdb9676964b3.jpg"
                                   }
-                                  className="w-12 h-12 rounded-full object-cover border border-white/10"
+                                  className="w-12 h-12 rounded-full object-cover border border-[#262626]"
                                   alt="Client"
                                 />
                                 <div>
@@ -1106,7 +1140,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                 {new Date(booking.created_at).toLocaleDateString()}
                               </div>
                             </div>
-                            <div className="bg-white/5 border border-white/5 rounded-lg p-3 space-y-2">
+                            <div className="bg-white/5 border border-[#262626] rounded-lg p-3 space-y-2">
                               <div className="text-[11px] text-gray-400 flex items-center gap-2">
                                 <FiCalendar size={12} className="text-pink-400" />{" "}
                                 <b>Date & Time:</b>{" "}
@@ -1120,7 +1154,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                 {booking.meeting_location || "Not specified"}
                               </div>
                               {booking.meeting_details && (
-                                <div className="text-[11px] text-gray-500 italic px-2 border-l border-white/10">
+                                <div className="text-[11px] text-gray-500 italic px-2 border-l border-[#262626]">
                                   "{booking.meeting_details}"
                                 </div>
                               )}
@@ -1165,7 +1199,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                               )}
                             </div>
 
-                            <div className="flex gap-2 justify-end pt-2 border-t border-white/5">
+                            <div className="flex gap-2 justify-end pt-2 border-t border-[#262626]">
                               {booking.status === "pending" &&
                                 (booking.sender_id === user.id ||
                                 (!booking.sender_id && user.role === "girl") ? (
@@ -1201,7 +1235,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                   {booking.reschedule_status !== "pending" && (
                                     <button
                                       onClick={() => handleRescheduleBooking(booking.id)}
-                                      className="px-4 py-2 bg-white/5 text-gray-300 border border-white/10 rounded-lg text-xs font-bold hover:bg-white/10 transition"
+                                      className="px-4 py-2 bg-white/5 text-gray-300 border border-[#262626] rounded-lg text-xs font-bold hover:bg-white/10 transition"
                                     >
                                       Reschedule
                                     </button>
@@ -1224,7 +1258,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                                 <div className="flex items-center gap-2 flex-wrap justify-end">
                                   <button
                                     onClick={() => setInvoiceModalBooking(booking)}
-                                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-xs font-bold border border-white/10 transition flex items-center gap-1.5"
+                                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 rounded-lg text-xs font-bold border border-[#262626] transition flex items-center gap-1.5"
                                   >
                                     <FiFileText size={13} className="text-pink-400" /> Invoice 📄
                                   </button>
@@ -1255,7 +1289,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                   completedBookings.map((b) => (
                     <div
                       key={b.id}
-                      className="flex justify-between items-center bg-[#000000] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition"
+                      className="flex justify-between items-center bg-[#000000] p-3 rounded-xl border border-[#262626] hover:bg-white/5 transition"
                     >
                       <div>
                         <p className="text-sm font-bold text-white">{b.boy_name}</p>
@@ -1275,7 +1309,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                   reviews.map((rev) => (
                     <div
                       key={rev.id}
-                      className="bg-[#000000] border border-white/5 p-4 rounded-xl flex gap-3 hover:bg-white/5 transition"
+                      className="bg-[#000000] border border-[#262626] p-4 rounded-xl flex gap-3 hover:bg-white/5 transition"
                     >
                       <img
                         src={
@@ -1305,7 +1339,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                   notificationsList.map((notif) => (
                     <div
                       key={notif.id}
-                      className="flex justify-between items-center bg-[#000000] p-3 rounded-xl border border-white/5 hover:bg-white/5 cursor-pointer transition"
+                      className="flex justify-between items-center bg-[#000000] p-3 rounded-xl border border-[#262626] hover:bg-white/5 cursor-pointer transition"
                     >
                       <div className="flex items-center gap-3">
                         <img
@@ -1346,7 +1380,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                     {followList.map((u) => (
                       <div
                         key={u.id}
-                        className="flex items-center gap-3 bg-[#000000] p-3 rounded-xl border border-white/5 hover:bg-white/5 transition"
+                        className="flex items-center gap-3 bg-[#000000] p-3 rounded-xl border border-[#262626] hover:bg-white/5 transition"
                       >
                         <img
                           src={
@@ -1354,7 +1388,7 @@ function GirlDashboard({ user, setGirlUser, setPage, setSelectedGirl, socket }) 
                             "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
                           }
                           alt={u.name}
-                          className="w-11 h-11 rounded-full object-cover border border-white/10 shrink-0"
+                          className="w-11 h-11 rounded-full object-cover border border-[#262626] shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-white truncate">{u.name}</p>
