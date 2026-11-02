@@ -144,7 +144,7 @@ export default function GirlWalletTab({ user }) {
       {/* ─── WALLET METRICS OVERVIEW CARDS ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Available Balance */}
-        <div className="bg-gradient-to-br from-[#16162A] to-[#1E1238] border border-pink-500/30 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+        <div className="bg-[#121212] border border-[#262626] rounded-3xl p-5 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-2xl pointer-events-none" />
           <div className="flex justify-between items-start mb-3">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -166,7 +166,7 @@ export default function GirlWalletTab({ user }) {
         </div>
 
         {/* Locked in Escrow */}
-        <div className="bg-[#16162A] border border-purple-500/20 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+        <div className="bg-[#121212] border border-[#262626] rounded-3xl p-5 shadow-xl relative overflow-hidden">
           <div className="flex justify-between items-start mb-3">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
               Locked in Escrow
@@ -185,7 +185,7 @@ export default function GirlWalletTab({ user }) {
         </div>
 
         {/* Total Lifetime Earnings */}
-        <div className="bg-[#16162A] border border-white/10 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+        <div className="bg-[#121212] border border-[#262626] rounded-3xl p-5 shadow-xl relative overflow-hidden">
           <div className="flex justify-between items-start mb-3">
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
               Lifetime Earnings
@@ -203,7 +203,7 @@ export default function GirlWalletTab({ user }) {
       </div>
 
       {/* ─── TRANSACTIONS & PAYOUT HISTORY ─── */}
-      <div className="bg-[#16162A] border border-white/10 rounded-3xl p-6 shadow-xl">
+      <div className="bg-[#121212] border border-[#262626] rounded-3xl p-6 shadow-xl">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
           <div>
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export default function GirlWalletTab({ user }) {
           </div>
 
           {/* Filter Tabs */}
-          <div className="flex bg-[#0D0D1A] p-1 rounded-2xl border border-white/5">
+          <div className="flex bg-[#000000] p-1 rounded-2xl border border-[#262626]">
             <button
               onClick={() => setFilterType("all")}
               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${

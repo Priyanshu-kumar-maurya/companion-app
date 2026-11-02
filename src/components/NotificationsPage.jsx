@@ -389,7 +389,7 @@ function NotificationsPage({ currentUser, setPage, setSelectedGirl, socket, onBa
             {categorizedGroups.map((group) => (
               <div key={group.title} className="flex flex-col">
                 {/* Group Title Header */}
-                <div className="px-5 py-3 bg-[#131324]/80 backdrop-blur-sm sticky top-0 z-10 border-b border-white/5">
+                <div className="px-5 py-3 bg-[#181818]/95 backdrop-blur-sm sticky top-0 z-10 border-b border-[#262626]">
                   <span className="text-xs font-black uppercase tracking-wider text-gray-400">
                     {group.title}
                   </span>

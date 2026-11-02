@@ -32,8 +32,8 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-[80vh] flex items-center justify-center p-4 bg-[#0D0D1A] text-white">
-          <div className="w-full max-w-md bg-[#16162A]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative overflow-hidden">
+        <div className="min-h-[80vh] flex items-center justify-center p-4 bg-[#000000] text-white">
+          <div className="w-full max-w-md bg-[#121212] backdrop-blur-xl border border-[#262626] rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative overflow-hidden">
             {/* Ambient Background Aura */}
             <div className="absolute -top-16 -left-16 w-40 h-40 bg-pink-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />

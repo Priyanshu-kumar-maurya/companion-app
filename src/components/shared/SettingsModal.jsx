@@ -588,9 +588,9 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      <div className="bg-[#141426] w-full max-w-md rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative flex flex-col max-h-[92vh]">
+      <div className="bg-[#121212] w-full max-w-md rounded-3xl border border-[#262626] shadow-2xl overflow-hidden relative flex flex-col max-h-[92vh]">
         {/* ─── Top Header ─── */}
-        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#141426]/95 backdrop-blur-xl z-20">
+        <div className="px-5 py-4 border-b border-[#262626] flex items-center justify-between sticky top-0 bg-[#121212]/95 backdrop-blur-xl z-20">
           <div className="flex items-center gap-3">
             {activeView !== "menu" && (
               <button
@@ -636,12 +636,12 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
           {activeView === "menu" && (
             <div className="p-4 space-y-4">
               {/* ── Hero Profile Card (Instagram / WhatsApp Profile Card) ── */}
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1A1A32] to-[#121224] p-4 border border-white/10 shadow-lg">
+              <div className="relative overflow-hidden rounded-2xl bg-[#181818] p-4 border border-[#262626] shadow-lg">
                 <div className="flex items-center gap-3.5">
                   {/* Avatar with Story gradient ring */}
                   <div className="relative shrink-0">
                     <div className="w-16 h-16 rounded-full p-[2.5px] bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4]">
-                      <div className="w-full h-full rounded-full overflow-hidden bg-[#16162A] flex items-center justify-center">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-[#121212] flex items-center justify-center">
                         {user?.profile_pic ? (
                           <img
                             src={user.profile_pic}
@@ -654,7 +654,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                       </div>
                     </div>
                     <label
-                      className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${currentAccent.bg} text-white flex items-center justify-center cursor-pointer shadow-md border-2 border-[#141426] hover:scale-110 transition`}
+                      className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${currentAccent.bg} text-white flex items-center justify-center cursor-pointer shadow-md border-2 border-[#121212] hover:scale-110 transition`}
                       title="Change photo"
                     >
                       {uploading ? (
@@ -697,7 +697,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                       </span>
                       <button
                         onClick={() => setActiveView("edit_profile")}
-                        className="text-[11px] font-semibold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-0.5 rounded-full border border-white/10 transition"
+                        className="text-[11px] font-semibold text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-0.5 rounded-full border border-[#262626] transition"
                       >
                         Edit
                       </button>
@@ -717,7 +717,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   placeholder="Search settings (e.g. password, privacy, theme)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500/50 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500/50 transition"
                 />
                 {searchQuery && (
                   <button
@@ -731,7 +731,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
               {/* ── Category 1: Account & Security ── */}
               {matchesSearch(["account", "profile", "password", "security", "pin", "edit"]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Account & Security</span>
                     <FiShield size={12} className="text-indigo-400" />
@@ -792,7 +792,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 "block",
                 "private",
               ]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Privacy & Permissions</span>
                     <FiLock size={12} className="text-emerald-400" />
@@ -855,7 +855,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 "dark",
                 "font",
               ]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Chats & Appearance</span>
                     <span className={`w-2 h-2 rounded-full ${currentAccent.bg}`}></span>
@@ -889,7 +889,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
               {/* ── Category 4: Notifications & Sounds ── */}
               {matchesSearch(["notification", "sound", "ringtone", "bell", "alert"]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Notifications & Alerts</span>
                     <FiBell size={12} className="text-amber-400" />
@@ -920,7 +920,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
               {/* ── Category 5: Storage & Data (WhatsApp Style) ── */}
               {matchesSearch(["storage", "data", "cache", "clear", "memory", "clean"]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Storage & Data</span>
                     <FiHardDrive size={12} className="text-sky-400" />
@@ -954,7 +954,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
               {/* ── Category 6: My Activity (Instagram Style) ── */}
               {matchesSearch(["activity", "gallery", "saved", "liked", "posts", "photos"]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>My Activity</span>
                     <FiBookmark size={12} className="text-pink-400" />
@@ -1032,7 +1032,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
               {/* ── Category 7: Safety & SOS ── */}
               {matchesSearch(["safety", "sos", "emergency", "contacts", "help"]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Safety & Security</span>
                     <FiShield size={12} className="text-red-400" />
@@ -1063,7 +1063,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
               {/* ── Category 8: Support & About ── */}
               {matchesSearch(["support", "help", "about", "version", "updates"]) && (
-                <div className="bg-white/[0.03] border border-white/5 rounded-2xl p-1.5 space-y-0.5">
+                <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-1.5 space-y-0.5">
                   <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-gray-500 flex items-center justify-between">
                     <span>Support & Info</span>
                     <FiInfo size={12} className="text-gray-400" />
@@ -1164,7 +1164,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               <div className="space-y-2">
                 <button
                   onClick={handleLogout}
-                  className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl transition flex items-center justify-center gap-2 text-xs font-bold text-gray-300 hover:text-white border border-white/5"
+                  className="w-full py-3 px-4 bg-white/5 hover:bg-white/10 rounded-xl transition flex items-center justify-center gap-2 text-xs font-bold text-gray-300 hover:text-white border border-[#262626]"
                 >
                   <FiLogOut size={15} className="text-pink-400" />
                   <span>Log Out of @{user.username || user.name}</span>
@@ -1186,7 +1186,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             <form onSubmit={handleSave} className="p-5 space-y-4">
               <div className="flex flex-col items-center mb-4">
                 <div className="relative w-24 h-24 mb-2">
-                  <div className="w-full h-full rounded-full overflow-hidden bg-[#16162A] border-4 border-white/10 flex items-center justify-center shadow-xl">
+                  <div className="w-full h-full rounded-full overflow-hidden bg-[#121212] border-4 border-[#262626] flex items-center justify-center shadow-xl">
                     {user?.profile_pic ? (
                       <img
                         src={user.profile_pic}
@@ -1198,7 +1198,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     )}
                   </div>
                   <label
-                    className={`absolute bottom-0 right-0 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#16162A] ${currentAccent.bg}`}
+                    className={`absolute bottom-0 right-0 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition shadow-lg border-2 border-[#121212] ${currentAccent.bg}`}
                   >
                     {uploading ? (
                       <FiLoader className="animate-spin" size={13} />
@@ -1237,7 +1237,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     }}
                     required
                     placeholder="username"
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-8 pr-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl pl-8 pr-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                   />
                 </div>
                 <span className="text-[10px] text-gray-500 block mt-1 ml-1">
@@ -1255,7 +1255,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                 />
               </div>
 
@@ -1267,7 +1267,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     name="age"
                     value={formData.age}
                     onChange={handleChange}
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                   />
                 </div>
                 <div className="relative">
@@ -1280,7 +1280,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     onFocus={() => {
                       if (citySuggestions.length > 0) setShowCitySuggestions(true);
                     }}
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                   />
                   {citySearchLoading && (
                     <div className="absolute right-3 top-8 flex items-center">
@@ -1293,7 +1293,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                         className="fixed inset-0 z-30"
                         onClick={() => setShowCitySuggestions(false)}
                       />
-                      <div className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-white/10 shadow-2xl z-40 bg-[#0D0D1A] divide-y divide-white/5 scrollbar-thin">
+                      <div className="absolute left-0 right-0 mt-1 max-h-40 overflow-y-auto rounded-xl border border-[#262626] shadow-2xl z-40 bg-[#000000] divide-y divide-white/5 scrollbar-thin">
                         {citySuggestions.map((sug, i) => (
                           <div
                             key={i}
@@ -1328,7 +1328,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   value={formData.price}
                   onChange={handleChange}
                   placeholder="e.g. 500"
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                 />
               </div>
 
@@ -1340,7 +1340,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   onChange={handleChange}
                   rows="3"
                   placeholder="Share a bit about yourself, interests, hobbies..."
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none resize-none focus:border-pink-500 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none resize-none focus:border-pink-500 transition"
                 />
               </div>
 
@@ -1354,7 +1354,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   value={formData.tags}
                   onChange={handleChange}
                   placeholder="Coffee Date, Movies, City Walk, Events"
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                 />
               </div>
 
@@ -1368,7 +1368,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   value={formData.link}
                   onChange={handleChange}
                   placeholder="https://instagram.com/yourhandle"
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                 />
               </div>
 
@@ -1385,7 +1385,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
           {/* ══════════ 3. CHANGE PASSWORD VIEW ══════════ */}
           {activeView === "change_password" && (
             <form onSubmit={handleChangePassword} className="p-5 space-y-4">
-              <div className="bg-white/[0.04] p-3.5 rounded-xl border border-white/10 text-xs text-gray-400 leading-relaxed">
+              <div className="bg-white/[0.04] p-3.5 rounded-xl border border-[#262626] text-xs text-gray-400 leading-relaxed">
                 <p className="font-semibold text-white mb-1 flex items-center gap-1.5">
                   <FiLock size={14} className="text-indigo-400" /> Strong Password Policy
                 </p>
@@ -1420,7 +1420,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     }
                     placeholder="Enter current password"
                     required
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition pr-10"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition pr-10"
                   />
                   <button
                     type="button"
@@ -1445,7 +1445,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     }
                     placeholder="At least 6 characters"
                     required
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition pr-10"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition pr-10"
                   />
                   <button
                     type="button"
@@ -1470,7 +1470,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     }
                     placeholder="Repeat new password"
                     required
-                    className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition pr-10"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition pr-10"
                   />
                   <button
                     type="button"
@@ -1506,7 +1506,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
           {activeView === "privacy" && (
             <div className="p-5 space-y-4">
               {/* Private Account */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Private Account</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1531,7 +1531,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Active Online Status */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Show Active Status</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1556,7 +1556,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Read Receipts (WhatsApp Style) */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Read Receipts (Blue Ticks)</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1577,7 +1577,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Call Privacy */}
-              <div className="p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl space-y-2">
+              <div className="p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl space-y-2">
                 <div>
                   <div className="text-xs font-bold text-white">
                     Who can call me (Voice & Video)
@@ -1593,7 +1593,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-2 ${
                       preferences.callPrivacy === "everyone"
                         ? `${currentAccent.bg} text-white border-transparent shadow-md`
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                        : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                     }`}
                   >
                     <FiGlobe size={13} />
@@ -1605,7 +1605,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition flex items-center justify-center gap-2 ${
                       preferences.callPrivacy === "booked_only"
                         ? `${currentAccent.bg} text-white border-transparent shadow-md`
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                        : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                     }`}
                   >
                     <FiLock size={13} />
@@ -1643,7 +1643,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                       className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl border transition ${
                         preferences.themeAccent === acc.id
                           ? "bg-white/10 border-white/40 scale-105 shadow-lg"
-                          : "bg-white/5 border-white/5 hover:bg-white/10"
+                          : "bg-white/5 border-[#262626] hover:bg-white/10"
                       }`}
                     >
                       <div
@@ -1673,12 +1673,12 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                       className={`w-full p-3 rounded-2xl border transition flex items-center justify-between text-left ${
                         preferences.chatWallpaper === wp.id
                           ? "bg-white/10 border-pink-500/50 shadow-md"
-                          : "bg-white/[0.03] border-white/5 hover:bg-white/5"
+                          : "bg-white/[0.03] border-[#262626] hover:bg-white/5"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-9 h-9 rounded-xl ${wp.previewBg} border border-white/10 shadow-inner flex items-center justify-center`}
+                          className={`w-9 h-9 rounded-xl ${wp.previewBg} border border-[#262626] shadow-inner flex items-center justify-center`}
                         >
                           <FiMessageCircle size={14} className="text-white/40" />
                         </div>
@@ -1700,7 +1700,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Enter is Send Toggle */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div>
                   <div className="text-xs font-bold text-white">Enter is Send (Key Action)</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1732,7 +1732,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
           {activeView === "notifications" && (
             <div className="p-5 space-y-4">
               {/* In-app message notifications */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Message Alerts & Badges</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1753,7 +1753,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Call Ringtone */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Incoming Call Ringtone</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1774,7 +1774,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Booking & Escrow Alerts */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Booking & Escrow Updates</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1804,7 +1804,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
           {/* ══════════ 7. STORAGE & DATA (WhatsApp Style) ══════════ */}
           {activeView === "storage" && (
             <div className="p-5 space-y-4">
-              <div className="bg-white/[0.03] border border-white/10 rounded-2xl p-4 text-left space-y-3">
+              <div className="bg-white/[0.03] border border-[#262626] rounded-2xl p-4 text-left space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-white">Local Storage Meter</span>
                   <span className="text-xs font-mono font-bold text-sky-400">
@@ -1832,7 +1832,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               {/* Data Saver Mode */}
-              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl">
                 <div className="pr-2">
                   <div className="text-xs font-bold text-white">Low Data Saver Mode</div>
                   <div className="text-[11px] text-gray-400 mt-0.5">
@@ -1889,7 +1889,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
               </div>
 
               <div className="space-y-2">
-                <div className="p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
+                <div className="p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-white">Emergency SOS Trigger</p>
                     <p className="text-[10px] text-gray-400">
@@ -1901,7 +1901,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   </span>
                 </div>
 
-                <div className="p-3.5 bg-white/[0.03] border border-white/10 rounded-2xl flex items-center justify-between">
+                <div className="p-3.5 bg-white/[0.03] border border-[#262626] rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-white">Escrow Protected Payments</p>
                     <p className="text-[10px] text-gray-400">
@@ -1919,7 +1919,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   onClose();
                   setPage(PAGES.HELP);
                 }}
-                className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition border border-white/10 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold transition border border-[#262626] flex items-center justify-center gap-2"
               >
                 <FiHelpCircle size={14} />
                 <span>Read Full Safety & Community Guidelines</span>
@@ -1932,7 +1932,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             <div className="p-4 space-y-4">
               <form
                 onSubmit={handleUploadPhoto}
-                className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3 text-left"
+                className="bg-white/5 border border-[#262626] rounded-2xl p-4 space-y-3 text-left"
               >
                 <h3 className="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
                   <FiPlus size={14} className={currentAccent.text} /> Add New Photo
@@ -1940,7 +1940,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
 
                 <div className="flex gap-3 items-center">
                   {newPhotoPreview ? (
-                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-white/10">
+                    <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#262626]">
                       <img
                         src={newPhotoPreview}
                         alt="Preview"
@@ -1976,7 +1976,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                       value={newPhotoCaption}
                       onChange={(e) => setNewPhotoCaption(e.target.value)}
                       rows="2"
-                      className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white outline-none resize-none focus:border-pink-500 transition"
+                      className="w-full bg-[#000000] border border-[#262626] rounded-xl px-3 py-1.5 text-xs text-white outline-none resize-none focus:border-pink-500 transition"
                     />
                   </div>
                 </div>
@@ -1992,7 +1992,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 )}
               </form>
 
-              <div className="border-t border-white/5 pt-3">
+              <div className="border-t border-[#262626] pt-3">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 text-left">
                   Current Gallery ({galleryPhotos.length})
                 </h3>
@@ -2010,7 +2010,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     {galleryPhotos.map((photo) => (
                       <div
                         key={photo.id}
-                        className="relative aspect-square rounded-xl overflow-hidden border border-white/5 group"
+                        className="relative aspect-square rounded-xl overflow-hidden border border-[#262626] group"
                       >
                         <img src={photo.image_url} alt="" className="w-full h-full object-cover" />
                         <button
@@ -2045,7 +2045,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     <div
                       key={post.id}
                       onClick={() => setExpandedPost({ ...post, type: "saved" })}
-                      className="aspect-square cursor-pointer overflow-hidden border border-white/5 rounded-xl"
+                      className="aspect-square cursor-pointer overflow-hidden border border-[#262626] rounded-xl"
                     >
                       <img
                         src={post.image_url}
@@ -2077,7 +2077,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                     <div
                       key={post.id}
                       onClick={() => setExpandedPost({ ...post, type: "liked" })}
-                      className="aspect-square cursor-pointer overflow-hidden border border-white/5 rounded-xl"
+                      className="aspect-square cursor-pointer overflow-hidden border border-[#262626] rounded-xl"
                     >
                       <img
                         src={post.image_url}
@@ -2107,7 +2107,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 blockedUsers.map((u) => (
                   <div
                     key={u.id}
-                    className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/10"
+                    className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-[#262626]"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <img
@@ -2115,7 +2115,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                           u.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
                         }
                         alt={u.name}
-                        className="w-9 h-9 rounded-full object-cover border border-white/10 flex-shrink-0"
+                        className="w-9 h-9 rounded-full object-cover border border-[#262626] flex-shrink-0"
                       />
                       <div className="min-w-0 flex-1 text-left">
                         <p className="text-xs font-bold text-white truncate">{u.name}</p>
@@ -2148,18 +2148,18 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 </span>
               </div>
 
-              <div className="w-full bg-[#0D0D1A] rounded-2xl border border-white/5 p-4 text-left space-y-2.5 mb-4 text-xs">
+              <div className="w-full bg-[#000000] rounded-2xl border border-[#262626] p-4 text-left space-y-2.5 mb-4 text-xs">
                 <div className="flex justify-between items-center text-gray-400">
                   <span>Running On</span>
                   <span className="text-white font-semibold flex items-center gap-1.5">
                     <FiSmartphone size={13} className="text-pink-400" /> {getAppPlatform()}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-gray-400 border-t border-white/5 pt-2">
+                <div className="flex justify-between items-center text-gray-400 border-t border-[#262626] pt-2">
                   <span>Release Date</span>
                   <span className="text-white font-semibold">{APP_BUILD_DATE}</span>
                 </div>
-                <div className="flex justify-between items-center text-gray-400 border-t border-white/5 pt-2">
+                <div className="flex justify-between items-center text-gray-400 border-t border-[#262626] pt-2">
                   <span>Status</span>
                   <span className="text-emerald-400 font-bold flex items-center gap-1">
                     <FiCheckCircle size={13} /> Up to Date (Latest)
@@ -2183,7 +2183,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 </div>
               )}
 
-              <div className="w-full mt-5 text-left border-t border-white/10 pt-4">
+              <div className="w-full mt-5 text-left border-t border-[#262626] pt-4">
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2.5">
                   What's new in {APP_VERSION_TAG}
                 </h4>
@@ -2235,16 +2235,16 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
             ✕
           </button>
           <div
-            className="max-w-md w-full bg-[#16162A] rounded-3xl border border-white/10 overflow-hidden shadow-2xl"
+            className="max-w-md w-full bg-[#121212] rounded-3xl border border-[#262626] overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 p-3.5 border-b border-white/5 bg-[#121222]">
+            <div className="flex items-center gap-3 p-3.5 border-b border-[#262626] bg-[#181818]">
               <img
                 src={
                   expandedPost.user_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                 }
                 alt={expandedPost.user_name}
-                className="w-8 h-8 rounded-full object-cover border border-white/10"
+                className="w-8 h-8 rounded-full object-cover border border-[#262626]"
               />
               <div className="text-left">
                 <span className="font-bold text-xs text-white block">{expandedPost.user_name}</span>
@@ -2260,7 +2260,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 className="w-full h-full object-contain"
               />
             </div>
-            <div className="p-4 bg-[#16162A] text-left">
+            <div className="p-4 bg-[#121212] text-left">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-xs text-gray-400 flex items-center gap-2">
                   <span className="flex items-center gap-1">
@@ -2290,7 +2290,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                 )}
               </div>
               {expandedPost.caption && (
-                <p className="text-gray-200 text-xs leading-relaxed mt-2 border-t border-white/5 pt-2">
+                <p className="text-gray-200 text-xs leading-relaxed mt-2 border-t border-[#262626] pt-2">
                   <span className="font-bold mr-2 text-pink-400">{expandedPost.user_name}</span>
                   {expandedPost.caption}
                 </p>

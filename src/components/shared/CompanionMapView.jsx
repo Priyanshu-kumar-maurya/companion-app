@@ -233,7 +233,7 @@ export default function CompanionMapView({
     <div className="relative w-full h-[620px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#0e0e1a]">
       {/* ── Top Floating Filter Bar ── */}
       <div className="absolute top-4 left-4 right-4 z-[999] flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-2 bg-[#121224]/90 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 shadow-xl pointer-events-auto">
+        <div className="flex items-center gap-2 bg-[#121212]/95 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-[#262626] shadow-xl pointer-events-auto">
           <span className="text-xs text-gray-400 font-semibold flex items-center gap-1.5">
             <FiCompass className="text-pink-400" size={14} /> Radius:
           </span>
@@ -254,7 +254,7 @@ export default function CompanionMapView({
 
         <button
           onClick={handleCenterOnUser}
-          className="p-3 bg-[#121224]/90 hover:bg-[#1f1f38] text-white rounded-2xl border border-white/10 shadow-xl pointer-events-auto transition flex items-center gap-2 text-xs font-bold active:scale-95"
+          className="p-3 bg-[#121212]/95 hover:bg-[#1c1c1c] text-white rounded-2xl border border-[#262626] shadow-xl pointer-events-auto transition flex items-center gap-2 text-xs font-bold active:scale-95"
           title="Center on my location"
         >
           <FiNavigation className="text-pink-400" size={16} />
@@ -359,7 +359,7 @@ export default function CompanionMapView({
       {/* Empty State Overlay */}
       {displayedCompanions.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#0e0e1a]/80 backdrop-blur-sm z-[500] pointer-events-none">
-          <div className="text-center p-6 bg-[#16162a] border border-white/10 rounded-2xl shadow-xl max-w-sm pointer-events-auto">
+          <div className="text-center p-6 bg-[#121212] border border-[#262626] rounded-2xl shadow-xl max-w-sm pointer-events-auto">
             <p className="text-gray-300 font-bold text-sm">
               No companions within {maxDistanceFilter} km
             </p>

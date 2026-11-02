@@ -80,7 +80,7 @@ function AboutPage({ setPage, onBack }) {
           ].map((f) => (
             <div
               key={f.title}
-              className="bg-[#16162A] border border-white/5 rounded-2xl p-6 hover:border-pink-500/20 transition"
+              className="bg-[#121212] border border-[#262626] rounded-2xl p-6 hover:border-pink-500/20 transition"
             >
               <div className="text-3xl mb-3">{f.icon}</div>
               <div className="text-base font-semibold mb-2">{f.title}</div>
@@ -89,9 +89,9 @@ function AboutPage({ setPage, onBack }) {
           ))}
         </div>
 
-        <div className="h-px bg-white/5 my-14" />
+        <div className="h-px bg-[#262626] my-14" />
 
-        <div className="bg-[#16162A] border border-pink-500/15 rounded-2xl p-8 text-center">
+        <div className="bg-[#121212] border border-[#262626] rounded-2xl p-8 text-center">
           <h3 className="text-2xl font-bold mb-4">
             Our{" "}
             <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">

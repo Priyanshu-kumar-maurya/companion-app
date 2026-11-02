@@ -52,7 +52,7 @@ function PWAInstallBanner() {
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-[90] max-w-md mx-auto animate-slide-up">
-      <div className="bg-gradient-to-r from-[#1a1a35] via-[#16162A] to-[#121225] border border-pink-500/30 rounded-2xl p-4 shadow-2xl shadow-pink-500/10 flex items-center gap-3.5 backdrop-blur-md">
+      <div className="bg-[#121212]/95 border border-[#262626] rounded-2xl p-4 shadow-2xl flex items-center gap-3.5 backdrop-blur-md">
         <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-pink-500/20">
           💝
         </div>

@@ -181,7 +181,7 @@ function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
 
   return (
     <div className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in">
-      <div className="bg-[#121224] border border-white/10 w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[95vh]">
+      <div className="bg-[#121212] border border-[#262626] w-full max-w-md rounded-3xl p-5 sm:p-6 shadow-2xl relative overflow-hidden flex flex-col max-h-[95vh]">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 shrink-0">
           <div className="flex items-center gap-2">
@@ -342,7 +342,7 @@ function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
               )}
             </div>
           ) : activeTab === "file" ? (
-            <label className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-white/15 rounded-2xl hover:border-pink-500/50 transition cursor-pointer bg-[#0D0D1A] group">
+            <label className="flex flex-col items-center justify-center w-full h-56 border-2 border-dashed border-[#262626] rounded-2xl hover:border-pink-500/50 transition cursor-pointer bg-[#000000] group">
               <div className="flex flex-col items-center justify-center p-6 text-center">
                 <div className="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center text-pink-400 group-hover:scale-110 transition mb-3">
                   <FiUploadCloud size={24} />
@@ -367,7 +367,7 @@ function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
                   placeholder="https://images.unsplash.com/..."
                   value={mediaUrl}
                   onChange={(e) => setMediaUrl(e.target.value)}
-                  className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
                 />
               </div>
             </div>
@@ -385,7 +385,7 @@ function AddStoryModal({ currentUser, onClose, onStoryCreated }) {
               placeholder="Add a moment caption... (e.g. Sunset vibes 🌅)"
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              className="w-full bg-[#0D0D1A] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+              className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
             />
 
             {/* Quick Emoji Shortcuts */}

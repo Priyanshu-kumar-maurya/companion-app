@@ -176,7 +176,7 @@ function Navbar({ page, setPage, girlUser, boyUser, adminUser, setGirlUser, setB
   return (
     <>
       {!isHiddenScreen && (
-        <nav className="fixed top-0 left-0 right-0 z-40 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.6)]">
+        <nav className="fixed top-0 left-0 right-0 z-40 bg-[#000000]/95 backdrop-blur-xl border-b border-[#262626] hidden md:block shadow-[0_2px_24px_rgba(0,0,0,0.8)]">
           <div className="max-w-6xl mx-auto px-6 h-[60px] flex items-center justify-between gap-6">
             {/* ─── LEFT: Logo ─── */}
             <button

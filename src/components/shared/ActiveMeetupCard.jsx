@@ -214,13 +214,13 @@ export default function ActiveMeetupCard({
   };
 
   return (
-    <div className="relative mb-6 rounded-3xl overflow-hidden border border-pink-500/30 bg-gradient-to-br from-[#16162E] via-[#121226] to-[#1A112C] shadow-2xl p-5 sm:p-6 text-left animate-fade-in">
+    <div className="relative mb-6 rounded-3xl overflow-hidden border border-[#262626] bg-[#121212] shadow-2xl p-5 sm:p-6 text-left animate-fade-in">
       {/* Background ambient decorative glow */}
       <div className="absolute -top-20 -right-20 w-56 h-56 bg-pink-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 w-56 h-56 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* ── Top Bar: Status Badge, Pagination Counter & Escrow Badge ── */}
-      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-white/10 flex-wrap">
+      <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-[#262626] flex-wrap">
         <div className="flex items-center gap-2">
           <span
             className={`px-3 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider border ${timing.badgeColor} flex items-center gap-1.5`}
@@ -278,7 +278,7 @@ export default function ActiveMeetupCard({
               alt={partner.name}
               className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-pink-500/40 shadow-lg"
             />
-            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[#16162E] rounded-full" />
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-[#121212] rounded-full" />
           </div>
 
           <div>

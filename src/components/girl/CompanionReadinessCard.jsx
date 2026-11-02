@@ -92,7 +92,7 @@ export default function CompanionReadinessCard({
   };
 
   return (
-    <div className="w-full mb-6 rounded-3xl bg-gradient-to-br from-[#16162A] via-[#151528] to-[#121222] border border-white/10 p-4 sm:p-5 shadow-xl transition-all">
+    <div className="w-full mb-6 rounded-3xl bg-[#121212] border border-[#262626] p-4 sm:p-5 shadow-xl transition-all">
       {/* Top Header Row */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">

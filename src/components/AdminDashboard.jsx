@@ -488,8 +488,8 @@ function AdminDashboard({ user, setPage }) {
        ════════════════════════════════════════════════════════════════════ */
   if (authError) {
     return (
-      <div className="min-h-[100dvh] bg-[#0D0D1A] flex items-center justify-center p-4 text-center">
-        <div className="max-w-md w-full bg-[#16162A] border border-red-500/30 rounded-3xl p-8 shadow-2xl space-y-4">
+      <div className="min-h-[100dvh] bg-[#000000] flex items-center justify-center p-4 text-center">
+        <div className="max-w-md w-full bg-[#121212] border border-red-500/30 rounded-3xl p-8 shadow-2xl space-y-4">
           <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto">
             <FiSlash size={32} />
           </div>
@@ -501,7 +501,7 @@ function AdminDashboard({ user, setPage }) {
                 if (setPage) setPage(PAGES.HOME);
                 else window.location.hash = "#home";
               }}
-              className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs transition border border-white/10"
+              className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs transition border border-[#262626]"
             >
               Back to Home
             </button>
@@ -522,7 +522,7 @@ function AdminDashboard({ user, setPage }) {
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] bg-[#0D0D1A] flex flex-col items-center justify-center gap-3">
+      <div className="min-h-[100dvh] bg-[#000000] flex flex-col items-center justify-center gap-3">
         <div className="w-10 h-10 border-3 border-pink-500 border-t-transparent rounded-full animate-spin" />
         <div className="text-pink-400 font-bold text-sm tracking-wide animate-pulse">
           Loading Super Admin Panel...
@@ -583,7 +583,7 @@ function AdminDashboard({ user, setPage }) {
       label: "Total Users",
       value: stats.totalUsers,
       color: "text-white",
-      border: "border-white/10",
+      border: "border-[#262626]",
       bg: "hover:bg-white/5",
       filter: "all",
     },
@@ -675,7 +675,7 @@ function AdminDashboard({ user, setPage }) {
        7. MAIN DASHBOARD RENDER
        ════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="pt-24 pb-20 min-h-[100dvh] bg-[#0D0D1A] px-4 sm:px-6 max-w-6xl mx-auto">
+    <div className="pt-24 pb-20 min-h-[100dvh] bg-[#000000] px-4 sm:px-6 max-w-6xl mx-auto">
       {/* Header Bar */}
       <div className="flex items-center justify-between mb-8 print:hidden">
         <div>
@@ -722,7 +722,7 @@ function AdminDashboard({ user, setPage }) {
                 setSearchQuery("");
               }
             }}
-            className={`bg-[#16162A] border ${s.border} rounded-2xl p-4 shadow-lg transition ${
+            className={`bg-[#121212] border ${s.border} rounded-2xl p-4 shadow-lg transition ${
               (s.filter !== null && s.filter !== undefined) || s.goTab
                 ? `cursor-pointer ${s.bg} ${activeFilter === s.filter && activeTab === "users" ? "ring-2 ring-white/30 scale-[1.02]" : ""}`
                 : "cursor-default opacity-80"
@@ -740,7 +740,7 @@ function AdminDashboard({ user, setPage }) {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6 bg-[#16162A] p-1.5 rounded-2xl border border-white/5 w-fit print:hidden">
+      <div className="flex flex-wrap gap-2 mb-6 bg-[#121212] p-1.5 rounded-2xl border border-[#262626] w-fit print:hidden">
         {/* Users Tab */}
         <button
           onClick={() => {
@@ -850,7 +850,7 @@ function AdminDashboard({ user, setPage }) {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, email, phone..."
-                className="w-full bg-[#16162A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
+                className="w-full bg-[#121212] border border-[#262626] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
               />
               {searchQuery && (
                 <button
@@ -885,7 +885,7 @@ function AdminDashboard({ user, setPage }) {
           </div>
 
           {filteredUsers.length === 0 ? (
-            <div className="p-12 bg-[#16162A] border border-white/10 rounded-2xl text-center text-gray-500 flex flex-col items-center gap-2 shadow-xl">
+            <div className="p-12 bg-[#121212] border border-[#262626] rounded-2xl text-center text-gray-500 flex flex-col items-center gap-2 shadow-xl">
               <FiUser size={32} className="text-gray-600" />
               <span className="font-bold text-sm">No users found under this filter.</span>
             </div>
@@ -899,7 +899,7 @@ function AdminDashboard({ user, setPage }) {
                   <div
                     key={u.id}
                     onClick={() => setSelectedUser(u)}
-                    className={`relative bg-gradient-to-br from-[#181832] to-[#121224] border border-white/8 hover:border-pink-500/40 p-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl hover:shadow-pink-500/5 cursor-pointer flex flex-col justify-between ${
+                    className={`relative bg-[#121212] border border-[#262626] hover:border-pink-500/40 p-4 rounded-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl hover:shadow-pink-500/5 cursor-pointer flex flex-col justify-between ${
                       u.is_frozen || u.is_platform_blocked ? "opacity-70" : ""
                     }`}
                   >
@@ -909,7 +909,7 @@ function AdminDashboard({ user, setPage }) {
                           <img
                             src={u.profile_pic}
                             alt=""
-                            className="w-12 h-12 rounded-full object-cover border border-white/10"
+                            className="w-12 h-12 rounded-full object-cover border border-[#262626]"
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-base font-extrabold shadow-inner">
@@ -939,7 +939,7 @@ function AdminDashboard({ user, setPage }) {
                         </div>
                       </div>
 
-                      <div className="mt-4 space-y-2 border-t border-white/5 pt-3 text-xs text-gray-400">
+                      <div className="mt-4 space-y-2 border-t border-[#262626] pt-3 text-xs text-gray-400">
                         <div className="flex justify-between items-center">
                           <span>Email:</span>
                           <span className="text-white font-mono truncate max-w-[150px]">
@@ -969,7 +969,7 @@ function AdminDashboard({ user, setPage }) {
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                    <div className="mt-4 pt-3 border-t border-[#262626] flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         {u.is_platform_blocked ? (
                           <span className="text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full font-bold">
@@ -1023,7 +1023,7 @@ function AdminDashboard({ user, setPage }) {
           </div>
 
           {sosAlerts.length === 0 ? (
-            <div className="bg-[#16162A] border border-white/5 rounded-2xl p-12 text-center text-gray-500 flex flex-col items-center gap-2">
+            <div className="bg-[#121212] border border-[#262626] rounded-2xl p-12 text-center text-gray-500 flex flex-col items-center gap-2">
               <FiCheckCircle size={32} className="text-green-500" />
               <span className="font-bold text-sm text-white">Zero Active SOS Alerts</span>
               <span className="text-xs text-gray-500">
@@ -1045,7 +1045,7 @@ function AdminDashboard({ user, setPage }) {
                     className={`p-5 rounded-2xl border transition ${
                       isActive
                         ? "bg-red-950/20 border-red-500/40 shadow-xl shadow-red-500/10"
-                        : "bg-[#16162A] border-white/5 opacity-70"
+                        : "bg-[#121212] border-[#262626] opacity-70"
                     }`}
                   >
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1108,7 +1108,7 @@ function AdminDashboard({ user, setPage }) {
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-white/5 text-[10px] text-gray-500 flex justify-between">
+                    <div className="mt-3 pt-3 border-t border-[#262626] text-[10px] text-gray-500 flex justify-between">
                       <span>Alert ID: #{alert.id}</span>
                       <span>Time: {new Date(alert.created_at).toLocaleString("en-IN")}</span>
                     </div>
@@ -1137,7 +1137,7 @@ function AdminDashboard({ user, setPage }) {
             </span>
           </div>
 
-          <div className="bg-[#16162A] border border-red-500/20 rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-[#121212] border border-red-500/20 rounded-2xl overflow-hidden shadow-xl">
             <div className="overflow-x-auto">
               {unverifiedUsers.length === 0 ? (
                 <div className="p-10 text-center text-gray-500 flex flex-col items-center gap-2">
@@ -1200,7 +1200,7 @@ function AdminDashboard({ user, setPage }) {
       {activeTab === "reports" && (
         <div className="space-y-3">
           {reports.length === 0 && (
-            <div className="bg-[#16162A] border border-white/5 rounded-2xl p-10 text-center text-gray-500 flex flex-col items-center gap-2">
+            <div className="bg-[#121212] border border-[#262626] rounded-2xl p-10 text-center text-gray-500 flex flex-col items-center gap-2">
               <FiCheckCircle size={28} className="text-green-500" />
               <span>No reports yet. Platform safety clean!</span>
             </div>
@@ -1208,7 +1208,7 @@ function AdminDashboard({ user, setPage }) {
           {reports.map((r) => (
             <div
               key={r.id}
-              className="bg-[#16162A] border border-white/10 rounded-2xl p-4 shadow-lg"
+              className="bg-[#121212] border border-[#262626] rounded-2xl p-4 shadow-lg"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
@@ -1324,7 +1324,7 @@ function AdminDashboard({ user, setPage }) {
             <div className="space-y-6 text-left">
               {/* Summary Metrics */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-[#16162A] border border-amber-500/30 rounded-2xl p-4 shadow-lg">
+                <div className="bg-[#121212] border border-amber-500/30 rounded-2xl p-4 shadow-lg">
                   <div className="text-gray-400 text-xs mb-1 flex items-center justify-between">
                     <span>Pending Payouts</span>
                     <FiClock size={16} className="text-amber-400" />
@@ -1337,7 +1337,7 @@ function AdminDashboard({ user, setPage }) {
                   </div>
                 </div>
 
-                <div className="bg-[#16162A] border border-emerald-500/30 rounded-2xl p-4 shadow-lg">
+                <div className="bg-[#121212] border border-emerald-500/30 rounded-2xl p-4 shadow-lg">
                   <div className="text-gray-400 text-xs mb-1 flex items-center justify-between">
                     <span>Settled Payouts</span>
                     <FiCheckCircle size={16} className="text-emerald-400" />
@@ -1350,7 +1350,7 @@ function AdminDashboard({ user, setPage }) {
                   </div>
                 </div>
 
-                <div className="bg-[#16162A] border border-white/10 rounded-2xl p-4 shadow-lg flex flex-col justify-between">
+                <div className="bg-[#121212] border border-[#262626] rounded-2xl p-4 shadow-lg flex flex-col justify-between">
                   <div className="text-gray-400 text-xs flex items-center justify-between">
                     <span>Total Requests</span>
                     <FiDollarSign size={16} className="text-pink-400" />
@@ -1366,7 +1366,7 @@ function AdminDashboard({ user, setPage }) {
               </div>
 
               {/* Payout Queue */}
-              <div className="bg-[#16162A] border border-white/10 rounded-3xl p-6 shadow-xl">
+              <div className="bg-[#121212] border border-[#262626] rounded-3xl p-6 shadow-xl">
                 <h3 className="text-base font-bold text-white mb-4">Companion Withdrawal Queue</h3>
 
                 {payouts.length === 0 ? (
@@ -1409,7 +1409,7 @@ function AdminDashboard({ user, setPage }) {
                                 </span>
                               </div>
                               <div className="text-xs text-gray-400 mt-0.5">{p.user_email}</div>
-                              <div className="text-xs text-gray-300 mt-1.5 bg-[#0E0E1C] px-2.5 py-1 rounded-lg border border-white/5 font-mono w-fit">
+                              <div className="text-xs text-gray-300 mt-1.5 bg-[#0E0E1C] px-2.5 py-1 rounded-lg border border-[#262626] font-mono w-fit">
                                 {p.payout_method === "upi" ? (
                                   <span>
                                     📱 UPI: <strong>{p.upi_id}</strong>
@@ -1500,7 +1500,7 @@ function AdminDashboard({ user, setPage }) {
       {activeTab === "insights" && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 print:hidden">
-            <div className="bg-[#16162A] border border-white/10 rounded-2xl p-5 shadow-lg">
+            <div className="bg-[#121212] border border-[#262626] rounded-2xl p-5 shadow-lg">
               <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-1.5">
                 <FiUser className="text-pink-500" /> Gender Distribution
               </h3>
@@ -1536,7 +1536,7 @@ function AdminDashboard({ user, setPage }) {
               </div>
             </div>
 
-            <div className="bg-[#16162A] border border-white/10 rounded-2xl p-5 shadow-lg">
+            <div className="bg-[#121212] border border-[#262626] rounded-2xl p-5 shadow-lg">
               <h3 className="text-white font-bold text-sm mb-4 flex items-center gap-1.5">
                 <FiCheckCircle className="text-yellow-500" /> KYC Verification Rate
               </h3>
@@ -1601,9 +1601,9 @@ function AdminDashboard({ user, setPage }) {
 
             <div
               id="print-section"
-              className="print-box bg-[#16162A] border border-white/10 rounded-3xl p-8 max-w-xl mx-auto shadow-2xl relative overflow-hidden"
+              className="print-box bg-[#121212] border border-[#262626] rounded-3xl p-8 max-w-xl mx-auto shadow-2xl relative overflow-hidden"
             >
-              <div className="flex flex-col items-center text-center pb-6 border-b border-white/10 print-border">
+              <div className="flex flex-col items-center text-center pb-6 border-b border-[#262626] print-border">
                 <span className="text-2xl font-black bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent tracking-wide print:text-black">
                   Coffeely
                 </span>
@@ -1611,7 +1611,7 @@ function AdminDashboard({ user, setPage }) {
                   Official Platform Summary Report
                 </p>
               </div>
-              <div className="py-5 grid grid-cols-2 gap-4 text-xs border-b border-white/10 print-border">
+              <div className="py-5 grid grid-cols-2 gap-4 text-xs border-b border-[#262626] print-border">
                 <div>
                   <span className="text-gray-500 block mb-0.5">Generated On</span>
                   <span className="text-gray-200 font-mono font-bold flex items-center gap-1">
@@ -1631,11 +1631,11 @@ function AdminDashboard({ user, setPage }) {
                 </div>
               </div>
               <div className="py-6 space-y-4">
-                <h4 className="text-sm font-bold text-white border-b border-white/5 pb-2">
+                <h4 className="text-sm font-bold text-white border-b border-[#262626] pb-2">
                   Statistical Breakdown
                 </h4>
                 <div className="grid grid-cols-2 gap-y-4 gap-x-2 text-xs">
-                  <div className="flex justify-between pr-4 border-r border-white/5 print-border">
+                  <div className="flex justify-between pr-4 border-r border-[#262626] print-border">
                     <span className="text-gray-400">Total Users:</span>
                     <span className="text-white font-bold">{stats.totalUsers}</span>
                   </div>
@@ -1643,7 +1643,7 @@ function AdminDashboard({ user, setPage }) {
                     <span className="text-gray-400">Total Bookings:</span>
                     <span className="text-white font-bold">{stats.bookings}</span>
                   </div>
-                  <div className="flex justify-between pr-4 border-r border-white/5 print-border">
+                  <div className="flex justify-between pr-4 border-r border-[#262626] print-border">
                     <span className="text-gray-400">Male Users (Boys):</span>
                     <span className="text-white font-bold">{stats.boys}</span>
                   </div>
@@ -1653,7 +1653,7 @@ function AdminDashboard({ user, setPage }) {
                   </div>
                 </div>
               </div>
-              <div className="pt-6 border-t border-white/10 print-border flex justify-between items-end text-[10px]">
+              <div className="pt-6 border-t border-[#262626] print-border flex justify-between items-end text-[10px]">
                 <div className="space-y-1">
                   <span className="text-gray-500 block">Security Verification</span>
                   <span className="text-gray-300 font-mono select-all">
@@ -1693,11 +1693,11 @@ function AdminDashboard({ user, setPage }) {
               onClick={() => setSelectedUser(null)}
             >
               <div
-                className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl"
+                className="bg-[#121212] border border-[#262626] rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Modal Header */}
-                <div className="bg-gradient-to-r from-[#181832] to-[#121224] p-5 border-b border-white/5 flex justify-between items-center">
+                <div className="bg-[#181818] p-5 border-b border-[#262626] flex justify-between items-center">
                   <h2 className="font-extrabold text-white text-base flex items-center gap-2">
                     🛡️ User Management
                   </h2>
@@ -1712,7 +1712,7 @@ function AdminDashboard({ user, setPage }) {
                 {/* Modal Body */}
                 <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
                   {/* Profile Card */}
-                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                  <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-[#262626]">
                     {u.profile_pic ? (
                       <a
                         href={u.profile_pic}
@@ -1800,10 +1800,10 @@ function AdminDashboard({ user, setPage }) {
                   </div>
 
                   {/* Bio & Tags */}
-                  <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5 text-xs">
+                  <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-[#262626] text-xs">
                     <div>
                       <span className="text-gray-500 block mb-1">Bio / Description:</span>
-                      <p className="text-white bg-[#0D0D1A]/50 p-2.5 rounded-xl border border-white/5 leading-relaxed italic">
+                      <p className="text-white bg-[#000000]/50 p-2.5 rounded-xl border border-[#262626] leading-relaxed italic">
                         {u.bio || "No bio provided."}
                       </p>
                     </div>
@@ -1813,7 +1813,7 @@ function AdminDashboard({ user, setPage }) {
                         {(u.tags || "Coffee Date").split(",").map((tag, i) => (
                           <span
                             key={i}
-                            className="px-2 py-1 bg-white/5 rounded-lg text-white font-semibold text-[10px] border border-white/5"
+                            className="px-2 py-1 bg-white/5 rounded-lg text-white font-semibold text-[10px] border border-[#262626]"
                           >
                             {tag.trim()}
                           </span>
@@ -1823,7 +1823,7 @@ function AdminDashboard({ user, setPage }) {
                   </div>
 
                   {/* KYC Document & Live Selfie Verification */}
-                  <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                  <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-[#262626]">
                     <h4 className="text-xs font-bold text-white flex justify-between items-center">
                       <span className="flex items-center gap-1.5">
                         <FiShield className="text-pink-400" size={13} />
@@ -1853,7 +1853,7 @@ function AdminDashboard({ user, setPage }) {
                               <span className="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
                                 📄 Government ID Proof:
                               </span>
-                              <div className="relative group overflow-hidden rounded-xl border border-white/10 max-h-[180px] bg-black/60">
+                              <div className="relative group overflow-hidden rounded-xl border border-[#262626] max-h-[180px] bg-black/60">
                                 <img
                                   src={u.id_proof_url}
                                   alt="KYC proof"
@@ -1914,7 +1914,7 @@ function AdminDashboard({ user, setPage }) {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-4 bg-white/5 rounded-xl border border-dashed border-white/10 text-xs text-gray-500">
+                      <div className="text-center py-4 bg-white/5 rounded-xl border border-dashed border-[#262626] text-xs text-gray-500">
                         No ID proof or live selfie uploaded yet.
                       </div>
                     )}
@@ -1922,7 +1922,7 @@ function AdminDashboard({ user, setPage }) {
 
                   {/* Security & Account Moderation Actions */}
                   {!isSelf && (
-                    <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-white/5">
+                    <div className="space-y-3 bg-white/5 p-4 rounded-2xl border border-[#262626]">
                       <h4 className="text-xs font-bold text-white">Administrative Moderation</h4>
                       <div className="grid grid-cols-2 gap-2">
                         <button
@@ -1931,7 +1931,7 @@ function AdminDashboard({ user, setPage }) {
                           className={`py-2 px-3 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 ${
                             u.is_frozen
                               ? "bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/40"
-                              : "bg-slate-500/10 border border-white/10 text-slate-300 hover:bg-white/5"
+                              : "bg-slate-500/10 border border-[#262626] text-slate-300 hover:bg-white/5"
                           }`}
                         >
                           {u.is_frozen ? (
@@ -1985,8 +1985,8 @@ function AdminDashboard({ user, setPage }) {
                ════════════════════════════════════════════════════════════ */}
       {payoutModal.open && payoutModal.payout && (
         <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-white/5">
+          <div className="bg-[#121212] border border-[#262626] rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-[#262626]">
               <h3 className="font-bold text-white text-base">
                 {payoutModal.action === "approve"
                   ? "💰 Approve Withdrawal Settlement"
@@ -2002,7 +2002,7 @@ function AdminDashboard({ user, setPage }) {
               </button>
             </div>
 
-            <div className="text-xs text-gray-300 space-y-2 bg-white/5 p-3 rounded-xl border border-white/5">
+            <div className="text-xs text-gray-300 space-y-2 bg-white/5 p-3 rounded-xl border border-[#262626]">
               <div className="flex justify-between">
                 <span className="text-gray-500">Companion:</span>
                 <span className="font-bold text-white">{payoutModal.payout.user_name}</span>
@@ -2038,7 +2038,7 @@ function AdminDashboard({ user, setPage }) {
                     ? "e.g. UTR_98234123..."
                     : "e.g. Invalid bank account details"
                 }
-                className="w-full bg-[#16162A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 font-mono"
+                className="w-full bg-[#121212] border border-[#262626] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 font-mono"
               />
             </div>
 
@@ -2072,8 +2072,8 @@ function AdminDashboard({ user, setPage }) {
                ════════════════════════════════════════════════════════════ */}
       {roleModal.open && roleModal.targetUser && (
         <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#121224] border border-white/10 rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center pb-2 border-b border-white/5">
+          <div className="bg-[#121212] border border-[#262626] rounded-3xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-[#262626]">
               <h3 className="font-bold text-white text-base flex items-center gap-2">
                 <FiKey className="text-yellow-400" /> Modify User Role
               </h3>
@@ -2114,7 +2114,7 @@ function AdminDashboard({ user, setPage }) {
                   className={`p-3 rounded-xl border cursor-pointer transition ${
                     roleModal.selectedRole === r.id
                       ? "bg-yellow-500/10 border-yellow-500/40 text-white"
-                      : "bg-white/5 border-white/5 text-gray-400 hover:text-white"
+                      : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                   }`}
                 >
                   <div className="text-xs font-bold capitalize">{r.label}</div>

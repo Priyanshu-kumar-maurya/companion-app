@@ -939,7 +939,7 @@ function CallOverlay({ socket, currentUser }) {
     <>
       {/* ── TOP FLOATING NOTIFICATION BANNER (When Receiving Call) ── */}
       {callState === "receiving" && showBanner && !isMinimized && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[92%] max-w-md bg-[#16162A]/90 border border-white/15 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl p-4 flex items-center justify-between animate-bounce">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[10000] w-[92%] max-w-md bg-[#121212]/95 border border-[#262626] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-2xl p-4 flex items-center justify-between animate-bounce">
           <div
             className="flex items-center gap-3.5 min-w-0 cursor-pointer"
             onClick={() => setShowBanner(false)}
@@ -948,9 +948,9 @@ function CallOverlay({ socket, currentUser }) {
               <img
                 src={partner?.pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
                 alt={partner?.name}
-                className="w-13 h-13 rounded-full object-cover border-2 border-[#FF4B72] shadow-[0_0_15px_rgba(255,75,114,0.4)]"
+                className="w-13 h-13 rounded-full object-cover border-2 border-[#e1306c] shadow-[0_0_15px_rgba(225,48,108,0.4)]"
               />
-              <div className="absolute inset-0 rounded-full bg-[#FF4B72]/30 animate-ping" />
+              <div className="absolute inset-0 rounded-full bg-[#e1306c]/30 animate-ping" />
             </div>
             <div className="min-w-0">
               <h4 className="text-base font-extrabold text-white truncate flex items-center gap-1.5">
@@ -959,7 +959,7 @@ function CallOverlay({ socket, currentUser }) {
                   ✓
                 </span>
               </h4>
-              <p className="text-xs text-[#FF4B72] font-semibold truncate flex items-center gap-1.5 mt-0.5">
+              <p className="text-xs text-[#e1306c] font-semibold truncate flex items-center gap-1.5 mt-0.5">
                 {callType === "video" ? <FiVideo size={13} /> : <FiPhone size={13} />}
                 Incoming {callType === "video" ? "Video" : "Voice"} Call...
               </p>
@@ -987,14 +987,14 @@ function CallOverlay({ socket, currentUser }) {
 
       {/* ── MINIMIZED COMPACT FLOATING PIP WIDGET ── */}
       {isMinimized && (
-        <div className="fixed bottom-6 right-6 z-[10000] bg-[#16162A]/90 border border-white/20 backdrop-blur-2xl rounded-3xl p-3 px-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] flex items-center gap-3.5 animate-slide-up hover:border-[#FF4B72]/50 transition-all select-none">
+        <div className="fixed bottom-6 right-6 z-[10000] bg-[#121212]/95 border border-[#262626] backdrop-blur-2xl rounded-3xl p-3 px-4 shadow-[0_20px_50px_rgba(0,0,0,0.85)] flex items-center gap-3.5 animate-slide-up hover:border-[#e1306c]/50 transition-all select-none">
           <div className="relative cursor-pointer" onClick={() => setIsMinimized(false)}>
             <img
               src={partner?.pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
               alt={partner?.name}
-              className="w-11 h-11 rounded-full object-cover border-2 border-[#FF4B72] shadow-[0_0_15px_rgba(255,75,114,0.3)]"
+              className="w-11 h-11 rounded-full object-cover border-2 border-[#e1306c] shadow-[0_0_15px_rgba(225,48,108,0.3)]"
             />
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#16162A] animate-pulse" />
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#121212] animate-pulse" />
           </div>
 
           <div className="min-w-[85px] cursor-pointer" onClick={() => setIsMinimized(false)}>
@@ -1035,7 +1035,7 @@ function CallOverlay({ socket, currentUser }) {
 
       {/* ── FULL SCREEN LUXURY CALL MODAL ── */}
       {!isMinimized && (
-        <div className="fixed inset-0 z-[9999] bg-[#0D0D1A] flex flex-col justify-between overflow-hidden animate-fade-in select-none">
+        <div className="fixed inset-0 z-[9999] bg-[#000000] flex flex-col justify-between overflow-hidden animate-fade-in select-none">
           {/* Hidden Audio Element for Voice Calls (UNMUTED) */}
           <audio
             ref={remoteAudioRef}
@@ -1053,12 +1053,12 @@ function CallOverlay({ socket, currentUser }) {
               className="w-full h-full object-cover scale-150 filter blur-[110px] opacity-25 brightness-50"
             />
             {/* Animated Sunset & Violet Gradient Radial Orbs */}
-            <div className="absolute -top-32 -left-32 w-[550px] h-[550px] bg-gradient-to-tr from-[#FF4B72]/20 via-purple-600/15 to-transparent rounded-full blur-[130px] animate-pulse" />
+            <div className="absolute -top-32 -left-32 w-[550px] h-[550px] bg-gradient-to-tr from-[#f9ce3f]/20 via-[#e1306c]/15 to-transparent rounded-full blur-[130px] animate-pulse" />
             <div
-              className="absolute -bottom-32 -right-32 w-[550px] h-[550px] bg-gradient-to-bl from-cyan-500/15 via-[#FF4B72]/15 to-transparent rounded-full blur-[130px] animate-pulse"
+              className="absolute -bottom-32 -right-32 w-[550px] h-[550px] bg-gradient-to-bl from-[#833ab4]/20 via-[#e1306c]/15 to-transparent rounded-full blur-[130px] animate-pulse"
               style={{ animationDelay: "2.5s" }}
             />
-            <div className="absolute inset-0 bg-[#0D0D1A]/70 backdrop-blur-2xl" />
+            <div className="absolute inset-0 bg-[#000000]/75 backdrop-blur-2xl" />
           </div>
 
           {/* ── FLOATING HEARTS & REACTION ANIMATION LAYER ── */}
@@ -1179,13 +1179,13 @@ function CallOverlay({ socket, currentUser }) {
                     </>
                   )}
 
-                  <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full p-1.5 bg-gradient-to-tr from-[#FF4B72] via-purple-500 to-indigo-500 shadow-[0_0_55px_rgba(255,75,114,0.35)]">
+                  <div className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-full p-1.5 bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] shadow-[0_0_55px_rgba(225,48,108,0.35)]">
                     <img
                       src={
                         partner?.pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                       }
                       alt={partner?.name}
-                      className="w-full h-full rounded-full object-cover border-4 border-[#0D0D1A]"
+                      className="w-full h-full rounded-full object-cover border-4 border-black"
                     />
                   </div>
                 </div>
@@ -1201,8 +1201,8 @@ function CallOverlay({ socket, currentUser }) {
                 {/* Status Subtitle */}
                 <p className="text-sm font-semibold text-gray-300 flex items-center justify-center gap-2">
                   {callState === "calling" && (
-                    <span className="text-rose-400 flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
+                    <span className="text-[#e1306c] flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#e1306c] animate-ping" />
                       {statusText}
                     </span>
                   )}
@@ -1223,7 +1223,7 @@ function CallOverlay({ socket, currentUser }) {
                     {[40, 75, 100, 60, 90, 50, 80].map((h, i) => (
                       <span
                         key={i}
-                        className="w-1 bg-gradient-to-t from-[#FF4B72] to-[#8A2BE2] rounded-full animate-pulse shadow-[0_0_8px_rgba(255,75,114,0.6)]"
+                        className="w-1 bg-gradient-to-t from-[#f9ce3f] via-[#e1306c] to-[#833ab4] rounded-full animate-pulse shadow-[0_0_8px_rgba(225,48,108,0.6)]"
                         style={{
                           height: `${h}%`,
                           animationDuration: `${0.7 + (i % 3) * 0.25}s`,
@@ -1239,7 +1239,7 @@ function CallOverlay({ socket, currentUser }) {
 
           {/* ── QUICK FLOATING REACTION POPUP ── */}
           {showReactionsMenu && (
-            <div className="z-40 mx-auto mb-3 bg-[#16162A]/95 border border-white/20 backdrop-blur-2xl px-4 py-2.5 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-slide-up">
+            <div className="z-40 mx-auto mb-3 bg-[#121212]/95 border border-[#262626] backdrop-blur-2xl px-4 py-2.5 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.8)] flex items-center gap-3 animate-slide-up">
               {["❤️", "🔥", "💋", "✨", "😍", "👏"].map((emoji) => (
                 <button
                   key={emoji}
@@ -1281,7 +1281,7 @@ function CallOverlay({ socket, currentUser }) {
               </div>
             ) : (
               /* Active / Calling Dock Controls */
-              <div className="flex items-center gap-3 sm:gap-5 bg-white/[0.07] border border-white/15 px-6 sm:px-8 py-3.5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-2xl">
+              <div className="flex items-center gap-3 sm:gap-5 bg-[#121212]/90 border border-[#262626] px-6 sm:px-8 py-3.5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
                 {/* 1. Mute Mic */}
                 <div className="flex flex-col items-center gap-1.5">
                   <button
@@ -1351,7 +1351,7 @@ function CallOverlay({ socket, currentUser }) {
                 <div className="flex flex-col items-center gap-1.5">
                   <button
                     onClick={() => setShowReactionsMenu(!showReactionsMenu)}
-                    className="w-12 h-12 rounded-full bg-gradient-to-tr from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border border-pink-500/30 text-[#FF4B72] flex items-center justify-center transition active:scale-90 shadow-[0_0_20px_rgba(255,75,114,0.25)]"
+                    className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 hover:opacity-90 border border-[#e1306c]/40 text-[#e1306c] flex items-center justify-center transition active:scale-90 shadow-[0_0_20px_rgba(225,48,108,0.25)]"
                     aria-label="Send Reaction"
                   >
                     <FiHeart size={20} className="fill-current" />
@@ -1363,7 +1363,7 @@ function CallOverlay({ socket, currentUser }) {
                 <div className="flex flex-col items-center gap-1.5 ml-2">
                   <button
                     onClick={endCall}
-                    className="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-600 to-red-500 hover:from-rose-500 hover:to-red-400 text-white flex items-center justify-center shadow-[0_0_35px_rgba(244,63,94,0.6)] transition transform hover:scale-105 active:scale-90"
+                    className="w-14 h-14 rounded-full bg-gradient-to-tr from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white flex items-center justify-center shadow-[0_0_35px_rgba(244,63,94,0.6)] transition transform hover:scale-105 active:scale-90"
                     aria-label="End Call"
                   >
                     <FiPhoneOff size={22} />

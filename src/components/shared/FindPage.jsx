@@ -412,7 +412,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
   };
 
   return (
-    <div className="pt-16 min-h-[100dvh] bg-[#0D0D1A]">
+    <div className="pt-16 min-h-[100dvh] bg-[#000000]">
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="mb-4">
           <button
@@ -902,7 +902,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
             onToggleFavorite={handleQuickFavorite}
           />
         ) : filtered.length === 0 ? (
-          <div className="bg-[#16162A]/60 border border-white/5 rounded-3xl p-10 text-center flex flex-col items-center justify-center my-8 shadow-xl max-w-lg mx-auto backdrop-blur-md">
+          <div className="bg-[#121212] border border-[#262626] rounded-3xl p-10 text-center flex flex-col items-center justify-center my-8 shadow-xl max-w-lg mx-auto backdrop-blur-md">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-pink-500/20 to-purple-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 mb-4 shadow-inner">
               <FiSearch size={28} />
             </div>
@@ -980,10 +980,10 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
               return (
                 <div
                   key={u.id}
-                  className={`group bg-[#16162A]/90 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden cursor-pointer hover:-translate-y-1.5 transition-all duration-300 flex flex-col shadow-lg hover:shadow-2xl ${
+                  className={`group bg-[#121212] border border-[#262626] rounded-2xl overflow-hidden cursor-pointer hover:-translate-y-1.5 transition-all duration-300 flex flex-col shadow-lg hover:shadow-2xl ${
                     isTargetGirl
-                      ? "hover:border-pink-500/40 hover:shadow-pink-500/15"
-                      : "hover:border-blue-500/40 hover:shadow-blue-500/15"
+                      ? "hover:border-[#e1306c]/50 hover:shadow-pink-500/10"
+                      : "hover:border-blue-500/50 hover:shadow-blue-500/10"
                   }`}
                   onClick={() => handleProfileClick(u)}
                 >
@@ -1040,7 +1040,7 @@ function FindPage({ setPage, setSelectedGirl, currentUser, socket, onBack }) {
                         />
                       </button>
                     )}
-                    <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#16162A] via-[#16162A]/60 to-transparent h-20" />
+                    <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#121212] via-[#121212]/60 to-transparent h-20" />
                   </div>
 
                   <div className="p-4 flex-1 flex flex-col justify-between">

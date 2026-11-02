@@ -13,7 +13,7 @@ export const isNativePlatform = () => {
 /**
  * Configure Android System Status Bar appearance
  */
-export const configureNativeStatusBar = async (bgColor = "#0D0D1A") => {
+export const configureNativeStatusBar = async (bgColor = "#000000") => {
   if (!isNativePlatform()) return;
 
   try {

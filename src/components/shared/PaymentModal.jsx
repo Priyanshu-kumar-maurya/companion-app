@@ -114,7 +114,7 @@ export default function PaymentModal({
               🔒 ₹{totalAmount.toLocaleString()} Held in Escrow Protection
             </p>
 
-            <div className="bg-[#1A1A32] border border-white/10 rounded-2xl p-4 text-left space-y-2 mb-6">
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 text-left space-y-2 mb-6">
               <div className="flex justify-between text-xs">
                 <span className="text-gray-400">Transaction ID:</span>
                 <span className="text-white font-mono font-bold">

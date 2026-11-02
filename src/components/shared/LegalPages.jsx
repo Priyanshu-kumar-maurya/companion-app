@@ -37,9 +37,9 @@ function LegalPages({ setPage, initialTab = "terms" }) {
   ];
 
   return (
-    <div className="min-h-[100dvh] bg-[#0D0D1A] pb-20">
+    <div className="min-h-[100dvh] bg-[#000000] pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[#0D0D1A]/90 backdrop-blur-xl border-b border-white/5 px-4 py-3">
+      <div className="sticky top-0 z-30 bg-[#000000]/95 backdrop-blur-xl border-b border-[#262626] px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <button
             onClick={() => setPage(PAGES.HOME)}
@@ -72,7 +72,7 @@ function LegalPages({ setPage, initialTab = "terms" }) {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-4 mt-6">
-        <div className="bg-[#16162A] rounded-2xl border border-white/5 p-6 sm:p-8">
+        <div className="bg-[#121212] rounded-2xl border border-[#262626] p-6 sm:p-8">
           {activeTab === "terms" && <TermsContent />}
           {activeTab === "privacy" && <PrivacyContent />}
           {activeTab === "safety" && <SafetyContent />}

@@ -74,7 +74,7 @@ function StoriesBar({ currentUser }) {
                   "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                 }
                 alt="Your profile"
-                className="w-full h-full rounded-full object-cover border-2 border-[#0D0D1A]"
+                className="w-full h-full rounded-full object-cover border-2 border-black"
               />
             </div>
 
@@ -86,7 +86,7 @@ function StoriesBar({ currentUser }) {
                 setShowAddModal(true);
               }}
               title="Add to your story"
-              className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-gradient-to-tr from-[#f09433] to-[#dc2743] text-white flex items-center justify-center border-2 border-[#0D0D1A] shadow-lg hover:scale-110 active:scale-95 transition"
+              className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-gradient-to-tr from-[#f09433] to-[#dc2743] text-white flex items-center justify-center border-2 border-black shadow-lg hover:scale-110 active:scale-95 transition"
             >
               <FiPlus size={13} className="stroke-[3]" />
             </button>
@@ -121,7 +121,7 @@ function StoriesBar({ currentUser }) {
                     storyGroup.user_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
                   }
                   alt={storyGroup.user_name}
-                  className="w-full h-full rounded-full object-cover border-2 border-[#0D0D1A]"
+                  className="w-full h-full rounded-full object-cover border-2 border-black"
                 />
               </div>
               <span

@@ -238,14 +238,14 @@ function InstagramPostModal({
 
       {/* ── DESKTOP SPLIT NAVIGATION VIEW (Hidden on Mobile) ── */}
       <div
-        className="hidden md:flex bg-[#121224] border border-white/10 w-full max-w-4xl h-auto max-h-[85vh] rounded-2xl overflow-hidden relative shadow-2xl"
+        className="hidden md:flex bg-[#121212] border border-[#262626] w-full max-w-4xl h-auto max-h-[85vh] rounded-2xl overflow-hidden relative shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Desktop Left/Right Navigation Arrows */}
         {activeIndex > 0 && (
           <button
             onClick={() => setActivePostId(posts[activeIndex - 1].id)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition border border-white/5"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition border border-[#262626]"
           >
             <FiChevronLeft size={22} />
           </button>
@@ -253,7 +253,7 @@ function InstagramPostModal({
         {activeIndex < posts.length - 1 && (
           <button
             onClick={() => setActivePostId(posts[activeIndex + 1].id)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition border border-white/5"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition border border-[#262626]"
           >
             <FiChevronRight size={22} />
           </button>
@@ -270,15 +270,15 @@ function InstagramPostModal({
         </div>
 
         {/* Right Column: Panel */}
-        <div className="w-[380px] shrink-0 flex flex-col bg-[#121224] border-l border-white/5">
+        <div className="w-[380px] shrink-0 flex flex-col bg-[#121212] border-l border-[#262626]">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 bg-[#16162A]">
+          <div className="flex items-center justify-between px-4 py-3.5 border-b border-[#262626] bg-[#121212]">
             <div className="flex items-center gap-3">
               {postOwner?.profile_pic ? (
                 <img
                   src={postOwner.profile_pic}
                   alt=""
-                  className="w-8 h-8 rounded-full object-cover border border-white/10"
+                  className="w-8 h-8 rounded-full object-cover border border-[#262626]"
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shrink-0">
@@ -308,7 +308,7 @@ function InstagramPostModal({
           {/* Comments list */}
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 custom-scrollbar">
             {activePost.caption && (
-              <div className="flex gap-3 items-start pb-3.5 border-b border-white/5">
+              <div className="flex gap-3 items-start pb-3.5 border-b border-[#262626]">
                 {postOwner?.profile_pic ? (
                   <img
                     src={postOwner.profile_pic}
@@ -342,10 +342,10 @@ function InstagramPostModal({
                     <img
                       src={comment.user_pic}
                       alt=""
-                      className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/5"
+                      className="w-7 h-7 rounded-full object-cover shrink-0 border border-[#262626]"
                     />
                   ) : (
-                    <div className="w-7 h-7 rounded-full bg-[#16162A] border border-white/10 flex items-center justify-center text-white text-[9px] font-black shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-[#121212] border border-[#262626] flex items-center justify-center text-white text-[9px] font-black shrink-0">
                       {comment.user_name?.[0]?.toUpperCase()}
                     </div>
                   )}
@@ -364,7 +364,7 @@ function InstagramPostModal({
           </div>
 
           {/* Bottom panel */}
-          <div className="p-4 border-t border-white/5 bg-[#16162A]/60">
+          <div className="p-4 border-t border-[#262626] bg-[#121212]/60">
             <div className="flex items-center justify-between mb-2">
               <div className="flex gap-4">
                 <button
@@ -410,7 +410,7 @@ function InstagramPostModal({
                     setNewCommentTexts((prev) => ({ ...prev, [activePost.id]: e.target.value }))
                   }
                   placeholder="Add a comment..."
-                  className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
+                  className="flex-1 bg-[#000000] border border-[#262626] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
                 />
                 <button
                   type="submit"
@@ -421,7 +421,7 @@ function InstagramPostModal({
                 </button>
               </form>
             ) : (
-              <div className="text-center py-2 text-xs text-gray-500 italic border-t border-white/5 mt-3 pt-3">
+              <div className="text-center py-2 text-xs text-gray-500 italic border-t border-[#262626] mt-3 pt-3">
                 Comments are turned off.
               </div>
             )}
@@ -431,12 +431,12 @@ function InstagramPostModal({
 
       {/* ── MOBILE VERTICAL SCROLLABLE POST FEED (Visible on Mobile) ── */}
       <div
-        className="flex md:hidden flex-col bg-[#0D0D1A] w-full h-full overflow-y-auto"
+        className="flex md:hidden flex-col bg-[#000000] w-full h-full overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         ref={containerRef}
       >
         {/* Mobile Sticky Title bar */}
-        <div className="sticky top-0 bg-[#0D0D1A]/95 border-b border-white/5 h-12 flex items-center px-4 justify-between z-30">
+        <div className="sticky top-0 bg-[#000000]/95 border-b border-[#262626] h-12 flex items-center px-4 justify-between z-30">
           <button onClick={onClose} className="text-white text-lg font-bold">
             ←
           </button>
@@ -452,16 +452,16 @@ function InstagramPostModal({
               <div
                 key={p.id}
                 id={`mobile-post-${p.id}`}
-                className="border-b border-white/5 pb-6 bg-[#121224]/30"
+                className="border-b border-[#262626] pb-6 bg-[#121212]/30"
               >
                 {/* Header */}
-                <div className="flex items-center justify-between px-4 py-3 bg-[#121224]/40">
+                <div className="flex items-center justify-between px-4 py-3 bg-[#121212]/40">
                   <div className="flex items-center gap-3">
                     {postOwner?.profile_pic ? (
                       <img
                         src={postOwner.profile_pic}
                         alt=""
-                        className="w-8 h-8 rounded-full object-cover border border-white/10"
+                        className="w-8 h-8 rounded-full object-cover border border-[#262626]"
                       />
                     ) : (
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-black shrink-0">
@@ -572,7 +572,7 @@ function InstagramPostModal({
           onClick={() => setOptionsPost(null)}
         >
           <div
-            className="bg-[#121224] border-t border-white/10 w-full max-w-md rounded-t-3xl overflow-hidden animate-slide-up flex flex-col p-4 space-y-2 pb-6"
+            className="bg-[#121212] border-t border-[#262626] w-full max-w-md rounded-t-3xl overflow-hidden animate-slide-up flex flex-col p-4 space-y-2 pb-6"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Decoration bar */}
@@ -593,7 +593,7 @@ function InstagramPostModal({
                 setShowAboutUser(true);
                 setOptionsPost(null);
               }}
-              className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center gap-1.5"
+              className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-[#262626] transition-all flex items-center justify-center gap-1.5"
             >
               <FiInfo size={14} /> About this profile
             </button>
@@ -603,14 +603,14 @@ function InstagramPostModal({
                 setSharingPost(optionsPost);
                 setOptionsPost(null);
               }}
-              className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center gap-1.5"
+              className="w-full py-4 text-center text-white font-bold text-xs hover:bg-white/5 rounded-xl border-t border-[#262626] transition-all flex items-center justify-center gap-1.5"
             >
               <FiShare2 size={14} /> Share post...
             </button>
 
             <button
               onClick={() => setOptionsPost(null)}
-              className="w-full py-4 text-center text-gray-400 font-bold text-xs hover:bg-white/5 rounded-xl border-t border-white/5 transition-all flex items-center justify-center"
+              className="w-full py-4 text-center text-gray-400 font-bold text-xs hover:bg-white/5 rounded-xl border-t border-[#262626] transition-all flex items-center justify-center"
             >
               Cancel
             </button>
@@ -625,7 +625,7 @@ function InstagramPostModal({
           onClick={() => setShowAboutUser(false)}
         >
           <div
-            className="bg-[#121224] border border-white/10 w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl p-6 text-center animate-scale-up"
+            className="bg-[#121212] border border-[#262626] w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl p-6 text-center animate-scale-up"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
@@ -636,7 +636,7 @@ function InstagramPostModal({
               Verify information for {postOwner?.name}
             </p>
 
-            <div className="space-y-3 text-left text-xs mb-6 bg-white/5 p-4 rounded-xl border border-white/5">
+            <div className="space-y-3 text-left text-xs mb-6 bg-white/5 p-4 rounded-xl border border-[#262626]">
               <div>
                 <span className="text-gray-500 block text-[9px] uppercase font-bold">
                   Full Name
@@ -678,14 +678,14 @@ function InstagramPostModal({
           onClick={() => setCommentsPost(null)}
         >
           <div
-            className="bg-[#121224] border-t border-white/10 w-full h-[65vh] rounded-t-3xl overflow-hidden animate-slide-up flex flex-col"
+            className="bg-[#121212] border-t border-[#262626] w-full h-[65vh] rounded-t-3xl overflow-hidden animate-slide-up flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag indicator decoration */}
             <div className="w-10 h-1 bg-white/15 rounded-full mx-auto my-3 shrink-0" />
 
             {/* Header */}
-            <div className="px-4 pb-3 border-b border-white/5 flex justify-between items-center shrink-0">
+            <div className="px-4 pb-3 border-b border-[#262626] flex justify-between items-center shrink-0">
               <span className="font-bold text-xs text-white">Comments</span>
               <button
                 onClick={() => setCommentsPost(null)}
@@ -706,10 +706,10 @@ function InstagramPostModal({
                       <img
                         src={comment.user_pic}
                         alt=""
-                        className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/5"
+                        className="w-7 h-7 rounded-full object-cover shrink-0 border border-[#262626]"
                       />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-[#16162A] border border-white/10 flex items-center justify-center text-white text-[9px] font-black shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-[#121212] border border-[#262626] flex items-center justify-center text-white text-[9px] font-black shrink-0">
                         {comment.user_name?.[0]?.toUpperCase()}
                       </div>
                     )}
@@ -728,7 +728,7 @@ function InstagramPostModal({
             </div>
 
             {/* Text comment form */}
-            <div className="p-4 border-t border-white/5 bg-[#16162A] shrink-0">
+            <div className="p-4 border-t border-[#262626] bg-[#121212] shrink-0">
               {!commentsPost.disable_comments ? (
                 <form
                   onSubmit={(e) => {
@@ -743,7 +743,7 @@ function InstagramPostModal({
                       setNewCommentTexts((prev) => ({ ...prev, [commentsPost.id]: e.target.value }))
                     }
                     placeholder="Add a comment..."
-                    className="flex-1 bg-[#0D0D1A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
+                    className="flex-1 bg-[#000000] border border-[#262626] rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-pink-500 transition"
                   />
                   <button
                     type="submit"

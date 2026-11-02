@@ -184,7 +184,7 @@ function SOSButton({ user, socket, currentPage }) {
           onClick={() => setShowPanel(false)}
         >
           <div
-            className="bg-[#16162A] w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl border border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+            className="bg-[#121212] w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl border border-[#262626] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

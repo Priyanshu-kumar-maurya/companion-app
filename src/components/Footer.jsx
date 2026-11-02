@@ -4,7 +4,7 @@ import { APP_VERSION_TAG } from "../config/version";
 
 function Footer({ setPage }) {
   return (
-    <footer className="bg-[#16162A] border-t border-white/5 pt-12 pb-8 mt-20">
+    <footer className="bg-[#000000] border-t border-[#262626] pt-12 pb-8 mt-20">
       <div className="max-w-5xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div className="md:col-span-2">

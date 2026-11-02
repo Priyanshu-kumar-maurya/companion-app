@@ -52,7 +52,7 @@ export const THEME_ACCENTS = [
 ];
 
 export const CHAT_WALLPAPERS = [
-  { id: "dark", name: "Classic Dark", desc: "Sleek standard dark mode", previewBg: "bg-[#0D0D1A]" },
+  { id: "dark", name: "Classic Dark", desc: "Sleek standard dark mode", previewBg: "bg-[#000000]" },
   {
     id: "midnight",
     name: "Midnight Nebula",

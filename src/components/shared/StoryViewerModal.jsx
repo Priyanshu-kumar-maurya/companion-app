@@ -302,7 +302,7 @@ function StoryViewerModal({
 
       {/* Main Story Phone Box */}
       <div
-        className="relative w-full h-full sm:max-w-md sm:h-[90vh] sm:rounded-3xl overflow-hidden bg-[#0D0D1A] border border-white/10 flex flex-col justify-between shadow-2xl"
+        className="relative w-full h-full sm:max-w-md sm:h-[90vh] sm:rounded-3xl overflow-hidden bg-[#000000] border border-[#262626] flex flex-col justify-between shadow-2xl"
         onMouseDown={() => setIsPaused(true)}
         onMouseUp={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
@@ -497,7 +497,7 @@ function StoryViewerModal({
         {/* ─── Story Viewers Bottom Sheet Drawer (For Story Owner) ─── */}
         {showViewersDrawer && (
           <div
-            className="absolute inset-x-0 bottom-0 z-40 bg-[#16162A] border-t border-white/15 rounded-t-3xl p-5 max-h-[70%] flex flex-col shadow-2xl animate-fade-in"
+            className="absolute inset-x-0 bottom-0 z-40 bg-[#121212] border-t border-[#262626] rounded-t-3xl p-5 max-h-[70%] flex flex-col shadow-2xl animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag Bar & Header */}

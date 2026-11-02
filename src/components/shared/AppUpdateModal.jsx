@@ -88,7 +88,7 @@ export default function AppUpdateModal() {
     <>
       {/* Manual Check Toast */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100001] bg-[#16162A]/95 text-white text-xs font-semibold px-4 py-2.5 rounded-full border border-pink-500/40 shadow-xl backdrop-blur-md flex items-center gap-2 animate-bounce">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-[100001] bg-[#121212]/95 text-white text-xs font-semibold px-4 py-2.5 rounded-full border border-[#262626] shadow-xl backdrop-blur-md flex items-center gap-2 animate-bounce">
           <span>☕</span>
           <span>{toastMessage}</span>
         </div>
@@ -97,7 +97,7 @@ export default function AppUpdateModal() {
       {/* Update Popup Modal */}
       {isOpen && updateInfo && (
         <div className="fixed inset-0 z-[100000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="relative w-full max-w-sm bg-gradient-to-b from-[#18182e] via-[#121222] to-[#0d0d1a] border border-pink-500/30 rounded-3xl p-6 shadow-2xl shadow-pink-500/10 text-center">
+          <div className="relative w-full max-w-sm bg-[#121212] border border-[#262626] rounded-3xl p-6 shadow-2xl text-center">
             {/* Glow Accent */}
             <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-32 h-32 bg-pink-500/15 rounded-full blur-2xl pointer-events-none"></div>
 

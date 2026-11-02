@@ -1165,7 +1165,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
         {showSearch && (
           <div
             className="flex items-center gap-2 px-3 py-2 border-b animate-fade-in z-30 shrink-0 shadow-lg"
-            style={{ background: "#121226", borderColor: "#262626" }}
+            style={{ background: "#121212", borderColor: "#262626" }}
           >
             <FiSearch size={16} className="text-pink-400 shrink-0 ml-1" />
             <input
@@ -1853,7 +1853,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
       {/* ─── WHATSAPP STYLE CONTACT INFO SIDEBAR ─── */}
       {showContactInfo && (
         <div className="w-full sm:w-80 bg-[#121212] border-l border-white/10 shrink-0 z-35 flex flex-col h-full relative text-left">
-          <div className="px-4 py-3.5 border-b border-white/5 flex items-center gap-3 bg-[#121222]">
+          <div className="px-4 py-3.5 border-b border-[#262626] flex items-center gap-3 bg-[#181818]">
             <button
               onClick={() => {
                 setShowContactInfo(false);
@@ -2094,7 +2094,7 @@ function ChatPage({ girl, currentUser, setPage, setSelectedGirl, socket: propSoc
           {/* Starred Messages Sub View inside sidebar */}
           {showStarredSubView && (
             <div className="absolute inset-0 bg-[#121212] z-[90] flex flex-col">
-              <div className="px-4 py-3.5 border-b border-white/5 flex items-center gap-3 bg-[#121222]">
+              <div className="px-4 py-3.5 border-b border-[#262626] flex items-center gap-3 bg-[#181818]">
                 <button
                   onClick={() => setShowStarredSubView(false)}
                   className="text-gray-400 hover:text-white transition"

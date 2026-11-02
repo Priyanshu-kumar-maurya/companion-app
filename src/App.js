@@ -153,7 +153,7 @@ function App() {
   }, [currentUser]);
 
   useEffect(() => {
-    configureNativeStatusBar("#0D0D1A");
+    configureNativeStatusBar("#000000");
   }, []);
 
   useEffect(() => {
