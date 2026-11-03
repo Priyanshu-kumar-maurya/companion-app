@@ -190,7 +190,7 @@ export default function GirlWalletTab({ user }) {
             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">
               Lifetime Earnings
             </span>
-            <div className="w-9 h-9 rounded-2xl bg-white/10 text-pink-400 border border-white/10 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-2xl bg-white/10 text-pink-400 border border-[#262626] flex items-center justify-center">
               <FiTrendingUp size={18} />
             </div>
           </div>
@@ -346,7 +346,7 @@ export default function GirlWalletTab({ user }) {
       {/* ─── WITHDRAWAL MODAL ─── */}
       {showWithdrawModal && (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md bg-[#141428] border border-pink-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl text-left">
+          <div className="relative w-full max-w-md bg-[#121212] border border-[#262626] rounded-3xl p-6 sm:p-7 shadow-2xl text-left">
             <button
               onClick={() => setShowWithdrawModal(false)}
               className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition"
@@ -379,7 +379,7 @@ export default function GirlWalletTab({ user }) {
                     className={`p-3 rounded-2xl border text-center transition flex items-center justify-center gap-2 ${
                       withdrawMethod === "upi"
                         ? "bg-pink-500/20 border-pink-500 text-pink-300 font-bold"
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                        : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                     }`}
                   >
                     <FiSmartphone size={16} /> Instant UPI
@@ -390,7 +390,7 @@ export default function GirlWalletTab({ user }) {
                     className={`p-3 rounded-2xl border text-center transition flex items-center justify-center gap-2 ${
                       withdrawMethod === "bank"
                         ? "bg-pink-500/20 border-pink-500 text-pink-300 font-bold"
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                        : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                     }`}
                   >
                     <FiCreditCard size={16} /> Bank Transfer
@@ -411,7 +411,7 @@ export default function GirlWalletTab({ user }) {
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   placeholder="Enter amount (min ₹500)"
-                  className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-bold"
+                  className="w-full bg-[#000000] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-bold"
                 />
                 <div className="flex gap-2 mt-2">
                   {[1000, 2500, 5000].map((amt) => (
@@ -419,7 +419,7 @@ export default function GirlWalletTab({ user }) {
                       key={amt}
                       type="button"
                       onClick={() => setWithdrawAmount(amt.toString())}
-                      className="px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] text-gray-300 border border-white/5"
+                      className="px-2.5 py-1 bg-white/5 hover:bg-white/10 rounded-lg text-[10px] text-gray-300 border border-[#262626]"
                     >
                       ₹{amt.toLocaleString()}
                     </button>
@@ -427,7 +427,7 @@ export default function GirlWalletTab({ user }) {
                   <button
                     type="button"
                     onClick={() => setWithdrawAmount(availableBalance.toString())}
-                    className="px-2.5 py-1 bg-pink-500/20 text-pink-300 rounded-lg text-[10px] font-bold border border-pink-500/30 ml-auto"
+                    className="px-2.5 py-1 bg-pink-500/20 text-pink-300 rounded-lg text-[10px] font-bold border border-[#262626] ml-auto"
                   >
                     Max All
                   </button>
@@ -446,7 +446,7 @@ export default function GirlWalletTab({ user }) {
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder="yourname@okhdfcbank / mobile@paytm"
-                    className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+                    className="w-full bg-[#000000] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
                   />
                 </div>
               ) : (
@@ -462,7 +462,7 @@ export default function GirlWalletTab({ user }) {
                       value={accountHolder}
                       onChange={(e) => setAccountHolder(e.target.value)}
                       placeholder="As per bank records"
-                      className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+                      className="w-full bg-[#000000] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
                     />
                   </div>
                   <div>
@@ -475,7 +475,7 @@ export default function GirlWalletTab({ user }) {
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value)}
                       placeholder="987654321000"
-                      className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
+                      className="w-full bg-[#000000] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
                     />
                   </div>
                   <div>
@@ -486,7 +486,7 @@ export default function GirlWalletTab({ user }) {
                       value={ifscCode}
                       onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
                       placeholder="HDFC0001234"
-                      className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition uppercase font-mono"
+                      className="w-full bg-[#000000] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition uppercase font-mono"
                     />
                   </div>
                 </div>

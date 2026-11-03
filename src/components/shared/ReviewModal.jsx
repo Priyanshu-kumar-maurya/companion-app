@@ -99,7 +99,7 @@ export default function ReviewModal({ isOpen, onClose, companion, bookingId, onR
 
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-[#141428] border border-pink-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl my-8 text-left animate-slide-up">
+      <div className="relative w-full max-w-lg bg-[#121212] border border-[#262626] rounded-3xl p-6 sm:p-7 shadow-2xl my-8 text-left animate-slide-up">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -109,7 +109,7 @@ export default function ReviewModal({ isOpen, onClose, companion, bookingId, onR
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3.5 mb-5 pb-4 border-b border-[#262626]">
           <img
             src={companion.profile_pic || "https://cdn-icons-png.flaticon.com/512/3135/3135768.png"}
             alt={companion.name}
@@ -136,7 +136,7 @@ export default function ReviewModal({ isOpen, onClose, companion, bookingId, onR
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Star Rating Selector */}
-          <div className="text-center py-2 bg-[#181832] rounded-2xl border border-white/5 p-4">
+          <div className="text-center py-2 bg-[#181832] rounded-2xl border border-[#262626] p-4">
             <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
               Overall Date Experience
             </label>
@@ -187,7 +187,7 @@ export default function ReviewModal({ isOpen, onClose, companion, bookingId, onR
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
                       isSelected
                         ? "bg-gradient-to-r from-pink-500/30 to-purple-600/30 border-pink-500 text-pink-200 shadow-md scale-105"
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+                        : "bg-white/5 border-[#262626] text-gray-400 hover:text-white hover:bg-white/10"
                     }`}
                   >
                     {comp}
@@ -209,7 +209,7 @@ export default function ReviewModal({ isOpen, onClose, companion, bookingId, onR
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="How was the conversation? Would you recommend them to others?"
-              className="w-full bg-[#181830] border border-white/10 rounded-2xl p-3.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition resize-none"
+              className="w-full bg-[#000000] border border-[#262626] rounded-2xl p-3.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition resize-none"
             />
           </div>
 

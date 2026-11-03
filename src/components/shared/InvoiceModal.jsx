@@ -22,9 +22,9 @@ export default function InvoiceModal({ isOpen, onClose, booking, clientName, com
 
   return (
     <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto print:p-0 print:bg-white">
-      <div className="relative w-full max-w-2xl bg-[#141428] border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl my-8 text-left text-white print:bg-white print:text-black print:border-none print:shadow-none print:m-0 print:w-full">
+      <div className="relative w-full max-w-2xl bg-[#121212] border border-[#262626] rounded-3xl p-6 sm:p-8 shadow-2xl my-8 text-left text-white print:bg-white print:text-black print:border-none print:shadow-none print:m-0 print:w-full">
         {/* Close and Print Bar */}
-        <div className="flex justify-between items-center mb-6 pb-4 border-b border-white/10 print:hidden">
+        <div className="flex justify-between items-center mb-6 pb-4 border-b border-[#262626] print:hidden">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold flex items-center gap-1.5">
               <FiCheckCircle size={12} /> Paid & Verified
@@ -75,7 +75,7 @@ export default function InvoiceModal({ isOpen, onClose, booking, clientName, com
           </div>
 
           {/* Parties Section */}
-          <div className="grid grid-cols-2 gap-4 bg-[#181832] p-4 rounded-2xl border border-white/5 print:bg-gray-50 print:border-gray-200">
+          <div className="grid grid-cols-2 gap-4 bg-[#181832] p-4 rounded-2xl border border-[#262626] print:bg-gray-50 print:border-gray-200">
             <div>
               <span className="text-[10px] uppercase font-bold text-gray-400 print:text-gray-600 block mb-1">
                 Billed To (Client)
@@ -99,7 +99,7 @@ export default function InvoiceModal({ isOpen, onClose, booking, clientName, com
           </div>
 
           {/* Booking Details Summary */}
-          <div className="bg-[#181832] p-4 rounded-2xl border border-white/5 print:bg-gray-50 print:border-gray-200">
+          <div className="bg-[#181832] p-4 rounded-2xl border border-[#262626] print:bg-gray-50 print:border-gray-200">
             <span className="text-[10px] uppercase font-bold text-gray-400 print:text-gray-600 block mb-2">
               Session Particulars
             </span>
@@ -132,7 +132,7 @@ export default function InvoiceModal({ isOpen, onClose, booking, clientName, com
           </div>
 
           {/* Line Items Table */}
-          <div className="border border-white/10 rounded-2xl overflow-hidden print:border-gray-300">
+          <div className="border border-[#262626] rounded-2xl overflow-hidden print:border-gray-300">
             <table className="w-full text-left text-xs">
               <thead className="bg-[#1F1F3D] text-gray-300 print:bg-gray-100 print:text-black font-bold">
                 <tr>

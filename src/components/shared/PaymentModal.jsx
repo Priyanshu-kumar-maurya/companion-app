@@ -91,7 +91,7 @@ export default function PaymentModal({
 
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-[#141428] border border-pink-500/20 rounded-3xl p-6 sm:p-7 shadow-2xl my-8 text-left">
+      <div className="relative w-full max-w-lg bg-[#121212] border border-[#262626] rounded-3xl p-6 sm:p-7 shadow-2xl my-8 text-left">
         {/* Close Button */}
         {!isProcessing && (
           <button
@@ -132,7 +132,7 @@ export default function PaymentModal({
                   {bookingData?.meeting_time || "Scheduled Time"}
                 </span>
               </div>
-              <div className="flex justify-between text-xs border-t border-white/10 pt-2 font-bold">
+              <div className="flex justify-between text-xs border-t border-[#262626] pt-2 font-bold">
                 <span className="text-gray-300">Escrow Guarantee:</span>
                 <span className="text-purple-400">
                   Funds released only after session completion
@@ -178,8 +178,8 @@ export default function PaymentModal({
             </div>
 
             {/* Booking Summary Card */}
-            <div className="bg-[#181830] border border-white/10 rounded-2xl p-4 mb-5">
-              <div className="flex items-center gap-3.5 pb-3 border-b border-white/5">
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 mb-5">
+              <div className="flex items-center gap-3.5 pb-3 border-b border-[#262626]">
                 <img
                   src={
                     companion?.profile_pic ||
@@ -226,7 +226,7 @@ export default function PaymentModal({
                   className={`p-3 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${
                     paymentMethod === "upi"
                       ? "bg-pink-500/20 border-pink-500 text-pink-300 font-bold"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
+                      : "bg-white/5 border-[#262626] text-gray-400 hover:border-white/20"
                   }`}
                 >
                   <FiSmartphone size={18} />
@@ -238,7 +238,7 @@ export default function PaymentModal({
                   className={`p-3 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${
                     paymentMethod === "card"
                       ? "bg-pink-500/20 border-pink-500 text-pink-300 font-bold"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
+                      : "bg-white/5 border-[#262626] text-gray-400 hover:border-white/20"
                   }`}
                 >
                   <FiCreditCard size={18} />
@@ -250,7 +250,7 @@ export default function PaymentModal({
                   className={`p-3 rounded-2xl border text-center transition flex flex-col items-center gap-1.5 ${
                     paymentMethod === "netbanking"
                       ? "bg-pink-500/20 border-pink-500 text-pink-300 font-bold"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:border-white/20"
+                      : "bg-white/5 border-[#262626] text-gray-400 hover:border-white/20"
                   }`}
                 >
                   <FiGlobe size={18} />
@@ -271,7 +271,7 @@ export default function PaymentModal({
                       className={`p-2.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition text-center ${
                         selectedUpiApp === app
                           ? "bg-white/15 border-pink-500 text-white"
-                          : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                          : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                       }`}
                     >
                       {app}
@@ -285,7 +285,7 @@ export default function PaymentModal({
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
                     placeholder="username@oksbi / username@paytm"
-                    className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+                    className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
                   />
                 </div>
               </div>
@@ -301,7 +301,7 @@ export default function PaymentModal({
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
                     placeholder="Name on card"
-                    className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
+                    className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition"
                   />
                 </div>
                 <div>
@@ -312,7 +312,7 @@ export default function PaymentModal({
                     onChange={(e) => setCardNumber(e.target.value)}
                     placeholder="4532 •••• •••• 8901"
                     maxLength={19}
-                    className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
+                    className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -324,7 +324,7 @@ export default function PaymentModal({
                       onChange={(e) => setCardExpiry(e.target.value)}
                       placeholder="MM/YY"
                       maxLength={5}
-                      className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
+                      className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
                     />
                   </div>
                   <div>
@@ -335,7 +335,7 @@ export default function PaymentModal({
                       onChange={(e) => setCardCvv(e.target.value)}
                       placeholder="•••"
                       maxLength={4}
-                      className="w-full bg-[#181830] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
+                      className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-500 outline-none focus:border-pink-500 transition font-mono"
                     />
                   </div>
                 </div>
@@ -355,7 +355,7 @@ export default function PaymentModal({
                       className={`p-2.5 rounded-xl text-xs font-semibold border transition text-left ${
                         selectedBank === bank
                           ? "bg-pink-500/20 border-pink-500 text-pink-300"
-                          : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                          : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
                       }`}
                     >
                       {bank}
@@ -366,7 +366,7 @@ export default function PaymentModal({
             )}
 
             {/* Bill Breakdown */}
-            <div className="border-t border-white/10 pt-3.5 mb-5 space-y-1.5 text-xs">
+            <div className="border-t border-[#262626] pt-3.5 mb-5 space-y-1.5 text-xs">
               <div className="flex justify-between text-gray-400">
                 <span>Session Base Rate ({bookingData?.hours || 1} hr):</span>
                 <span className="text-white font-semibold">₹{baseAmount.toLocaleString()}</span>
@@ -375,7 +375,7 @@ export default function PaymentModal({
                 <span>Escrow & Platform Safety Fee (5%):</span>
                 <span className="text-white font-semibold">₹{platformFee.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-sm font-bold text-white border-t border-white/10 pt-2">
+              <div className="flex justify-between text-sm font-bold text-white border-t border-[#262626] pt-2">
                 <span>Total Payable Amount:</span>
                 <span className="text-pink-400 text-base font-extrabold">
                   ₹{totalAmount.toLocaleString()}

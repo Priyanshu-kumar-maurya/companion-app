@@ -103,10 +103,10 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
   return (
     <div className="space-y-6 text-left">
       {/* ─── OVERALL SCORE & BREAKDOWN CARD ─── */}
-      <div className="bg-[#141428] border border-white/10 rounded-3xl p-5 sm:p-6 shadow-xl">
+      <div className="bg-[#121212] border border-[#262626] rounded-3xl p-5 sm:p-6 shadow-xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
           {/* Score summary */}
-          <div className="text-center md:text-left flex flex-col items-center md:items-start justify-center md:border-r border-white/10 md:pr-6">
+          <div className="text-center md:text-left flex flex-col items-center md:items-start justify-center md:border-r border-[#262626] md:pr-6">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl sm:text-5xl font-black text-white">
                 {reviewsData.avgRating || companion?.rating || "5.0"}
@@ -178,7 +178,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
 
         {/* ─── TOP COMPLIMENTS CHIPS ─── */}
         {reviewsData.topCompliments.length > 0 && (
-          <div className="mt-6 pt-5 border-t border-white/5">
+          <div className="mt-6 pt-5 border-t border-[#262626]">
             <div className="text-xs font-bold text-gray-400 mb-2.5 flex items-center gap-1.5">
               <FiSmile className="text-pink-400" /> Top Praised Highlights
             </div>
@@ -218,7 +218,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
         </div>
 
         {filteredReviews.length === 0 ? (
-          <div className="bg-[#141428] border border-white/5 rounded-3xl p-8 text-center text-gray-500 text-xs">
+          <div className="bg-[#121212] border border-[#262626] rounded-3xl p-8 text-center text-gray-500 text-xs">
             <FiMessageCircle size={32} className="mx-auto mb-2 opacity-40 text-pink-400" />
             <p className="font-semibold text-gray-400">No reviews found yet.</p>
             <p className="text-[11px] text-gray-600 mt-1">
@@ -230,7 +230,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
             {filteredReviews.map((r) => (
               <div
                 key={r.id}
-                className="bg-[#141428] border border-white/5 hover:border-white/10 rounded-2xl p-4 sm:p-5 transition"
+                className="bg-[#121212] border border-[#262626] hover:border-[#262626] rounded-2xl p-4 sm:p-5 transition"
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
@@ -238,7 +238,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
                       <img
                         src={r.reviewer_pic}
                         alt={r.reviewer_name}
-                        className="w-10 h-10 rounded-full object-cover border border-white/15"
+                        className="w-10 h-10 rounded-full object-cover border border-[#262626]"
                       />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
@@ -286,7 +286,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
                     className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition flex items-center gap-1.5 border ${
                       r.has_voted_helpful
                         ? "bg-pink-500/20 border-pink-500 text-pink-300"
-                        : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                        : "bg-white/5 border-[#262626] text-gray-400 hover:text-white hover:bg-white/10"
                     }`}
                   >
                     <FiThumbsUp size={12} className={r.has_voted_helpful ? "fill-pink-400" : ""} />
@@ -300,7 +300,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
                     {r.compliment_tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-white/5 text-gray-300 text-[10px] font-medium"
+                        className="px-2.5 py-0.5 rounded-lg bg-white/5 border border-[#262626] text-gray-300 text-[10px] font-medium"
                       >
                         {tag}
                       </span>
@@ -310,7 +310,7 @@ export default function ReviewsSection({ companion, currentUser, onReviewAdded }
 
                 {/* Review text */}
                 {r.comment && (
-                  <p className="text-xs text-gray-300 leading-relaxed bg-[#0E0E1C] p-3 rounded-xl border border-white/5">
+                  <p className="text-xs text-gray-300 leading-relaxed bg-[#0E0E1C] p-3 rounded-xl border border-[#262626]">
                     "{r.comment}"
                   </p>
                 )}

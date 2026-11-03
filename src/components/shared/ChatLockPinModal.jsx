@@ -99,7 +99,7 @@ export default function ChatLockPinModal({
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
-        className={`relative w-full max-w-sm bg-[#141428] border border-white/15 rounded-3xl p-6 shadow-2xl text-center ${shake ? "animate-bounce" : ""}`}
+        className={`relative w-full max-w-sm bg-[#121212] border border-[#262626] rounded-3xl p-6 shadow-2xl text-center ${shake ? "animate-bounce" : ""}`}
       >
         <button
           onClick={onClose}
@@ -108,7 +108,7 @@ export default function ChatLockPinModal({
           <FiX size={18} />
         </button>
 
-        <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/30 flex items-center justify-center text-pink-400 shadow-inner mb-4">
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-[#262626] flex items-center justify-center text-pink-400 shadow-inner mb-4">
           {activeMode === "set_new" ? <FiKey size={24} /> : <FiLock size={24} />}
         </div>
 
@@ -157,7 +157,7 @@ export default function ChatLockPinModal({
             <button
               key={num}
               onClick={() => handleKeyPress(num.toString())}
-              className="w-16 h-14 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 text-white font-bold text-xl transition border border-white/5 flex items-center justify-center shadow-md"
+              className="w-16 h-14 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 text-white font-bold text-xl transition border border-[#262626] flex items-center justify-center shadow-md"
             >
               {num}
             </button>
@@ -165,13 +165,13 @@ export default function ChatLockPinModal({
           <div className="w-16 h-14 flex items-center justify-center text-xs text-gray-500">🔒</div>
           <button
             onClick={() => handleKeyPress("0")}
-            className="w-16 h-14 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 text-white font-bold text-xl transition border border-white/5 flex items-center justify-center shadow-md"
+            className="w-16 h-14 rounded-2xl bg-white/5 hover:bg-white/15 active:scale-95 text-white font-bold text-xl transition border border-[#262626] flex items-center justify-center shadow-md"
           >
             0
           </button>
           <button
             onClick={handleDelete}
-            className="w-16 h-14 rounded-2xl bg-white/5 hover:bg-red-500/20 active:scale-95 text-gray-300 hover:text-red-400 transition border border-white/5 flex items-center justify-center shadow-md"
+            className="w-16 h-14 rounded-2xl bg-white/5 hover:bg-red-500/20 active:scale-95 text-gray-300 hover:text-red-400 transition border border-[#262626] flex items-center justify-center shadow-md"
             title="Delete"
           >
             <FiDelete size={20} />

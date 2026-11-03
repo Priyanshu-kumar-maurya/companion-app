@@ -230,7 +230,7 @@ export default function CompanionMapView({
   };
 
   return (
-    <div className="relative w-full h-[620px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-[#0e0e1a]">
+    <div className="relative w-full h-[620px] rounded-3xl overflow-hidden border border-[#262626] shadow-2xl bg-[#0e0e1a]">
       {/* ── Top Floating Filter Bar ── */}
       <div className="absolute top-4 left-4 right-4 z-[999] flex items-center justify-between pointer-events-none">
         <div className="flex items-center gap-2 bg-[#121212]/95 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-[#262626] shadow-xl pointer-events-auto">
@@ -267,7 +267,7 @@ export default function CompanionMapView({
 
       {/* ── Selected Companion Floating Card / Sheet ── */}
       {selectedCompanion && (
-        <div className="absolute bottom-5 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[999] bg-[#141428]/95 backdrop-blur-xl border border-white/15 rounded-3xl p-4 shadow-[0_12px_36px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-bottom-4 duration-300">
+        <div className="absolute bottom-5 left-4 right-4 sm:left-auto sm:right-6 sm:w-96 z-[999] bg-[#121212]/95 backdrop-blur-xl border border-[#262626] rounded-3xl p-4 shadow-[0_12px_36px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-bottom-4 duration-300">
           <button
             onClick={() => setSelectedCompanion(null)}
             className="absolute top-3 right-3 p-1.5 rounded-full bg-white/5 hover:bg-white/15 text-gray-400 hover:text-white transition"
@@ -328,7 +328,7 @@ export default function CompanionMapView({
               className={`p-2.5 rounded-2xl border transition shrink-0 ${
                 favIds.has(selectedCompanion.id)
                   ? "bg-pink-500/20 border-pink-500 text-pink-500"
-                  : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                  : "bg-white/5 border-[#262626] text-gray-400 hover:text-white"
               }`}
             >
               <FiHeart
@@ -348,7 +348,7 @@ export default function CompanionMapView({
             </button>
             <button
               onClick={() => onSelectProfile(selectedCompanion)}
-              className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold border border-white/10 transition active:scale-[0.98]"
+              className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold border border-[#262626] transition active:scale-[0.98]"
             >
               Book Session
             </button>
