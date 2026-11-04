@@ -1,8 +1,41 @@
 const express = require("express");
+const crypto = require("crypto");
+let Razorpay;
+try {
+  Razorpay = require("razorpay");
+} catch (e) {
+  Razorpay = null;
+}
 const { pool } = require("../config/db");
 const authenticateToken = require("../middleware/auth");
 
 const router = express.Router();
+
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "rzp_test_51MockCoffeelyKey";
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "";
+
+let razorpay = null;
+if (Razorpay && RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET && !RAZORPAY_KEY_ID.includes("Mock")) {
+  try {
+    razorpay = new Razorpay({
+      key_id: RAZORPAY_KEY_ID,
+      key_secret: RAZORPAY_KEY_SECRET,
+    });
+    console.log("✅ Razorpay Test Mode initialized with credentials.");
+  } catch (err) {
+    console.warn("⚠️ Razorpay init warning:", err.message);
+  }
+}
+
+// 0. Public Razorpay Config & Test Mode Status
+router.get("/payment/config", (req, res) => {
+  res.status(200).json({
+    key_id: RAZORPAY_KEY_ID,
+    is_test_mode: true,
+    currency: "INR",
+    merchant_name: "Coffeely Escrow",
+  });
+});
 
 // Helper: Ensure or initialize wallet balance for a user
 async function ensureWalletExists(userId) {
@@ -33,30 +66,56 @@ async function checkUserHasDocument(userId) {
   }
 }
 
-// 1. Create Razorpay / Escrow Payment Order
+// 1. Create Razorpay / Escrow Payment Order (Test Mode & Live Ready)
 router.post("/payment/create-order", authenticateToken, async (req, res) => {
   try {
     const { booking_id, amount } = req.body;
     const totalAmt = parseFloat(amount) || 1000;
     const platformFee = Math.round(totalAmt * 0.05); // 5% escrow safety & trust fee
     const payableTotal = totalAmt + platformFee;
+    const amountInPaise = Math.round(payableTotal * 100);
 
-    const fakeOrderId = `order_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+    let orderId;
+    let isMockOrder = true;
+
+    if (razorpay) {
+      try {
+        const rzpOrder = await razorpay.orders.create({
+          amount: amountInPaise,
+          currency: "INR",
+          receipt: `rcpt_${booking_id || Date.now()}`,
+          notes: {
+            booking_id: booking_id ? String(booking_id) : "",
+            user_id: String(req.user.id),
+          },
+        });
+        orderId = rzpOrder.id;
+        isMockOrder = false;
+      } catch (rzpErr) {
+        console.warn("Razorpay order creation fallback to test mode:", rzpErr.message);
+        orderId = `order_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+      }
+    } else {
+      orderId = `order_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+    }
 
     if (booking_id) {
       await pool.query(
         "UPDATE bookings SET order_id = $1, platform_fee = $2, companion_earnings = $3 WHERE id = $4",
-        [fakeOrderId, platformFee, totalAmt, booking_id]
+        [orderId, platformFee, totalAmt, booking_id]
       );
     }
 
     res.status(200).json({
-      order_id: fakeOrderId,
+      order_id: orderId,
       amount: payableTotal,
+      amount_paise: amountInPaise,
       base_amount: totalAmt,
       platform_fee: platformFee,
       currency: "INR",
-      key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_coffeely_escrow",
+      key_id: RAZORPAY_KEY_ID,
+      is_test_mode: true,
+      is_mock_order: isMockOrder,
     });
   } catch (err) {
     console.error("Create order error:", err);
@@ -64,75 +123,106 @@ router.post("/payment/create-order", authenticateToken, async (req, res) => {
   }
 });
 
-// 2. Verify Payment & Hold Funds in Escrow
+// 2. Verify Razorpay Payment & Hold Funds in Escrow (Test Mode & Live Ready)
 router.post("/payment/verify", authenticateToken, async (req, res) => {
   try {
-    const { booking_id, payment_id, order_id, payment_method, amount } = req.body;
-    if (!booking_id) {
-      return res.status(400).json({ error: "Booking ID is required" });
+    const {
+      booking_id,
+      payment_id,
+      order_id,
+      razorpay_signature,
+      payment_method,
+      amount,
+    } = req.body;
+
+    // Verify HMAC signature if razorpay_signature and secret are present
+    if (razorpay_signature && RAZORPAY_KEY_SECRET) {
+      const generatedSignature = crypto
+        .createHmac("sha256", RAZORPAY_KEY_SECRET)
+        .update(`${order_id}|${payment_id}`)
+        .digest("hex");
+
+      if (generatedSignature !== razorpay_signature) {
+        return res.status(400).json({ error: "Invalid Razorpay payment signature!" });
+      }
     }
 
-    const bookingRes = await pool.query("SELECT * FROM bookings WHERE id = $1", [booking_id]);
-    if (bookingRes.rows.length === 0) {
-      return res.status(404).json({ error: "Booking not found" });
+    let booking = null;
+    let baseAmount = parseFloat(amount) || 1000;
+    let platformFee = Math.round(baseAmount * 0.05);
+    let companionEarnings = baseAmount;
+    let targetGirlId = null;
+
+    if (booking_id) {
+      const bookingRes = await pool.query("SELECT * FROM bookings WHERE id = $1", [booking_id]);
+      if (bookingRes.rows.length > 0) {
+        booking = bookingRes.rows[0];
+
+        // 🛡️ Security Check: Ensure caller is paying client or admin
+        const isClient = parseInt(req.user.id) === parseInt(booking.boy_id);
+        const isAdmin = req.user.role === "admin";
+        if (!isClient && !isAdmin) {
+          return res.status(403).json({
+            error: "Forbidden: You are not authorized to verify payment for this booking.",
+          });
+        }
+
+        baseAmount = booking.amount || parseFloat(amount) || 1000;
+        platformFee = Math.round(baseAmount * 0.05);
+        companionEarnings = baseAmount;
+        targetGirlId = booking.girl_id;
+
+        const pid =
+          payment_id || `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+        const oid = order_id || booking.order_id || `order_test_${Date.now().toString(36)}`;
+        const pMethod = payment_method || "razorpay_test";
+
+        // Update booking to escrow_held
+        await pool.query(
+          `UPDATE bookings 
+                 SET payment_status = 'escrow_held', payment_id = $1, order_id = $2, payment_method = $3, platform_fee = $4, companion_earnings = $5 
+                 WHERE id = $6`,
+          [pid, oid, pMethod, platformFee, companionEarnings, booking_id]
+        );
+      }
     }
 
-    const booking = bookingRes.rows[0];
+    if (targetGirlId) {
+      // Update companion's wallet (Pending in Escrow)
+      await ensureWalletExists(targetGirlId);
+      await pool.query(
+        "UPDATE wallet_balances SET pending_escrow = pending_escrow + $1, updated_at = NOW() WHERE user_id = $2",
+        [companionEarnings, targetGirlId]
+      );
 
-    // 🛡️ Security Check: Ensure caller is the paying client or admin
-    const isClient = parseInt(req.user.id) === parseInt(booking.boy_id);
-    const isAdmin = req.user.role === "admin";
-    if (!isClient && !isAdmin) {
-      return res
-        .status(403)
-        .json({ error: "Forbidden: You are not authorized to verify payment for this booking." });
+      // Record Escrow Hold transaction
+      await pool.query(
+        `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
+               VALUES ($1, $2, 'escrow_hold', $3, $4, $5, 'in_escrow', $6)`,
+        [
+          targetGirlId,
+          booking_id,
+          companionEarnings,
+          `Session Escrow Hold (Booking #${booking_id})`,
+          `Funds held safely in escrow via Razorpay Test Mode. Released upon session completion.`,
+          payment_method || "Razorpay Test",
+        ]
+      );
     }
 
-    const baseAmount = booking.amount || parseFloat(amount) || 1000;
-    const platformFee = Math.round(baseAmount * 0.05);
-    const companionEarnings = baseAmount; // 100% of base rate goes to companion
-
-    const pid =
-      payment_id || `pay_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-    const oid = order_id || booking.order_id || `order_${Date.now().toString(36)}`;
-    const pMethod = payment_method || "upi";
-
-    // Update booking to escrow_held
-    await pool.query(
-      `UPDATE bookings 
-             SET payment_status = 'escrow_held', payment_id = $1, order_id = $2, payment_method = $3, platform_fee = $4, companion_earnings = $5 
-             WHERE id = $6`,
-      [pid, oid, pMethod, platformFee, companionEarnings, booking_id]
-    );
-
-    // Update companion's wallet (Pending in Escrow)
-    await ensureWalletExists(booking.girl_id);
-    await pool.query(
-      "UPDATE wallet_balances SET pending_escrow = pending_escrow + $1, updated_at = NOW() WHERE user_id = $2",
-      [companionEarnings, booking.girl_id]
-    );
-
-    // Record Escrow Hold transaction
-    await pool.query(
-      `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
-             VALUES ($1, $2, 'escrow_hold', $3, $4, $5, 'in_escrow', $6)`,
-      [
-        booking.girl_id,
-        booking_id,
-        companionEarnings,
-        `Session Escrow Hold (Booking #${booking_id})`,
-        `Funds held safely in escrow. Released upon session completion.`,
-        pMethod,
-      ]
-    );
+    const finalPid =
+      payment_id || `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+    const finalOid = order_id || (booking ? booking.order_id : null) || `order_test_${Date.now().toString(36)}`;
 
     res.status(200).json({
       success: true,
       payment_status: "escrow_held",
-      payment_id: pid,
+      payment_id: finalPid,
+      order_id: finalOid,
       companion_earnings: companionEarnings,
       platform_fee: platformFee,
-      message: "Payment captured successfully and held in 100% Escrow Protection!",
+      is_test_mode: true,
+      message: "Payment captured successfully and held in 100% Escrow Protection (Razorpay Test Mode)!",
     });
   } catch (err) {
     console.error("Payment verify error:", err);

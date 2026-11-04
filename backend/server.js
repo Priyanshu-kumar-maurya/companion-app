@@ -122,16 +122,27 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://i.pinimg.com", "blob:"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://res.cloudinary.com",
+          "https://i.pinimg.com",
+          "blob:",
+          "https://*.razorpay.com",
+          "https://cdn.razorpay.com"
+        ],
         connectSrc: [
           "'self'",
           "https://rentgf-and-bf.onrender.com",
           "wss://rentgf-and-bf.onrender.com",
+          "https://api.razorpay.com",
+          "https://lumberjack.razorpay.com",
+          "https://lumberjack-cx.razorpay.com"
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        frameSrc: ["'none'"],
+        frameSrc: ["'self'", "https://api.razorpay.com", "https://checkout.razorpay.com"],
         objectSrc: ["'none'"],
       },
     },
