@@ -14,7 +14,17 @@ import {
   FiAlertCircle,
   FiCheck,
   FiZap,
+  FiArrowLeft,
+  FiXCircle,
+  FiActivity,
 } from "react-icons/fi";
+
+const UPI_APPS = [
+  { id: "gpay", name: "Google Pay", color: "from-blue-500 to-emerald-500", handle: "okaxis / oksbi" },
+  { id: "phonepe", name: "PhonePe", color: "from-purple-600 to-indigo-600", handle: "ybl / ibl" },
+  { id: "paytm", name: "Paytm UPI", color: "from-sky-500 to-blue-600", handle: "paytm" },
+  { id: "bhim", name: "BHIM UPI", color: "from-amber-500 to-emerald-600", handle: "upi" },
+];
 
 export default function PaymentModal({
   isOpen,
@@ -32,7 +42,7 @@ export default function PaymentModal({
   const [cardCvv, setCardCvv] = useState("123");
   const [cardName, setCardName] = useState(currentUser?.name || "Test Cardholder");
   const [selectedBank, setSelectedBank] = useState("HDFC Bank");
-  
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -46,9 +56,16 @@ export default function PaymentModal({
   const [customKeyInput, setCustomKeyInput] = useState("");
   const [keySavedToast, setKeySavedToast] = useState(false);
 
-  // Simulated OTP Modal State for Card Checkout
+  // Simulated Verification Screens
+  const [showUpiModal, setShowUpiModal] = useState(false);
+  const [upiCountdown, setUpiCountdown] = useState(300); // 5 minutes countdown
+  const [isAuthorizingUpi, setIsAuthorizingUpi] = useState(false);
+  const [pendingOrderDetails, setPendingOrderDetails] = useState(null);
+
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [otpValue, setOtpValue] = useState("123456");
+
+  const [showNetbankingModal, setShowNetbankingModal] = useState(false);
 
   // Fetch backend Razorpay public config on mount
   useEffect(() => {
@@ -70,12 +87,38 @@ export default function PaymentModal({
     fetchConfig();
   }, [isOpen]);
 
+  // Live 5-minute countdown for UPI payment request
+  useEffect(() => {
+    if (!showUpiModal) return;
+    setUpiCountdown(300);
+    const interval = setInterval(() => {
+      setUpiCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setShowUpiModal(false);
+          setErrorMsg("UPI collect request timed out after 5 minutes. Please try again.");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showUpiModal]);
+
   if (!isOpen) return null;
 
   const baseAmount =
     bookingData?.amount || (companion?.price ? companion.price * (bookingData?.hours || 1) : 1000);
   const platformFee = Math.round(baseAmount * 0.05); // 5% platform trust & safety fee
   const totalAmount = baseAmount + platformFee;
+
+  const formatCountdown = (seconds) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
 
   // Save custom Razorpay Test Key (starts with rzp_test_)
   const handleSaveCustomKey = () => {
@@ -151,6 +194,10 @@ export default function PaymentModal({
 
       setTransactionDetails(paymentResult);
       setIsProcessing(false);
+      setIsAuthorizingUpi(false);
+      setShowUpiModal(false);
+      setShowOtpModal(false);
+      setShowNetbankingModal(false);
       setIsSuccess(true);
       setErrorMsg("");
 
@@ -159,7 +206,7 @@ export default function PaymentModal({
       }
     } catch (err) {
       console.error("Payment verification error:", err);
-      // Even if backend fails in offline/mock environment, provide safe escrow fallback
+      // Fallback result for reliable testing
       const fallbackResult = {
         payment_id: paymentId,
         order_id: orderId,
@@ -173,6 +220,10 @@ export default function PaymentModal({
       };
       setTransactionDetails(fallbackResult);
       setIsProcessing(false);
+      setIsAuthorizingUpi(false);
+      setShowUpiModal(false);
+      setShowOtpModal(false);
+      setShowNetbankingModal(false);
       setIsSuccess(true);
       if (onPaymentSuccess) onPaymentSuccess(fallbackResult);
     }
@@ -270,21 +321,46 @@ export default function PaymentModal({
       }
     }
 
-    // Fast Test Simulator Fallback (When using mock key or offline testing)
+    // Realistic Interactive Simulation Flow based on chosen payment method
     setTimeout(() => {
-      if (paymentMethod === "card") {
-        setIsProcessing(false);
+      setIsProcessing(false);
+      setPendingOrderDetails({ orderId, effectiveKey });
+
+      if (paymentMethod === "upi") {
+        setShowUpiModal(true);
+        try {
+          navigator.vibrate?.([80, 50, 80]);
+        } catch (e) {}
+      } else if (paymentMethod === "card") {
         setShowOtpModal(true);
-      } else {
-        const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-        verifyWithBackend({
-          paymentId: testPaymentId,
-          orderId,
-          signature: "test_sig_verified_escrow",
-          method: `Razorpay Test Simulator (${paymentMethod.toUpperCase()})`,
-        });
+      } else if (paymentMethod === "netbanking") {
+        setShowNetbankingModal(true);
       }
-    }, 900);
+    }, 450);
+  };
+
+  // Complete UPI Authorization (User clicks "Approve in UPI App")
+  const handleApproveUpiPayment = () => {
+    setIsAuthorizingUpi(true);
+    const selectedAppObj = UPI_APPS.find((a) => a.id === selectedUpiApp) || UPI_APPS[0];
+    const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+    const orderId = pendingOrderDetails?.orderId || `order_test_${Date.now().toString(36)}`;
+
+    setTimeout(() => {
+      verifyWithBackend({
+        paymentId: testPaymentId,
+        orderId,
+        signature: "test_upi_signature_approved",
+        method: `Razorpay UPI Test (${selectedAppObj.name})`,
+      });
+    }, 1100);
+  };
+
+  // User declines UPI payment
+  const handleDeclineUpiPayment = () => {
+    setShowUpiModal(false);
+    setIsAuthorizingUpi(false);
+    setErrorMsg("UPI collect request was declined by user. You can retry or choose another method.");
   };
 
   // Complete OTP Simulation for Test Cards
@@ -292,23 +368,42 @@ export default function PaymentModal({
     setShowOtpModal(false);
     setIsProcessing(true);
     const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-    const testOrderId = `order_test_${Date.now().toString(36)}`;
+    const orderId = pendingOrderDetails?.orderId || `order_test_${Date.now().toString(36)}`;
 
     setTimeout(() => {
       verifyWithBackend({
         paymentId: testPaymentId,
-        orderId: testOrderId,
+        orderId,
         signature: "test_card_otp_signature",
         method: "Razorpay Test Card (4111-1111)",
       });
     }, 700);
   };
 
+  // Complete NetBanking Simulation
+  const handleApproveNetbanking = () => {
+    setIsProcessing(true);
+    setShowNetbankingModal(false);
+    const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
+    const orderId = pendingOrderDetails?.orderId || `order_test_${Date.now().toString(36)}`;
+
+    setTimeout(() => {
+      verifyWithBackend({
+        paymentId: testPaymentId,
+        orderId,
+        signature: "test_netbanking_approved",
+        method: `Razorpay Test NetBanking (${selectedBank})`,
+      });
+    }, 800);
+  };
+
+  const selectedAppObj = UPI_APPS.find((a) => a.id === selectedUpiApp) || UPI_APPS[0];
+
   return (
     <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-lg bg-[#121212] border border-[#262626] rounded-3xl p-6 sm:p-7 shadow-2xl my-8 text-left">
         {/* Close Button */}
-        {!isProcessing && !showOtpModal && (
+        {!isProcessing && !showOtpModal && !showUpiModal && !showNetbankingModal && (
           <button
             type="button"
             onClick={onClose}
@@ -344,6 +439,10 @@ export default function PaymentModal({
                 </span>
               </div>
               <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Method:</span>
+                <span className="text-white font-semibold">{transactionDetails?.payment_method}</span>
+              </div>
+              <div className="flex justify-between text-xs">
                 <span className="text-gray-400">Mode:</span>
                 <span className="text-purple-400 font-bold flex items-center gap-1">
                   <FiZap size={11} /> Razorpay Test Mode
@@ -375,6 +474,128 @@ export default function PaymentModal({
             >
               View Booking Status →
             </button>
+          </div>
+        ) : showUpiModal ? (
+          /* ─── REALISTIC UPI APPROVAL & INTENT WAITING SCREEN ─── */
+          <div className="py-2 animate-fade-in text-left">
+            {/* Header with App Brand */}
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#262626]">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${selectedAppObj.color} flex items-center justify-center text-white font-black text-sm shadow-md shrink-0`}
+                >
+                  <FiSmartphone size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                    <span>{selectedAppObj.name} Collect Request</span>
+                  </h3>
+                  <p className="text-[11px] text-gray-400">
+                    Awaiting authorization on your phone
+                  </p>
+                </div>
+              </div>
+
+              {/* Live Expiry Countdown Pill */}
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-mono font-bold">
+                <FiClock size={12} className="animate-pulse" />
+                <span>{formatCountdown(upiCountdown)}</span>
+              </div>
+            </div>
+
+            {/* Pulsing Request Box */}
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 mb-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#262626]">
+                <span className="text-xs text-gray-400">Requested Amount:</span>
+                <span className="text-lg font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
+                  ₹{totalAmount.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Merchant:</span>
+                  <span className="text-white font-semibold">Coffeely Escrow (Razorpay)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Your UPI ID:</span>
+                  <span className="text-pink-300 font-mono font-bold truncate max-w-[200px]">
+                    {upiId}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Session Date:</span>
+                  <span className="text-white">
+                    {bookingData?.meeting_date || "Today"} with {companion?.name}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Realistic Steps Instruction */}
+            <div className="bg-[#141414] border border-[#262626] rounded-2xl p-3.5 mb-5 space-y-2">
+              <div className="text-[11px] font-bold text-gray-300 flex items-center gap-1.5 mb-1">
+                <FiActivity size={13} className="text-pink-400" />
+                <span>Simulated UPI Flow Instructions:</span>
+              </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
+                <span className="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">1</span>
+                <span>Open your <strong>{selectedAppObj.name}</strong> or UPI app notification.</span>
+              </p>
+              <p className="text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
+                <span className="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">2</span>
+                <span>Review collect request of <strong>₹{totalAmount.toLocaleString()}</strong> from Coffeely Escrow.</span>
+              </p>
+              <p className="text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
+                <span className="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">3</span>
+                <span>Tap <strong>"Approve & Enter UPI PIN"</strong> below to simulate authorized completion in test mode.</span>
+              </p>
+            </div>
+
+            {/* Test Action Controls */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleApproveUpiPayment}
+                disabled={isAuthorizingUpi}
+                className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isAuthorizingUpi ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Verifying UPI PIN & Securing Escrow...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiCheckCircle size={15} />
+                    <span>✅ Approve & Enter UPI PIN (Simulate Success)</span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeclineUpiPayment}
+                  disabled={isAuthorizingUpi}
+                  className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-xl text-xs font-bold transition border border-red-500/25 flex items-center justify-center gap-1.5"
+                >
+                  <FiXCircle size={13} />
+                  <span>Decline Payment</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowUpiModal(false)}
+                  disabled={isAuthorizingUpi}
+                  className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-xs font-semibold transition border border-[#262626] flex items-center gap-1"
+                >
+                  <FiArrowLeft size={13} />
+                  <span>Back</span>
+                </button>
+              </div>
+            </div>
           </div>
         ) : showOtpModal ? (
           /* ─── SIMULATED 3D SECURE OTP MODAL (TEST CARD) ─── */
@@ -418,6 +639,51 @@ export default function PaymentModal({
                 className="flex-2 py-3 bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] text-white rounded-xl text-xs font-bold shadow-lg hover:opacity-95 transition"
               >
                 Submit OTP & Authorize ₹{totalAmount.toLocaleString()}
+              </button>
+            </div>
+          </div>
+        ) : showNetbankingModal ? (
+          /* ─── SIMULATED NETBANKING CONFIRMATION ─── */
+          <div className="text-left py-2 animate-fade-in">
+            <div className="flex items-center gap-3 pb-3 mb-4 border-b border-[#262626]">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-pink-400 font-bold">
+                <FiGlobe size={20} />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">{selectedBank} NetBanking</h3>
+                <p className="text-[11px] text-gray-400">Razorpay NetBanking Sandbox Simulation</p>
+              </div>
+            </div>
+
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 mb-4 space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Payable Amount:</span>
+                <span className="text-white font-bold">₹{totalAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Beneficiary:</span>
+                <span className="text-white">Coffeely Escrow Protection</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Account:</span>
+                <span className="text-gray-300 font-mono">XXXX-XXXX-8901</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleApproveNetbanking}
+                className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-bold text-xs shadow-lg transition active:scale-95"
+              >
+                ✅ Authorize NetBanking Payment of ₹{totalAmount.toLocaleString()}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowNetbankingModal(false)}
+                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl text-xs font-semibold transition border border-[#262626]"
+              >
+                Cancel
               </button>
             </div>
           </div>
@@ -598,40 +864,44 @@ export default function PaymentModal({
             {/* UPI Payment Input */}
             {paymentMethod === "upi" && (
               <div className="space-y-2.5 mb-4 animate-fade-in">
+                <label className="block text-[11px] text-gray-400">Choose UPI App</label>
                 <div className="grid grid-cols-4 gap-1.5">
-                  {["gpay", "phonepe", "paytm", "bhim"].map((app) => (
+                  {UPI_APPS.map((app) => (
                     <button
-                      key={app}
+                      key={app.id}
                       type="button"
-                      onClick={() => setSelectedUpiApp(app)}
+                      onClick={() => setSelectedUpiApp(app.id)}
                       className={`p-2 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition text-center ${
-                        selectedUpiApp === app
+                        selectedUpiApp === app.id
                           ? "bg-white/10 border-[#e1306c] text-white"
                           : "bg-[#181818] border-[#262626] text-gray-400 hover:text-white"
                       }`}
                     >
-                      {app}
+                      {app.name.split(" ")[0]}
                     </button>
                   ))}
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-[11px] text-gray-400">Test UPI ID</label>
+                    <label className="text-[11px] text-gray-400">Enter UPI ID / VPA</label>
                     <button
                       type="button"
-                      onClick={() => setUpiId("success@razorpay")}
+                      onClick={() => setUpiId("test@razorpay")}
                       className="text-[10px] text-pink-400 hover:underline"
                     >
-                      Use success@razorpay
+                      Use test@razorpay
                     </button>
                   </div>
                   <input
                     type="text"
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="success@razorpay"
+                    placeholder="username@oksbi / username@paytm"
                     className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-[#e1306c] transition"
                   />
+                  <p className="text-[10px] text-gray-500 mt-1">
+                    💡 Clicking Pay will send a simulated collect request to your selected UPI app.
+                  </p>
                 </div>
               </div>
             )}
@@ -741,12 +1011,15 @@ export default function PaymentModal({
               {isProcessing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Processing Razorpay Escrow...</span>
+                  <span>Connecting to Razorpay UPI...</span>
                 </>
               ) : (
                 <>
                   <FiLock size={15} />
-                  <span>Pay ₹{totalAmount.toLocaleString()} · Razorpay Test</span>
+                  <span>
+                    Pay ₹{totalAmount.toLocaleString()} via{" "}
+                    {paymentMethod === "upi" ? "UPI Collect" : paymentMethod === "card" ? "Card" : "NetBanking"}
+                  </span>
                 </>
               )}
             </button>
