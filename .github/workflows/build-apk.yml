@@ -102,32 +102,23 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: v0.0.6
-          name: "Coffeely App v0.0.6 Beta (Official APK)"
+          tag_name: v0.0.7
+          name: "Coffeely App v0.0.7 Beta (Official APK)"
           body: |
-            ### ☕ Coffeely Android App v0.0.6 (Beta)
+            ### ☕ Coffeely Android App v0.0.7 (Beta)
             
             Official installable Android APK package for **Coffeely** - Safe & Verified Companion Booking Platform.
             
-            #### 🆕 What's New in v0.0.6:
-            - ✨ **YouTube & Instagram Shimmer Skeletons**: High-end animated placeholders replacing spinning loaders and raw text across all feeds.
-            - 🔍 **YouTube Explore Card Grid**: Shimmer wave video-card style skeleton preview for discover companions.
-            - 📸 **Instagram Post & Photo Grid Skeletons**: Smooth dark shimmer placeholders on Home feed and Profile posts.
-            - 💬 **Inbox & Call History Skeletons**: Fluid avatar and multi-line loading placeholders.
-            - 🔔 **Activity Shimmer**: Polished activity item loading.
-            - 📱 **Zero Navbar Squashing on Mobile**: Fixed fixed top/bottom headers compressing login & registration inputs.
-            - 🔙 **Quick Back to Home Navigation**: Added persistent '← Back to Home' button on Login and Register screens.
-            - 🎯 **Streamlined Mobile Hero**: Cleaned up mobile homepage so users see brand actions directly without a 550px static frame.
-            - 🎂 **Native Date of Birth Picker**: Clean responsive wheel controls for Day, Month, and Year on mobile registration.
-            - 👤 **Single Name Support & Phone Auto-Sanitize**: Supports single-name users (e.g. Priyanshu, Aanu) and auto-cleans country codes / spaces.
-            - ✨ **Polished Guest Modals**: Sleek native-style 'Sign In to Connect' bottom modal replacing old browser alerts.
-            - 📡 **Smart Offline Mode & Session Persistence**: Offline notifications with seamless auto-reconnect.
-            - 🎨 **Official Coffeely App Icon**: Replaced default Capacitor icon with high-res dark Coffeely branding across all device resolutions.
-            - 🌟 **Custom Splash Screen**: Smooth themed splash screen on app launch.
-            - 📹 **Camera & Microphone Auto-Permission**: Fixed WebRTC video & voice call permissions in Android WebView.
-            - 🔙 **Android Hardware Back-Button Support**: Pressing back navigates screens smoothly instead of closing the app.
-            - 📱 **Edge-to-Edge Safe Area Insets**: Fixed top notch / status bar and bottom navigation bar overlap.
-            - 🚫 **Suppressed PWA Banner in Native APK**: Pure native look and feel without browser prompts.
+            #### 🆕 What's New in v0.0.7:
+            - 🎨 **Complete Instagram-Grade OLED Dark Redesign**: Pure black (`#000000`) background with Instagram sunset accents (`#f9ce3f` -> `#e1306c` -> `#833ab4`) across all screens and modals.
+            - 🔍 **Streamlined Explore Header**: Replaced 6 stacked rows with a single clean controls bar (Search with `×` clear, Near Me, View switcher) and a bottom-sheet filter drawer.
+            - 👤 **Mobile Photos-First Profile**: Companion photos immediately below Bio, Instagram profile tabs (`[ 📸 POSTS | ⭐ REVIEWS | ☕ MEETUP ]`), and sticky bottom booking bar.
+            - 💬 **Modern Direct Messages**: Segmented `[ 💬 Chats | 📞 Calls ]` with secret 4-digit PIN lock protection.
+            - 📞 **Frosted Glass Calling Overlay**: iOS/Instagram frosted glass controls dock with live audio waveform equalizer bars.
+            - 💳 **Razorpay Test Mode & UPI Collect Simulator**: 5-minute live countdown timer, interactive UPI PIN authorization, 3D Secure card test, and 100% Escrow Protection.
+            - 📊 **Story Highlights Analytics**: Modern gradient ring metrics on Boy & Girl dashboards.
+            - ✨ **YouTube & Instagram Shimmer Skeletons**: High-end animated placeholders across all feeds.
+            - 📱 **Edge-to-Edge & Hardware Back Support**: Full Android gesture navigation and safe-area notch spacing.
             
             #### 📥 Direct Download:
             - **[Click here to Download coffeely.apk](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/download/v2.4.1/coffeely.apk)**

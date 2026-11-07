@@ -1,16 +1,18 @@
 {
-  "version": "0.0.6",
-  "versionCode": 8,
-  "releaseTitle": "Coffeely v0.0.6 (Beta) — YouTube & Instagram Shimmer Skeleton Loaders",
+  "version": "0.0.7",
+  "versionCode": 9,
+  "releaseTitle": "Coffeely v0.0.7 (Beta) — Instagram OLED Dark Theme & Razorpay Gateway",
   "releaseNotes": [
-    "✨ YouTube & Instagram Shimmer Wave: Premium animated skeleton loading states across the entire app",
-    "🔍 Find & Discover Grid: High-fidelity card skeletons with rounded thumbnails, avatars, and lines",
-    "📸 Home Feed & Details: Instagram-style card and 3x3 photo grid shimmer placeholders",
-    "💬 Message Inbox & Calls: Replaced text spinners with sleek avatar and message bar skeletons",
-    "🔔 Activity Notifications: Shimmer skeleton list during background sync"
+    "🎨 Complete Instagram-Grade OLED Dark Redesign: Pure black (#000000) with Instagram sunset accents across all pages and modals",
+    "🔍 Streamlined Explore Bar: Replaced 6 stacked rows with a single clean controls bar and bottom-sheet filter drawer",
+    "👤 Mobile Photos-First Profile: Interactive tabs ([ Posts | Reviews | Meetup ]) and sticky booking bar",
+    "💬 Modern Direct Messages: Segmented Chats & Calls with biometric PIN lock protection",
+    "📞 Frosted Glass Calling Overlay: iOS/Instagram dark glass controls with real-time waveform equalizer bars",
+    "💳 Razorpay Test Mode & UPI Collect: 5-minute countdown request timer, interactive UPI PIN simulation, and 100% Escrow Protection",
+    "📊 Story Highlights Analytics: Modern gradient ring metrics on Boy & Girl dashboards"
   ],
   "mandatory": false,
   "apkDownloadUrl": "https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk",
   "webUrl": "https://coffeely-app.vercel.app",
-  "releaseDate": "September 2026"
+  "releaseDate": "November 2026"
 }

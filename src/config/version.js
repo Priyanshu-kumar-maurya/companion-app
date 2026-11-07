@@ -1,10 +1,23 @@
-export const APP_VERSION = "0.0.6";
-export const APP_VERSION_TAG = "v0.0.6";
+export const APP_VERSION = "0.0.7";
+export const APP_VERSION_TAG = "v0.0.7";
 export const APP_RELEASE_STAGE = "Beta Early Access";
-export const APP_BUILD_DATE = "September 2026";
+export const APP_BUILD_DATE = "November 2026";
 export const IS_LATEST_VERSION = true;
 
 export const APP_CHANGELOG = [
+  {
+    version: "v0.0.7 (Beta)",
+    date: "November 2026",
+    features: [
+      "🎨 Complete Instagram-Grade OLED Dark Redesign: Pure black (#000000) with Instagram sunset accents across all pages and modals",
+      "🔍 Streamlined Explore Bar: Replaced 6 stacked rows with a single clean controls bar and bottom-sheet filter drawer",
+      "👤 Mobile Photos-First Profile: Interactive tabs ([ Posts | Reviews | Meetup ]) and sticky booking bar",
+      "💬 Modern Direct Messages: Segmented Chats & Calls with biometric PIN lock protection",
+      "📞 Frosted Glass Calling Overlay: iOS/Instagram dark glass controls with real-time waveform equalizer bars",
+      "💳 Razorpay Test Mode & UPI Collect: 5-minute countdown request timer, interactive UPI PIN simulation, and 100% Escrow Protection",
+      "📊 Story Highlights Analytics: Modern gradient ring metrics on Boy & Girl dashboards",
+    ],
+  },
   {
     version: "v0.0.6 (Beta)",
     date: "September 2026",
