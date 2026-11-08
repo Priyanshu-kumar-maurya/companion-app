@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 permissions:
@@ -56,12 +58,12 @@ jobs:
           cp -r build/* android/app/src/main/assets/public/
           cp capacitor.config.json android/app/src/main/assets/capacitor.config.json
 
-      - name: Build Android Debug APK with Gradle
+      - name: Build Android Release and Debug APK with Gradle
         id: gradle_build
         continue-on-error: true
         run: |
           cd android
-          ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee ../gradle_output.txt
+          ./gradlew assembleRelease assembleDebug --stacktrace --no-daemon 2>&1 | tee ../gradle_output.txt
           exit ${PIPESTATUS[0]}
 
       - name: Upload Build Log if Failed
@@ -81,7 +83,11 @@ jobs:
       - name: Locate and Prepare Coffeely APK
         run: |
           mkdir -p build-output
-          APK_FILE=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          # Prefer signed release APK if generated, fallback to debug APK
+          APK_FILE=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find android/app/build/outputs/apk -name "*.apk" | head -n 1)
+          fi
           if [ -z "$APK_FILE" ]; then
             echo "ERROR: APK file not found in android/app/build/outputs/apk!"
             exit 1
@@ -100,7 +106,7 @@ jobs:
 
       - name: Publish Coffeely APK to GitHub Releases
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
         with:
           tag_name: v0.0.7
           name: "Coffeely App v0.0.7 Beta (Official APK)"
@@ -121,14 +127,16 @@ jobs:
             - 📱 **Edge-to-Edge & Hardware Back Support**: Full Android gesture navigation and safe-area notch spacing.
             
             #### 📥 Direct Download:
-            - **[Click here to Download coffeely.apk](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/download/v2.4.1/coffeely.apk)**
+            - **[Click here to Download coffeely.apk (v0.0.7)](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/download/v0.0.7/coffeely.apk)**
             - **[Always Download Latest APK](https://github.com/Priyanshu-kumar-maurya/companion-app/releases/latest/download/coffeely.apk)**
             
             #### 📱 Installation Instructions:
-            1. Download `coffeely.apk` directly on your Android mobile.
-            2. Tap the downloaded file in your browser downloads or Files app.
-            3. If prompted with *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings** and enable **"Allow from this source"**.
-            4. Tap **Install** and launch **Coffeely**!
+            1. **Important:** If you have an older version of Coffeely installed, **uninstall it first** from your phone (to avoid signature conflict).
+            2. Download `coffeely.apk` directly on your Android mobile.
+            3. Tap the downloaded file in your browser downloads or Files app.
+            4. If prompted with *"For your security, your phone is not allowed to install unknown apps from this source"*, tap **Settings** and enable **"Allow from this source"**.
+            5. If Google Play Protect warns, tap **"More details"** -> **"Install anyway"**.
+            6. Tap **Install** and enjoy **Coffeely**!
             
             #### ✨ Highlights & Features:
             - 🛡️ **100% Escrow Protection** for bookings and secure wallet payouts
