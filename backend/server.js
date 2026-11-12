@@ -22,6 +22,7 @@ const storyRoutes = require("./routes/storyRoutes");
 const { router: pushRoutes } = require("./routes/pushRoutes");
 const webrtcRoutes = require("./routes/webrtcRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
+const upiRoutes = require("./routes/upiRoutes");
 
 const app = express();
 const server = http.createServer(app);
@@ -213,6 +214,7 @@ const paymentRateLimit = rateLimiter(
 );
 app.use("/api/payment", paymentRateLimit);
 app.use("/api/wallet", paymentRateLimit);
+app.use("/api/upi", paymentRateLimit, upiRoutes);
 app.use("/api", paymentRoutes);
 
 // ─── Health Check ─────────────────────────────────────────────

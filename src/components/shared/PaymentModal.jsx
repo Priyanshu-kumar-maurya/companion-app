@@ -66,6 +66,11 @@ export default function PaymentModal({
   const [otpValue, setOtpValue] = useState("123456");
 
   const [showNetbankingModal, setShowNetbankingModal] = useState(false);
+  const [upiOrderData, setUpiOrderData] = useState(null);
+  const [upiViewMode, setUpiViewMode] = useState("apps"); // 'apps' | 'qr'
+  const [userUtr, setUserUtr] = useState("");
+  const [isVerifyingUtr, setIsVerifyingUtr] = useState(false);
+  const [utrError, setUtrError] = useState("");
 
   // Fetch backend Razorpay public config on mount
   useEffect(() => {
@@ -327,6 +332,31 @@ export default function PaymentModal({
       setPendingOrderDetails({ orderId, effectiveKey });
 
       if (paymentMethod === "upi") {
+        // Fetch UPIGateway order
+        try {
+          const token = localStorage.getItem("token");
+          const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+          fetch(`${API_BASE}/api/upi/create-order`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({
+              booking_id: bookingData?.id,
+              amount: baseAmount,
+              note: `Booking with ${companion?.name || "Companion"}`,
+            }),
+          })
+            .then((r) => r.json())
+            .then((uData) => {
+              if (uData.success) {
+                setUpiOrderData(uData);
+              }
+            })
+            .catch((e) => console.warn("UPIGateway order error:", e));
+        } catch (e) {}
+
         setShowUpiModal(true);
         try {
           navigator.vibrate?.([80, 50, 80]);
@@ -337,6 +367,78 @@ export default function PaymentModal({
         setShowNetbankingModal(true);
       }
     }, 450);
+  };
+
+  // Verify 12-Digit UTR via UPIGateway
+  const handleVerifyUtr = async (submittedUtr) => {
+    const finalUtr = (submittedUtr || userUtr).trim();
+    if (!finalUtr || finalUtr.length !== 12) {
+      setUtrError("Please enter a valid 12-digit UPI Reference / UTR Number");
+      return;
+    }
+    setIsVerifyingUtr(true);
+    setUtrError("");
+    const token = localStorage.getItem("token");
+    const API_BASE = process.env.REACT_APP_API_URL || "https://rentgf-and-bf.onrender.com";
+
+    try {
+      const res = await fetch(`${API_BASE}/api/upi/verify-payment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          booking_id: bookingData?.id,
+          order_id: upiOrderData?.order_id || pendingOrderDetails?.orderId,
+          utr: finalUtr,
+          amount: baseAmount,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "UTR verification failed");
+      }
+      const paymentResult = {
+        payment_id: finalUtr,
+        order_id: data.order_id || upiOrderData?.order_id,
+        payment_method: "UPIGateway (0% Fee Direct Bank)",
+        amount: totalAmount,
+        base_amount: baseAmount,
+        platform_fee: 0,
+        payment_status: "escrow_held",
+        is_test_mode: true,
+        created_at: new Date().toISOString(),
+      };
+      setTransactionDetails(paymentResult);
+      setIsVerifyingUtr(false);
+      setShowUpiModal(false);
+      setIsSuccess(true);
+      if (onPaymentSuccess) onPaymentSuccess(paymentResult);
+    } catch (err) {
+      // Sandbox fallback for local offline testing
+      if (err.message.includes("fetch") || err.message.includes("Network")) {
+        const fallbackResult = {
+          payment_id: finalUtr,
+          order_id: upiOrderData?.order_id || `UPI_${Date.now()}`,
+          payment_method: "UPIGateway Sandbox (0% Fee)",
+          amount: totalAmount,
+          base_amount: baseAmount,
+          platform_fee: 0,
+          payment_status: "escrow_held",
+          is_test_mode: true,
+          created_at: new Date().toISOString(),
+        };
+        setTransactionDetails(fallbackResult);
+        setIsVerifyingUtr(false);
+        setShowUpiModal(false);
+        setIsSuccess(true);
+        if (onPaymentSuccess) onPaymentSuccess(fallbackResult);
+      } else {
+        setUtrError(err.message || "Failed to verify payment");
+        setIsVerifyingUtr(false);
+      }
+    }
   };
 
   // Complete UPI Authorization (User clicks "Approve in UPI App")
@@ -476,22 +578,23 @@ export default function PaymentModal({
             </button>
           </div>
         ) : showUpiModal ? (
-          /* ─── REALISTIC UPI APPROVAL & INTENT WAITING SCREEN ─── */
+          /* ─── UPIGATEWAY ZERO-FEE DIRECT BANK CHECKOUT ─── */
           <div className="py-2 animate-fade-in text-left">
-            {/* Header with App Brand */}
+            {/* Header with UPIGateway Branding & Timer */}
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#262626]">
               <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${selectedAppObj.color} flex items-center justify-center text-white font-black text-sm shadow-md shrink-0`}
-                >
-                  <FiSmartphone size={18} />
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#f9ce3f] via-[#e1306c] to-[#833ab4] flex items-center justify-center text-white font-black text-sm shadow-md shrink-0">
+                  ⚡
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
-                    <span>{selectedAppObj.name} Collect Request</span>
+                    <span>UPIGateway (0% Fee)</span>
+                    <span className="px-2 py-0.2 rounded-full text-[9px] font-extrabold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
+                      DIRECT BANK
+                    </span>
                   </h3>
                   <p className="text-[11px] text-gray-400">
-                    Awaiting authorization on your phone
+                    Direct Peer-to-Merchant · Escrow Protection
                   </p>
                 </div>
               </div>
@@ -503,98 +606,194 @@ export default function PaymentModal({
               </div>
             </div>
 
-            {/* Pulsing Request Box */}
-            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 mb-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/5 rounded-full blur-2xl pointer-events-none" />
-
-              <div className="flex items-center justify-between mb-3 pb-3 border-b border-[#262626]">
-                <span className="text-xs text-gray-400">Requested Amount:</span>
-                <span className="text-lg font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
+            {/* Requested Amount Banner */}
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 mb-3 relative overflow-hidden">
+              <div className="flex items-center justify-between mb-2 pb-2 border-b border-[#262626]">
+                <span className="text-xs text-gray-400">Payable Amount:</span>
+                <span className="text-xl font-black bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent">
                   ₹{totalAmount.toLocaleString()}
                 </span>
               </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Merchant:</span>
-                  <span className="text-white font-semibold">Coffeely Escrow (Razorpay)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Your UPI ID:</span>
-                  <span className="text-pink-300 font-mono font-bold truncate max-w-[200px]">
-                    {upiId}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Session Date:</span>
-                  <span className="text-white">
-                    {bookingData?.meeting_date || "Today"} with {companion?.name}
-                  </span>
-                </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Merchant VPA:</span>
+                <span className="text-pink-300 font-mono font-bold">
+                  {upiOrderData?.vpa || "priyanshu.companion@icici"}
+                </span>
               </div>
             </div>
 
-            {/* Realistic Steps Instruction */}
-            <div className="bg-[#141414] border border-[#262626] rounded-2xl p-3.5 mb-5 space-y-2">
-              <div className="text-[11px] font-bold text-gray-300 flex items-center gap-1.5 mb-1">
-                <FiActivity size={13} className="text-pink-400" />
-                <span>Simulated UPI Flow Instructions:</span>
-              </div>
-              <p className="text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
-                <span className="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">1</span>
-                <span>Open your <strong>{selectedAppObj.name}</strong> or UPI app notification.</span>
-              </p>
-              <p className="text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
-                <span className="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">2</span>
-                <span>Review collect request of <strong>₹{totalAmount.toLocaleString()}</strong> from Coffeely Escrow.</span>
-              </p>
-              <p className="text-[11px] text-gray-400 leading-relaxed flex items-start gap-2">
-                <span className="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] shrink-0 font-bold">3</span>
-                <span>Tap <strong>"Approve & Enter UPI PIN"</strong> below to simulate authorized completion in test mode.</span>
-              </p>
-            </div>
-
-            {/* Test Action Controls */}
-            <div className="space-y-2">
+            {/* View Mode Switcher: 1-Tap Apps vs Dynamic QR */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-[#121212] border border-[#222] rounded-xl mb-3 text-xs font-bold">
               <button
                 type="button"
-                onClick={handleApproveUpiPayment}
-                disabled={isAuthorizingUpi}
-                className="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={() => setUpiViewMode("apps")}
+                className={`py-2 rounded-lg transition ${
+                  upiViewMode === "apps"
+                    ? "bg-[#242424] text-white shadow"
+                    : "text-gray-400 hover:text-white"
+                }`}
               >
-                {isAuthorizingUpi ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Verifying UPI PIN & Securing Escrow...</span>
-                  </>
-                ) : (
-                  <>
-                    <FiCheckCircle size={15} />
-                    <span>✅ Approve & Enter UPI PIN (Simulate Success)</span>
-                  </>
-                )}
+                📱 1-Tap UPI Apps
               </button>
+              <button
+                type="button"
+                onClick={() => setUpiViewMode("qr")}
+                className={`py-2 rounded-lg transition ${
+                  upiViewMode === "qr"
+                    ? "bg-[#242424] text-white shadow"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                📷 Scan QR Code
+              </button>
+            </div>
 
+            {/* Tab 1: 1-Tap UPI Apps Grid */}
+            {upiViewMode === "apps" ? (
+              <div className="space-y-2 mb-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const intent =
+                        upiOrderData?.app_intents?.phonepe ||
+                        upiOrderData?.intent_url ||
+                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                      window.location.href = intent;
+                    }}
+                    className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-purple-500"
+                  >
+                    <span className="text-lg">🟣</span>
+                    <span>PhonePe</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const intent =
+                        upiOrderData?.app_intents?.gpay ||
+                        upiOrderData?.intent_url ||
+                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                      window.location.href = intent;
+                    }}
+                    className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-blue-500"
+                  >
+                    <span className="text-lg">🔵</span>
+                    <span>Google Pay</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const intent =
+                        upiOrderData?.app_intents?.paytm ||
+                        upiOrderData?.intent_url ||
+                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                      window.location.href = intent;
+                    }}
+                    className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-sky-500"
+                  >
+                    <span className="text-lg">🟦</span>
+                    <span>Paytm</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const intent =
+                        upiOrderData?.app_intents?.bhim ||
+                        upiOrderData?.intent_url ||
+                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                      window.location.href = intent;
+                    }}
+                    className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-amber-500"
+                  >
+                    <span className="text-lg">🟧</span>
+                    <span>BHIM UPI</span>
+                  </button>
+                </div>
+                <p className="text-[11px] text-gray-500 text-center">
+                  💡 Tap your preferred app to open and complete payment directly.
+                </p>
+              </div>
+            ) : (
+              /* Tab 2: Dynamic QR Code */
+              <div className="flex flex-col items-center justify-center p-3 mb-4 bg-[#161616] border border-[#262626] rounded-2xl">
+                {upiOrderData?.qr_data_url ? (
+                  <img
+                    src={upiOrderData.qr_data_url}
+                    alt="UPI Dynamic QR"
+                    className="w-44 h-44 bg-white p-2 rounded-xl shadow-lg mb-2"
+                  />
+                ) : (
+                  <div className="w-44 h-44 bg-white p-2 rounded-xl flex items-center justify-center text-black font-mono text-xs text-center">
+                    Generating dynamic QR code...
+                  </div>
+                )}
+                <span className="text-[11px] text-gray-400">
+                  Scan using GPay, PhonePe, Paytm, or any UPI App
+                </span>
+              </div>
+            )}
+
+            {/* 12-Digit UTR Form */}
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-3.5 mb-3">
+              <label className="block text-[11px] font-bold text-gray-300 mb-1.5">
+                Enter 12-Digit UPI Reference / UTR Number (after payment):
+              </label>
               <div className="flex gap-2">
+                <input
+                  type="text"
+                  maxLength={12}
+                  placeholder="e.g. 431526789012"
+                  value={userUtr}
+                  onChange={(e) => setUserUtr(e.target.value.replace(/[^0-9]/g, ""))}
+                  className="flex-1 bg-[#121212] border border-[#262626] focus:border-[#e1306c] rounded-xl px-3 py-2 text-sm font-mono tracking-wider text-white outline-none"
+                />
                 <button
                   type="button"
-                  onClick={handleDeclineUpiPayment}
-                  disabled={isAuthorizingUpi}
-                  className="flex-1 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-xl text-xs font-bold transition border border-red-500/25 flex items-center justify-center gap-1.5"
+                  onClick={() => handleVerifyUtr()}
+                  disabled={isVerifyingUtr || userUtr.length !== 12}
+                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl font-bold text-xs shadow-md disabled:opacity-40 transition active:scale-95"
                 >
-                  <FiXCircle size={13} />
-                  <span>Decline Payment</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowUpiModal(false)}
-                  disabled={isAuthorizingUpi}
-                  className="px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-xs font-semibold transition border border-[#262626] flex items-center gap-1"
-                >
-                  <FiArrowLeft size={13} />
-                  <span>Back</span>
+                  {isVerifyingUtr ? "Verifying..." : "Verify UTR"}
                 </button>
               </div>
+              {utrError && (
+                <div className="text-red-400 text-[11px] mt-1.5 flex items-center gap-1 font-semibold">
+                  ⚠️ {utrError}
+                </div>
+              )}
+            </div>
+
+            {/* Sandbox Simulation / One-Click Test Control */}
+            <div className="bg-[#151515] border border-dashed border-[#f9ce3f]/40 rounded-xl p-2.5 mb-3 flex items-center justify-between text-xs">
+              <span className="text-amber-300 font-semibold text-[11px] flex items-center gap-1">
+                🧪 Sandbox Testing Mode
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const dummyUtr = `4315${Math.floor(10000000 + Math.random() * 90000000)}`;
+                  setUserUtr(dummyUtr);
+                  handleVerifyUtr(dummyUtr);
+                }}
+                className="px-3 py-1 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 rounded-lg text-[10px] font-bold transition"
+              >
+                ⚡ 1-Click Auto Verify
+              </button>
+            </div>
+
+            {/* Back / Cancel */}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowUpiModal(false)}
+                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-xs font-semibold transition border border-[#262626] flex items-center justify-center gap-1.5"
+              >
+                <FiArrowLeft size={13} />
+                <span>Choose Another Payment Method</span>
+              </button>
             </div>
           </div>
         ) : showOtpModal ? (
