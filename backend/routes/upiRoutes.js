@@ -1,6 +1,6 @@
 /**
- * Coffeely - Zero-Fee UPIGateway Router
- * Direct peer-to-merchant UPI integration with 0% MDR, dynamic QR codes, mobile intents, and escrow protection
+ * Coffeely - Zero-Fee Direct P2P UPIGateway Router
+ * Direct user-to-user (Client -> Companion) UPI payments with 0% platform fee, dynamic QR, and 1-tap mobile intents
  */
 
 const express = require("express");
@@ -10,26 +10,12 @@ const authenticateToken = require("../middleware/auth");
 
 const router = express.Router();
 
-// Configuration
-const UPI_VPA = process.env.UPI_VPA || "priyanshu.companion@icici";
-const MERCHANT_NAME = process.env.MERCHANT_NAME || "Coffeely Escrow";
+// Fallback configuration if a companion hasn't configured a personal UPI ID yet
+const DEFAULT_FALLBACK_VPA = process.env.UPI_VPA || "priyanshu.companion@icici";
 const IS_SANDBOX = process.env.UPI_SANDBOX === "true" || true;
 
 // In-memory anti-replay cache for UTRs
 const usedUTRs = new Set();
-
-// Helper: Ensure or initialize wallet balance for a user
-async function ensureWalletExists(userId) {
-  const existing = await pool.query("SELECT * FROM wallet_balances WHERE user_id = $1", [userId]);
-  if (existing.rows.length > 0) {
-    return existing.rows[0];
-  }
-  const inserted = await pool.query(
-    "INSERT INTO wallet_balances (user_id, available_balance, pending_escrow, total_withdrawn, total_earned) VALUES ($1, 0, 0, 0, 0) RETURNING *",
-    [userId]
-  );
-  return inserted.rows[0];
-}
 
 /**
  * 0. GET /api/upi/config
@@ -38,32 +24,53 @@ async function ensureWalletExists(userId) {
 router.get("/config", (req, res) => {
   res.status(200).json({
     success: true,
-    vpa: UPI_VPA,
-    merchant_name: MERCHANT_NAME,
     currency: "INR",
     is_sandbox: IS_SANDBOX,
-    commission_rate: 0,
-    message: "Zero-fee direct bank UPI gateway active",
+    mode: "direct_p2p",
+    platform_fee: 0,
+    message: "Direct user-to-user UPI payments (100% Free / 0% Platform Fee)",
   });
 });
 
 /**
  * 1. POST /api/upi/create-order
- * Generates dynamic NPCI UPI intent & high-res Base64 QR code
+ * Generates direct Peer-to-Peer UPI Intent & QR directly to the Companion's UPI ID!
  */
 router.post("/create-order", authenticateToken, async (req, res) => {
   try {
-    const { booking_id, amount, note } = req.body;
+    const { booking_id, companion_id, amount, note } = req.body;
     const baseAmt = parseFloat(amount) || 1000;
-    // 0% Payment Gateway Fee (100% saved for merchant/client)
-    const platformFee = 0;
-    const payableTotal = baseAmt + platformFee;
-    const orderId = `UPI_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    // 0% Platform Fee - 100% of money goes directly to the companion!
+    const payableTotal = baseAmt;
+    const orderId = `P2P_${Date.now()}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-    // NPCI standard UPI Intent URL
-    const cleanName = encodeURIComponent(MERCHANT_NAME);
-    const cleanNote = encodeURIComponent(note || `Coffeely Booking ${booking_id ? '#' + booking_id : orderId}`);
-    const intentUrl = `upi://pay?pa=${UPI_VPA}&pn=${cleanName}&am=${payableTotal.toFixed(2)}&cu=INR&tn=${cleanNote}&tr=${orderId}`;
+    let targetGirlId = companion_id;
+    let targetCompanionName = "Companion";
+    let targetUpiId = null;
+
+    if (booking_id) {
+      const bRes = await pool.query("SELECT * FROM bookings WHERE id = $1", [booking_id]);
+      if (bRes.rows.length > 0) {
+        targetGirlId = bRes.rows[0].girl_id;
+      }
+    }
+
+    if (targetGirlId) {
+      const uRes = await pool.query("SELECT id, name, upi_id FROM users WHERE id = $1", [targetGirlId]);
+      if (uRes.rows.length > 0) {
+        targetCompanionName = uRes.rows[0].name || "Companion";
+        targetUpiId = uRes.rows[0].upi_id;
+      }
+    }
+
+    // Use Companion's personal UPI ID, or fallback if not yet set
+    const effectiveVpa = (targetUpiId && targetUpiId.trim()) || DEFAULT_FALLBACK_VPA;
+    const isDirectCompanionUPI = Boolean(targetUpiId && targetUpiId.trim());
+
+    // NPCI standard UPI Intent URL pointing DIRECTLY to the Companion
+    const cleanName = encodeURIComponent(targetCompanionName);
+    const cleanNote = encodeURIComponent(note || `Coffeely Meetup #${booking_id || orderId}`);
+    const intentUrl = `upi://pay?pa=${effectiveVpa}&pn=${cleanName}&am=${payableTotal.toFixed(2)}&cu=INR&tn=${cleanNote}&tr=${orderId}`;
 
     // Generate Base64 Data URL QR Code
     let qrDataUrl = null;
@@ -88,8 +95,8 @@ router.post("/create-order", authenticateToken, async (req, res) => {
 
     if (booking_id) {
       await pool.query(
-        "UPDATE bookings SET order_id = $1, platform_fee = $2, companion_earnings = $3 WHERE id = $4",
-        [orderId, platformFee, baseAmt, booking_id]
+        "UPDATE bookings SET order_id = $1, platform_fee = 0, companion_earnings = $2 WHERE id = $3",
+        [orderId, baseAmt, booking_id]
       );
     }
 
@@ -100,8 +107,9 @@ router.post("/create-order", authenticateToken, async (req, res) => {
       amount: payableTotal,
       base_amount: baseAmt,
       platform_fee: 0,
-      vpa: UPI_VPA,
-      merchant_name: MERCHANT_NAME,
+      vpa: effectiveVpa,
+      companion_name: targetCompanionName,
+      is_direct_companion_upi: isDirectCompanionUPI,
       intent_url: intentUrl,
       qr_data_url: qrDataUrl,
       app_intents: appIntents,
@@ -110,13 +118,13 @@ router.post("/create-order", authenticateToken, async (req, res) => {
     });
   } catch (err) {
     console.error("UPI create-order error:", err);
-    res.status(500).json({ success: false, error: "Failed to create UPI order" });
+    res.status(500).json({ success: false, error: "Failed to create direct UPI order" });
   }
 });
 
 /**
  * 2. POST /api/upi/verify-payment
- * Validates 12-digit UTR, prevents replay attacks, and holds funds in Escrow
+ * Validates 12-digit UTR, prevents replay attacks, marks booking as PAID directly (0% fee)
  */
 router.post("/verify-payment", authenticateToken, async (req, res) => {
   try {
@@ -156,7 +164,7 @@ router.post("/verify-payment", authenticateToken, async (req, res) => {
       });
     }
 
-    // Also check database if this UTR was used before in bookings
+    // Check database if this UTR was used before in bookings
     const dbUtrCheck = await pool.query(
       "SELECT id, booking_id FROM wallet_transactions WHERE method LIKE $1 OR description LIKE $2 LIMIT 1",
       [`%${cleanUtr}%`, `%${cleanUtr}%`]
@@ -168,12 +176,11 @@ router.post("/verify-payment", authenticateToken, async (req, res) => {
       });
     }
 
-    // Mark UTR as used
+    // Mark UTR as consumed
     usedUTRs.add(cleanUtr);
 
     let booking = null;
     let baseAmount = parseFloat(amount) || 1000;
-    let companionEarnings = baseAmount;
     let targetGirlId = null;
 
     if (booking_id) {
@@ -192,54 +199,50 @@ router.post("/verify-payment", authenticateToken, async (req, res) => {
         }
 
         baseAmount = booking.amount || parseFloat(amount) || 1000;
-        companionEarnings = baseAmount;
         targetGirlId = booking.girl_id;
 
-        // Update booking payment status
+        // Update booking: Mark as PAID directly (Direct User-to-User settlement)
         await pool.query(
           `UPDATE bookings 
-           SET payment_status = 'escrow_held', payment_id = $1, order_id = $2, payment_method = 'UPIGateway (0% Fee)', platform_fee = 0, companion_earnings = $3 
+           SET payment_status = 'paid', payment_id = $1, order_id = $2, payment_method = 'Direct P2P UPI (0% Fee)', platform_fee = 0, companion_earnings = $3 
            WHERE id = $4`,
-          [cleanUtr, order_id || booking.order_id, companionEarnings, booking_id]
+          [cleanUtr, order_id || booking.order_id, baseAmount, booking_id]
         );
       }
     }
 
-    // Hold in Escrow for Companion
+    // Record direct transaction in wallet for records
     if (targetGirlId) {
-      await ensureWalletExists(targetGirlId);
-      await pool.query(
-        "UPDATE wallet_balances SET pending_escrow = pending_escrow + $1, updated_at = NOW() WHERE user_id = $2",
-        [companionEarnings, targetGirlId]
-      );
-
-      // Record Escrow Transaction
-      await pool.query(
-        `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
-         VALUES ($1, $2, 'escrow_hold', $3, $4, $5, 'in_escrow', $6)`,
-        [
-          targetGirlId,
-          booking_id,
-          companionEarnings,
-          `Session Escrow Hold (Booking #${booking_id})`,
-          `Funds (UTR: ${cleanUtr}) held safely in Coffeely Escrow via UPIGateway. Released upon meetup completion.`,
-          `UPIGateway (UTR: ${cleanUtr})`,
-        ]
-      );
+      try {
+        await pool.query(
+          `INSERT INTO wallet_transactions (user_id, booking_id, type, amount, title, description, status, method)
+           VALUES ($1, $2, 'direct_p2p', $3, $4, $5, 'completed', $6)`,
+          [
+            targetGirlId,
+            booking_id,
+            baseAmount,
+            `Direct P2P UPI Payment (Booking #${booking_id})`,
+            `Payment of Rs. ${baseAmount} transferred directly to companion's UPI bank account (UTR: ${cleanUtr}). 0% platform fee.`,
+            `Direct UPI (UTR: ${cleanUtr})`,
+          ]
+        );
+      } catch (txErr) {
+        console.warn("Wallet record warning (non-fatal):", txErr.message);
+      }
     }
 
     res.status(200).json({
       success: true,
-      payment_status: "escrow_held",
+      payment_status: "paid",
       payment_id: cleanUtr,
       utr: cleanUtr,
       order_id: order_id || (booking ? booking.order_id : null),
-      companion_earnings: companionEarnings,
+      companion_earnings: baseAmount,
       platform_fee: 0,
-      payment_method: "UPIGateway (0% Fee Direct Bank)",
+      payment_method: "Direct User-to-User UPI (100% Free)",
       payer_vpa: payer_vpa || "customer@upi",
       is_sandbox: IS_SANDBOX,
-      message: "Payment verified successfully and held in 100% Escrow Protection via UPIGateway!",
+      message: "Direct user-to-user UPI payment verified successfully! 100% transferred to companion bank.",
     });
   } catch (err) {
     console.error("UPI verify error:", err);

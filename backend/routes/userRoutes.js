@@ -19,7 +19,7 @@ const isOwner = (req, res, userId) => {
 router.get("/me", authenticateToken, async (req, res) => {
   try {
     const userResult = await pool.query(
-      "SELECT id, name, username, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, id_proof_url, live_selfie_url, is_verified, social_link, latitude, longitude, is_instant_available, schedule_status, available_days, available_slots FROM users WHERE id = $1",
+      "SELECT id, name, username, email, role, age, city, bio, price, profile_pic, tags, is_private, show_online, kyc_status, id_proof_url, live_selfie_url, is_verified, social_link, latitude, longitude, is_instant_available, schedule_status, available_days, available_slots, upi_id FROM users WHERE id = $1",
       [req.user.id]
     );
     if (userResult.rows.length === 0) return res.status(404).json({ error: "User nahi mila!" });
@@ -55,7 +55,7 @@ router.get("/users", async (req, res) => {
 
     let paramIndex = params.length + 1;
     let query = `
-            SELECT u.id, u.name, u.username, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status, u.is_verified, u.latitude, u.longitude, u.is_instant_available, u.schedule_status, u.available_days, u.available_slots,
+            SELECT u.id, u.name, u.username, u.age, u.city, u.bio, u.price, u.profile_pic, u.role, u.tags, u.is_private, u.show_online, u.kyc_status, u.is_verified, u.latitude, u.longitude, u.is_instant_available, u.schedule_status, u.available_days, u.available_slots, u.upi_id,
                     COALESCE(ROUND(AVG(r.rating), 1), 0) as avg_rating,
                     COUNT(r.id) as review_count
             FROM users u

@@ -35,6 +35,42 @@ export default function GirlWalletTab({ user }) {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [transactions, setTransactions] = useState([]);
+  const [currentUpiId, setCurrentUpiId] = useState(user?.upi_id || "");
+  const [isEditingUpi, setIsEditingUpi] = useState(false);
+  const [directUpiInput, setDirectUpiInput] = useState(user?.upi_id || "");
+  const [upiSaveToast, setUpiSaveToast] = useState("");
+
+  const handleSaveDirectUpi = async () => {
+    if (!directUpiInput.trim()) {
+      alert("Please enter a valid UPI ID");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ upi_id: directUpiInput.trim() }),
+      });
+      if (res.ok) {
+        setCurrentUpiId(directUpiInput.trim());
+        setIsEditingUpi(false);
+        setUpiSaveToast("UPI ID saved successfully! Clients will pay you directly.");
+        setTimeout(() => setUpiSaveToast(""), 4000);
+        // update local user
+        const stored = JSON.parse(localStorage.getItem("user") || "{}");
+        stored.upi_id = directUpiInput.trim();
+        localStorage.setItem("user", JSON.stringify(stored));
+      } else {
+        alert("Failed to save UPI ID");
+      }
+    } catch (e) {
+      alert("Error saving UPI ID: " + e.message);
+    }
+  };
 
   const fetchWalletData = async () => {
     if (!user?.id) return;
@@ -140,6 +176,72 @@ export default function GirlWalletTab({ user }) {
           </button>
         </div>
       )}
+
+      {/* ─── DIRECT P2P UPI ACCOUNT SETUP CARD ─── */}
+      <div className="bg-gradient-to-r from-emerald-950/40 via-[#141414] to-[#121212] border border-emerald-500/30 rounded-3xl p-5 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-400">
+                Direct User-to-User UPI (100% Free · Instant Bank Credit)
+              </span>
+            </div>
+            <h4 className="text-base font-extrabold text-white">
+              {currentUpiId ? (
+                <span>Receiving UPI: <span className="font-mono text-emerald-300 font-bold">{currentUpiId}</span></span>
+              ) : (
+                <span className="text-amber-300">⚠️ Apna UPI ID add karein taaki bookings ka paisa direct aapko mile!</span>
+              )}
+            </h4>
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              Clients jab aapko book karenge, payment bina kisi middleman ke <strong>seedha aapke bank account</strong> me aayegi. 0% platform fee!
+            </p>
+            {upiSaveToast && (
+              <p className="text-xs text-emerald-400 font-bold animate-fade-in">{upiSaveToast}</p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {isEditingUpi ? (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <input
+                  type="text"
+                  placeholder="e.g. name@okaxis"
+                  value={directUpiInput}
+                  onChange={(e) => setDirectUpiInput(e.target.value)}
+                  className="bg-[#000] border border-[#333] focus:border-emerald-500 px-3 py-2 rounded-xl text-xs font-mono text-white outline-none w-44"
+                />
+                <button
+                  type="button"
+                  onClick={handleSaveDirectUpi}
+                  className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold transition shadow"
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingUpi(false)}
+                  className="px-2.5 py-2 bg-white/5 text-gray-400 rounded-xl text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setDirectUpiInput(currentUpiId);
+                  setIsEditingUpi(true);
+                }}
+                className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+              >
+                <span>{currentUpiId ? "✏️ Edit UPI ID" : "➕ Set UPI ID Now"}</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* ─── WALLET METRICS OVERVIEW CARDS ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

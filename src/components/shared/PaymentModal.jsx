@@ -344,6 +344,7 @@ export default function PaymentModal({
             },
             body: JSON.stringify({
               booking_id: bookingData?.id,
+              companion_id: companion?.id,
               amount: baseAmount,
               note: `Booking with ${companion?.name || "Companion"}`,
             }),
@@ -615,9 +616,9 @@ export default function PaymentModal({
                 </span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400">Merchant VPA:</span>
+                <span className="text-gray-400">Receiving Companion UPI:</span>
                 <span className="text-pink-300 font-mono font-bold">
-                  {upiOrderData?.vpa || "priyanshu.companion@icici"}
+                  {companion?.upi_id || upiOrderData?.vpa || "priyanshu.companion@icici"}
                 </span>
               </div>
             </div>
@@ -658,7 +659,7 @@ export default function PaymentModal({
                       const intent =
                         upiOrderData?.app_intents?.phonepe ||
                         upiOrderData?.intent_url ||
-                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                        `upi://pay?pa=${companion?.upi_id || "priyanshu.companion@icici"}&pn=${encodeURIComponent(companion?.name || "Companion")}&am=${totalAmount}&cu=INR`;
                       window.location.href = intent;
                     }}
                     className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-purple-500"
@@ -673,7 +674,7 @@ export default function PaymentModal({
                       const intent =
                         upiOrderData?.app_intents?.gpay ||
                         upiOrderData?.intent_url ||
-                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                        `upi://pay?pa=${companion?.upi_id || "priyanshu.companion@icici"}&pn=${encodeURIComponent(companion?.name || "Companion")}&am=${totalAmount}&cu=INR`;
                       window.location.href = intent;
                     }}
                     className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-blue-500"
@@ -688,7 +689,7 @@ export default function PaymentModal({
                       const intent =
                         upiOrderData?.app_intents?.paytm ||
                         upiOrderData?.intent_url ||
-                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                        `upi://pay?pa=${companion?.upi_id || "priyanshu.companion@icici"}&pn=${encodeURIComponent(companion?.name || "Companion")}&am=${totalAmount}&cu=INR`;
                       window.location.href = intent;
                     }}
                     className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-sky-500"
@@ -703,7 +704,7 @@ export default function PaymentModal({
                       const intent =
                         upiOrderData?.app_intents?.bhim ||
                         upiOrderData?.intent_url ||
-                        `upi://pay?pa=priyanshu.companion@icici&pn=Coffeely&am=${totalAmount}&cu=INR`;
+                        `upi://pay?pa=${companion?.upi_id || "priyanshu.companion@icici"}&pn=${encodeURIComponent(companion?.name || "Companion")}&am=${totalAmount}&cu=INR`;
                       window.location.href = intent;
                     }}
                     className="p-3 rounded-xl bg-[#161616] hover:bg-[#202020] border border-[#262626] flex items-center gap-2.5 text-white text-xs font-bold transition hover:border-amber-500"

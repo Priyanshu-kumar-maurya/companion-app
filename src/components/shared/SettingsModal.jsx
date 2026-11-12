@@ -80,6 +80,7 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
     link: user.social_link || user.link || "",
     is_private: user.is_private || false,
     show_online: user.show_online !== false,
+    upi_id: user.upi_id || "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -1370,6 +1371,29 @@ function SettingsModal({ user, setUser, onClose, setPage, socket }) {
                   placeholder="https://instagram.com/yourhandle"
                   className="w-full bg-[#000000] border border-[#262626] rounded-xl px-4 py-2.5 text-xs text-white outline-none focus:border-pink-500 transition"
                 />
+              </div>
+
+              {/* Direct UPI ID for Receiving Payments (Companions / Users) */}
+              <div className="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-transparent border border-emerald-500/30 rounded-2xl p-3.5 space-y-1.5 my-2">
+                <label className="block text-xs font-bold text-white flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-emerald-400">
+                    <span>⚡ Your UPI ID (For Direct Payments)</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    0% Fee · Direct Bank
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  name="upi_id"
+                  value={formData.upi_id || ""}
+                  onChange={handleChange}
+                  placeholder="e.g. yourname@okaxis, 9876543210@paytm, name@ybl"
+                  className="w-full bg-[#000000] border border-[#262626] focus:border-emerald-500 rounded-xl px-4 py-2.5 text-xs font-mono text-emerald-300 placeholder-gray-600 outline-none transition"
+                />
+                <p className="text-[10px] text-gray-400 leading-relaxed">
+                  💰 Jab koi client aapko book karega, paisa <strong>direct aapke iss UPI ID par</strong> aapke bank account me transfer hoga. Koi wallet hold nahi, 100% instant payment!
+                </p>
               </div>
 
               <button
