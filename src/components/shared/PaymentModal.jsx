@@ -517,22 +517,22 @@ export default function PaymentModal({
         )}
 
         {isSuccess ? (
-          /* ─── PAYMENT SUCCESS & ESCROW CONFIRMATION ─── */
+          /* ─── DIRECT P2P UPI PAYMENT SUCCESS CONFIRMATION ─── */
           <div className="text-center py-6 animate-slide-up">
             <div className="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_25px_rgba(16,185,129,0.4)]">
               <FiCheckCircle size={42} className="animate-bounce" />
             </div>
 
             <h3 className="text-2xl font-black text-white mb-1">Payment Successful!</h3>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">
-              <span>🔒 ₹{totalAmount.toLocaleString()} Held in Escrow Protection</span>
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">
+              <span>⚡ ₹{totalAmount.toLocaleString()} Direct Bank Transfer Completed</span>
             </div>
 
-            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 text-left space-y-2 mb-6">
+            <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 text-left space-y-2.5 mb-6">
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400">Razorpay Payment ID:</span>
-                <span className="text-emerald-400 font-mono font-bold">
-                  {transactionDetails?.payment_id}
+                <span className="text-gray-400">UPI Ref / UTR No:</span>
+                <span className="text-emerald-400 font-mono font-bold tracking-wider">
+                  {transactionDetails?.payment_id || transactionDetails?.utr || "Verified"}
                 </span>
               </div>
               <div className="flex justify-between text-xs">
@@ -542,30 +542,30 @@ export default function PaymentModal({
                 </span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400">Method:</span>
-                <span className="text-white font-semibold">{transactionDetails?.payment_method}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-400">Mode:</span>
-                <span className="text-purple-400 font-bold flex items-center gap-1">
-                  <FiZap size={11} /> Razorpay Test Mode
-                </span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-gray-400">Companion:</span>
+                <span className="text-gray-400">Transferred To:</span>
                 <span className="text-white font-bold">{companion?.name}</span>
+              </div>
+              {companion?.upi_id && (
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-400">Companion UPI ID:</span>
+                  <span className="text-pink-300 font-mono font-bold">{companion.upi_id}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Platform Fee:</span>
+                <span className="text-emerald-400 font-bold">₹0 (100% Free · 0% Commission)</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-gray-400">Session Date:</span>
-                <span className="text-white font-bold">
+                <span className="text-white font-semibold">
                   {bookingData?.meeting_date || "Today"} at{" "}
                   {bookingData?.meeting_time || "Scheduled Time"}
                 </span>
               </div>
               <div className="flex justify-between text-xs border-t border-[#262626] pt-2 font-bold">
-                <span className="text-gray-300">Escrow Guarantee:</span>
-                <span className="text-purple-400">
-                  Funds released only after session completion
+                <span className="text-gray-300">Settlement:</span>
+                <span className="text-emerald-400 flex items-center gap-1">
+                  <FiCheck size={13} /> Direct User-to-User Bank Credit
                 </span>
               </div>
             </div>
