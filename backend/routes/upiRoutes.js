@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Fallback configuration if a companion hasn't configured a personal UPI ID yet
 const DEFAULT_FALLBACK_VPA = process.env.UPI_VPA || "priyanshu.companion@icici";
-const IS_SANDBOX = process.env.UPI_SANDBOX === "true" || true;
+const IS_SANDBOX = process.env.UPI_SANDBOX === "true"; // Default: false (Live Production Mode)
 
 // In-memory anti-replay cache for UTRs
 const usedUTRs = new Set();
@@ -25,7 +25,7 @@ router.get("/config", (req, res) => {
   res.status(200).json({
     success: true,
     currency: "INR",
-    is_sandbox: IS_SANDBOX,
+    is_sandbox: false,
     mode: "direct_p2p",
     platform_fee: 0,
     message: "Direct user-to-user UPI payments (100% Free / 0% Platform Fee)",

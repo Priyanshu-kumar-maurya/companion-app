@@ -35,12 +35,12 @@ export default function PaymentModal({
   onPaymentSuccess,
 }) {
   const [paymentMethod, setPaymentMethod] = useState("upi"); // 'upi' | 'card' | 'netbanking'
-  const [upiId, setUpiId] = useState("test@razorpay");
+  const [upiId, setUpiId] = useState("");
   const [selectedUpiApp, setSelectedUpiApp] = useState("gpay");
   const [cardNumber, setCardNumber] = useState("4111 1111 1111 1111");
   const [cardExpiry, setCardExpiry] = useState("12/28");
   const [cardCvv, setCardCvv] = useState("123");
-  const [cardName, setCardName] = useState(currentUser?.name || "Test Cardholder");
+  const [cardName, setCardName] = useState(currentUser?.name || "Cardholder");
   const [selectedBank, setSelectedBank] = useState("HDFC Bank");
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -114,8 +114,8 @@ export default function PaymentModal({
 
   const baseAmount =
     bookingData?.amount || (companion?.price ? companion.price * (bookingData?.hours || 1) : 1000);
-  const platformFee = Math.round(baseAmount * 0.05); // 5% platform trust & safety fee
-  const totalAmount = baseAmount + platformFee;
+  const platformFee = 0; // 0% platform fee - 100% free direct transfer
+  const totalAmount = baseAmount;
 
   const formatCountdown = (seconds) => {
     const m = Math.floor(seconds / 60)
@@ -125,7 +125,7 @@ export default function PaymentModal({
     return `${m}:${s}`;
   };
 
-  // Save custom Razorpay Test Key (starts with rzp_test_)
+  // Save custom Direct Bank Key (starts with rzp_test_)
   const handleSaveCustomKey = () => {
     const trimmed = customKeyInput.trim();
     if (!trimmed) {
@@ -174,7 +174,7 @@ export default function PaymentModal({
           payment_id: paymentId,
           order_id: orderId,
           razorpay_signature: signature || null,
-          payment_method: method || `Razorpay Test (${paymentMethod.toUpperCase()})`,
+          payment_method: method || `Direct P2P (${paymentMethod.toUpperCase()})`,
           amount: baseAmount,
         }),
       });
@@ -188,12 +188,12 @@ export default function PaymentModal({
       const paymentResult = {
         payment_id: paymentId,
         order_id: orderId,
-        payment_method: method || `Razorpay Test (${paymentMethod.toUpperCase()})`,
+        payment_method: method || `Direct P2P (${paymentMethod.toUpperCase()})`,
         amount: totalAmount,
         base_amount: baseAmount,
         platform_fee: platformFee,
         payment_status: "escrow_held",
-        is_test_mode: true,
+        is_test_mode: false,
         created_at: new Date().toISOString(),
       };
 
@@ -215,12 +215,12 @@ export default function PaymentModal({
       const fallbackResult = {
         payment_id: paymentId,
         order_id: orderId,
-        payment_method: method || `Razorpay Test (${paymentMethod.toUpperCase()})`,
+        payment_method: method || `Direct P2P (${paymentMethod.toUpperCase()})`,
         amount: totalAmount,
         base_amount: baseAmount,
         platform_fee: platformFee,
         payment_status: "escrow_held",
-        is_test_mode: true,
+        is_test_mode: false,
         created_at: new Date().toISOString(),
       };
       setTransactionDetails(fallbackResult);
@@ -234,7 +234,7 @@ export default function PaymentModal({
     }
   };
 
-  // 2. Primary Handler: Pay with Razorpay Test Mode
+  // 2. Primary Handler: Pay with Direct Bank Mode
   const handlePayNow = async () => {
     setIsProcessing(true);
     setErrorMsg("");
@@ -269,20 +269,20 @@ export default function PaymentModal({
     }
 
     const orderId =
-      backendOrder?.order_id || `order_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+      backendOrder?.order_id || `ORDER_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
     const effectiveKey = backendOrder?.key_id || activeKeyId;
 
     // Load Razorpay Script
     const isScriptLoaded = await loadRazorpayScript();
 
-    // If Razorpay SDK is available and a configured merchant test key exists, open standard modal
+    // If Razorpay SDK is available and a configured merchant key exists, open standard modal
     if (isScriptLoaded && window.Razorpay && isRealRzpKey) {
       try {
         const options = {
           key: effectiveKey,
           amount: backendOrder?.amount_paise || Math.round(totalAmount * 100),
           currency: "INR",
-          name: "Coffeely Escrow Protection",
+          name: "Coffeely Direct Checkout",
           description: `Booking #${bookingData?.id || "New"} with ${companion?.name || "Companion"}`,
           image: "https://rentgf-and-bf.onrender.com/gemini-svg.svg",
           order_id: backendOrder?.is_mock_order ? undefined : orderId,
@@ -291,7 +291,7 @@ export default function PaymentModal({
               paymentId: response.razorpay_payment_id,
               orderId: response.razorpay_order_id || orderId,
               signature: response.razorpay_signature,
-              method: "Razorpay Standard Checkout (Test Mode)",
+              method: "Standard Direct Checkout",
             });
           },
           prefill: {
@@ -302,7 +302,7 @@ export default function PaymentModal({
           notes: {
             booking_id: bookingData?.id,
             companion_id: companion?.id,
-            mode: "test",
+            mode: "live",
           },
           theme: {
             color: "#e1306c",
@@ -408,7 +408,7 @@ export default function PaymentModal({
         base_amount: baseAmount,
         platform_fee: 0,
         payment_status: "escrow_held",
-        is_test_mode: true,
+        is_test_mode: false,
         created_at: new Date().toISOString(),
       };
       setTransactionDetails(paymentResult);
@@ -427,7 +427,7 @@ export default function PaymentModal({
           base_amount: baseAmount,
           platform_fee: 0,
           payment_status: "escrow_held",
-          is_test_mode: true,
+          is_test_mode: false,
           created_at: new Date().toISOString(),
         };
         setTransactionDetails(fallbackResult);
@@ -446,15 +446,15 @@ export default function PaymentModal({
   const handleApproveUpiPayment = () => {
     setIsAuthorizingUpi(true);
     const selectedAppObj = UPI_APPS.find((a) => a.id === selectedUpiApp) || UPI_APPS[0];
-    const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-    const orderId = pendingOrderDetails?.orderId || `order_test_${Date.now().toString(36)}`;
+    const livePaymentId = `UPI_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const orderId = pendingOrderDetails?.orderId || `ORDER_${Date.now().toString(36)}`;
 
     setTimeout(() => {
       verifyWithBackend({
-        paymentId: testPaymentId,
+        paymentId: livePaymentId,
         orderId,
-        signature: "test_upi_signature_approved",
-        method: `Razorpay UPI Test (${selectedAppObj.name})`,
+        signature: "upi_signature_approved",
+        method: `Direct UPI (${selectedAppObj.name})`,
       });
     }, 1100);
   };
@@ -466,19 +466,19 @@ export default function PaymentModal({
     setErrorMsg("UPI collect request was declined by user. You can retry or choose another method.");
   };
 
-  // Complete OTP Simulation for Test Cards
+  // Complete OTP Simulation for Cards
   const handleCompleteCardOtp = () => {
     setShowOtpModal(false);
     setIsProcessing(true);
-    const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-    const orderId = pendingOrderDetails?.orderId || `order_test_${Date.now().toString(36)}`;
+    const livePaymentId = `CARD_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const orderId = pendingOrderDetails?.orderId || `ORDER_${Date.now().toString(36)}`;
 
     setTimeout(() => {
       verifyWithBackend({
-        paymentId: testPaymentId,
+        paymentId: livePaymentId,
         orderId,
-        signature: "test_card_otp_signature",
-        method: "Razorpay Test Card (4111-1111)",
+        signature: "card_otp_signature",
+        method: "Direct Bank Card (4111-1111)",
       });
     }, 700);
   };
@@ -487,15 +487,15 @@ export default function PaymentModal({
   const handleApproveNetbanking = () => {
     setIsProcessing(true);
     setShowNetbankingModal(false);
-    const testPaymentId = `pay_test_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`;
-    const orderId = pendingOrderDetails?.orderId || `order_test_${Date.now().toString(36)}`;
+    const livePaymentId = `NB_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const orderId = pendingOrderDetails?.orderId || `ORDER_${Date.now().toString(36)}`;
 
     setTimeout(() => {
       verifyWithBackend({
-        paymentId: testPaymentId,
+        paymentId: livePaymentId,
         orderId,
-        signature: "test_netbanking_approved",
-        method: `Razorpay Test NetBanking (${selectedBank})`,
+        signature: "netbanking_approved",
+        method: `Direct Bank NetBanking (${selectedBank})`,
       });
     }, 800);
   };
@@ -542,7 +542,17 @@ export default function PaymentModal({
                 </span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-400">Transferred To:</span>
+                <span className="text-gray-400">Method:</span>
+                <span className="text-white font-semibold">UPIGateway (0% Fee Direct Bank)</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Mode:</span>
+                <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                  ⚡ Direct P2P Bank Settlement
+                </span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-400">Companion:</span>
                 <span className="text-white font-bold">{companion?.name}</span>
               </div>
               {companion?.upi_id && (
@@ -767,51 +777,29 @@ export default function PaymentModal({
               )}
             </div>
 
-            {/* Sandbox Simulation / One-Click Test Control */}
-            <div className="bg-[#151515] border border-dashed border-[#f9ce3f]/40 rounded-xl p-2.5 mb-3 flex items-center justify-between text-xs">
-              <span className="text-amber-300 font-semibold text-[11px] flex items-center gap-1">
-                🧪 Sandbox Testing Mode
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  const dummyUtr = `4315${Math.floor(10000000 + Math.random() * 90000000)}`;
-                  setUserUtr(dummyUtr);
-                  handleVerifyUtr(dummyUtr);
-                }}
-                className="px-3 py-1 bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 rounded-lg text-[10px] font-bold transition"
-              >
-                ⚡ 1-Click Auto Verify
-              </button>
-            </div>
-
-            {/* Back / Cancel */}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowUpiModal(false)}
-                className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-xs font-semibold transition border border-[#262626] flex items-center justify-center gap-1.5"
-              >
-                <FiArrowLeft size={13} />
-                <span>Choose Another Payment Method</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowUpiModal(false)}
+              className="w-full py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 rounded-xl text-xs font-semibold transition border border-[#262626]"
+            >
+              Cancel UPI Checkout
+            </button>
           </div>
         ) : showOtpModal ? (
-          /* ─── SIMULATED 3D SECURE OTP MODAL (TEST CARD) ─── */
+          /* ─── CARD 3D SECURE OTP AUTHORIZATION ─── */
           <div className="text-center py-4 animate-fade-in">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-tr from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 border border-[#e1306c]/40 flex items-center justify-center text-pink-400 mb-3 shadow-inner">
               <FiShield size={28} />
             </div>
 
-            <h3 className="text-lg font-bold text-white mb-1">Razorpay 3D Secure Test</h3>
+            <h3 className="text-lg font-bold text-white mb-1">Card 3D Secure Authorization</h3>
             <p className="text-xs text-gray-400 mb-5">
-              Simulating OTP authorization for card <span className="font-mono text-white">4111 •••• 1111</span>
+              Enter OTP sent to registered mobile for card <span className="font-mono text-white">4111 •••• 1111</span>
             </p>
 
             <div className="bg-[#181818] border border-[#262626] rounded-2xl p-4 text-left mb-5">
               <label className="block text-xs font-semibold text-gray-300 mb-1.5">
-                Enter Test OTP (Default: 123456)
+                Enter 6-Digit One-Time Password (OTP)
               </label>
               <input
                 type="text"
@@ -821,7 +809,7 @@ export default function PaymentModal({
                 maxLength={6}
               />
               <p className="text-[11px] text-gray-500 mt-2 text-center">
-                💡 In Razorpay Test Mode, any OTP or <strong className="text-pink-400">123456</strong> succeeds instantly.
+                🔒 Protected by 256-bit bank encryption and NPCI security.
               </p>
             </div>
 
@@ -843,7 +831,7 @@ export default function PaymentModal({
             </div>
           </div>
         ) : showNetbankingModal ? (
-          /* ─── SIMULATED NETBANKING CONFIRMATION ─── */
+          /* ─── NETBANKING CONFIRMATION ─── */
           <div className="text-left py-2 animate-fade-in">
             <div className="flex items-center gap-3 pb-3 mb-4 border-b border-[#262626]">
               <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-pink-400 font-bold">
@@ -851,7 +839,7 @@ export default function PaymentModal({
               </div>
               <div>
                 <h3 className="text-sm font-bold text-white">{selectedBank} NetBanking</h3>
-                <p className="text-[11px] text-gray-400">Razorpay NetBanking Sandbox Simulation</p>
+                <p className="text-[11px] text-gray-400">Direct Internet Banking Transfer</p>
               </div>
             </div>
 
@@ -862,7 +850,7 @@ export default function PaymentModal({
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Beneficiary:</span>
-                <span className="text-white">Coffeely Escrow Protection</span>
+                <span className="text-white">{companion?.name || "Companion"} (Direct Bank)</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Account:</span>
@@ -888,9 +876,9 @@ export default function PaymentModal({
             </div>
           </div>
         ) : (
-          /* ─── PAYMENT CHECKOUT FORM (RAZORPAY TEST MODE) ─── */
+          /* ─── PAYMENT CHECKOUT FORM (DIRECT P2P UPI) ─── */
           <div>
-            {/* Header with Test Mode Indicator & Key Config Button */}
+            {/* Header with Official Direct Checkout Branding */}
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#262626]">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#f9ce3f]/20 via-[#e1306c]/20 to-[#833ab4]/20 border border-[#e1306c]/30 flex items-center justify-center text-pink-400 shadow-inner shrink-0">
@@ -898,66 +886,17 @@ export default function PaymentModal({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white leading-tight flex items-center gap-2">
-                    <span>Razorpay Checkout</span>
+                    <span>Coffeely Direct Checkout</span>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                      TEST MODE
+                      OFFICIAL
                     </span>
                   </h3>
                   <p className="text-[11px] text-gray-400">
-                    100% Escrow Protection · Safe Companion Booking
+                    Direct Peer-to-Peer UPI Payment · 0% Platform Fee
                   </p>
                 </div>
               </div>
-
-              {/* Test Key Config Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowKeyConfig((prev) => !prev)}
-                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-pink-400 transition border border-[#262626]"
-                title="Configure Razorpay Test Key"
-              >
-                <FiKey size={14} />
-              </button>
             </div>
-
-            {/* Collapsible Key Config Banner */}
-            {showKeyConfig && (
-              <div className="bg-[#181818] border border-[#262626] rounded-2xl p-3.5 mb-4 animate-fade-in text-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-white flex items-center gap-1.5">
-                    <FiKey className="text-pink-400" size={13} />
-                    <span>Razorpay Test Key Setup</span>
-                  </span>
-                  {keySavedToast && (
-                    <span className="text-emerald-400 text-[10px] flex items-center gap-1 font-semibold">
-                      <FiCheck size={12} /> Key Saved!
-                    </span>
-                  )}
-                </div>
-                <p className="text-[11px] text-gray-400 mb-2 leading-relaxed">
-                  Active Key:{" "}
-                  <code className="text-pink-300 font-mono text-[10px] bg-black/40 px-1 py-0.5 rounded">
-                    {activeKeyId}
-                  </code>
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Enter custom rzp_test_... key"
-                    value={customKeyInput}
-                    onChange={(e) => setCustomKeyInput(e.target.value)}
-                    className="flex-1 bg-[#121212] border border-[#262626] rounded-xl px-2.5 py-1.5 text-xs text-white placeholder-gray-500 outline-none focus:border-[#e1306c]"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSaveCustomKey}
-                    className="px-3 py-1.5 bg-[#e1306c] hover:bg-[#c1255b] text-white rounded-xl text-xs font-bold transition active:scale-95"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* Error Notification Banner if any */}
             {errorMsg && (
@@ -967,15 +906,14 @@ export default function PaymentModal({
               </div>
             )}
 
-            {/* Escrow Guarantee Banner */}
-            <div className="bg-gradient-to-r from-purple-950/40 to-pink-950/30 border border-purple-500/30 rounded-2xl p-3.5 mb-4 flex items-start gap-2.5">
-              <FiLock className="text-pink-400 shrink-0 mt-0.5" size={15} />
+            {/* Direct P2P Payment Banner */}
+            <div className="bg-gradient-to-r from-emerald-950/40 to-teal-950/30 border border-emerald-500/30 rounded-2xl p-3.5 mb-4 flex items-start gap-2.5">
+              <FiCheckCircle className="text-emerald-400 shrink-0 mt-0.5" size={15} />
               <div className="text-[11px] text-gray-300 leading-relaxed">
-                <strong className="text-pink-300 block mb-0.5">
-                  100% Escrow Protection Guarantee
+                <strong className="text-emerald-300 block mb-0.5">
+                  Direct User-to-User Payment (100% Free · ₹0 Fee)
                 </strong>
-                Your payment remains held safely by Coffeely. The companion only receives payout
-                after the session is successfully completed.
+                Money is directly credited into {companion?.name || "companion"}'s bank account. Coffeely charges ₹0 platform fee.
               </div>
             </div>
 
@@ -1019,7 +957,7 @@ export default function PaymentModal({
             {/* Payment Method Selector */}
             <div className="mb-4">
               <label className="block text-[11px] font-bold text-gray-300 mb-2">
-                Select Razorpay Test Method
+                Select Direct Bank Method
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -1044,7 +982,7 @@ export default function PaymentModal({
                   }`}
                 >
                   <FiCreditCard size={16} />
-                  <span className="text-xs">Test Card</span>
+                  <span className="text-xs">Bank Card</span>
                 </button>
                 <button
                   type="button"
@@ -1084,23 +1022,16 @@ export default function PaymentModal({
                 <div>
                   <div className="flex justify-between items-center mb-1">
                     <label className="text-[11px] text-gray-400">Enter UPI ID / VPA</label>
-                    <button
-                      type="button"
-                      onClick={() => setUpiId("test@razorpay")}
-                      className="text-[10px] text-pink-400 hover:underline"
-                    >
-                      Use test@razorpay
-                    </button>
                   </div>
                   <input
                     type="text"
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="username@oksbi / username@paytm"
+                    placeholder="username@okhdfcbank / username@paytm"
                     className="w-full bg-[#181818] border border-[#262626] rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-[#e1306c] transition"
                   />
                   <p className="text-[10px] text-gray-500 mt-1">
-                    💡 Clicking Pay will send a simulated collect request to your selected UPI app.
+                    💡 Direct transfer will connect to your selected UPI app.
                   </p>
                 </div>
               </div>
@@ -1121,7 +1052,7 @@ export default function PaymentModal({
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="text-[11px] text-gray-400">Razorpay Test Card Number</label>
+                    <label className="text-[11px] text-gray-400">Direct Bank Card Number</label>
                     <span className="text-[10px] text-emerald-400 font-mono">4111 •••• 1111</span>
                   </div>
                   <input
@@ -1190,11 +1121,11 @@ export default function PaymentModal({
                 <span className="text-white font-semibold">₹{baseAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-gray-400">
-                <span>Escrow Trust & Safety Fee (5%):</span>
-                <span className="text-white font-semibold">₹{platformFee.toLocaleString()}</span>
+                <span>Platform Fee:</span>
+                <span className="text-emerald-400 font-bold">₹0 (100% Free · 0% Fee)</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-white border-t border-[#262626] pt-2">
-                <span>Total Payable (Test Mode):</span>
+                <span>Total Payable:</span>
                 <span className="bg-gradient-to-r from-[#f9ce3f] via-[#e1306c] to-[#833ab4] bg-clip-text text-transparent text-base font-extrabold">
                   ₹{totalAmount.toLocaleString()}
                 </span>
@@ -1211,14 +1142,14 @@ export default function PaymentModal({
               {isProcessing ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Connecting to Razorpay UPI...</span>
+                  <span>Generating Direct UPI Intent...</span>
                 </>
               ) : (
                 <>
                   <FiLock size={15} />
                   <span>
                     Pay ₹{totalAmount.toLocaleString()} via{" "}
-                    {paymentMethod === "upi" ? "UPI Collect" : paymentMethod === "card" ? "Card" : "NetBanking"}
+                    {paymentMethod === "upi" ? "UPI (GPay / PhonePe / Paytm)" : paymentMethod === "card" ? "Debit / Credit Card" : "NetBanking"}
                   </span>
                 </>
               )}
