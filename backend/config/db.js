@@ -103,6 +103,7 @@ const connectDB = async () => {
     await pool.query(
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_blocked BOOLEAN DEFAULT false;"
     );
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS upi_id VARCHAR(100);");
     await pool.query(
       "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
     );
